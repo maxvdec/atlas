@@ -1,1532 +1,2156 @@
 // This file contains packed shader source code.
+// Metal shaders packed as source
 #ifndef ATLAS_GENERATED_SHADERS_H
 #define ATLAS_GENERATED_SHADERS_H
 
-static const char* BINN_PHONG_VERT =
-R"(#version 410 core
-layout(location = 0) in vec3 aPos;
-layout(location = 1) in vec4 aColor;
-layout(location = 2) in vec2 aTexCoord;
-layout(location = 3) in vec3 aNormal;
-layout(location = 4) in vec3 aTangent;
-layout(location = 5) in vec3 aBitangent;
-layout(location = 6) in mat4 instanceModel;
-
-uniform mat4 model;
-uniform mat4 view;
-uniform mat4 projection;
-uniform bool isInstanced = true;
-
-out vec4 outColor;
-out vec2 TexCoord;
-out vec3 Normal;
-out vec3 FragPos;
-out mat3 TBN;
-
-void main() {
-    mat4 mvp;
-    if (isInstanced) {
-        mvp = projection * view * instanceModel;
-    } else {
-        mvp = projection * view * model;
-    }
-    gl_Position = mvp * vec4(aPos, 1.0);
-    FragPos = vec3(instanceModel * vec4(aPos, 1.0));
-    TexCoord = aTexCoord;
-    Normal = mat3(transpose(inverse(instanceModel))) * aNormal;
-    outColor = aColor;
-
-    vec3 T = normalize(vec3(instanceModel * vec4(aTangent, 0.0)));
-    vec3 B = normalize(vec3(instanceModel * vec4(aBitangent, 0.0)));
-    vec3 N = normalize(vec3(instanceModel * vec4(aNormal, 0.0)));
-    TBN = mat3(T, B, N);
-}
-)"
-;
-
-static const char* BLINN_PHONG_FRAG =
-R"(#version 410 core
-layout (location = 0) out vec4 FragColor;
-layout (location = 1) out vec4 BrightColor;
-
-in vec2 TexCoord;
-in vec4 outColor;
-in vec3 Normal;
-in vec3 FragPos;
-in mat3 TBN;
-
-const int TEXTURE_COLOR = 0;
-const int TEXTURE_SPECULAR = 1;
-const int TEXTURE_DEPTH_CUBE = 4;
-const int TEXTURE_NORMAL = 5;
-const int TEXTURE_PARALLAX = 6;
-
-vec2 texCoord;
-
-// ----- Structures -----
-struct AmbientLight {
-    vec4 color;
-    float intensity;
-};
-
-struct Material {
-    vec3 ambient;
-    vec3 diffuse;
-    vec3 specular;
-    float shininess;
-    float reflectivity;
-};
-
-struct DirectionalLight {
-    vec3 direction;
-    vec3 diffuse;
-    vec3 specular;
-};
-
-struct PointLight {
-    vec3 position;
-
-    vec3 diffuse;
-    vec3 specular;
-
-    float constant;
-    float linear;
-    float quadratic;
-};
-
-struct SpotLight {
-    vec3 position;
-    vec3 direction;
-    float cutOff;
-    float outerCutOff;
-
-    vec3 diffuse;
-    vec3 specular;
-};
-
-struct ShadowParameters {
-    mat4 lightView;
-    mat4 lightProjection;
-    float bias;
-    int textureIndex;
-    float farPlane;
-    vec3 lightPos;
-    int lightType;
-};
-
-// ----- Textures -----
-uniform sampler2D texture1;
-uniform sampler2D texture2;
-uniform sampler2D texture3;
-uniform sampler2D texture4;
-uniform sampler2D texture5;
-uniform sampler2D texture6;
-uniform sampler2D texture7;
-uniform sampler2D texture8;
-uniform sampler2D texture9;
-uniform sampler2D texture10;
-uniform samplerCube skybox;
-uniform samplerCube cubeMap1;
-uniform samplerCube cubeMap2;
-uniform samplerCube cubeMap3;
-uniform samplerCube cubeMap4;
-uniform samplerCube cubeMap5;
-
-// ----- Uniforms -----
-uniform int textureTypes[16];
-uniform int textureCount;
-
-uniform AmbientLight ambientLight;
-uniform Material material;
-
-uniform DirectionalLight directionalLights[4];
-uniform int directionalLightCount;
-
-uniform PointLight pointLights[32];
-uniform int pointLightCount;
-
-uniform SpotLight spotlights[32];
-uniform int spotlightCount;
-
-uniform ShadowParameters shadowParams[10];
-uniform int shadowParamCount;
-
-uniform vec3 cameraPosition;
-
-uniform bool useTexture;
-uniform bool useColor;
-
-// ----- Helper Functions -----
-vec4 enableTextures(int type) {
-    vec4 color = vec4(0.0);
-    int count = 0;
-    for (int i = 0; i < textureCount; i++) {
-        if (textureTypes[i] == type) {
-            if (i == 0) color += texture(texture1, texCoord);
-            else if (i == 1) color += texture(texture2, texCoord);
-            else if (i == 2) color += texture(texture3, texCoord);
-            else if (i == 3) color += texture(texture4, texCoord);
-            else if (i == 4) color += texture(texture5, texCoord);
-            else if (i == 5) color += texture(texture6, texCoord);
-            else if (i == 6) color += texture(texture7, texCoord);
-            else if (i == 7) color += texture(texture8, texCoord);
-            else if (i == 8) color += texture(texture9, texCoord);
-            else if (i == 9) color += texture(texture10, texCoord);
-            count++;
-        }
-    }
-    if (count > 0) color /= float(count);
-    if (count == 0) return vec4(-1.0);
-    return color;
-}
-
-vec4 enableCubeMaps(int type, vec3 direction) {
-    vec4 color = vec4(0.0);
-    int count = 0;
-    for (int i = 0; i < 8; i++) {
-        if (type == i + 10) {
-            if (i == 0) color += texture(cubeMap1, direction);
-            else if (i == 1) color += texture(cubeMap2, direction);
-            else if (i == 2) color += texture(cubeMap3, direction);
-            else if (i == 3) color += texture(cubeMap4, direction);
-            else if (i == 4) color += texture(cubeMap5, direction);
-            count++;
-        }
-    }
-    if (count > 0) color /= float(count);
-    if (count == 0) return vec4(-1.0);
-    return color;
-}
-
-vec4 sampleCubeTextureAt(int textureIndex, vec3 direction) {
-    if (textureIndex == 0) return texture(cubeMap1, direction);
-    else if (textureIndex == 1) return texture(cubeMap2, direction);
-    else if (textureIndex == 2) return texture(cubeMap3, direction);
-    else if (textureIndex == 3) return texture(cubeMap4, direction);
-    else if (textureIndex == 4) return texture(cubeMap5, direction);
-    return vec4(0.0);
-}
-
-vec2 getTextureDimensions(int textureIndex) {
-    if (textureIndex == 0) return vec2(textureSize(texture1, 0));
-    else if (textureIndex == 1) return vec2(textureSize(texture2, 0));
-    else if (textureIndex == 2) return vec2(textureSize(texture3, 0));
-    else if (textureIndex == 3) return vec2(textureSize(texture4, 0));
-    else if (textureIndex == 4) return vec2(textureSize(texture5, 0));
-    else if (textureIndex == 5) return vec2(textureSize(texture6, 0));
-    else if (textureIndex == 6) return vec2(textureSize(texture7, 0));
-    else if (textureIndex == 7) return vec2(textureSize(texture8, 0));
-    else if (textureIndex == 8) return vec2(textureSize(texture9, 0));
-    else if (textureIndex == 9) return vec2(textureSize(texture10, 0));
-    return vec2(0);
-}
-
-vec4 sampleTextureAt(int textureIndex, vec2 uv) {
-    if (textureIndex == 0) return texture(texture1, uv);
-    else if (textureIndex == 1) return texture(texture2, uv);
-    else if (textureIndex == 2) return texture(texture3, uv);
-    else if (textureIndex == 3) return texture(texture4, uv);
-    else if (textureIndex == 4) return texture(texture5, uv);
-    else if (textureIndex == 5) return texture(texture6, uv);
-    else if (textureIndex == 6) return texture(texture7, uv);
-    else if (textureIndex == 7) return texture(texture8, uv);
-    else if (textureIndex == 8) return texture(texture9, uv);
-    else if (textureIndex == 9) return texture(texture10, uv);
-    return vec4(0.0);
-}
-
-vec3 getSpecularColor() {
-    vec4 specTex = enableTextures(TEXTURE_SPECULAR);
-    vec3 specColor = material.specular;
-    if (specTex.r != -1.0 || specTex.g != -1.0 || specTex.b != -1.0) {
-        specColor *= specTex.rgb;
-    }
-    return specColor;
-}
-
-vec4 applyGammaCorrection(vec4 color, float gamma) {
-    return vec4(pow(color.rgb, vec3(1.0 / gamma)), color.a);
-}
-
-vec2 parallaxMapping(vec2 texCoords, vec3 viewDir) {
-    const float minLayers = 8.0;
-    const float maxLayers = 32.0;
-    float numLayers = mix(maxLayers, minLayers, abs(dot(vec3(0.0, 0.0, 1.0), viewDir)));
-    float layerDepth = 1.0 / numLayers;
-    float currentLayerDepth = 0.0;
-
-    vec2 P = viewDir.xy * 0.1;
-    vec2 deltaTexCoords = P / numLayers;
-
-    vec2 currentTexCoords = texCoords;
-    int textureIndex = -1;
-    for (int i = 0; i < textureCount; i++) {
-        if (textureTypes[i] == TEXTURE_PARALLAX) {
-            textureIndex = i;
-            break;
-        }
-    }
-    if (textureIndex == -1) return texCoords;
-    float currentDepthMapValue = sampleTextureAt(textureIndex, currentTexCoords).r;
-
-    while (currentLayerDepth < currentDepthMapValue) {
-        currentTexCoords -= deltaTexCoords;
-        currentDepthMapValue = sampleTextureAt(textureIndex, currentTexCoords).r;
-        currentLayerDepth += layerDepth;
-    }
-
-    vec2 prevTexCoords = currentTexCoords + deltaTexCoords;
-    float afterDepth = currentDepthMapValue - currentLayerDepth;
-    float beforeDepth = sampleTextureAt(textureIndex, prevTexCoords).r - (currentLayerDepth - layerDepth);
-    float weight = afterDepth / (afterDepth - beforeDepth);
-    currentTexCoords = prevTexCoords * weight + currentTexCoords * (1.0 - weight);
-
-    return currentTexCoords;
-}
-
-vec3 reinhardToneMapping(vec3 hdrColor) {
-    vec3 color = vec3(1.0) - exp(-hdrColor * 1.0);
-    color = pow(color, vec3(1.0 / 2.2));
-    return color;
-}
-
-vec3 acesToneMapping(vec3 color) {
-    float a = 2.51;
-    float b = 0.03;
-    float c = 2.43;
-    float d = 0.59;
-    float e = 0.14;
-    color = (color * (a * color + b)) / (color * (c * color + d) + e);
-    color = pow(clamp(color, 0.0, 1.0), vec3(1.0 / 2.2));
-    return color;
-}
-
-// ----- Environment Mapping -----
-vec4 getEnvironmentReflected(vec4 color) {
-    vec3 I = normalize(FragPos - cameraPosition);
-    vec3 R = reflect(I, normalize(Normal));
-    return mix(color, vec4(texture(skybox, R).rgb, 1.0), material.reflectivity);
-}
-
-// ----- Directional Light -----
-vec3 calcDirectionalDiffuse(DirectionalLight light, vec3 norm) {
-    vec3 lightDir = normalize(-light.direction);
-    float diff = max(dot(norm, lightDir), 0.0);
-    return diff * light.diffuse;
-}
-
-vec3 calcDirectionalSpecular(DirectionalLight light, vec3 norm, vec3 viewDir, vec3 specColor, float shininess) {
-    vec3 lightDir = normalize(-light.direction);
-    vec3 halfwayDir = normalize(lightDir + viewDir);
-    float spec = pow(max(dot(Normal, halfwayDir), 0.0), shininess);
-    return spec * specColor * light.specular;
-}
-
-vec3 calcAllDirectionalLights(vec3 norm, vec3 viewDir) {
-    vec3 diffuseSum = vec3(0.0);
-    vec3 specularSum = vec3(0.0);
-    vec3 specColor = getSpecularColor();
-
-    for (int i = 0; i < directionalLightCount; i++) {
-        diffuseSum += calcDirectionalDiffuse(directionalLights[i], norm);
-        specularSum += calcDirectionalSpecular(directionalLights[i], norm, viewDir, specColor, material.shininess);
-    }
-
-    diffuseSum *= material.diffuse;
-    return diffuseSum + specularSum;
-}
-
-// ----- Point Light -----
-vec3 calcPointDiffuse(PointLight light, vec3 norm, vec3 fragPos) {
-    vec3 lightDir = normalize(light.position - fragPos);
-    float diff = max(dot(norm, lightDir), 0.0);
-    return diff * light.diffuse;
-}
-
-vec3 calcPointSpecular(PointLight light, vec3 norm, vec3 fragPos, vec3 viewDir, vec3 specColor, float shininess) {
-    vec3 lightDir = normalize(light.position - fragPos);
-    vec3 halfwayDir = normalize(lightDir + viewDir);
-    float spec = pow(max(dot(Normal, halfwayDir), 0.0), shininess);
-    return spec * specColor * light.specular;
-}
-
-float calcAttenuation(PointLight light, vec3 fragPos) {
-    float distance = length(light.position - fragPos);
-    return 1.0 / (light.constant + light.linear * distance + light.quadratic * distance);
-}
-
-vec3 calcAllPointLights(vec3 norm, vec3 fragPos, vec3 viewDir) {
-    vec3 diffuseSum = vec3(0.0);
-    vec3 specularSum = vec3(0.0);
-    vec3 specColor = getSpecularColor();
-
-    for (int i = 0; i < pointLightCount; i++) {
-        float attenuation = calcAttenuation(pointLights[i], fragPos);
-        diffuseSum += calcPointDiffuse(pointLights[i], norm, fragPos) * attenuation;
-        specularSum += calcPointSpecular(pointLights[i], norm, fragPos, viewDir, specColor, material.shininess) * attenuation;
-    }
-
-    diffuseSum *= material.diffuse;
-    return diffuseSum + specularSum;
-}
-
-// ----- Spot Light -----
-vec3 calcSpotDiffuse(SpotLight light, vec3 norm, vec3 fragPos) {
-    vec3 lightDir = normalize(light.position - fragPos);
-    float diff = max(dot(norm, lightDir), 0.0);
-
-    vec3 spotDirection = normalize(light.direction);
-    float theta = dot(lightDir, -spotDirection);
-
-    float intensity = smoothstep(light.outerCutOff, light.cutOff, theta);
-
-    return diff * light.diffuse * intensity;
-}
-
-vec3 calcSpotSpecular(SpotLight light, vec3 norm, vec3 fragPos, vec3 viewDir, vec3 specColor, float shininess) {
-    vec3 lightDir = normalize(light.position - fragPos);
-    vec3 halfwayDir = normalize(lightDir + viewDir);
-    float spec = pow(max(dot(Normal, halfwayDir), 0.0), shininess);
-
-    vec3 spotDirection = normalize(light.direction);
-    float theta = dot(lightDir, -spotDirection);
-
-    float intensity = smoothstep(light.outerCutOff, light.cutOff, theta);
-
-    return spec * specColor * light.specular * intensity;
-}
-
-float calcSpotAttenuation(SpotLight light, vec3 fragPos) {
-    float distance = length(light.position - fragPos);
-    return 1.0 / (1.0 + 0.09 * distance + 0.032 * distance);
-}
-
-vec3 calcAllSpotLights(vec3 norm, vec3 fragPos, vec3 viewDir) {
-    vec3 diffuseSum = vec3(0.0);
-    vec3 specularSum = vec3(0.0);
-    vec3 specColor = getSpecularColor();
-
-    for (int i = 0; i < spotlightCount; i++) {
-        float attenuation = calcSpotAttenuation(spotlights[i], fragPos);
-        diffuseSum += calcSpotDiffuse(spotlights[i], norm, fragPos) * attenuation;
-        specularSum += calcSpotSpecular(spotlights[i], norm, fragPos, viewDir, specColor, material.shininess) * attenuation;
-    }
-
-    diffuseSum *= material.diffuse;
-    return diffuseSum + specularSum;
-}
-
-// ----- Shadow Calculations -----
-float calculateShadow(ShadowParameters shadowParam, vec4 fragPosLightSpace) {
-    vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
-    projCoords = projCoords * 0.5 + 0.5;
-
-    if (projCoords.x < 0.0 || projCoords.x > 1.0 ||
-            projCoords.y < 0.0 || projCoords.y > 1.0 ||
-            projCoords.z > 1.0) {
-        return 0.0;
-    }
-
-    float currentDepth = projCoords.z;
-
-    vec3 lightDir = normalize(-directionalLights[0].direction);
-    vec3 normal = normalize(Normal);
-    float biasValue = shadowParam.bias;
-    float bias = max(biasValue * (1.0 - dot(normal, lightDir)), biasValue);
-
-    float shadow = 0.0;
-    vec2 texelSize = 1.0 / getTextureDimensions(shadowParam.textureIndex);
-
-    float distance = length(cameraPosition - FragPos);
-    int kernelSize = int(mix(1.0, 3.0, clamp(distance / 100.0, 0.0, 1.0)));
-
-    int sampleCount = 0;
-    for (int x = -kernelSize; x <= kernelSize; ++x) {
-        for (int y = -kernelSize; y <= kernelSize; ++y) {
-            float pcfDepth = sampleTextureAt(shadowParam.textureIndex,
-                    projCoords.xy + vec2(x, y) * texelSize).r;
-            shadow += currentDepth - bias > pcfDepth ? 1.0 : 0.0;
-            sampleCount++;
-        }
-    }
-    shadow /= float(sampleCount);
-
-    return shadow;
-}
-
-float calculateShadowRaw(ShadowParameters shadowParam, vec4 fragPosLightSpace) {
-    vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
-    projCoords = projCoords * 0.5 + 0.5;
-
-    if (projCoords.x < 0.0 || projCoords.x > 1.0 ||
-            projCoords.y < 0.0 || projCoords.y > 1.0 ||
-            projCoords.z < 0.0 || projCoords.z > 1.0) {
-        return 0.0;
-    }
-
-    float currentDepth = projCoords.z;
-    float closestDepth = sampleTextureAt(shadowParam.textureIndex, projCoords.xy).r;
-
-    return currentDepth > closestDepth ? 1.0 : 0.0;
-}
-
-float calculateAllShadows() {
-    float totalShadow = 0.0;
-    for (int i = 0; i < shadowParamCount; i++) {
-        vec4 fragPosLightSpace = shadowParams[i].lightProjection * shadowParams[i].lightView * vec4(FragPos, 1.0);
-        float shadow = calculateShadow(shadowParams[i], fragPosLightSpace);
-        totalShadow = max(totalShadow, shadow);
-    }
-    return totalShadow;
-}
-
-float calculatePointShadow(ShadowParameters shadowParam, vec3 fragPos)
-{
-    vec3 fragToLight = fragPos - shadowParam.lightPos;
-    float currentDepth = length(fragToLight);
-
-    float bias = 0.05;
-    float shadow = 0.0;
-
-    float diskRadius = (1.0 + (currentDepth / shadowParam.farPlane)) * 0.05;
-
-    const int samples = 54;
-    const vec3 sampleOffsetDirections[] = vec3[](
-            vec3(0.5381, 0.1856, -0.4319), vec3(0.1379, 0.2486, 0.4430),
-            vec3(0.3371, 0.5679, -0.0057), vec3(-0.6999, -0.0451, -0.0019),
-            vec3(0.0689, -0.1598, -0.8547), vec3(0.0560, 0.0069, -0.1843),
-            vec3(-0.0146, 0.1402, 0.0762), vec3(0.0100, -0.1924, -0.0344),
-            vec3(-0.3577, -0.5301, -0.4358), vec3(-0.3169, 0.1063, 0.0158),
-            vec3(0.0103, -0.5869, 0.0046), vec3(-0.0897, -0.4940, 0.3287),
-            vec3(0.7119, -0.0154, -0.0918), vec3(-0.0533, 0.0596, -0.5411),
-            vec3(0.0352, -0.0631, 0.5460), vec3(-0.4776, 0.2847, -0.0271),
-            vec3(-0.1120, 0.1234, -0.7446), vec3(-0.2130, -0.0782, -0.1379),
-            vec3(0.2944, -0.3112, -0.2645), vec3(-0.4564, 0.4175, -0.1843),
-            // remaining random-ish points
-            vec3(0.1234, -0.5678, 0.7890), vec3(-0.6789, 0.2345, -0.4567),
-            vec3(0.3456, -0.7890, 0.1234), vec3(-0.2345, 0.5678, -0.6789),
-            vec3(0.7890, 0.1234, 0.5678), vec3(-0.5678, -0.6789, 0.2345),
-            vec3(0.4567, 0.7890, -0.2345), vec3(-0.7890, 0.3456, -0.5678),
-            vec3(0.6789, -0.2345, 0.7890), vec3(-0.1234, 0.6789, -0.4567),
-            vec3(0.2345, -0.5678, 0.6789), vec3(-0.3456, 0.7890, -0.1234),
-            vec3(0.5678, 0.2345, -0.7890), vec3(-0.6789, -0.5678, 0.3456),
-            vec3(0.7890, -0.3456, 0.4567), vec3(-0.2345, 0.1234, -0.6789),
-            vec3(0.4567, 0.7890, -0.5678), vec3(-0.5678, 0.2345, 0.6789),
-            vec3(0.3456, -0.7890, -0.1234), vec3(-0.7890, 0.5678, -0.2345),
-            vec3(0.6789, -0.1234, 0.3456), vec3(-0.4567, 0.7890, 0.2345),
-            vec3(0.5678, -0.6789, 0.7890), vec3(-0.3456, 0.5678, -0.6789),
-            vec3(0.2345, -0.7890, 0.5678), vec3(-0.6789, 0.2345, -0.1234),
-            vec3(0.7890, -0.3456, -0.5678), vec3(-0.5678, 0.6789, 0.2345),
-            vec3(0.4567, -0.7890, 0.3456), vec3(-0.2345, 0.1234, -0.7890),
-            vec3(0.3456, -0.5678, 0.6789), vec3(-0.7890, 0.4567, -0.3456),
-            vec3(0.6789, -0.1234, -0.5678), vec3(-0.4567, 0.2345, 0.7890)
-        );
-
-    for (int i = 0; i < samples; ++i)
-    {
-        vec3 sampleDir = normalize(fragToLight + sampleOffsetDirections[i] * diskRadius);
-        float closestDepth = sampleCubeTextureAt(shadowParam.textureIndex, sampleDir).r * shadowParam.farPlane;
-        if (currentDepth - bias > closestDepth)
-            shadow += 1.0;
-    }
-
-    shadow /= float(samples);
-    return shadow;
-}
-
-float calculateAllPointShadows(vec3 fragPos) {
-    float totalShadow = 0.0;
-    for (int i = 0; i < shadowParamCount; i++) {
-        if (shadowParams[i].lightType == 3) {
-            float shadow = calculatePointShadow(shadowParams[i], fragPos);
-            totalShadow = max(totalShadow, shadow);
-        }
-    }
-    return totalShadow;
-}
-
-// ----- Main -----
-void main() {
-    texCoord = TexCoord;
-    vec4 baseColor;
-
-    vec3 tangentViewDir = normalize((TBN * cameraPosition) - (TBN * FragPos));
-    texCoord = parallaxMapping(texCoord, tangentViewDir);
-    if (texCoord.x > 1.0 || texCoord.y > 1.0 || texCoord.x < 0.0 || texCoord.y < 0.0)
-        discard;
-
-    if (useTexture && !useColor)
-        baseColor = enableTextures(TEXTURE_COLOR);
-    else if (useTexture && useColor)
-        baseColor = enableTextures(TEXTURE_COLOR) * outColor;
-    else if (!useTexture && useColor)
-        baseColor = vec4(1.0, 0.0, 0.0, 1.0);
-    else
-        baseColor = vec4(1.0);
-
-    FragColor = baseColor;
-    
-    vec4 normTexture = enableTextures(TEXTURE_NORMAL);
-    vec3 norm = vec3(0.0);
-    if (normTexture.r != -1.0 || normTexture.g != -1.0 || normTexture.b != -1.0) {
-        norm = normalize(normTexture.rgb * 2.0 - 1.0);
-        norm = normalize(TBN * norm);
-    } else {
-        norm = normalize(Normal);
-    }
-    vec3 viewDir = normalize(cameraPosition - FragPos);
-
-    vec3 ambient = ambientLight.color.rgb * ambientLight.intensity * material.ambient;
-    float dirShadow = 0.0;
-    for (int i = 0; i < shadowParamCount; i++) {
-        if (shadowParams[i].lightType != 3) {
-            vec4 fragPosLightSpace = shadowParams[i].lightProjection *
-                    shadowParams[i].lightView *
-                    vec4(FragPos, 1.0);
-            dirShadow = max(dirShadow, calculateShadow(shadowParams[i], fragPosLightSpace));
-        }
-    }
-
-    float pointShadow = calculateAllPointShadows(FragPos);
-
-    vec3 directionalLights = calcAllDirectionalLights(norm, viewDir) * (1.0 - dirShadow);
-    vec3 pointLights = calcAllPointLights(norm, FragPos, viewDir) * (1.0 - pointShadow);
-    vec3 spotLightsContrib = calcAllSpotLights(norm, FragPos, viewDir);
-
-    vec3 finalColor = (ambient + directionalLights + pointLights + spotLightsContrib) * baseColor.rgb;
-
-    FragColor = vec4(finalColor, baseColor.a);
-    FragColor = getEnvironmentReflected(FragColor);
-
-    if (FragColor.a < 0.1)
-        discard;
-
-    float brightness = dot(FragColor.rgb, vec3(0.2126, 0.7152, 0.0722));
-    if (brightness > 1.0)
-        BrightColor = vec4(FragColor.rgb, 1.0);
-    else
-        BrightColor = vec4(0.0, 0.0, 0.0, 1.0);
-
-    FragColor.rgb = acesToneMapping(FragColor.rgb);
-}
-)"
-;
-
 static const char* COLOR_FRAG =
-R"(#version 410 core
-layout (location = 0) out vec4 FragColor;
-layout (location = 1) out vec4 BrightColor;
-in vec4 vertexColor;
+R"(#include <metal_stdlib>
+#include <simd/simd.h>
 
-void main() {
-    vec3 color = vertexColor.rgb / (vertexColor.rgb + vec3(1.0));
-    FragColor = vec4(color, vertexColor.a);
-    if (length(color) > 1.0) {
-        BrightColor = vec4(color, vertexColor.a);
+using namespace metal;
+
+struct main0_out
+{
+    float4 FragColor [[color(0)]];
+    float4 BrightColor [[color(1)]];
+};
+
+struct main0_in
+{
+    float4 vertexColor [[user(locn0)]];
+};
+
+fragment main0_out main0(main0_in in [[stage_in]])
+{
+    main0_out out = {};
+    float3 color = in.vertexColor.xyz / (in.vertexColor.xyz + float3(1.0));
+    out.FragColor = float4(color, in.vertexColor.w);
+    if (length(color) > 1.0)
+    {
+        out.BrightColor = float4(color, in.vertexColor.w);
     }
-})"
+    return out;
+}
+
+)"
 ;
 
 static const char* COLOR_VERT =
-R"(#version 410 core
-layout(location = 0) in vec3 aPos;
-layout(location = 1) in vec4 aColor;
-layout(location = 6) in mat4 instanceModel;
+R"(#include <metal_stdlib>
+#include <simd/simd.h>
 
-out vec4 vertexColor;
+using namespace metal;
 
-uniform mat4 model;
-uniform mat4 view;
-uniform mat4 projection;
-uniform bool isInstanced = true;
+struct UBO
+{
+    float4x4 model;
+    float4x4 view;
+    float4x4 projection;
+    uint isInstanced;
+};
 
-void main() {
-    mat4 mvp;
-    if (isInstanced) {
-        mvp = projection * view * instanceModel;
-    } else {
-        mvp = projection * view * model;
+struct main0_out
+{
+    float4 vertexColor [[user(locn0)]];
+    float4 gl_Position [[position]];
+};
+
+struct main0_in
+{
+    float3 aPos [[attribute(0)]];
+    float4 aColor [[attribute(1)]];
+    float4 instanceModel_0 [[attribute(6)]];
+    float4 instanceModel_1 [[attribute(7)]];
+    float4 instanceModel_2 [[attribute(8)]];
+    float4 instanceModel_3 [[attribute(9)]];
+};
+
+vertex main0_out main0(main0_in in [[stage_in]], constant UBO& _12 [[buffer(0)]])
+{
+    main0_out out = {};
+    float4x4 instanceModel = {};
+    instanceModel[0] = in.instanceModel_0;
+    instanceModel[1] = in.instanceModel_1;
+    instanceModel[2] = in.instanceModel_2;
+    instanceModel[3] = in.instanceModel_3;
+    float4x4 mvp;
+    bool hasInstanceMatrix = abs(instanceModel[3].w) > 0.5;
+    if ((_12.isInstanced != 0u) && hasInstanceMatrix)
+    {
+        mvp = (_12.projection * _12.view) * instanceModel;
     }
-    gl_Position = mvp * vec4(aPos, 1.0);
-    vertexColor = aColor;
+    else
+    {
+        mvp = (_12.projection * _12.view) * _12.model;
+    }
+    out.gl_Position = mvp * float4(in.aPos, 1.0);
+    out.vertexColor = in.aColor;
+    return out;
+}
+)"
+;
+
+static const char* DDGI =
+R"(#include <metal_stdlib>
+using namespace metal;
+
+struct ProbeSpace {
+    float3 origin;
+    float _pad0;
+
+    float3 spacing;
+    float _pad1;
+
+    float3 probeCount;
+    float _pad2;
+
+    float4 debugColor;
+
+    float4 atlasParams;
+};
+
+struct RaytracingSettings {
+    uint raysPerProbe;
+    float maxRayDistance;
+    float normalBias;
+    float hysteresis;
+
+    uint frameIndex;
+    uint probeUpdateOffset;
+    uint probeUpdateStride;
+    uint probeUpdateCount;
+};
+
+struct Material {
+    int materialID;
+    int albedoTextureIndex;
+    int normalTextureIndex;
+    int metallicTextureIndex;
+    int roughnessTextureIndex;
+    int aoTextureIndex;
+    float metallic;
+    float roughness;
+    float ao;
+    float emissiveIntensity;
+
+    packed_float3 albedo;
+    float _pad0;
+
+    packed_float3 emissiveColor;
+    float _pad1;
+};
+
+struct Triangle {
+    float4 v0;
+    float4 v1;
+    float4 v2;
+    float4 n0;
+    float4 n1;
+    float4 n2;
+
+    float4 uv0;
+    float4 uv1;
+    float4 uv2;
+
+    float4 t0;
+    float4 t1;
+    float4 t2;
+
+    float4 b0;
+    float4 b1;
+    float4 b2;
+
+    int materialID;
+    int padding[3];
+};
+
+struct SceneCounts {
+    uint triCount;
+    uint materialCount;
+    uint directionalLightCount;
+    uint pointLightCount;
+    uint spotLightCount;
+    uint areaLightCount;
+    uint textureCount;
+    uint _pad0;
+};
+
+struct DirectionalLight {
+    packed_float3 direction;
+    float _pad1;
+    packed_float3 diffuse;
+    float _pad2;
+    packed_float3 specular;
+    float intensity;
+};
+
+struct PointLight {
+    packed_float3 position;
+    float _pad1;
+    packed_float3 diffuse;
+    float _pad2;
+    packed_float3 specular;
+    float intensity;
+    float constant0;
+    float linear;
+    float quadratic;
+    float radius;
+    float _pad3;
+};
+
+struct SpotLight {
+    packed_float3 position;
+    float _pad1;
+    packed_float3 direction;
+    float cutOff;
+    float outerCutOff;
+    float intensity;
+    float range;
+    float _pad4;
+    packed_float3 diffuse;
+    float _pad5;
+    packed_float3 specular;
+    float _pad6;
+};
+
+struct AreaLight {
+    packed_float3 position;
+    float _pad1;
+    packed_float3 right;
+    float _pad2;
+    packed_float3 up;
+    float _pad3;
+    float2 size;
+    float _pad4;
+    float _pad5;
+    packed_float3 diffuse;
+    float _pad6;
+    packed_float3 specular;
+    float angle;
+    int castsBothSides;
+    float intensity;
+    float range;
+    float _pad9;
+};
+
+struct Hit {
+    float t;
+    float3 n;
+    float2 uv;
+    float3 tangent;
+    float3 bitangent;
+    int materialID;
+    uint triIndex;
+    uint hit;
+    uint _pad0;
+};
+
+static inline bool rayTriangleMT(float3 ro, float3 rd, float3 v0, float3 v1,
+                                 float3 v2, thread float &t, thread float &u,
+                                 thread float &v) {
+    float3 e1 = v1 - v0;
+    float3 e2 = v2 - v0;
+    float3 p = cross(rd, e2);
+    float det = dot(e1, p);
+
+    if (fabs(det) < 1e-8f)
+        return false;
+    float invDet = 1.0f / det;
+
+    float3 s = ro - v0;
+    u = dot(s, p) * invDet;
+    if (u < 0.0f || u > 1.0f)
+        return false;
+
+    float3 q = cross(s, e1);
+    v = dot(rd, q) * invDet;
+    if (v < 0.0f || u + v > 1.0f)
+        return false;
+
+    t = dot(e2, q) * invDet;
+    return t > 0.0f;
+}
+
+static inline Hit traceScene(float3 ro, float3 rd, device const Triangle *tris,
+                             uint triCount) {
+    Hit best;
+    best.t = INFINITY;
+    best.hit = 0u;
+    best.materialID = -1;
+    best.n = float3(0.0f, 1.0f, 0.0f);
+    best.uv = float2(0.0f);
+    best.tangent = float3(1.0f, 0.0f, 0.0f);
+    best.bitangent = float3(0.0f, 0.0f, 1.0f);
+    best.triIndex = 0u;
+    best._pad0 = 0u;
+
+    for (uint i = 0; i < triCount; i++) {
+        float t, u, v;
+        if (rayTriangleMT(ro, rd, tris[i].v0.xyz, tris[i].v1.xyz,
+                          tris[i].v2.xyz, t, u, v)) {
+            if (t < best.t) {
+                best.t = t;
+                float w = 1.0f - u - v;
+                float3 n = normalize(tris[i].n0.xyz * w + tris[i].n1.xyz * u +
+                                     tris[i].n2.xyz * v);
+                best.n = n;
+                best.uv =
+                    tris[i].uv0.xy * w + tris[i].uv1.xy * u + tris[i].uv2.xy * v;
+                float3 tRaw = tris[i].t0.xyz * w + tris[i].t1.xyz * u +
+                              tris[i].t2.xyz * v;
+                float tLen2 = dot(tRaw, tRaw);
+                best.tangent = (tLen2 > 1e-10f)
+                                   ? tRaw * rsqrt(tLen2)
+                                   : float3(1.0f, 0.0f, 0.0f);
+                float3 bRaw = tris[i].b0.xyz * w + tris[i].b1.xyz * u +
+                              tris[i].b2.xyz * v;
+                float bLen2 = dot(bRaw, bRaw);
+                best.bitangent = (bLen2 > 1e-10f)
+                                     ? bRaw * rsqrt(bLen2)
+                                     : float3(0.0f, 0.0f, 1.0f);
+                best.materialID = tris[i].materialID;
+                best.triIndex = i;
+                best.hit = 1u;
+            }
+        }
+    }
+
+    return best;
+}
+
+static inline uint wangHash(uint x) {
+    x = (x ^ 61u) ^ (x >> 16);
+    x *= 9u;
+    x = x ^ (x >> 4);
+    x *= 0x27d4eb2du;
+    x = x ^ (x >> 15);
+    return x;
+}
+
+static inline float rand01(thread uint &state) {
+    state = wangHash(state);
+    return (float)(state & 0x00FFFFFFu) / 16777216.0f;
+}
+
+static inline uint3 probeCoordFromIndex(uint idx, uint3 counts) {
+    uint xy = counts.x * counts.y;
+    uint z = idx / xy;
+    uint rem = idx - z * xy;
+    uint y = rem / counts.x;
+    uint x = rem - y * counts.x;
+    return uint3(x, y, z);
+}
+
+static inline float3 safeNormalize(float3 v, float3 fallback) {
+    float len2 = dot(v, v);
+    if (len2 > 1e-10f) {
+        return v * rsqrt(len2);
+    }
+    return fallback;
+}
+
+constexpr sampler materialTexSampler(coord::normalized, address::repeat,
+                                     filter::linear, mip_filter::linear);
+
+static inline float4 sampleMaterialTexture(
+    int textureIndex, float2 uv, texture2d<float> materialTexture0,
+    texture2d<float> materialTexture1, texture2d<float> materialTexture2,
+    texture2d<float> materialTexture3, texture2d<float> materialTexture4,
+    texture2d<float> materialTexture5, texture2d<float> materialTexture6,
+    texture2d<float> materialTexture7, texture2d<float> materialTexture8,
+    texture2d<float> materialTexture9, texture2d<float> materialTexture10,
+    texture2d<float> materialTexture11, texture2d<float> materialTexture12,
+    texture2d<float> materialTexture13, texture2d<float> materialTexture14,
+    texture2d<float> materialTexture15, texture2d<float> materialTexture16,
+    texture2d<float> materialTexture17, texture2d<float> materialTexture18,
+    texture2d<float> materialTexture19, texture2d<float> materialTexture20,
+    texture2d<float> materialTexture21, texture2d<float> materialTexture22,
+    texture2d<float> materialTexture23) {
+    switch (textureIndex) {
+    case 0:
+        return materialTexture0.sample(materialTexSampler, uv);
+    case 1:
+        return materialTexture1.sample(materialTexSampler, uv);
+    case 2:
+        return materialTexture2.sample(materialTexSampler, uv);
+    case 3:
+        return materialTexture3.sample(materialTexSampler, uv);
+    case 4:
+        return materialTexture4.sample(materialTexSampler, uv);
+    case 5:
+        return materialTexture5.sample(materialTexSampler, uv);
+    case 6:
+        return materialTexture6.sample(materialTexSampler, uv);
+    case 7:
+        return materialTexture7.sample(materialTexSampler, uv);
+    case 8:
+        return materialTexture8.sample(materialTexSampler, uv);
+    case 9:
+        return materialTexture9.sample(materialTexSampler, uv);
+    case 10:
+        return materialTexture10.sample(materialTexSampler, uv);
+    case 11:
+        return materialTexture11.sample(materialTexSampler, uv);
+    case 12:
+        return materialTexture12.sample(materialTexSampler, uv);
+    case 13:
+        return materialTexture13.sample(materialTexSampler, uv);
+    case 14:
+        return materialTexture14.sample(materialTexSampler, uv);
+    case 15:
+        return materialTexture15.sample(materialTexSampler, uv);
+    case 16:
+        return materialTexture16.sample(materialTexSampler, uv);
+    case 17:
+        return materialTexture17.sample(materialTexSampler, uv);
+    case 18:
+        return materialTexture18.sample(materialTexSampler, uv);
+    case 19:
+        return materialTexture19.sample(materialTexSampler, uv);
+    case 20:
+        return materialTexture20.sample(materialTexSampler, uv);
+    case 21:
+        return materialTexture21.sample(materialTexSampler, uv);
+    case 22:
+        return materialTexture22.sample(materialTexSampler, uv);
+    case 23:
+        return materialTexture23.sample(materialTexSampler, uv);
+    default:
+        break;
+    }
+    return float4(0.0f);
+}
+
+static inline void resolveMaterialParameters(
+    device const Material *materials, int materialID, uint materialCount,
+    float2 uv, uint textureCount, texture2d<float> materialTexture0,
+    texture2d<float> materialTexture1, texture2d<float> materialTexture2,
+    texture2d<float> materialTexture3, texture2d<float> materialTexture4,
+    texture2d<float> materialTexture5, texture2d<float> materialTexture6,
+    texture2d<float> materialTexture7, texture2d<float> materialTexture8,
+    texture2d<float> materialTexture9, texture2d<float> materialTexture10,
+    texture2d<float> materialTexture11, texture2d<float> materialTexture12,
+    texture2d<float> materialTexture13, texture2d<float> materialTexture14,
+    texture2d<float> materialTexture15, texture2d<float> materialTexture16,
+    texture2d<float> materialTexture17, texture2d<float> materialTexture18,
+    texture2d<float> materialTexture19, texture2d<float> materialTexture20,
+    texture2d<float> materialTexture21, texture2d<float> materialTexture22,
+    texture2d<float> materialTexture23, thread float3 &albedo,
+    thread float &metallic, thread float &roughness, thread float &ao,
+    thread float3 &emissive, thread int &normalTextureIndex,
+    thread float &normalStrength) {
+    albedo = float3(0.7f);
+    metallic = 0.0f;
+    roughness = 0.6f;
+    ao = 1.0f;
+    emissive = float3(0.0f);
+    normalTextureIndex = -1;
+    normalStrength = 0.0f;
+
+    if (materialID < 0 || uint(materialID) >= materialCount) {
+        return;
+    }
+
+    const Material mat = materials[materialID];
+    albedo = clamp(float3(mat.albedo), float3(0.0f), float3(1.0f));
+    metallic = clamp(mat.metallic, 0.0f, 1.0f);
+    roughness = clamp(mat.roughness, 0.05f, 1.0f);
+    ao = clamp(mat.ao, 0.0f, 1.0f);
+    emissive = float3(mat.emissiveColor) * max(mat.emissiveIntensity, 0.0f);
+    normalStrength = max(mat._pad0, 0.0f);
+    bool useNormalMap = mat._pad1 > 0.5f && normalStrength > 0.0f;
+    normalTextureIndex = useNormalMap ? mat.normalTextureIndex : -1;
+
+    if (mat.albedoTextureIndex >= 0 && uint(mat.albedoTextureIndex) < textureCount) {
+        albedo = clamp(sampleMaterialTexture(
+                           mat.albedoTextureIndex, uv, materialTexture0,
+                           materialTexture1, materialTexture2, materialTexture3,
+                           materialTexture4, materialTexture5, materialTexture6,
+                           materialTexture7, materialTexture8, materialTexture9,
+                           materialTexture10, materialTexture11,
+                           materialTexture12, materialTexture13,
+                           materialTexture14, materialTexture15,
+                           materialTexture16, materialTexture17,
+                           materialTexture18, materialTexture19,
+                           materialTexture20, materialTexture21,
+                           materialTexture22, materialTexture23)
+                           .xyz,
+                       float3(0.0f), float3(1.0f));
+    }
+    if (mat.metallicTextureIndex >= 0 &&
+        uint(mat.metallicTextureIndex) < textureCount) {
+        float4 metallicSample = sampleMaterialTexture(
+            mat.metallicTextureIndex, uv, materialTexture0, materialTexture1,
+            materialTexture2, materialTexture3, materialTexture4,
+            materialTexture5, materialTexture6, materialTexture7,
+            materialTexture8, materialTexture9, materialTexture10,
+            materialTexture11, materialTexture12, materialTexture13,
+            materialTexture14, materialTexture15, materialTexture16,
+            materialTexture17, materialTexture18, materialTexture19,
+            materialTexture20, materialTexture21, materialTexture22,
+            materialTexture23);
+        float metallicValue = metallicSample.x;
+        if (mat.roughnessTextureIndex == mat.metallicTextureIndex) {
+            metallicValue = metallicSample.z;
+        }
+        metallic *= clamp(metallicValue, 0.0f, 1.0f);
+    }
+    if (mat.roughnessTextureIndex >= 0 &&
+        uint(mat.roughnessTextureIndex) < textureCount) {
+        float4 roughnessSample = sampleMaterialTexture(
+            mat.roughnessTextureIndex, uv, materialTexture0, materialTexture1,
+            materialTexture2, materialTexture3, materialTexture4,
+            materialTexture5, materialTexture6, materialTexture7,
+            materialTexture8, materialTexture9, materialTexture10,
+            materialTexture11, materialTexture12, materialTexture13,
+            materialTexture14, materialTexture15, materialTexture16,
+            materialTexture17, materialTexture18, materialTexture19,
+            materialTexture20, materialTexture21, materialTexture22,
+            materialTexture23);
+        float roughnessValue = roughnessSample.x;
+        if (mat.roughnessTextureIndex == mat.metallicTextureIndex) {
+            roughnessValue = roughnessSample.y;
+        }
+        roughness *= clamp(roughnessValue, 0.0f, 1.0f);
+    }
+    if (mat.aoTextureIndex >= 0 && uint(mat.aoTextureIndex) < textureCount) {
+        ao *= clamp(sampleMaterialTexture(
+                        mat.aoTextureIndex, uv, materialTexture0,
+                        materialTexture1, materialTexture2, materialTexture3,
+                        materialTexture4, materialTexture5, materialTexture6,
+                        materialTexture7, materialTexture8, materialTexture9,
+                        materialTexture10, materialTexture11,
+                        materialTexture12, materialTexture13,
+                        materialTexture14, materialTexture15,
+                        materialTexture16, materialTexture17,
+                        materialTexture18, materialTexture19,
+                        materialTexture20, materialTexture21,
+                        materialTexture22, materialTexture23)
+                        .x,
+                    0.0f, 1.0f);
+    }
+
+    emissive = clamp(emissive, float3(0.0f), float3(8.0f));
+    roughness = clamp(roughness, 0.05f, 1.0f);
+    metallic = clamp(metallic, 0.0f, 1.0f);
+    ao = clamp(ao, 0.0f, 1.0f);
+}
+
+static inline float3 resolveNormal(
+    int normalTextureIndex, float normalStrength, float2 uv, float3 n, float3 tangent,
+    float3 bitangent, uint textureCount, texture2d<float> materialTexture0,
+    texture2d<float> materialTexture1, texture2d<float> materialTexture2,
+    texture2d<float> materialTexture3, texture2d<float> materialTexture4,
+    texture2d<float> materialTexture5, texture2d<float> materialTexture6,
+    texture2d<float> materialTexture7, texture2d<float> materialTexture8,
+    texture2d<float> materialTexture9, texture2d<float> materialTexture10,
+    texture2d<float> materialTexture11, texture2d<float> materialTexture12,
+    texture2d<float> materialTexture13, texture2d<float> materialTexture14,
+    texture2d<float> materialTexture15, texture2d<float> materialTexture16,
+    texture2d<float> materialTexture17, texture2d<float> materialTexture18,
+    texture2d<float> materialTexture19, texture2d<float> materialTexture20,
+    texture2d<float> materialTexture21, texture2d<float> materialTexture22,
+    texture2d<float> materialTexture23) {
+    float3 N = safeNormalize(n, float3(0.0f, 1.0f, 0.0f));
+    float3 T = safeNormalize(tangent - N * dot(N, tangent), float3(1.0f, 0.0f, 0.0f));
+    float3 B = safeNormalize(bitangent - N * dot(N, bitangent), cross(N, T));
+    if (dot(cross(T, B), cross(T, B)) <= 1e-10f) {
+        float3 up = (fabs(N.y) < 0.999f) ? float3(0.0f, 1.0f, 0.0f)
+                                         : float3(1.0f, 0.0f, 0.0f);
+        T = safeNormalize(cross(up, N), float3(1.0f, 0.0f, 0.0f));
+        B = safeNormalize(cross(N, T), float3(0.0f, 0.0f, 1.0f));
+    }
+    if (normalTextureIndex >= 0 && uint(normalTextureIndex) < textureCount &&
+        normalStrength > 0.0f) {
+        float3 texN = sampleMaterialTexture(
+                          normalTextureIndex, uv, materialTexture0,
+                          materialTexture1, materialTexture2, materialTexture3,
+                          materialTexture4, materialTexture5, materialTexture6,
+                          materialTexture7, materialTexture8, materialTexture9,
+                          materialTexture10, materialTexture11,
+                          materialTexture12, materialTexture13,
+                          materialTexture14, materialTexture15,
+                          materialTexture16, materialTexture17,
+                          materialTexture18, materialTexture19,
+                          materialTexture20, materialTexture21,
+                          materialTexture22, materialTexture23)
+                          .xyz;
+        texN = texN * 2.0f - 1.0f;
+        texN.xy *= normalStrength;
+        texN = safeNormalize(texN, float3(0.0f, 0.0f, 1.0f));
+        N = safeNormalize(float3x3(T, B, N) * texN, N);
+    }
+    return N;
+}
+
+static inline float3 sampleSky(float3 d) {
+    float t = clamp(d.y * 0.5f + 0.5f, 0.0f, 1.0f);
+    return mix(float3(0.02f, 0.023f, 0.028f),
+               float3(0.12f, 0.14f, 0.18f),
+               t);
+}
+
+static inline float shadowVisibility(float3 ro, float3 rd, float maxT,
+                                     device const Triangle *tris,
+                                     uint triCount) {
+    if (maxT <= 1e-4f) {
+        return 1.0f;
+    }
+    Hit h = traceScene(ro, rd, tris, triCount);
+    if (!h.hit) {
+        return 1.0f;
+    }
+    float minOccluderDistance = max(0.01f, maxT * 0.0025f);
+    if (h.t <= minOccluderDistance) {
+        return 1.0f;
+    }
+    return (h.t >= maxT) ? 1.0f : 0.0f;
+}
+
+static inline float giNdotL(float3 n, float3 l) {
+    return max(dot(n, l), 0.0f);
+}
+
+static inline float3 evaluateDirectLights(
+    float3 posWS, float3 normalWS, float bias, float maxDistance,
+    device const Triangle *tris, uint triCount,
+    device const DirectionalLight *directionalLights, uint directionalLightCount,
+    device const PointLight *pointLights, uint pointLightCount,
+    device const SpotLight *spotLights, uint spotLightCount,
+    device const AreaLight *areaLights, uint areaLightCount) {
+    float3 n = safeNormalize(normalWS, float3(0.0f, 1.0f, 0.0f));
+    float3 sum = float3(0.0f);
+
+    for (uint i = 0; i < directionalLightCount; i++) {
+        float3 L = safeNormalize(-directionalLights[i].direction,
+                                 float3(0.0f, 1.0f, 0.0f));
+        float ndl = giNdotL(n, L);
+        if (ndl <= 0.0f)
+            continue;
+
+        sum += directionalLights[i].diffuse *
+               max(0.0f, directionalLights[i].intensity) * ndl;
+    }
+
+    for (uint i = 0; i < pointLightCount; i++) {
+        float3 toLight = pointLights[i].position - posWS;
+        float dist = length(toLight);
+        float radius = max(pointLights[i].radius, 0.001f);
+        if (dist <= 1e-4f || dist >= radius)
+            continue;
+
+        float3 L = toLight / dist;
+        float ndl = giNdotL(n, L);
+        if (ndl <= 0.0f)
+            continue;
+
+        float attenuation =
+            1.0f / max(pointLights[i].constant0 + pointLights[i].linear * dist +
+                           pointLights[i].quadratic * dist * dist,
+                       1e-4f);
+        float fade = 1.0f - smoothstep(radius * 0.9f, radius, dist);
+        sum += pointLights[i].diffuse * max(0.0f, pointLights[i].intensity) *
+               attenuation * fade * ndl;
+    }
+
+    for (uint i = 0; i < spotLightCount; i++) {
+        float3 toLight = spotLights[i].position - posWS;
+        float dist = length(toLight);
+        float range = max(spotLights[i].range, 0.001f);
+        if (dist <= 1e-4f || dist >= range)
+            continue;
+
+        float3 L = toLight / dist;
+        float ndl = giNdotL(n, L);
+        if (ndl <= 0.0f)
+            continue;
+
+        float3 spotDir = safeNormalize(spotLights[i].direction,
+                                       float3(0.0f, -1.0f, 0.0f));
+        float theta = dot(L, -spotDir);
+        float epsilon = max(spotLights[i].cutOff - spotLights[i].outerCutOff,
+                            1e-4f);
+        float cone = clamp((theta - spotLights[i].outerCutOff) / epsilon, 0.0f,
+                           1.0f);
+        if (cone <= 0.0f)
+            continue;
+
+        float attenuation =
+            1.0f / ((1.0f + (dist / range)) + ((dist * dist) / (range * range)));
+        float fade = 1.0f - smoothstep(range * 0.9f, range, dist);
+        sum += spotLights[i].diffuse * max(0.0f, spotLights[i].intensity) * cone *
+               attenuation * fade * ndl;
+    }
+
+    for (uint i = 0; i < areaLightCount; i++) {
+        float3 center = areaLights[i].position;
+        float3 right = safeNormalize(areaLights[i].right, float3(1.0f, 0.0f, 0.0f));
+        float3 up = safeNormalize(areaLights[i].up, float3(0.0f, 1.0f, 0.0f));
+        float2 halfSize = areaLights[i].size * 0.5f;
+
+        float3 toPoint = posWS - center;
+        float s = clamp(dot(toPoint, right), -halfSize.x, halfSize.x);
+        float t = clamp(dot(toPoint, up), -halfSize.y, halfSize.y);
+        float3 closest = center + right * s + up * t;
+
+        float3 Lvec = closest - posWS;
+        float dist = length(Lvec);
+        float range = max(areaLights[i].range, 0.001f);
+        if (dist <= 1e-4f || dist >= range)
+            continue;
+
+        float3 L = Lvec / dist;
+        float ndl = giNdotL(n, L);
+        if (ndl <= 0.0f)
+            continue;
+
+        float3 lightNormal =
+            safeNormalize(cross(right, up), float3(0.0f, -1.0f, 0.0f));
+        float nl = dot(lightNormal, -L);
+        float facing = (areaLights[i].castsBothSides != 0) ? abs(nl) : max(nl, 0.0f);
+        float cutoff = cos(areaLights[i].angle * 0.01745329251f);
+        if (facing < cutoff || facing <= 0.0f)
+            continue;
+
+        float attenuation =
+            1.0f / ((1.0f + (dist / range)) + ((dist * dist) / (range * range)));
+        float fade = 1.0f - smoothstep(range * 0.9f, range, dist);
+        sum += areaLights[i].diffuse * max(0.0f, areaLights[i].intensity) *
+               facing * attenuation * fade * ndl;
+    }
+
+    return sum;
+}
+
+static inline void buildBasis(float3 n, thread float3 &t, thread float3 &b) {
+    float3 up = (fabs(n.y) < 0.999f) ? float3(0.0f, 1.0f, 0.0f)
+                                     : float3(1.0f, 0.0f, 0.0f);
+    t = safeNormalize(cross(up, n), float3(1.0f, 0.0f, 0.0f));
+    b = safeNormalize(cross(n, t), float3(0.0f, 0.0f, 1.0f));
+}
+
+static inline float3 sampleCosineHemisphere(thread uint &state) {
+    float u1 = rand01(state);
+    float u2 = rand01(state);
+    float r = sqrt(max(0.0f, u1));
+    float phi = 6.28318530718f * u2;
+    float x = r * cos(phi);
+    float z = r * sin(phi);
+    float y = sqrt(max(0.0f, 1.0f - u1));
+    return float3(x, y, z);
+}
+
+static inline float3 sphericalFibonacci(uint index, uint count, uint frameIndex) {
+    const float GOLDEN_RATIO = 1.6180339887498949f;
+    const float TAU = 6.28318530718f;
+    float i = float(index) + 0.5f;
+    float phi = TAU * fract(i / GOLDEN_RATIO);
+    float cosTheta = 1.0f - (2.0f * i) / float(count);
+    float sinTheta = sqrt(max(0.0f, 1.0f - cosTheta * cosTheta));
+    uint rotSeed = wangHash(frameIndex * 1471u + 5743u);
+    float rotAngle = float(rotSeed & 0xFFFFu) / 65536.0f * TAU;
+    phi += rotAngle;
+    return float3(sinTheta * cos(phi), cosTheta, sinTheta * sin(phi));
+}
+
+kernel void main0(device float4 *probeRadianceOut [[buffer(0)]],
+                  device const Triangle *tris [[buffer(1)]],
+                  device const Material *materials [[buffer(2)]],
+                  constant SceneCounts &sc [[buffer(3)]],
+                  constant ProbeSpace &ps [[buffer(4)]],
+                  constant RaytracingSettings &rt [[buffer(5)]],
+                  device const DirectionalLight *directionalLights [[buffer(6)]],
+                  device const PointLight *pointLights [[buffer(7)]],
+                  device const SpotLight *spotLights [[buffer(8)]],
+                  device const AreaLight *areaLights [[buffer(9)]],
+                  texture2d<float> materialTexture0 [[texture(10)]],
+                  texture2d<float> materialTexture1 [[texture(11)]],
+                  texture2d<float> materialTexture2 [[texture(12)]],
+                  texture2d<float> materialTexture3 [[texture(13)]],
+                  texture2d<float> materialTexture4 [[texture(14)]],
+                  texture2d<float> materialTexture5 [[texture(15)]],
+                  texture2d<float> materialTexture6 [[texture(16)]],
+                  texture2d<float> materialTexture7 [[texture(17)]],
+                  texture2d<float> materialTexture8 [[texture(18)]],
+                  texture2d<float> materialTexture9 [[texture(19)]],
+                  texture2d<float> materialTexture10 [[texture(20)]],
+                  texture2d<float> materialTexture11 [[texture(21)]],
+                  texture2d<float> materialTexture12 [[texture(22)]],
+                  texture2d<float> materialTexture13 [[texture(23)]],
+                  texture2d<float> materialTexture14 [[texture(24)]],
+                  texture2d<float> materialTexture15 [[texture(25)]],
+                  texture2d<float> materialTexture16 [[texture(26)]],
+                  texture2d<float> materialTexture17 [[texture(27)]],
+                  texture2d<float> materialTexture18 [[texture(28)]],
+                  texture2d<float> materialTexture19 [[texture(29)]],
+                  texture2d<float> materialTexture20 [[texture(30)]],
+                  texture2d<float> materialTexture21 [[texture(31)]],
+                  texture2d<float> materialTexture22 [[texture(32)]],
+                  texture2d<float> materialTexture23 [[texture(33)]],
+                  uint tid [[thread_position_in_grid]]) {
+    const float PI = 3.14159265359f;
+    uint totalProbes = (uint)ps.atlasParams.w;
+    uint raysPerProbe = max(rt.raysPerProbe, 1u);
+    uint updateStride = max(rt.probeUpdateStride, 1u);
+    uint updateOffset =
+        (updateStride > 1u) ? rt.probeUpdateOffset % updateStride : 0u;
+    if (totalProbes > 0u) {
+        updateOffset %= totalProbes;
+    }
+    uint activeProbeCount = rt.probeUpdateCount;
+    if (activeProbeCount == 0u && totalProbes > updateOffset) {
+        activeProbeCount =
+            (totalProbes - updateOffset + updateStride - 1u) / updateStride;
+    }
+    activeProbeCount = max(activeProbeCount, 1u);
+    uint totalRays = activeProbeCount * raysPerProbe;
+
+    if (tid >= totalRays)
+        return;
+
+    uint localProbeIndex = tid / raysPerProbe;
+    uint rayIndex = tid - localProbeIndex * raysPerProbe;
+    uint probeIndex = updateOffset + localProbeIndex * updateStride;
+    if (probeIndex >= totalProbes) {
+        return;
+    }
+
+    uint3 counts = uint3((uint)ps.probeCount.x, (uint)ps.probeCount.y,
+                         (uint)ps.probeCount.z);
+    uint3 pc = probeCoordFromIndex(probeIndex, counts);
+    float3 probePos = ps.origin + float3(pc) * ps.spacing;
+
+    float3 rayDir = sphericalFibonacci(rayIndex, raysPerProbe, rt.frameIndex);
+
+    float maxDistance = max(rt.maxRayDistance, 0.001f);
+    float bias = max(rt.normalBias, 0.001f);
+
+    float3 ro = probePos + rayDir * bias;
+    Hit h;
+    float selfHitThreshold = bias * 4.0f;
+    for (uint escapeStep = 0u; escapeStep < 1u; escapeStep++) {
+        h = traceScene(ro, rayDir, tris, sc.triCount);
+        if (h.hit == 0u || h.t >= selfHitThreshold) {
+            break;
+        }
+        ro += rayDir * (h.t + selfHitThreshold);
+    }
+    if (h.hit != 0u && h.t < selfHitThreshold) {
+        h.hit = 0u;
+        h.t = INFINITY;
+    }
+
+    float3 radiance = float3(0.0f);
+    if (h.hit == 0u || h.t > maxDistance) {
+        radiance = sampleSky(rayDir);
+    } else {
+        float3 hitPos = ro + rayDir * h.t;
+        float3 albedo;
+        float metallic;
+        float roughness;
+        float ao;
+        float3 emissive;
+        int normalTextureIndex;
+        float normalStrength;
+        resolveMaterialParameters(
+            materials, h.materialID, sc.materialCount, h.uv, sc.textureCount,
+            materialTexture0,
+            materialTexture1, materialTexture2, materialTexture3,
+            materialTexture4, materialTexture5, materialTexture6,
+            materialTexture7, materialTexture8, materialTexture9,
+            materialTexture10, materialTexture11, materialTexture12,
+            materialTexture13, materialTexture14, materialTexture15,
+            materialTexture16, materialTexture17, materialTexture18,
+            materialTexture19, materialTexture20, materialTexture21,
+            materialTexture22, materialTexture23, albedo, metallic, roughness,
+            ao, emissive,
+            normalTextureIndex, normalStrength);
+        float3 hitNormal = resolveNormal(
+            normalTextureIndex, normalStrength, h.uv, h.n, h.tangent, h.bitangent,
+            sc.textureCount, materialTexture0, materialTexture1,
+            materialTexture2, materialTexture3, materialTexture4,
+            materialTexture5, materialTexture6, materialTexture7,
+            materialTexture8, materialTexture9, materialTexture10,
+            materialTexture11, materialTexture12, materialTexture13,
+            materialTexture14, materialTexture15, materialTexture16,
+            materialTexture17, materialTexture18, materialTexture19,
+            materialTexture20, materialTexture21, materialTexture22,
+            materialTexture23);
+
+        if (dot(hitNormal, -rayDir) < 0.0f) {
+            hitNormal = -hitNormal;
+        }
+
+        float3 direct = evaluateDirectLights(
+            hitPos, hitNormal, bias, maxDistance, tris, sc.triCount,
+            directionalLights, sc.directionalLightCount, pointLights,
+            sc.pointLightCount, spotLights, sc.spotLightCount, areaLights,
+            sc.areaLightCount);
+
+        float diffuseWeight =
+            (1.0f - metallic) * mix(0.35f, 1.0f, 1.0f - roughness);
+        radiance = direct * albedo * diffuseWeight * max(ao, 0.05f) + emissive;
+        radiance = clamp(radiance, float3(0.0f), float3(16.0f));
+    }
+
+    uint outIndex = probeIndex * raysPerProbe + rayIndex;
+    probeRadianceOut[outIndex] = float4(radiance, h.hit != 0u ? h.t : -1.0f);
+}
+)"
+;
+
+static const char* DDGI_WRITE =
+R"(#include <metal_stdlib>
+using namespace metal;
+
+struct ProbeSpace {
+    float3 origin;
+    float _pad0;
+
+    float3 spacing;
+    float _pad1;
+
+    float3 probeCount;
+    float _pad2;
+
+    float4 debugColor;
+
+    float4 atlasParams;
+};
+
+struct RaytracingSettings {
+    uint raysPerProbe;
+    float maxRayDistance;
+    float normalBias;
+    float hysteresis;
+
+    uint frameIndex;
+    uint probeUpdateOffset;
+    uint probeUpdateStride;
+    uint probeUpdateCount;
+};
+
+static inline uint wangHash(uint x) {
+    x = (x ^ 61u) ^ (x >> 16);
+    x *= 9u;
+    x = x ^ (x >> 4);
+    x *= 0x27d4eb2du;
+    x = x ^ (x >> 15);
+    return x;
+}
+
+static inline float3 octDecode(float2 e) {
+    float3 n = float3(e.x, e.y, 1.0f - fabs(e.x) - fabs(e.y));
+    if (n.z < 0.0f) {
+        float2 signNotZero =
+            float2(n.x >= 0.0f ? 1.0f : -1.0f, n.y >= 0.0f ? 1.0f : -1.0f);
+        float2 folded = (1.0f - fabs(n.yx)) * signNotZero;
+        n.x = folded.x;
+        n.y = folded.y;
+    }
+    return normalize(n);
+}
+
+static inline float3 sphericalFibonacci(uint index, uint count, uint frameIndex) {
+    const float GOLDEN_RATIO = 1.6180339887498949f;
+    const float TAU = 6.28318530718f;
+    float i = float(index) + 0.5f;
+    float phi = TAU * fract(i / GOLDEN_RATIO);
+    float cosTheta = 1.0f - (2.0f * i) / float(count);
+    float sinTheta = sqrt(max(0.0f, 1.0f - cosTheta * cosTheta));
+    uint rotSeed = wangHash(frameIndex * 1471u + 5743u);
+    float rotAngle = float(rotSeed & 0xFFFFu) / 65536.0f * TAU;
+    phi += rotAngle;
+    return float3(sinTheta * cos(phi), cosTheta, sinTheta * sin(phi));
+}
+
+kernel void main0(texture2d<float, access::write> outTexture [[texture(0)]],
+                  texture2d<float, access::read> prevTexture [[texture(1)]],
+                  device float4 *probeRadiance [[buffer(0)]],
+                  constant ProbeSpace &ps [[buffer(1)]],
+                  constant RaytracingSettings &rt [[buffer(2)]],
+                  uint2 gid [[thread_position_in_grid]]) {
+    const float FOUR_PI = 12.566370614359172f;
+
+    uint border = (uint)ps.atlasParams.x;
+    uint innerRes = (uint)ps.atlasParams.y;
+    uint probesPerRow = (uint)ps.atlasParams.z;
+    uint totalProbes = (uint)ps.atlasParams.w;
+
+    if (gid.x >= outTexture.get_width() || gid.y >= outTexture.get_height())
+        return;
+
+    uint tileRes = innerRes + 2u * border;
+    if (tileRes == 0u || probesPerRow == 0u || totalProbes == 0u ||
+        innerRes == 0u) {
+        outTexture.write(prevTexture.read(gid), gid);
+        return;
+    }
+
+    uint tileX = gid.x / tileRes;
+    uint tileY = gid.y / tileRes;
+    uint probeIndex = tileX + tileY * probesPerRow;
+
+    if (probeIndex >= totalProbes) {
+        outTexture.write(prevTexture.read(gid), gid);
+        return;
+    }
+
+    uint updateStride = max(rt.probeUpdateStride, 1u);
+    uint updateOffset =
+        (updateStride > 1u) ? (rt.probeUpdateOffset % updateStride) : 0u;
+    bool probeIsActive =
+        (updateStride <= 1u) ||
+        ((probeIndex >= updateOffset) &&
+         (((probeIndex - updateOffset) % updateStride) == 0u));
+    if (!probeIsActive) {
+        outTexture.write(prevTexture.read(gid), gid);
+        return;
+    }
+
+    uint localX = gid.x - tileX * tileRes;
+    uint localY = gid.y - tileY * tileRes;
+
+    int innerX = clamp(int(localX) - int(border), 0, int(innerRes) - 1);
+    int innerY = clamp(int(localY) - int(border), 0, int(innerRes) - 1);
+
+    float2 e = (float2(float(innerX), float(innerY)) + 0.5f) / float(innerRes) * 2.0f - 1.0f;
+    float3 texelDir = octDecode(e);
+
+    uint raysPerProbe = max(rt.raysPerProbe, 1u);
+    uint baseOffset = probeIndex * raysPerProbe;
+    uint rayStep = (raysPerProbe >= 128u) ? 2u : 1u;
+    uint sampledRayCount = 0u;
+
+    float3 sum = float3(0.0f);
+    float weightSum = 0.0f;
+    float nearHitCount = 0.0f;
+    float missCount = 0.0f;
+    float spacingScale =
+        max(max(ps.spacing.x, max(ps.spacing.y, ps.spacing.z)), 1e-4f);
+    float nearHitThreshold =
+        max(max(rt.normalBias * 1.2f, spacingScale * 0.015f), 0.0008f);
+
+    for (uint r = 0; r < raysPerProbe; r += rayStep) {
+        sampledRayCount++;
+        float4 raySample = probeRadiance[baseOffset + r];
+        float hitDistance = raySample.w;
+        if (hitDistance > 0.0f && hitDistance < nearHitThreshold) {
+            nearHitCount += 1.0f;
+        } else if (hitDistance <= 0.0f) {
+            missCount += 1.0f;
+        }
+
+        float3 rayDir = sphericalFibonacci(r, raysPerProbe, rt.frameIndex);
+        float w = max(0.0f, dot(texelDir, rayDir));
+        if (w > 1e-6f) {
+            float3 rad = raySample.xyz;
+            if (all(isfinite(rad))) {
+                float lum = dot(rad, float3(0.2126f, 0.7152f, 0.0722f));
+                float compression = 1.0f / (1.0f + lum * 0.25f);
+                rad *= compression;
+                sum += rad * w;
+                weightSum += w;
+            }
+        }
+    }
+
+    float3 irradiance = float3(0.0f);
+    float invRayCount = 1.0f / float(max(sampledRayCount, 1u));
+    if (weightSum > 1e-6f) {
+        irradiance = sum * (FOUR_PI * invRayCount);
+    }
+
+    if (!all(isfinite(irradiance))) {
+        irradiance = float3(0.0f);
+    }
+
+    float4 prev = prevTexture.read(gid);
+    float3 prevValue = all(isfinite(prev.xyz)) ? prev.xyz : float3(0.0f);
+    float prevValidity = isfinite(prev.w) ? clamp(prev.w, 0.0f, 1.0f) : 1.0f;
+
+    float nearFraction = nearHitCount * invRayCount;
+    float missFraction = missCount * invRayCount;
+    float nearPenalty = smoothstep(0.82f, 0.995f, nearFraction);
+    float missPenalty = smoothstep(0.95f, 1.0f, missFraction);
+    float probeValidity = (1.0f - nearPenalty) * (1.0f - missPenalty);
+    probeValidity = clamp(probeValidity, 0.005f, 1.0f);
+
+    float h = clamp(rt.hysteresis, 0.0f, 0.995f);
+    float3 blended = (rt.frameIndex == 0u) ? irradiance : mix(irradiance, prevValue, h);
+    float blendedValidity =
+        (rt.frameIndex == 0u)
+            ? probeValidity
+            : mix(probeValidity, prevValidity, h);
+
+    outTexture.write(float4(max(blended, float3(0.0f)), blendedValidity), gid);
 }
 )"
 ;
 
 static const char* DEBUG_FRAG =
-R"(#version 410 core
-out vec4 FragColor;
+R"(#include <metal_stdlib>
+#include <simd/simd.h>
 
-void main() {
-    FragColor = vec4(1.0, 0.0, 1.0, 1.0);
+using namespace metal;
+
+struct main0_out
+{
+    float4 FragColor [[color(0)]];
+};
+
+fragment main0_out main0()
+{
+    main0_out out = {};
+    out.FragColor = float4(1.0, 0.0, 1.0, 1.0);
+    return out;
 }
+
 )"
 ;
 
 static const char* DEBUG_VERT =
-R"(#version 410 core
-layout (location = 0) in vec3 aPos;
+R"(#include <metal_stdlib>
+#include <simd/simd.h>
 
-void main() {
-    gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);
+using namespace metal;
+
+struct main0_out
+{
+    float4 gl_Position [[position]];
+};
+
+struct main0_in
+{
+    float3 aPos [[attribute(0)]];
+};
+
+vertex main0_out main0(main0_in in [[stage_in]])
+{
+    main0_out out = {};
+    out.gl_Position = float4(in.aPos, 1.0);
+    return out;
 }
+
 )"
 ;
 
 static const char* DEFERRED_FRAG =
-R"(#version 410 core
-layout(location = 0) out vec4 gPosition;
-layout(location = 1) out vec4 gNormal;
-layout(location = 2) out vec4 gAlbedoSpec;
-layout(location = 3) out vec4 gMaterial;
+R"(#pragma clang diagnostic ignored "-Wmissing-prototypes"
 
-in vec2 TexCoord;
-in vec4 outColor;
-in vec3 Normal;
-in vec3 FragPos;
-in mat3 TBN;
+#include <metal_stdlib>
+#include <simd/simd.h>
 
-const int TEXTURE_COLOR = 0;
-const int TEXTURE_SPECULAR = 1;
-const int TEXTURE_NORMAL = 5;
-const int TEXTURE_PARALLAX = 6;
-const int TEXTURE_METALLIC = 9;
-const int TEXTURE_ROUGHNESS = 10;
-const int TEXTURE_AO = 11;
-const int TEXTURE_OPACITY = 12;
+using namespace metal;
 
-struct Material {
-    vec3 albedo;
+struct UBO
+{
+    int4 textureTypes[16];
+    int textureCount;
+    uint useTexture;
+    uint useColor;
+    float3 cameraPosition;
+    float normalMapStrength;
+    uint useNormalMap;
+};
+
+struct MaterialPush
+{
+    packed_float3 albedo;
     float metallic;
     float roughness;
     float ao;
     float reflectivity;
 };
 
-uniform sampler2D texture1;
-uniform sampler2D texture2;
-uniform sampler2D texture3;
-uniform sampler2D texture4;
-uniform sampler2D texture5;
-uniform sampler2D texture6;
-uniform sampler2D texture7;
-uniform sampler2D texture8;
-uniform sampler2D texture9;
-uniform sampler2D texture10;
+struct main0_out
+{
+    float4 gPosition [[color(0)]];
+    float4 gNormal [[color(1)]];
+    float4 gAlbedoSpec [[color(2)]];
+    float4 gMaterial [[color(3)]];
+};
 
-uniform int textureTypes[16];
-uniform int textureCount;
-uniform Material material;
-uniform vec3 cameraPosition;
-uniform bool useTexture;
-uniform bool useColor;
+struct main0_in
+{
+    float2 TexCoord [[user(locn1)]];
+    float3 Normal [[user(locn2)]];
+    float3 FragPos [[user(locn3)]];
+    float3 TBN_0 [[user(locn4)]];
+    float3 TBN_1 [[user(locn5)]];
+    float3 TBN_2 [[user(locn6)]];
+};
 
-vec2 texCoord;
-
-vec4 enableTextures(int type) {
-    vec4 color = vec4(0.0);
-    int count = 0;
-    for (int i = 0; i < textureCount; i++) {
-        if (textureTypes[i] == type) {
-            if (i == 0) color += texture(texture1, texCoord);
-            else if (i == 1) color += texture(texture2, texCoord);
-            else if (i == 2) color += texture(texture3, texCoord);
-            else if (i == 3) color += texture(texture4, texCoord);
-            else if (i == 4) color += texture(texture5, texCoord);
-            else if (i == 5) color += texture(texture6, texCoord);
-            else if (i == 6) color += texture(texture7, texCoord);
-            else if (i == 7) color += texture(texture8, texCoord);
-            else if (i == 8) color += texture(texture9, texCoord);
-            else if (i == 9) color += texture(texture10, texCoord);
-            count++;
+static inline __attribute__((always_inline))
+float4 sampleTextureAt(thread const int& textureIndex, thread const float2& uv, texture2d<float> texture1, sampler texture1Smplr, texture2d<float> texture2, sampler texture2Smplr, texture2d<float> texture3, sampler texture3Smplr, texture2d<float> texture4, sampler texture4Smplr, texture2d<float> texture5, sampler texture5Smplr, texture2d<float> texture6, sampler texture6Smplr, texture2d<float> texture7, sampler texture7Smplr, texture2d<float> texture8, sampler texture8Smplr, texture2d<float> texture9, sampler texture9Smplr, texture2d<float> texture10, sampler texture10Smplr)
+{
+    if (textureIndex == 0)
+    {
+        return texture1.sample(texture1Smplr, uv);
+    }
+    else
+    {
+        if (textureIndex == 1)
+        {
+            return texture2.sample(texture2Smplr, uv);
+        }
+        else
+        {
+            if (textureIndex == 2)
+            {
+                return texture3.sample(texture3Smplr, uv);
+            }
+            else
+            {
+                if (textureIndex == 3)
+                {
+                    return texture4.sample(texture4Smplr, uv);
+                }
+                else
+                {
+                    if (textureIndex == 4)
+                    {
+                        return texture5.sample(texture5Smplr, uv);
+                    }
+                    else
+                    {
+                        if (textureIndex == 5)
+                        {
+                            return texture6.sample(texture6Smplr, uv);
+                        }
+                        else
+                        {
+                            if (textureIndex == 6)
+                            {
+                                return texture7.sample(texture7Smplr, uv);
+                            }
+                            else
+                            {
+                                if (textureIndex == 7)
+                                {
+                                    return texture8.sample(texture8Smplr, uv);
+                                }
+                                else
+                                {
+                                    if (textureIndex == 8)
+                                    {
+                                        return texture9.sample(texture9Smplr, uv);
+                                    }
+                                    else
+                                    {
+                                        if (textureIndex == 9)
+                                        {
+                                            return texture10.sample(texture10Smplr, uv);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
-    if (count > 0) color /= float(count);
-    if (count == 0) return vec4(-1.0);
-    return color;
+    return float4(0.0);
 }
 
-vec4 sampleTextureAt(int textureIndex, vec2 uv) {
-    if (textureIndex == 0) return texture(texture1, uv);
-    else if (textureIndex == 1) return texture(texture2, uv);
-    else if (textureIndex == 2) return texture(texture3, uv);
-    else if (textureIndex == 3) return texture(texture4, uv);
-    else if (textureIndex == 4) return texture(texture5, uv);
-    else if (textureIndex == 5) return texture(texture6, uv);
-    else if (textureIndex == 6) return texture(texture7, uv);
-    else if (textureIndex == 7) return texture(texture8, uv);
-    else if (textureIndex == 8) return texture(texture9, uv);
-    else if (textureIndex == 9) return texture(texture10, uv);
-    return vec4(0.0);
-}
-
-vec2 parallaxMapping(vec2 texCoords, vec3 viewDir) {
-    const float minLayers = 8.0;
-    const float maxLayers = 32.0;
-    vec3 v = normalize(viewDir);
-    float numLayers = mix(maxLayers, minLayers, abs(dot(vec3(0.0, 0.0, 1.0), v)));
+static inline __attribute__((always_inline))
+float2 parallaxMapping(thread const float2& texCoords, thread const float3& viewDir, constant UBO& _46, texture2d<float> texture1, sampler texture1Smplr, texture2d<float> texture2, sampler texture2Smplr, texture2d<float> texture3, sampler texture3Smplr, texture2d<float> texture4, sampler texture4Smplr, texture2d<float> texture5, sampler texture5Smplr, texture2d<float> texture6, sampler texture6Smplr, texture2d<float> texture7, sampler texture7Smplr, texture2d<float> texture8, sampler texture8Smplr, texture2d<float> texture9, sampler texture9Smplr, texture2d<float> texture10, sampler texture10Smplr)
+{
+    float3 v = fast::normalize(viewDir);
+    float numLayers = mix(32.0, 8.0, abs(dot(float3(0.0, 0.0, 1.0), v)));
     float layerDepth = 1.0 / numLayers;
     float currentLayerDepth = 0.0;
-
-    const float heightScale = 0.04;
-    vec2 P = (v.xy / max(v.z, 0.05)) * heightScale;
-    vec2 deltaTexCoords = P / numLayers;
-
-    vec2 currentTexCoords = texCoords;
+    float2 P = (v.xy / float2(fast::max(v.z, 0.0500000007450580596923828125))) * 0.039999999105930328369140625;
+    float2 deltaTexCoords = P / float2(numLayers);
+    float2 currentTexCoords = texCoords;
     int textureIndex = -1;
-    for (int i = 0; i < textureCount; i++) {
-        if (textureTypes[i] == TEXTURE_PARALLAX) {
+    for (int i = 0; i < _46.textureCount; i++)
+    {
+        if (_46.textureTypes[i].x == 6)
+        {
             textureIndex = i;
             break;
         }
     }
-    if (textureIndex == -1) return currentTexCoords;
-
-    float currentDepthMapValue = sampleTextureAt(textureIndex, currentTexCoords).r;
-
-    while (currentLayerDepth < currentDepthMapValue) {
-        currentTexCoords -= deltaTexCoords;
-        currentDepthMapValue = sampleTextureAt(textureIndex, currentTexCoords).r;
-        currentLayerDepth += layerDepth;
+    if (textureIndex == (-1))
+    {
+        return currentTexCoords;
     }
-
-    vec2 prevTexCoords = currentTexCoords + deltaTexCoords;
+    int param = textureIndex;
+    float2 param_1 = currentTexCoords;
+    float currentDepthMapValue = sampleTextureAt(param, param_1, texture1, texture1Smplr, texture2, texture2Smplr, texture3, texture3Smplr, texture4, texture4Smplr, texture5, texture5Smplr, texture6, texture6Smplr, texture7, texture7Smplr, texture8, texture8Smplr, texture9, texture9Smplr, texture10, texture10Smplr).x;
+    int maxIterations = int(numLayers) + 1;
+    int iteration = 0;
+    while (currentLayerDepth < currentDepthMapValue && iteration < maxIterations)
+    {
+        currentTexCoords -= deltaTexCoords;
+        int param_2 = textureIndex;
+        float2 param_3 = currentTexCoords;
+        currentDepthMapValue = sampleTextureAt(param_2, param_3, texture1, texture1Smplr, texture2, texture2Smplr, texture3, texture3Smplr, texture4, texture4Smplr, texture5, texture5Smplr, texture6, texture6Smplr, texture7, texture7Smplr, texture8, texture8Smplr, texture9, texture9Smplr, texture10, texture10Smplr).x;
+        currentLayerDepth += layerDepth;
+        iteration++;
+    }
+    float2 prevTexCoords = currentTexCoords + deltaTexCoords;
     float afterDepth = currentDepthMapValue - currentLayerDepth;
-    float beforeDepth = sampleTextureAt(textureIndex, prevTexCoords).r - (currentLayerDepth - layerDepth);
-    float denom = max(afterDepth - beforeDepth, 1e-4);
-    float weight = clamp(afterDepth / denom, 0.0, 1.0);
-    currentTexCoords = prevTexCoords * weight + currentTexCoords * (1.0 - weight);
-
+    int param_4 = textureIndex;
+    float2 param_5 = prevTexCoords;
+    float beforeDepth = sampleTextureAt(param_4, param_5, texture1, texture1Smplr, texture2, texture2Smplr, texture3, texture3Smplr, texture4, texture4Smplr, texture5, texture5Smplr, texture6, texture6Smplr, texture7, texture7Smplr, texture8, texture8Smplr, texture9, texture9Smplr, texture10, texture10Smplr).x - (currentLayerDepth - layerDepth);
+    float denom = fast::max(afterDepth - beforeDepth, 9.9999997473787516355514526367188e-05);
+    float weight = fast::clamp(afterDepth / denom, 0.0, 1.0);
+    currentTexCoords = (prevTexCoords * weight) + (currentTexCoords * (1.0 - weight));
     return currentTexCoords;
 }
 
-void main() {
-    texCoord = TexCoord;
+static inline __attribute__((always_inline))
+float4 enableTextures(thread const int& type, constant UBO& _46, texture2d<float> texture1, sampler texture1Smplr, thread float2& texCoord, texture2d<float> texture2, sampler texture2Smplr, texture2d<float> texture3, sampler texture3Smplr, texture2d<float> texture4, sampler texture4Smplr, texture2d<float> texture5, sampler texture5Smplr, texture2d<float> texture6, sampler texture6Smplr, texture2d<float> texture7, sampler texture7Smplr, texture2d<float> texture8, sampler texture8Smplr, texture2d<float> texture9, sampler texture9Smplr, texture2d<float> texture10, sampler texture10Smplr)
+{
+    float4 color = float4(0.0);
+    int count = 0;
+    for (int i = 0; i < _46.textureCount; i++)
+    {
+        if (_46.textureTypes[i].x == type)
+        {
+            if (i == 0)
+            {
+                color += texture1.sample(texture1Smplr, texCoord);
+            }
+            else
+            {
+                if (i == 1)
+                {
+                    color += texture2.sample(texture2Smplr, texCoord);
+                }
+                else
+                {
+                    if (i == 2)
+                    {
+                        color += texture3.sample(texture3Smplr, texCoord);
+                    }
+                    else
+                    {
+                        if (i == 3)
+                        {
+                            color += texture4.sample(texture4Smplr, texCoord);
+                        }
+                        else
+                        {
+                            if (i == 4)
+                            {
+                                color += texture5.sample(texture5Smplr, texCoord);
+                            }
+                            else
+                            {
+                                if (i == 5)
+                                {
+                                    color += texture6.sample(texture6Smplr, texCoord);
+                                }
+                                else
+                                {
+                                    if (i == 6)
+                                    {
+                                        color += texture7.sample(texture7Smplr, texCoord);
+                                    }
+                                    else
+                                    {
+                                        if (i == 7)
+                                        {
+                                            color += texture8.sample(texture8Smplr, texCoord);
+                                        }
+                                        else
+                                        {
+                                            if (i == 8)
+                                            {
+                                                color += texture9.sample(texture9Smplr, texCoord);
+                                            }
+                                            else
+                                            {
+                                                if (i == 9)
+                                                {
+                                                    color += texture10.sample(texture10Smplr, texCoord);
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            count++;
+        }
+    }
+    if (count > 0)
+    {
+        color /= float4(float(count));
+    }
+    if (count == 0)
+    {
+        return float4(-1.0);
+    }
+    return color;
+}
 
-    vec3 tangentViewDir = normalize(transpose(TBN) * (cameraPosition - FragPos));
-    texCoord = parallaxMapping(texCoord, tangentViewDir);
-
-    if (texCoord.x > 1.0 || texCoord.y > 1.0 || texCoord.x < 0.0 || texCoord.y < 0.0)
-        discard;
-
-    vec4 sampledColor = enableTextures(TEXTURE_COLOR);
-    bool hasColorTexture = sampledColor != vec4(-1.0);
-
-    vec4 baseColor = vec4(material.albedo, 1.0);
-    vec4 albedoTex = enableTextures(TEXTURE_COLOR);
-    if (albedoTex != vec4(-1.0)) {
+fragment main0_out main0(main0_in in [[stage_in]], constant UBO& _46 [[buffer(0)]], constant MaterialPush& material [[buffer(1)]], texture2d<float> texture1 [[texture(0)]], texture2d<float> texture2 [[texture(1)]], texture2d<float> texture3 [[texture(2)]], texture2d<float> texture4 [[texture(3)]], texture2d<float> texture5 [[texture(4)]], texture2d<float> texture6 [[texture(5)]], texture2d<float> texture7 [[texture(6)]], texture2d<float> texture8 [[texture(7)]], texture2d<float> texture9 [[texture(8)]], texture2d<float> texture10 [[texture(9)]], sampler texture1Smplr [[sampler(0)]], sampler texture2Smplr [[sampler(1)]], sampler texture3Smplr [[sampler(2)]], sampler texture4Smplr [[sampler(3)]], sampler texture5Smplr [[sampler(4)]], sampler texture6Smplr [[sampler(5)]], sampler texture7Smplr [[sampler(6)]], sampler texture8Smplr [[sampler(7)]], sampler texture9Smplr [[sampler(8)]], sampler texture10Smplr [[sampler(9)]], float4 gl_FragCoord [[position]])
+{
+    main0_out out = {};
+    float3x3 TBN = {};
+    TBN[0] = in.TBN_0;
+    TBN[1] = in.TBN_1;
+    TBN[2] = in.TBN_2;
+    float2 texCoord = in.TexCoord;
+    bool hasParallaxMap = false;
+    for (int i = 0; i < _46.textureCount; i++)
+    {
+        if (_46.textureTypes[i].x == 6)
+        {
+            hasParallaxMap = true;
+            break;
+        }
+    }
+    if (hasParallaxMap)
+    {
+        float3 tangentViewDir = fast::normalize(transpose(TBN) * (_46.cameraPosition - in.FragPos));
+        float2 param = texCoord;
+        float3 param_1 = tangentViewDir;
+        texCoord = parallaxMapping(param, param_1, _46, texture1, texture1Smplr, texture2, texture2Smplr, texture3, texture3Smplr, texture4, texture4Smplr, texture5, texture5Smplr, texture6, texture6Smplr, texture7, texture7Smplr, texture8, texture8Smplr, texture9, texture9Smplr, texture10, texture10Smplr);
+        bool _476 = texCoord.x > 1.0;
+        bool _483;
+        if (!_476)
+        {
+            _483 = texCoord.y > 1.0;
+        }
+        else
+        {
+            _483 = _476;
+        }
+        bool _490;
+        if (!_483)
+        {
+            _490 = texCoord.x < 0.0;
+        }
+        else
+        {
+            _490 = _483;
+        }
+        bool _497;
+        if (!_490)
+        {
+            _497 = texCoord.y < 0.0;
+        }
+        else
+        {
+            _497 = _490;
+        }
+        if (_497)
+        {
+            discard_fragment();
+        }
+    }
+    int param_2 = 0;
+    float4 sampledColor = enableTextures(param_2, _46, texture1, texture1Smplr, texCoord, texture2, texture2Smplr, texture3, texture3Smplr, texture4, texture4Smplr, texture5, texture5Smplr, texture6, texture6Smplr, texture7, texture7Smplr, texture8, texture8Smplr, texture9, texture9Smplr, texture10, texture10Smplr);
+    bool hasColorTexture = any(sampledColor != float4(-1.0));
+    float4 baseColor = float4(material.albedo[0], material.albedo[1], material.albedo[2], 1.0);
+    int param_3 = 0;
+    float4 albedoTex = enableTextures(param_3, _46, texture1, texture1Smplr, texCoord, texture2, texture2Smplr, texture3, texture3Smplr, texture4, texture4Smplr, texture5, texture5Smplr, texture6, texture6Smplr, texture7, texture7Smplr, texture8, texture8Smplr, texture9, texture9Smplr, texture10, texture10Smplr);
+    if (any(albedoTex != float4(-1.0)))
+    {
         baseColor *= albedoTex;
     }
-    vec4 opacityTex = enableTextures(TEXTURE_OPACITY);
-    if (opacityTex != vec4(-1.0)) {
-        if (opacityTex.r < 0.1) {
-            discard;
+    int param_3a = 12;
+    float4 opacityTex = enableTextures(param_3a, _46, texture1, texture1Smplr, texCoord, texture2, texture2Smplr, texture3, texture3Smplr, texture4, texture4Smplr, texture5, texture5Smplr, texture6, texture6Smplr, texture7, texture7Smplr, texture8, texture8Smplr, texture9, texture9Smplr, texture10, texture10Smplr);
+    if (any(opacityTex != float4(-1.0)))
+    {
+        if (opacityTex.x < 0.100000001490116119384765625)
+        {
+            discard_fragment();
         }
-    } else if (material.albedo.a < 0.999 && baseColor.a < 0.1) {
-        discard;
     }
-
-
-    vec4 normTexture = enableTextures(TEXTURE_NORMAL);
-    vec3 normal;
-    if (normTexture.r != -1.0 && normTexture.g != -1.0 && normTexture.b != -1.0) {
-        vec3 tangentNormal = normalize(normTexture.rgb * 2.0 - 1.0);
-        normal = normalize(TBN * tangentNormal);
-    } else {
-        normal = normalize(Normal);
+    else
+    {
+        if ((baseColor.w < 0.100000001490116119384765625) && (material.albedo[3] < 0.999000012874603271484375))
+        {
+            discard_fragment();
+        }
     }
-
-    vec3 albedo = baseColor.rgb;
-
-    float metallic = material.metallic;
-    vec4 metallicTex = enableTextures(TEXTURE_METALLIC);
-    if (metallicTex != vec4(-1.0)) {
-        metallic *= metallicTex.r;
+    int param_4 = 5;
+    float4 normTexture = enableTextures(param_4, _46, texture1, texture1Smplr, texCoord, texture2, texture2Smplr, texture3, texture3Smplr, texture4, texture4Smplr, texture5, texture5Smplr, texture6, texture6Smplr, texture7, texture7Smplr, texture8, texture8Smplr, texture9, texture9Smplr, texture10, texture10Smplr);
+    bool _527 = normTexture.x != (-1.0);
+    bool _534;
+    if (_527)
+    {
+        _534 = normTexture.y != (-1.0);
     }
-
-    float roughness = material.roughness;
-    vec4 roughnessTex = enableTextures(TEXTURE_ROUGHNESS);
-    if (roughnessTex != vec4(-1.0)) {
-        roughness *= roughnessTex.r;
+    else
+    {
+        _534 = _527;
     }
-
-    float ao = material.ao;
-    vec4 aoTex = enableTextures(TEXTURE_AO);
-    if (aoTex != vec4(-1.0)) {
-        ao *= aoTex.r;
+    bool _540;
+    if (_534)
+    {
+        _540 = normTexture.z != (-1.0);
     }
-
-    metallic = clamp(metallic, 0.0, 1.0);
-    roughness = clamp(roughness, 0.0, 1.0);
-    ao = clamp(ao, 0.0, 1.0);
-
+    else
+    {
+        _540 = _534;
+    }
+    float normalStrength = fast::max(_46.normalMapStrength, 0.0f);
+    bool useNormalMap = (_46.useNormalMap != 0u) && (normalStrength > 0.0f);
+    float3 normal;
+    if (_540 && useNormalMap)
+    {
+        float3 tangentNormal = (normTexture.xyz * 2.0) - float3(1.0);
+        tangentNormal.xy *= normalStrength;
+        tangentNormal = fast::normalize(tangentNormal);
+        normal = fast::normalize(TBN * tangentNormal);
+    }
+    else
+    {
+        normal = fast::normalize(in.Normal);
+    }
+    float3 albedoColor = baseColor.xyz;
+    float metallicValue = material.metallic;
+    int param_5 = 9;
+    float4 metallicTex = enableTextures(param_5, _46, texture1, texture1Smplr, texCoord, texture2, texture2Smplr, texture3, texture3Smplr, texture4, texture4Smplr, texture5, texture5Smplr, texture6, texture6Smplr, texture7, texture7Smplr, texture8, texture8Smplr, texture9, texture9Smplr, texture10, texture10Smplr);
+    if (any(metallicTex != float4(-1.0)))
+    {
+        metallicValue *= metallicTex.x;
+    }
+    float roughnessValue = material.roughness;
+    int param_6 = 10;
+    float4 roughnessTex = enableTextures(param_6, _46, texture1, texture1Smplr, texCoord, texture2, texture2Smplr, texture3, texture3Smplr, texture4, texture4Smplr, texture5, texture5Smplr, texture6, texture6Smplr, texture7, texture7Smplr, texture8, texture8Smplr, texture9, texture9Smplr, texture10, texture10Smplr);
+    if (any(roughnessTex != float4(-1.0)))
+    {
+        roughnessValue *= roughnessTex.x;
+    }
+    float aoValue = material.ao;
+    int param_7 = 11;
+    float4 aoTex = enableTextures(param_7, _46, texture1, texture1Smplr, texCoord, texture2, texture2Smplr, texture3, texture3Smplr, texture4, texture4Smplr, texture5, texture5Smplr, texture6, texture6Smplr, texture7, texture7Smplr, texture8, texture8Smplr, texture9, texture9Smplr, texture10, texture10Smplr);
+    if (any(aoTex != float4(-1.0)))
+    {
+        aoValue *= aoTex.x;
+    }
+    metallicValue = fast::clamp(metallicValue, 0.0, 1.0);
+    roughnessValue = fast::clamp(roughnessValue, 0.0, 1.0);
+    aoValue = fast::clamp(aoValue, 0.0, 1.0);
     float nonlinearDepth = gl_FragCoord.z;
-    gPosition = vec4(FragPos, nonlinearDepth);
-
-    vec3 n = normalize(normal);
-    if (!all(equal(n, n)) || length(n) < 1e-4) {
-        n = normalize(Normal);
+    out.gPosition = float4(in.FragPos, nonlinearDepth);
+    float3 n = fast::normalize(normal);
+    bool _639 = !all(n == n);
+    bool _646;
+    if (!_639)
+    {
+        _646 = length(n) < 9.9999997473787516355514526367188e-05;
     }
-    gNormal = vec4(n, 1.0);
-
-    vec3 a = clamp(albedo, 0.0, 1.0);
-    if (!all(equal(a, a))) {
-        a = vec3(0.0);
+    else
+    {
+        _646 = _639;
     }
-    gAlbedoSpec = vec4(a, ao);
-
-    gMaterial = vec4(metallic, roughness, ao, 1.0);
+    if (_646)
+    {
+        n = fast::normalize(in.Normal);
+    }
+    out.gNormal = float4(n, 1.0);
+    float3 a = fast::clamp(albedoColor, float3(0.0), float3(1.0));
+    if (!all(a == a))
+    {
+        a = float3(0.0);
+    }
+    out.gAlbedoSpec = float4(a, aoValue);
+    out.gMaterial = float4(metallicValue, roughnessValue, aoValue, 1.0);
+    return out;
 }
 )"
 ;
 
 static const char* DEFERRED_VERT =
-R"(#version 410 core
-layout(location = 0) in vec3 aPos;
-layout(location = 1) in vec4 aColor;
-layout(location = 2) in vec2 aTexCoord;
-layout(location = 3) in vec3 aNormal;
-layout(location = 4) in vec3 aTangent;
-layout(location = 5) in vec3 aBitangent;
-layout(location = 6) in mat4 instanceModel;
+R"(#pragma clang diagnostic ignored "-Wmissing-prototypes"
 
-uniform mat4 model;
-uniform mat4 view;
-uniform mat4 projection;
-uniform bool isInstanced = true;
+#include <metal_stdlib>
+#include <simd/simd.h>
 
-out vec4 outColor;
-out vec2 TexCoord;
-out vec3 Normal;
-out vec3 FragPos;
-out mat3 TBN;
+using namespace metal;
 
-void main() {
-    mat4 finalModel;
-    if (isInstanced) {
+// Returns the determinant of a 2x2 matrix.
+static inline __attribute__((always_inline))
+float spvDet2x2(float a1, float a2, float b1, float b2)
+{
+    return a1 * b2 - b1 * a2;
+}
+
+// Returns the determinant of a 3x3 matrix.
+static inline __attribute__((always_inline))
+float spvDet3x3(float a1, float a2, float a3, float b1, float b2, float b3, float c1, float c2, float c3)
+{
+    return a1 * spvDet2x2(b2, b3, c2, c3) - b1 * spvDet2x2(a2, a3, c2, c3) + c1 * spvDet2x2(a2, a3, b2, b3);
+}
+
+// Returns the inverse of a matrix, by using the algorithm of calculating the classical
+// adjoint and dividing by the determinant. The contents of the matrix are changed.
+static inline __attribute__((always_inline))
+float4x4 spvInverse4x4(float4x4 m)
+{
+    float4x4 adj;	// The adjoint matrix (inverse after dividing by determinant)
+
+    // Create the transpose of the cofactors, as the classical adjoint of the matrix.
+    adj[0][0] =  spvDet3x3(m[1][1], m[1][2], m[1][3], m[2][1], m[2][2], m[2][3], m[3][1], m[3][2], m[3][3]);
+    adj[0][1] = -spvDet3x3(m[0][1], m[0][2], m[0][3], m[2][1], m[2][2], m[2][3], m[3][1], m[3][2], m[3][3]);
+    adj[0][2] =  spvDet3x3(m[0][1], m[0][2], m[0][3], m[1][1], m[1][2], m[1][3], m[3][1], m[3][2], m[3][3]);
+    adj[0][3] = -spvDet3x3(m[0][1], m[0][2], m[0][3], m[1][1], m[1][2], m[1][3], m[2][1], m[2][2], m[2][3]);
+
+    adj[1][0] = -spvDet3x3(m[1][0], m[1][2], m[1][3], m[2][0], m[2][2], m[2][3], m[3][0], m[3][2], m[3][3]);
+    adj[1][1] =  spvDet3x3(m[0][0], m[0][2], m[0][3], m[2][0], m[2][2], m[2][3], m[3][0], m[3][2], m[3][3]);
+    adj[1][2] = -spvDet3x3(m[0][0], m[0][2], m[0][3], m[1][0], m[1][2], m[1][3], m[3][0], m[3][2], m[3][3]);
+    adj[1][3] =  spvDet3x3(m[0][0], m[0][2], m[0][3], m[1][0], m[1][2], m[1][3], m[2][0], m[2][2], m[2][3]);
+
+    adj[2][0] =  spvDet3x3(m[1][0], m[1][1], m[1][3], m[2][0], m[2][1], m[2][3], m[3][0], m[3][1], m[3][3]);
+    adj[2][1] = -spvDet3x3(m[0][0], m[0][1], m[0][3], m[2][0], m[2][1], m[2][3], m[3][0], m[3][1], m[3][3]);
+    adj[2][2] =  spvDet3x3(m[0][0], m[0][1], m[0][3], m[1][0], m[1][1], m[1][3], m[3][0], m[3][1], m[3][3]);
+    adj[2][3] = -spvDet3x3(m[0][0], m[0][1], m[0][3], m[1][0], m[1][1], m[1][3], m[2][0], m[2][1], m[2][3]);
+
+    adj[3][0] = -spvDet3x3(m[1][0], m[1][1], m[1][2], m[2][0], m[2][1], m[2][2], m[3][0], m[3][1], m[3][2]);
+    adj[3][1] =  spvDet3x3(m[0][0], m[0][1], m[0][2], m[2][0], m[2][1], m[2][2], m[3][0], m[3][1], m[3][2]);
+    adj[3][2] = -spvDet3x3(m[0][0], m[0][1], m[0][2], m[1][0], m[1][1], m[1][2], m[3][0], m[3][1], m[3][2]);
+    adj[3][3] =  spvDet3x3(m[0][0], m[0][1], m[0][2], m[1][0], m[1][1], m[1][2], m[2][0], m[2][1], m[2][2]);
+
+    // Calculate the determinant as a combination of the cofactors of the first row.
+    float det = (adj[0][0] * m[0][0]) + (adj[0][1] * m[1][0]) + (adj[0][2] * m[2][0]) + (adj[0][3] * m[3][0]);
+
+    // Divide the classical adjoint matrix by the determinant.
+    // If determinant is zero, matrix is not invertable, so leave it unchanged.
+    return (det != 0.0f) ? (adj * (1.0f / det)) : m;
+}
+
+struct UBO
+{
+    float4x4 model;
+    float4x4 view;
+    float4x4 projection;
+    uint isInstanced;
+};
+
+struct main0_out
+{
+    float4 outColor [[user(locn0)]];
+    float2 TexCoord [[user(locn1)]];
+    float3 Normal [[user(locn2)]];
+    float3 FragPos [[user(locn3)]];
+    float3 TBN_0 [[user(locn4)]];
+    float3 TBN_1 [[user(locn5)]];
+    float3 TBN_2 [[user(locn6)]];
+    float4 gl_Position [[position]];
+};
+
+struct main0_in
+{
+    float3 aPos [[attribute(0)]];
+    float4 aColor [[attribute(1)]];
+    float2 aTexCoord [[attribute(2)]];
+    float3 aNormal [[attribute(3)]];
+    float3 aTangent [[attribute(4)]];
+    float3 aBitangent [[attribute(5)]];
+    float4 instanceModel_0 [[attribute(6)]];
+    float4 instanceModel_1 [[attribute(7)]];
+    float4 instanceModel_2 [[attribute(8)]];
+    float4 instanceModel_3 [[attribute(9)]];
+};
+
+vertex main0_out main0(main0_in in [[stage_in]], constant UBO& _12 [[buffer(0)]])
+{
+    main0_out out = {};
+    float3x3 TBN = {};
+    float4x4 instanceModel = {};
+    instanceModel[0] = in.instanceModel_0;
+    instanceModel[1] = in.instanceModel_1;
+    instanceModel[2] = in.instanceModel_2;
+    instanceModel[3] = in.instanceModel_3;
+    float4x4 finalModel;
+    bool hasInstanceMatrix = abs(instanceModel[3].w) > 0.5;
+    if ((_12.isInstanced != 0u) && hasInstanceMatrix)
+    {
         finalModel = instanceModel;
-    } else {
-        finalModel = model;
     }
-
-    vec4 worldPos = finalModel * vec4(aPos, 1.0);
-    FragPos = worldPos.xyz;
-    gl_Position = projection * view * worldPos;
-
-    TexCoord = aTexCoord;
-    outColor = aColor;
-
-    mat3 normalMatrix = mat3(transpose(inverse(finalModel)));
-    Normal = normalize(normalMatrix * aNormal);
-
-    vec3 T = normalize(normalMatrix * aTangent);
-    vec3 B = normalize(normalMatrix * aBitangent);
-    vec3 N = normalize(normalMatrix * aNormal);
-    TBN = mat3(T, B, N);
-})"
+    else
+    {
+        finalModel = _12.model;
+    }
+    float4 worldPos = finalModel * float4(in.aPos, 1.0);
+    out.FragPos = worldPos.xyz;
+    out.gl_Position = (_12.projection * _12.view) * worldPos;
+    out.TexCoord = in.aTexCoord;
+    out.outColor = in.aColor;
+    float4x4 _81 = transpose(spvInverse4x4(finalModel));
+    float3x3 normalMatrix = float3x3(_81[0].xyz, _81[1].xyz, _81[2].xyz);
+    out.Normal = fast::normalize(normalMatrix * in.aNormal);
+    float3 T = fast::normalize(normalMatrix * in.aTangent);
+    float3 B = fast::normalize(normalMatrix * in.aBitangent);
+    float3 N = fast::normalize(normalMatrix * in.aNormal);
+    TBN = float3x3(float3(T), float3(B), float3(N));
+    out.TBN_0 = TBN[0];
+    out.TBN_1 = TBN[1];
+    out.TBN_2 = TBN[2];
+    return out;
+}
+)"
 ;
 
 static const char* DEPTH_VERT =
-R"(#version 410 core
-layout(location = 0) in vec3 aPos;
-layout(location = 6) in mat4 instanceModel;
+R"(#include <metal_stdlib>
+#include <simd/simd.h>
 
-uniform mat4 projection; // the light space matrix
-uniform mat4 view;
-uniform mat4 model;
-uniform bool isInstanced = true;
+using namespace metal;
 
-void main() {
-    if (isInstanced) {
-        gl_Position = projection * view * instanceModel * vec4(aPos, 1.0);
-    } else {
-        gl_Position = projection * view * model * vec4(aPos, 1.0);
+struct UBO
+{
+    float4x4 model;
+    float4x4 view;
+    float4x4 projection;
+    uint isInstanced;
+};
+
+struct main0_out
+{
+    float4 gl_Position [[position, invariant]];
+};
+
+struct main0_in
+{
+    float3 aPos [[attribute(0)]];
+    float4 instanceModel_0 [[attribute(6)]];
+    float4 instanceModel_1 [[attribute(7)]];
+    float4 instanceModel_2 [[attribute(8)]];
+    float4 instanceModel_3 [[attribute(9)]];
+};
+
+vertex main0_out main0(main0_in in [[stage_in]], constant UBO& _12 [[buffer(0)]])
+{
+    main0_out out = {};
+    float4x4 instanceModel = {};
+    instanceModel[0] = in.instanceModel_0;
+    instanceModel[1] = in.instanceModel_1;
+    instanceModel[2] = in.instanceModel_2;
+    instanceModel[3] = in.instanceModel_3;
+    bool hasInstanceMatrix = abs(instanceModel[3].w) > 0.5;
+    if ((_12.isInstanced != 0u) && hasInstanceMatrix)
+    {
+        float4x4 _36 = _12.projection * _12.view;
+        float4x4 _40 = _36 * instanceModel;
+        float4 _49 = float4(in.aPos, 1.0);
+        float4 _50 = _40 * _49;
+        out.gl_Position = _50;
     }
+    else
+    {
+        float4x4 _58 = _12.projection * _12.view;
+        float4x4 _61 = _58 * _12.model;
+        float4 _66 = float4(in.aPos, 1.0);
+        float4 _67 = _61 * _66;
+        out.gl_Position = _67;
+    }
+    return out;
 }
 )"
 ;
 
 static const char* DOWNSAMPLE_FRAG =
-R"(#version 410 core
+R"(#include <metal_stdlib>
+#include <simd/simd.h>
 
-uniform sampler2D srcTexture;
-uniform vec2 srcResolution;
+using namespace metal;
 
-in vec2 TexCoord;
-layout(location = 0) out vec3 downsample;
+struct Params
+{
+    float2 srcResolution;
+};
 
-void main() {
-    vec2 srcTexelSize = 1.0 / srcResolution;
+struct main0_out
+{
+    float4 downsample [[color(0)]];
+};
+
+struct main0_in
+{
+    float2 TexCoord [[user(locn0)]];
+};
+
+fragment main0_out main0(main0_in in [[stage_in]], constant Params& _13 [[buffer(0)]], texture2d<float> srcTexture [[texture(0)]], sampler srcTextureSmplr [[sampler(0)]])
+{
+    main0_out out = {};
+    float2 srcTexelSize =
+        float2(1.0) / float2(srcTexture.get_width(), srcTexture.get_height());
     float x = srcTexelSize.x;
     float y = srcTexelSize.y;
-    vec2 texCoord = TexCoord;
-
-    vec3 a = texture(srcTexture, vec2(texCoord.x - 2 * x, texCoord.y + 2 * y)).rgb;
-    vec3 b = texture(srcTexture, vec2(texCoord.x, texCoord.y + 2 * y)).rgb;
-    vec3 c = texture(srcTexture, vec2(texCoord.x + 2 * x, texCoord.y + 2 * y)).rgb;
-
-    vec3 d = texture(srcTexture, vec2(texCoord.x - 2 * x, texCoord.y)).rgb;
-    vec3 e = texture(srcTexture, vec2(texCoord.x, texCoord.y)).rgb;
-    vec3 f = texture(srcTexture, vec2(texCoord.x + 2 * x, texCoord.y)).rgb;
-
-    vec3 g = texture(srcTexture, vec2(texCoord.x - 2 * x, texCoord.y - 2 * y)).rgb;
-    vec3 h = texture(srcTexture, vec2(texCoord.x, texCoord.y - 2 * y)).rgb;
-    vec3 i = texture(srcTexture, vec2(texCoord.x + 2 * x, texCoord.y - 2 * y)).rgb;
-
-    vec3 j = texture(srcTexture, vec2(texCoord.x - x, texCoord.y + y)).rgb;
-    vec3 k = texture(srcTexture, vec2(texCoord.x + x, texCoord.y + y)).rgb;
-    vec3 l = texture(srcTexture, vec2(texCoord.x - x, texCoord.y - y)).rgb;
-    vec3 m = texture(srcTexture, vec2(texCoord.x + x, texCoord.y - y)).rgb;
-
-    downsample = e * 0.125;
-    downsample += (a + c + g + i) * 0.03125;
-    downsample += (b + d + f + h) * 0.0625;
-    downsample += (j + k + l + m) * 0.125;
+    float2 texCoord = in.TexCoord;
+    float3 a = srcTexture.sample(srcTextureSmplr, float2(texCoord.x - (2.0 * x), texCoord.y + (2.0 * y))).xyz;
+    float3 b = srcTexture.sample(srcTextureSmplr, float2(texCoord.x, texCoord.y + (2.0 * y))).xyz;
+    float3 c = srcTexture.sample(srcTextureSmplr, float2(texCoord.x + (2.0 * x), texCoord.y + (2.0 * y))).xyz;
+    float3 d = srcTexture.sample(srcTextureSmplr, float2(texCoord.x - (2.0 * x), texCoord.y)).xyz;
+    float3 e = srcTexture.sample(srcTextureSmplr, float2(texCoord.x, texCoord.y)).xyz;
+    float3 f = srcTexture.sample(srcTextureSmplr, float2(texCoord.x + (2.0 * x), texCoord.y)).xyz;
+    float3 g = srcTexture.sample(srcTextureSmplr, float2(texCoord.x - (2.0 * x), texCoord.y - (2.0 * y))).xyz;
+    float3 h = srcTexture.sample(srcTextureSmplr, float2(texCoord.x, texCoord.y - (2.0 * y))).xyz;
+    float3 i = srcTexture.sample(srcTextureSmplr, float2(texCoord.x + (2.0 * x), texCoord.y - (2.0 * y))).xyz;
+    float3 j = srcTexture.sample(srcTextureSmplr, float2(texCoord.x - x, texCoord.y + y)).xyz;
+    float3 k = srcTexture.sample(srcTextureSmplr, float2(texCoord.x + x, texCoord.y + y)).xyz;
+    float3 l = srcTexture.sample(srcTextureSmplr, float2(texCoord.x - x, texCoord.y - y)).xyz;
+    float3 m = srcTexture.sample(srcTextureSmplr, float2(texCoord.x + x, texCoord.y - y)).xyz;
+    float3 downsampleColor = e * 0.125;
+    downsampleColor += ((((a + c) + g) + i) * 0.03125);
+    downsampleColor += ((((b + d) + f) + h) * 0.0625);
+    downsampleColor += ((((j + k) + l) + m) * 0.125);
+    out.downsample = float4(downsampleColor, 1.0);
+    return out;
 }
 )"
 ;
 
 static const char* EMPTY_FRAG =
-R"(#version 410 core
+R"(#include <metal_stdlib>
+#include <simd/simd.h>
 
-void main() {}
+using namespace metal;
+
+fragment void main0()
+{
+}
+
 )"
 ;
 
 static const char* FLUID_FRAG =
-R"(#version 410 core
-layout(location = 0) out vec4 FragColor;
-layout(location = 1) out vec4 BrightColor;
+R"(#include <metal_stdlib>
+#include <simd/simd.h>
 
-in vec2 TexCoord;
-in vec3 WorldPos;          
-in vec3 WorldNormal;
-in vec3 WorldTangent;
-in vec3 WorldBitangent;
+using namespace metal;
 
-uniform vec4 waterColor;         
-uniform sampler2D sceneTexture;  
-uniform sampler2D sceneDepth;    
-uniform vec3 cameraPos;           
-uniform float time;
-uniform float refractionStrength; 
-uniform float reflectionStrength; 
-uniform float depthFade;         
-uniform mat4 projection;
-uniform mat4 view;
-uniform mat4 invProjection;      
-uniform mat4 invView;
-uniform sampler2D reflectionTexture;
-uniform sampler2D refractionTexture;
-uniform vec3 lightDirection;
-uniform vec3 lightColor;
-uniform sampler2D movementTexture;
-uniform sampler2D normalTexture;
-uniform int hasNormalTexture;
-uniform int hasMovementTexture;
-uniform vec3 windForce;
-
-void main()
+struct Uniforms
 {
-    vec3 normal = normalize(WorldNormal);
-    vec3 viewDir = normalize(cameraPos - WorldPos);
-    
-    vec4 clipSpace = projection * view * vec4(WorldPos, 1.0);
-    vec3 ndc = clipSpace.xyz / clipSpace.w;
-    vec2 screenUV = ndc.xy * 0.5 + 0.5;
-    
-    float windStrength = length(windForce);
-    vec2 windDir = windStrength > 0.001 ? normalize(windForce.xy) : vec2(1.0, 0.0);
-    
-    float waveSpeed = 0.15 + windStrength * 0.3;  
-    float waveAmplitude = 0.01 + windStrength * 0.02;  
-    float waveFrequency = 30.0 + windStrength * 10.0; 
-    
-    vec2 waveOffset;
-    waveOffset.x = sin((TexCoord.x * windDir.x + time * waveSpeed) * waveFrequency);
-    waveOffset.y = cos((TexCoord.y * windDir.y - time * waveSpeed) * waveFrequency);
+    float4 waterColor;
+    packed_float3 cameraPos;
+    float time;
+    float4x4 projection;
+    float4x4 view;
+    float4x4 invProjection;
+    float4x4 invView;
+    float3 lightDirection;
+    float3 lightColor;
+};
+
+struct Parameters
+{
+    float refractionStrength;
+    float reflectionStrength;
+    float depthFade;
+    int hasNormalTexture;
+    int hasMovementTexture;
+    float3 windForce;
+};
+
+struct main0_out
+{
+    float4 FragColor [[color(0)]];
+    float4 BrightColor [[color(1)]];
+};
+
+struct main0_in
+{
+    float2 TexCoord [[user(locn0)]];
+    float3 WorldPos [[user(locn1)]];
+    float3 WorldNormal [[user(locn2)]];
+    float3 WorldTangent [[user(locn3)]];
+    float3 WorldBitangent [[user(locn4)]];
+};
+
+fragment main0_out main0(main0_in in [[stage_in]], constant Uniforms& _19 [[buffer(0)]], constant Parameters& _68 [[buffer(1)]], texture2d<float> movementTexture [[texture(0)]], texture2d<float> normalTexture [[texture(1)]], texture2d<float> reflectionTexture [[texture(2)]], texture2d<float> refractionTexture [[texture(3)]], texture2d<float> sceneTexture [[texture(4)]], sampler movementTextureSmplr [[sampler(0)]], sampler normalTextureSmplr [[sampler(1)]], sampler reflectionTextureSmplr [[sampler(2)]], sampler refractionTextureSmplr [[sampler(3)]], sampler sceneTextureSmplr [[sampler(4)]])
+{
+    main0_out out = {};
+    float3 normal = fast::normalize(in.WorldNormal);
+    float3 viewDir = fast::normalize(float3(_19.cameraPos) - in.WorldPos);
+    float4 clipSpace = (_19.projection * _19.view) * float4(in.WorldPos, 1.0);
+    float3 ndc = clipSpace.xyz / float3(clipSpace.w);
+    float2 screenUV = (ndc.xy * 0.5) + float2(0.5);
+    float windStrength = length(_68.windForce);
+    float2 _78;
+    if (windStrength > 0.001000000047497451305389404296875)
+    {
+        _78 = fast::normalize(_68.windForce.xy);
+    }
+    else
+    {
+        _78 = float2(1.0, 0.0);
+    }
+    float2 windDir = _78;
+    float waveSpeed = 0.1500000059604644775390625 + (windStrength * 0.300000011920928955078125);
+    float waveAmplitude = 0.00999999977648258209228515625 + (windStrength * 0.0199999995529651641845703125);
+    float waveFrequency = 30.0 + (windStrength * 10.0);
+    float2 waveOffset;
+    waveOffset.x = sin(((in.TexCoord.x * windDir.x) + (_19.time * waveSpeed)) * waveFrequency);
+    waveOffset.y = cos(((in.TexCoord.y * windDir.y) - (_19.time * waveSpeed)) * waveFrequency);
     waveOffset *= waveAmplitude;
-    
-    vec2 flowOffset = vec2(0.0);
-    if (hasMovementTexture == 1) {
-        vec2 windUV = windForce.xy * time * 0.05;
-        vec2 movementUV = TexCoord * 2.0 + windUV;
-        vec2 movementSample = texture(movementTexture, movementUV).rg;
-        
-        movementSample = movementSample * 2.0 - 1.0;
-        
-        flowOffset = movementSample * windStrength * 0.15;
-        
-        waveOffset += flowOffset * 0.5;
+    float2 flowOffset = float2(0.0);
+    if (_68.hasMovementTexture == 1)
+    {
+        float2 windUV = (_68.windForce.xy * _19.time) * 0.0500000007450580596923828125;
+        float2 movementUV = (in.TexCoord * 2.0) + windUV;
+        float2 movementSample = movementTexture.sample(movementTextureSmplr, movementUV).xy;
+        movementSample = (movementSample * 2.0) - float2(1.0);
+        flowOffset = (movementSample * windStrength) * 0.1500000059604644775390625;
+        waveOffset += (flowOffset * 0.5);
     }
-    
-    if (hasNormalTexture == 1) {
-        vec3 T = normalize(WorldTangent);
-        vec3 B = normalize(WorldBitangent);
-        vec3 N = normalize(WorldNormal);
-        mat3 TBN = mat3(T, B, N);
-        
-        float normalSpeed = 0.03 + windStrength * 0.05; 
-        vec2 normalUV1 = TexCoord * 5.0 + waveOffset * 10.0 + windForce.xy * time * normalSpeed;
-        vec2 normalUV2 = TexCoord * 3.0 - waveOffset * 8.0 - windForce.xy * time * normalSpeed * 0.8;
-        
-        vec3 normalMap1 = texture(normalTexture, normalUV1).rgb;
-        vec3 normalMap2 = texture(normalTexture, normalUV2).rgb;
-        
-        normalMap1 = normalMap1 * 2.0 - 1.0;
-        normalMap2 = normalMap2 * 2.0 - 1.0;
-        
-        vec3 blendedNormal = normalize(normalMap1 + normalMap2);
-        
-        vec3 worldSpaceNormal = normalize(TBN * blendedNormal);
-        
-        float normalStrength = 0.5 + windStrength * 0.3;
-        normal = normalize(mix(N, worldSpaceNormal, normalStrength));
+    if (_68.hasNormalTexture == 1)
+    {
+        float3 T = fast::normalize(in.WorldTangent);
+        float3 B = fast::normalize(in.WorldBitangent);
+        float3 N = fast::normalize(in.WorldNormal);
+        float3x3 TBN = float3x3(float3(T), float3(B), float3(N));
+        float normalSpeed = 0.02999999932944774627685546875 + (windStrength * 0.0500000007450580596923828125);
+        float2 normalUV1 = ((in.TexCoord * 5.0) + (waveOffset * 10.0)) + ((_68.windForce.xy * _19.time) * normalSpeed);
+        float2 normalUV2 = ((in.TexCoord * 3.0) - (waveOffset * 8.0)) - (((_68.windForce.xy * _19.time) * normalSpeed) * 0.800000011920928955078125);
+        float3 normalMap1 = normalTexture.sample(normalTextureSmplr, normalUV1).xyz;
+        float3 normalMap2 = normalTexture.sample(normalTextureSmplr, normalUV2).xyz;
+        normalMap1 = (normalMap1 * 2.0) - float3(1.0);
+        normalMap2 = (normalMap2 * 2.0) - float3(1.0);
+        float3 blendedNormal = fast::normalize(normalMap1 + normalMap2);
+        float3 worldSpaceNormal = fast::normalize(TBN * blendedNormal);
+        float normalStrength = 0.5 + (windStrength * 0.300000011920928955078125);
+        normal = fast::normalize(mix(N, worldSpaceNormal, float3(normalStrength)));
     }
-    
-    vec2 reflectionUV = screenUV;
-    reflectionUV.y = 1.0 - reflectionUV.y;  
-    reflectionUV += waveOffset * 0.3;
-    
-    vec2 refractionUV = screenUV - waveOffset * 0.2;
-    
-    bool reflectionInBounds = (reflectionUV.x >= 0.0 && reflectionUV.x <= 1.0 && 
-                               reflectionUV.y >= 0.0 && reflectionUV.y <= 1.0);
-    bool refractionInBounds = (refractionUV.x >= 0.0 && refractionUV.x <= 1.0 && 
-                               refractionUV.y >= 0.0 && refractionUV.y <= 1.0);
-    
-    reflectionUV = clamp(reflectionUV, 0.05, 0.95);
-    refractionUV = clamp(refractionUV, 0.05, 0.95);
-    
-    vec2 reflectionEdgeFade = smoothstep(0.0, 0.15, reflectionUV) * smoothstep(1.0, 0.85, reflectionUV);
+    float2 reflectionUV = screenUV;
+    reflectionUV.y = 1.0 - reflectionUV.y;
+    reflectionUV += (waveOffset * 0.300000011920928955078125);
+    float2 refractionUV = screenUV - (waveOffset * 0.20000000298023223876953125);
+    bool _324 = reflectionUV.x >= 0.0;
+    bool _330;
+    if (_324)
+    {
+        _330 = reflectionUV.x <= 1.0;
+    }
+    else
+    {
+        _330 = _324;
+    }
+    bool _336;
+    if (_330)
+    {
+        _336 = reflectionUV.y >= 0.0;
+    }
+    else
+    {
+        _336 = _330;
+    }
+    bool _342;
+    if (_336)
+    {
+        _342 = reflectionUV.y <= 1.0;
+    }
+    else
+    {
+        _342 = _336;
+    }
+    bool reflectionInBounds = _342;
+    bool _346 = refractionUV.x >= 0.0;
+    bool _352;
+    if (_346)
+    {
+        _352 = refractionUV.x <= 1.0;
+    }
+    else
+    {
+        _352 = _346;
+    }
+    bool _358;
+    if (_352)
+    {
+        _358 = refractionUV.y >= 0.0;
+    }
+    else
+    {
+        _358 = _352;
+    }
+    bool _364;
+    if (_358)
+    {
+        _364 = refractionUV.y <= 1.0;
+    }
+    else
+    {
+        _364 = _358;
+    }
+    bool refractionInBounds = _364;
+    reflectionUV = fast::clamp(reflectionUV, float2(0.0500000007450580596923828125), float2(0.949999988079071044921875));
+    refractionUV = fast::clamp(refractionUV, float2(0.0500000007450580596923828125), float2(0.949999988079071044921875));
+    float2 reflectionEdgeFade = smoothstep(float2(0.0), float2(0.1500000059604644775390625), reflectionUV) * smoothstep(float2(1.0), float2(0.85000002384185791015625), reflectionUV);
     float reflectionFadeFactor = reflectionEdgeFade.x * reflectionEdgeFade.y;
-    
-    vec2 refractionEdgeFade = smoothstep(0.0, 0.15, refractionUV) * smoothstep(1.0, 0.85, refractionUV);
+    float2 refractionEdgeFade = smoothstep(float2(0.0), float2(0.1500000059604644775390625), refractionUV) * smoothstep(float2(1.0), float2(0.85000002384185791015625), refractionUV);
     float refractionFadeFactor = refractionEdgeFade.x * refractionEdgeFade.y;
-    
-    if (!reflectionInBounds) {
-        reflectionFadeFactor *= 0.3;
+    if (!reflectionInBounds)
+    {
+        reflectionFadeFactor *= 0.300000011920928955078125;
     }
-    if (!refractionInBounds) {
-        refractionFadeFactor *= 0.3;
+    if (!refractionInBounds)
+    {
+        refractionFadeFactor *= 0.300000011920928955078125;
     }
-    
-    vec4 reflectionSample = texture(reflectionTexture, reflectionUV);
-    vec4 refractionSample = texture(refractionTexture, refractionUV);
-    vec4 sceneFallback = texture(sceneTexture, screenUV);
-    
-    bool validReflection = (length(reflectionSample.rgb) > 0.01);
-    bool validRefraction = (length(refractionSample.rgb) > 0.01);
-    
-    if (!validReflection) {
+    float4 reflectionSample = reflectionTexture.sample(reflectionTextureSmplr, reflectionUV);
+    float4 refractionSample = refractionTexture.sample(refractionTextureSmplr, refractionUV);
+    float4 sceneFallback = sceneTexture.sample(sceneTextureSmplr, screenUV);
+    bool validReflection = length(reflectionSample.xyz) > 0.00999999977648258209228515625;
+    bool validRefraction = length(refractionSample.xyz) > 0.00999999977648258209228515625;
+    if (!validReflection)
+    {
         reflectionSample = sceneFallback;
     }
-    if (!validRefraction) {
+    if (!validRefraction)
+    {
         refractionSample = sceneFallback;
     }
-    
-    float fresnel = pow(1.0 - clamp(dot(normal, viewDir), 0.0, 1.0), 3.0);
-    fresnel = mix(0.02, 1.0, fresnel); 
-    fresnel *= reflectionStrength;
-    
-    vec3 combined = mix(refractionSample.rgb, reflectionSample.rgb, fresnel);
-    
-    float waterTint = clamp(depthFade * 0.3, 0.0, 0.5); 
-    combined = mix(combined, waterColor.rgb, waterTint);
-
+    float fresnel = powr(1.0 - fast::clamp(dot(normal, viewDir), 0.0, 1.0), 3.0);
+    fresnel = mix(0.0199999995529651641845703125, 1.0, fresnel);
+    fresnel *= _68.reflectionStrength;
+    float3 combined = mix(refractionSample.xyz, reflectionSample.xyz, float3(fresnel));
+    float waterTint = fast::clamp(_68.depthFade * 0.300000011920928955078125, 0.0, 0.5);
+    combined = mix(combined, _19.waterColor.xyz, float3(waterTint));
     float foamAmount = 0.0;
-    if (hasMovementTexture == 1) {
-        float foamFactor = smoothstep(0.7, 1.0, length(flowOffset) * windStrength);
-        foamAmount = foamFactor * 0.2;
-        combined = mix(combined, vec3(1.0), foamAmount);
+    if (_68.hasMovementTexture == 1)
+    {
+        float foamFactor = smoothstep(0.699999988079071044921875, 1.0, length(flowOffset) * windStrength);
+        foamAmount = foamFactor * 0.20000000298023223876953125;
+        combined = mix(combined, float3(1.0), float3(foamAmount));
     }
-    
-    vec3 lightDir = normalize(-lightDirection);
-    
-    float diffuse = max(dot(normal, lightDir), 0.0);
-    diffuse = diffuse * 0.3; 
-    
-    vec3 halfDir = normalize(lightDir + viewDir);
-    float specAngle = max(dot(normal, halfDir), 0.0);
-    float specular = pow(specAngle, 128.0); 
-    
-    specular *= (fresnel * 0.5 + 0.5);
-    
-    float waveVariation = sin(TexCoord.x * 50.0 + time * 2.0) * 0.5 + 0.5;
-    waveVariation *= cos(TexCoord.y * 50.0 - time * 1.5) * 0.5 + 0.5;
-    specular *= (0.7 + waveVariation * 0.3);
-    
-    vec3 lighting = lightColor * (diffuse + specular * 2.0);
+    float3 lightDir = fast::normalize(-_19.lightDirection);
+    float diffuse = fast::max(dot(normal, lightDir), 0.0);
+    diffuse *= 0.300000011920928955078125;
+    float3 halfDir = fast::normalize(lightDir + viewDir);
+    float specAngle = fast::max(dot(normal, halfDir), 0.0);
+    float specular = powr(specAngle, 128.0);
+    specular *= ((fresnel * 0.5) + 0.5);
+    float waveVariation = (sin((in.TexCoord.x * 50.0) + (_19.time * 2.0)) * 0.5) + 0.5;
+    waveVariation *= ((cos((in.TexCoord.y * 50.0) - (_19.time * 1.5)) * 0.5) + 0.5);
+    specular *= (0.699999988079071044921875 + (waveVariation * 0.300000011920928955078125));
+    float3 lighting = _19.lightColor * (diffuse + (specular * 2.0));
     combined += lighting;
-    
-    vec3 specularHighlight = lightColor * specular * 2.5;
-    
-    specularHighlight += vec3(foamAmount * 2.0);
-    
-    float alpha = mix(0.7, 0.95, fresnel);
-    
-    FragColor = vec4(combined, alpha);
-    
-    float luminance = max(max(combined.r, combined.g), combined.b);
-    vec3 bloomColor = vec3(0.0);
-    
-    if (luminance > 1.0) {
-        bloomColor = combined - 1.0;
+    float3 specularHighlight = (_19.lightColor * specular) * 2.5;
+    specularHighlight += float3(foamAmount * 2.0);
+    float alpha = mix(0.699999988079071044921875, 0.949999988079071044921875, fresnel);
+    out.FragColor = float4(combined, alpha);
+    float luminance = fast::max(fast::max(combined.x, combined.y), combined.z);
+    float3 bloomColor = float3(0.0);
+    if (luminance > 1.0)
+    {
+        bloomColor = combined - float3(1.0);
     }
-    
     bloomColor += specularHighlight;
+    out.BrightColor = float4(bloomColor, alpha);
+    return out;
+}
 
-    BrightColor = vec4(bloomColor, alpha);
-})"
+)"
 ;
 
 static const char* FLUID_VERT =
-R"(#version 410 core
-layout(location = 0) in vec3 aPos;
-layout(location = 1) in vec2 aTexCoord;
-layout(location = 2) in vec3 aNormal;
-layout(location = 3) in vec3 aTangent;
-layout(location = 4) in vec3 aBitangent;
+R"(#include <metal_stdlib>
+#include <simd/simd.h>
 
-uniform mat4 model;
-uniform mat4 view;
-uniform mat4 projection;
+using namespace metal;
 
-out vec2 TexCoord;
-out vec3 WorldPos;
-out vec3 WorldNormal;
-out vec3 WorldTangent;
-out vec3 WorldBitangent;
+struct UBO
+{
+    float4x4 model;
+    float4x4 view;
+    float4x4 projection;
+};
 
-void main() {
-    gl_Position = projection * view * model * vec4(aPos, 1.0);
-    TexCoord = aTexCoord;
-    WorldPos = vec3(model * vec4(aPos, 1.0));
-    WorldNormal = normalize(mat3(model) * aNormal);
-    WorldTangent = normalize(mat3(model) * aTangent);
-    WorldBitangent = normalize(mat3(model) * aBitangent);
+struct main0_out
+{
+    float2 TexCoord [[user(locn0)]];
+    float3 WorldPos [[user(locn1)]];
+    float3 WorldNormal [[user(locn2)]];
+    float3 WorldTangent [[user(locn3)]];
+    float3 WorldBitangent [[user(locn4)]];
+    float4 gl_Position [[position]];
+};
+
+struct main0_in
+{
+    float3 aPos [[attribute(0)]];
+    float2 aTexCoord [[attribute(1)]];
+    float3 aNormal [[attribute(2)]];
+    float3 aTangent [[attribute(3)]];
+    float3 aBitangent [[attribute(4)]];
+};
+
+vertex main0_out main0(main0_in in [[stage_in]], constant UBO& _19 [[buffer(0)]])
+{
+    main0_out out = {};
+    out.gl_Position = ((_19.projection * _19.view) * _19.model) * float4(in.aPos, 1.0);
+    out.TexCoord = in.aTexCoord;
+    out.WorldPos = float3((_19.model * float4(in.aPos, 1.0)).xyz);
+    out.WorldNormal = fast::normalize(float3x3(_19.model[0].xyz, _19.model[1].xyz, _19.model[2].xyz) * in.aNormal);
+    out.WorldTangent = fast::normalize(float3x3(_19.model[0].xyz, _19.model[1].xyz, _19.model[2].xyz) * in.aTangent);
+    out.WorldBitangent = fast::normalize(float3x3(_19.model[0].xyz, _19.model[1].xyz, _19.model[2].xyz) * in.aBitangent);
+    return out;
 }
+
 )"
 ;
 
 static const char* FULLSCREEN_FRAG =
-R"(#version 410 core
+R"(#pragma clang diagnostic ignored "-Wmissing-prototypes"
+#pragma clang diagnostic ignored "-Wmissing-braces"
 
-in vec2 TexCoord;
-out vec4 FragColor;
+#include <metal_stdlib>
+#include <simd/simd.h>
 
-const int TEXTURE_COLOR = 0;
-const int TEXTURE_DEPTH = 3;
-const int TEXTURE_CUBE_DEPTH = 4;
+using namespace metal;
 
-const int EFFECT_INVERSION = 0;
-const int EFFECT_GRAYSCALE = 1;
-const int EFFECT_SHARPEN = 2;
-const int EFFECT_BLUR = 3;
-const int EFFECT_EDGE_DETECTION = 4;
-const int EFFECT_COLOR_CORRECTION = 5;
-const int EFFECT_MOTION_BLUR = 6;
-const int EFFECT_CHROMATIC_ABERRATION = 7;
-const int EFFECT_POSTERIZATION = 8;
-const int EFFECT_PIXELATION = 9;
-const int EFFECT_DILATION = 10;
-const int EFFECT_FILM_GRAIN = 11;
-
-const float offset = 1.0 / 300.0;
-const float exposure = 1.0;
-
-vec3 reinhardToneMapping(vec3 hdrColor) {
-    vec3 color = vec3(1.0) - exp(-hdrColor * 1.0);
-    color = pow(color, vec3(1.0 / 2.2));
-    return color;
-}
-
-vec3 acesToneMapping(vec3 color) {
-    float a = 2.51;
-    float b = 0.03;
-    float c = 2.43;
-    float d = 0.59;
-    float e = 0.14;
-    return clamp((color * (a * color + b)) / (color * (c * color + d) + e), 0.0, 1.0);
-}
-
-vec4 sharpen(sampler2D image) {
-    vec2 offsets[9] = vec2[](
-            vec2(-offset, offset),
-            vec2(0.0f, offset),
-            vec2(offset, offset),
-            vec2(-offset, 0.0f),
-            vec2(0.0f, 0.0f),
-            vec2(offset, 0.0f),
-            vec2(-offset, -offset),
-            vec2(0.0f, -offset),
-            vec2(offset, -offset)
-        );
-
-    float kernel[9] = float[](
-            -1, -1, -1,
-            -1, 9, -1,
-            -1, -1, -1
-        );
-
-    vec3 sampleTex[9];
-    for (int i = 0; i < 9; i++) {
-        sampleTex[i] = vec3(texture(image, TexCoord.st + offsets[i]));
+template<typename T, size_t Num>
+struct spvUnsafeArray
+{
+    T elements[Num ? Num : 1];
+    
+    thread T& operator [] (size_t pos) thread
+    {
+        return elements[pos];
     }
-
-    vec3 col = vec3(0.0);
-    for (int i = 0; i < 9; i++) {
-        col += sampleTex[i] * kernel[i];
+    constexpr const thread T& operator [] (size_t pos) const thread
+    {
+        return elements[pos];
     }
-
-    return vec4(col, 1.0);
-}
-
-vec4 blur(sampler2D image, float radius) {
-    vec2 texelSize = 1.0 / textureSize(image, 0);
-    vec3 result = vec3(0.0);
-    float total = 0.0;
-
-    float sigma = radius * 0.5;
-    float twoSigmaSq = 2.0 * sigma * sigma;
-
-    for (int x = -int(radius); x <= int(radius); x++) {
-        float weight = exp(-(x * x) / twoSigmaSq);
-        vec2 offset = vec2(x, 0.0) * texelSize;
-        result += texture(image, TexCoord + offset).rgb * weight;
-        total += weight;
+    
+    device T& operator [] (size_t pos) device
+    {
+        return elements[pos];
     }
-
-    result /= total;
-
-    return vec4(result, 1.0);
-}
-
-vec4 edgeDetection(sampler2D image) {
-    vec2 offsets[9] = vec2[](
-            vec2(-offset, offset),
-            vec2(0.0f, offset),
-            vec2(offset, offset),
-            vec2(-offset, 0.0f),
-            vec2(0.0f, 0.0f),
-            vec2(offset, 0.0f),
-            vec2(-offset, -offset),
-            vec2(0.0f, -offset),
-            vec2(offset, -offset)
-        );
-
-    float kernel[9] = float[](
-            1, 1, 1,
-            1, -8, 1,
-            1, 1, 1
-        );
-
-    vec3 sampleTex[9];
-    for (int i = 0; i < 9; i++) {
-        sampleTex[i] = vec3(texture(image, TexCoord.st + offsets[i]));
+    constexpr const device T& operator [] (size_t pos) const device
+    {
+        return elements[pos];
     }
-
-    vec3 col = vec3(0.0);
-    for (int i = 0; i < 9; i++) {
-        col += sampleTex[i] * kernel[i];
+    
+    constexpr const constant T& operator [] (size_t pos) const constant
+    {
+        return elements[pos];
     }
-
-    return vec4(col, 1.0);
-}
-
-uniform sampler2D Texture;
-uniform sampler2D BrightTexture;
-uniform sampler2D DepthTexture;
-uniform sampler2D VolumetricLightTexture;
-uniform sampler2D PositionTexture;
-uniform sampler2D LUTTexture;
-uniform sampler2D SSRTexture;
-uniform int hasBrightTexture;
-uniform int hasDepthTexture;
-uniform int hasVolumetricLightTexture;
-uniform int hasPositionTexture;
-uniform int hasLUTTexture;
-uniform int hasSSRTexture;
-uniform float lutSize;
-uniform samplerCube cubeMap;
-uniform bool isCubeMap;
-uniform int TextureType;
-uniform int EffectCount;
-uniform int Effects[10];
-uniform float EffectFloat1[10];
-uniform float EffectFloat2[10];
-uniform float EffectFloat3[10];
-uniform float EffectFloat4[10];
-uniform float EffectFloat5[10];
-uniform float EffectFloat6[10];
-
-struct Environment {
-    vec3 fogColor;
-    float fogIntensity;
+    
+    threadgroup T& operator [] (size_t pos) threadgroup
+    {
+        return elements[pos];
+    }
+    constexpr const threadgroup T& operator [] (size_t pos) const threadgroup
+    {
+        return elements[pos];
+    }
 };
 
-uniform Environment environment;
-
-uniform mat4 invProjectionMatrix;
-uniform mat4 projectionMatrix;
-uniform mat4 viewMatrix;
-uniform mat4 invViewMatrix;
-uniform mat4 lastViewMatrix;
-
-uniform float nearPlane = 0.1;
-uniform float farPlane = 100.0;
-
-uniform float focusDepth;
-uniform float focusRange;
-
-uniform int maxMipLevel;
-uniform float deltaTime;
-uniform float time;
-
-uniform sampler3D cloudsTexture;
-uniform vec3 cloudPosition;
-uniform vec3 cloudSize;
-uniform vec3 cameraPosition;
-uniform float cloudScale;
-uniform vec3 cloudOffset;
-uniform float cloudDensityThreshold;
-uniform float cloudDensityMultiplier;
-uniform float cloudAbsorption;
-uniform float cloudScattering;
-uniform float cloudPhaseG;
-uniform float cloudClusterStrength;
-uniform int cloudPrimarySteps;
-uniform int cloudLightSteps;
-uniform float cloudLightStepMultiplier;
-uniform float cloudMinStepLength;
-uniform vec3 sunDirection;
-uniform vec3 sunColor;
-uniform float sunIntensity;
-uniform vec3 cloudAmbientColor;
-uniform int hasClouds;
-
-vec4 sampleColor(vec2 uv) {
-    for (int i = 0; i < EffectCount; i++) {
-        if (Effects[i] == EFFECT_CHROMATIC_ABERRATION) {
-            float redOffset = EffectFloat1[i];
-            float greenOffset = EffectFloat2[i];
-            float blueOffset = EffectFloat3[i];
-            vec2 focusPoint = vec2(EffectFloat4[i], EffectFloat5[i]);
-            vec2 sampleCoord = uv;
-            vec2 direction = sampleCoord - focusPoint;
-            float red = texture(Texture, sampleCoord + (direction * redOffset)).r;
-            float green = texture(Texture, sampleCoord + (direction * greenOffset)).g;
-            vec2 blue = texture(Texture, sampleCoord + (direction * blueOffset)).ba;
-            return vec4(red, green, blue);
-        } else if (Effects[i] == EFFECT_PIXELATION) {
-            float pixelSizeInPixels = EffectFloat1[i];
-            vec2 texSize = vec2(textureSize(Texture, 0));
-
-            vec2 pixelSize = vec2(pixelSizeInPixels) / texSize;
-
-            vec2 pixelated = floor(uv / pixelSize) * pixelSize;
-
-            return texture(Texture, pixelated);
-        } else if (Effects[i] == EFFECT_DILATION) {
-            float radius = EffectFloat1[i];
-            float separation = EffectFloat2[i];
-            vec2 texelSize = 1.0 / vec2(textureSize(Texture, 0));
-
-            vec3 maxColor = texture(Texture, uv).rgb;
-            int range = int(radius);
-            float radiusSq = radius * radius;
-
-            for (int x = -range; x <= range; x++) {
-                for (int y = -range; y <= range; y++) {
-                    float distSq = float(x * x + y * y);
-                    if (distSq <= radiusSq) {
-                        vec2 offset = vec2(float(x), float(y)) * texelSize * separation;
-                        vec3 sampled = texture(Texture, uv + offset).rgb;
-                        maxColor = max(maxColor, sampled);
-                    }
-                }
-            }
-
-            return vec4(maxColor, texture(Texture, uv).a);
-        }
-    }
-
-    return texture(Texture, uv);
+// Implementation of the GLSL mod() function, which is slightly different than Metal fmod()
+template<typename Tx, typename Ty>
+inline Tx mod(Tx x, Ty y)
+{
+    return x - y * floor(x / y);
 }
 
-vec4 sampleBright(vec2 uv) {
-    for (int i = 0; i < EffectCount; i++) {
-        if (Effects[i] == EFFECT_CHROMATIC_ABERRATION) {
-            float redOffset = EffectFloat1[i];
-            float greenOffset = EffectFloat2[i];
-            float blueOffset = EffectFloat3[i];
-            vec2 focusPoint = vec2(EffectFloat4[i], EffectFloat5[i]);
-            vec2 sampleCoord = uv;
-            vec2 direction = sampleCoord - focusPoint;
-            float red = texture(BrightTexture, sampleCoord + (direction * redOffset)).r;
-            float green = texture(BrightTexture, sampleCoord + (direction * greenOffset)).g;
-            vec2 blue = texture(BrightTexture, sampleCoord + (direction * blueOffset)).ba;
-            return vec4(red, green, blue);
-        } else if (Effects[i] == EFFECT_PIXELATION) {
-            float pixelSizeInPixels = EffectFloat1[i];
-            vec2 texSize = vec2(textureSize(BrightTexture, 0));
-
-            vec2 pixelSize = vec2(pixelSizeInPixels) / texSize;
-
-            vec2 pixelated = floor(uv / pixelSize) * pixelSize;
-            vec4 color = texture(BrightTexture, pixelated);
-            return color;
-        } else if (Effects[i] == EFFECT_DILATION) {
-            float radius = EffectFloat1[i];
-            float separation = EffectFloat2[i];
-            vec2 texelSize = 1.0 / vec2(textureSize(BrightTexture, 0));
-
-            vec3 maxColor = texture(BrightTexture, uv).rgb;
-            int range = int(radius);
-            float radiusSq = radius * radius;
-
-            for (int x = -range; x <= range; x++) {
-                for (int y = -range; y <= range; y++) {
-                    float distSq = float(x * x + y * y);
-                    if (distSq <= radiusSq) {
-                        vec2 offset = vec2(float(x), float(y)) * texelSize * separation;
-                        vec3 sampled = texture(BrightTexture, uv + offset).rgb;
-                        maxColor = max(maxColor, sampled);
-                    }
-                }
-            }
-
-            return vec4(maxColor, texture(BrightTexture, uv).a);
-        }
-    }
-
-    return texture(BrightTexture, uv);
-}
-
-float LinearizeDepth(float depth) {
-    float z = depth * 2.0 - 1.0;
-    float linear = (2.0 * nearPlane * farPlane) /
-            (farPlane + nearPlane - z * (farPlane - nearPlane));
-    return linear / farPlane;
-}
-
-vec3 reconstructViewPos(vec2 uv, float depth) {
-    float z = depth * 2.0 - 1.0;
-    vec4 clipPos = vec4(uv * 2.0 - 1.0, z, 1.0);
-    vec4 viewPos = invProjectionMatrix * clipPos;
-    viewPos /= viewPos.w;
-    return viewPos.xyz;
-}
-
-struct ChromaticAberrationSettings {
-    float redOffset;
-    float greenOffset;
-    float blueOffset;
-    vec2 focusPoint;
-    bool enabled;
-};
-
-struct ColorCorrection {
+struct ColorCorrection
+{
     float exposure;
     float contrast;
     float saturation;
@@ -1535,2904 +2159,6667 @@ struct ColorCorrection {
     float tint;
 };
 
-vec4 applyColorCorrection(vec4 color, ColorCorrection cc) {
-    vec3 linearColor = color.rgb;
+struct PushConstants
+{
+    int hasBrightTexture;
+    int hasDepthTexture;
+    int hasVolumetricLightTexture;
+    int hasPositionTexture;
+    int hasLUTTexture;
+    int hasSSRTexture;
+    int TextureType;
+    float lutSize;
+    int EffectCount;
+};
 
-    linearColor *= pow(2.0, cc.exposure);
+struct EffectBuffer
+{
+    int Effects[1];
+};
 
-    linearColor = (linearColor - 0.5) * cc.contrast + 0.5;
+struct EffectFloat1Buffer
+{
+    float EffectFloat1[1];
+};
 
-    linearColor.r += cc.temperature * 0.05;
-    linearColor.g += cc.tint * 0.05;
+struct EffectFloat2Buffer
+{
+    float EffectFloat2[1];
+};
 
-    float luminance = dot(linearColor, vec3(0.2126, 0.7152, 0.0722));
-    linearColor = mix(vec3(luminance), linearColor, cc.saturation);
+struct EffectFloat3Buffer
+{
+    float EffectFloat3[1];
+};
 
-    linearColor = clamp(linearColor, 0.0, 1.0);
+struct EffectFloat4Buffer
+{
+    float EffectFloat4[1];
+};
 
-    return vec4(linearColor, color.a);
-}
+struct EffectFloat5Buffer
+{
+    float EffectFloat5[1];
+};
 
-vec4 applyColorEffects(vec4 color) {
-    for (int i = 0; i < EffectCount; i++) {
-        if (Effects[i] == EFFECT_INVERSION) {
-            color = vec4(1.0 - color.rgb, color.a);
-        } else if (Effects[i] == EFFECT_GRAYSCALE) {
-            float average = 0.2126 * color.r + 0.7152 * color.g + 0.0722 * color.b;
-            color = vec4(average, average, average, color.a);
-        } else if (Effects[i] == EFFECT_COLOR_CORRECTION) {
-            ColorCorrection cc;
-            cc.exposure = EffectFloat1[i];
-            cc.contrast = EffectFloat2[i];
-            cc.saturation = EffectFloat3[i];
-            cc.gamma = EffectFloat4[i];
-            cc.temperature = EffectFloat5[i];
-            cc.tint = EffectFloat6[i];
-            color = applyColorCorrection(color, cc);
-        } else if (Effects[i] == EFFECT_POSTERIZATION) {
-            float levels = max(EffectFloat1[i], 1.0);
-            float grayscale = max(color.r, max(color.g, color.b));
-            if (grayscale > 1e-4) {
-                float lower = floor(grayscale * levels) / levels;
-                float lowerDiff = abs(grayscale - lower);
-                float upper = ceil(grayscale * levels) / levels;
-                float upperDiff = abs(upper - grayscale);
-                float level = lowerDiff <= upperDiff ? lower : upper;
-                float adjustment = level / max(grayscale, 1e-4);
-                color = adjustment * color;
+struct Uniforms
+{
+    float4x4 invProjectionMatrix;
+    float4x4 projectionMatrix;
+    float4x4 viewMatrix;
+    float4x4 invViewMatrix;
+    float4x4 lastViewMatrix;
+    float nearPlane;
+    float farPlane;
+    float focusDepth;
+    float focusRange;
+    int maxMipLevel;
+    float deltaTime;
+    float time;
+};
+
+struct EffectFloat6Buffer
+{
+    float EffectFloat6[1];
+};
+
+struct Clouds
+{
+    float3 cloudPosition;
+    float3 cloudSize;
+    packed_float3 cameraPosition;
+    float cloudScale;
+    packed_float3 cloudOffset;
+    float cloudDensityThreshold;
+    float cloudDensityMultiplier;
+    float cloudAbsorption;
+    float cloudScattering;
+    float cloudPhaseG;
+    float cloudClusterStrength;
+    int cloudPrimarySteps;
+    int cloudLightSteps;
+    float cloudLightStepMultiplier;
+    float cloudMinStepLength;
+    float3 sunDirection;
+    packed_float3 sunColor;
+    float sunIntensity;
+    packed_float3 cloudAmbientColor;
+    int hasClouds;
+};
+
+struct Environment
+{
+    packed_float3 fogColor;
+    float fogIntensity;
+};
+
+constant spvUnsafeArray<float2, 9> _165 = spvUnsafeArray<float2, 9>({ float2(-0.0033333334140479564666748046875, 0.0033333334140479564666748046875), float2(0.0, 0.0033333334140479564666748046875), float2(0.0033333334140479564666748046875), float2(-0.0033333334140479564666748046875, 0.0), float2(0.0), float2(0.0033333334140479564666748046875, 0.0), float2(-0.0033333334140479564666748046875), float2(0.0, -0.0033333334140479564666748046875), float2(0.0033333334140479564666748046875, -0.0033333334140479564666748046875) });
+constant spvUnsafeArray<float, 9> _171 = spvUnsafeArray<float, 9>({ -1.0, -1.0, -1.0, -1.0, 9.0, -1.0, -1.0, -1.0, -1.0 });
+constant spvUnsafeArray<float, 9> _311 = spvUnsafeArray<float, 9>({ 1.0, 1.0, 1.0, 1.0, -8.0, 1.0, 1.0, 1.0, 1.0 });
+
+struct main0_out
+{
+    float4 FragColor [[color(0)]];
+};
+
+struct main0_in
+{
+    float2 TexCoord [[user(locn0)]];
+};
+
+static inline __attribute__((always_inline))
+float4 sampleColor(thread const float2& uv, constant PushConstants& _372, device EffectBuffer& _381, device EffectFloat1Buffer& _394, device EffectFloat2Buffer& _403, device EffectFloat3Buffer& _411, device EffectFloat4Buffer& _419, device EffectFloat5Buffer& _426, texture2d<float> Texture, sampler TextureSmplr)
+{
+    for (int i = 0; i < _372.EffectCount; i++)
+    {
+        if (_381.Effects[i] == 7)
+        {
+            float redOffset = _394.EffectFloat1[i];
+            float greenOffset = _403.EffectFloat2[i];
+            float blueOffset = _411.EffectFloat3[i];
+            float2 focusPoint = float2(_419.EffectFloat4[i], _426.EffectFloat5[i]);
+            float2 sampleCoord = uv;
+            float2 direction = sampleCoord - focusPoint;
+            float red = Texture.sample(TextureSmplr, (sampleCoord + (direction * redOffset))).x;
+            float green = Texture.sample(TextureSmplr, (sampleCoord + (direction * greenOffset))).y;
+            float2 blue = Texture.sample(TextureSmplr, (sampleCoord + (direction * blueOffset))).zw;
+            return float4(red, green, blue);
+        }
+        else
+        {
+            if (_381.Effects[i] == 9)
+            {
+                float pixelSizeInPixels = _394.EffectFloat1[i];
+                float2 texSize = float2(int2(Texture.get_width(), Texture.get_height()));
+                float2 pixelSize = float2(pixelSizeInPixels) / texSize;
+                float2 pixelated = floor(uv / pixelSize) * pixelSize;
+                return Texture.sample(TextureSmplr, pixelated);
             }
-        } else if (Effects[i] == EFFECT_FILM_GRAIN) {
-            float amount = EffectFloat1[i];
-
-            vec3 seed = vec3(gl_FragCoord.xy, deltaTime * 100.0);
-
-            vec3 noise;
-            float n;
-
-            n = dot(seed, vec3(12.9898, 78.233, 45.164));
-            noise.r = fract(sin(n) * 43758.5453);
-
-            n = dot(seed, vec3(93.989, 67.345, 12.989));
-            noise.g = fract(sin(n) * 28001.1234);
-
-            n = dot(seed, vec3(39.346, 11.135, 83.155));
-            noise.b = fract(sin(n) * 19283.4567);
-
-            vec3 grain = (noise - 0.5) * 2.0 * amount;
-
-            float luminance = dot(color.rgb, vec3(0.299, 0.587, 0.114));
-            float visibility = 1.0 - abs(luminance - 0.5) * 0.5;
-
-            color.rgb += grain * visibility;
-            color.rgb = clamp(color.rgb, 0.0, 1.0);
+            else
+            {
+                if (_381.Effects[i] == 10)
+                {
+                    float radius = _394.EffectFloat1[i];
+                    float separation = _403.EffectFloat2[i];
+                    float2 texelSize = float2(1.0) / float2(int2(Texture.get_width(), Texture.get_height()));
+                    float3 maxColor = Texture.sample(TextureSmplr, uv).xyz;
+                    int range = int(radius);
+                    float radiusSq = radius * radius;
+                    int _543 = -range;
+                    for (int x = _543; x <= range; x++)
+                    {
+                        int _554 = -range;
+                        for (int y = _554; y <= range; y++)
+                        {
+                            float distSq = float((x * x) + (y * y));
+                            if (distSq <= radiusSq)
+                            {
+                                float2 offset = (float2(float(x), float(y)) * texelSize) * separation;
+                                float3 sampled = Texture.sample(TextureSmplr, (uv + offset)).xyz;
+                                maxColor = fast::max(maxColor, sampled);
+                            }
+                        }
+                    }
+                    return float4(maxColor, Texture.sample(TextureSmplr, uv).w);
+                }
+            }
         }
     }
-
-    return color;
+    return Texture.sample(TextureSmplr, uv);
 }
 
-vec4 applyFXAA(sampler2D tex, vec2 texCoord) {
-    vec2 texelSize = 1.0 / textureSize(tex, 0);
+static inline __attribute__((always_inline))
+float3 reconstructViewPos(thread const float2& uv, thread const float& depth, constant Uniforms& _849)
+{
+    float z = (depth * 2.0) - 1.0;
+    float4 clipPos = float4((uv * 2.0) - float2(1.0), z, 1.0);
+    float4 viewPos = _849.invProjectionMatrix * clipPos;
+    viewPos /= float4(viewPos.w);
+    return viewPos.xyz;
+}
 
+static inline __attribute__((always_inline))
+float4 sharpen(texture2d<float> image, sampler imageSmplr, thread float2& TexCoord)
+{
+    spvUnsafeArray<float3, 9> sampleTex;
+    for (int i = 0; i < 9; i++)
+    {
+        sampleTex[i] = float3(image.sample(imageSmplr, (TexCoord + _165[i])).xyz);
+    }
+    float3 col = float3(0.0);
+    for (int i_1 = 0; i_1 < 9; i_1++)
+    {
+        col += (sampleTex[i_1] * _171[i_1]);
+    }
+    return float4(col, 1.0);
+}
+
+static inline __attribute__((always_inline))
+float4 blur(texture2d<float> image, sampler imageSmplr, thread const float& radius, thread float2& TexCoord)
+{
+    float2 texelSize = float2(1.0) / float2(int2(image.get_width(), image.get_height()));
+    float3 result = float3(0.0);
+    float total = 0.0;
+    float sigma = radius * 0.5;
+    float twoSigmaSq = (2.0 * sigma) * sigma;
+    int _257 = -int(radius);
+    for (int x = _257; x <= int(radius); x++)
+    {
+        float weight = exp(float(-(x * x)) / twoSigmaSq);
+        float2 offset = float2(float(x), 0.0) * texelSize;
+        result += (image.sample(imageSmplr, (TexCoord + offset)).xyz * weight);
+        total += weight;
+    }
+    result /= float3(total);
+    return float4(result, 1.0);
+}
+
+static inline __attribute__((always_inline))
+float4 edgeDetection(texture2d<float> image, sampler imageSmplr, thread float2& TexCoord)
+{
+    spvUnsafeArray<float3, 9> sampleTex;
+    for (int i = 0; i < 9; i++)
+    {
+        sampleTex[i] = float3(image.sample(imageSmplr, (TexCoord + _165[i])).xyz);
+    }
+    float3 col = float3(0.0);
+    for (int i_1 = 0; i_1 < 9; i_1++)
+    {
+        col += (sampleTex[i_1] * _311[i_1]);
+    }
+    return float4(col, 1.0);
+}
+
+static inline __attribute__((always_inline))
+float4 applyFXAA(texture2d<float> tex, sampler texSmplr, thread const float2& texCoord, constant PushConstants& _372, device EffectBuffer& _381, device EffectFloat1Buffer& _394, device EffectFloat2Buffer& _403, device EffectFloat3Buffer& _411, device EffectFloat4Buffer& _419, device EffectFloat5Buffer& _426, texture2d<float> Texture, sampler TextureSmplr)
+{
+    float2 texelSize = float2(1.0) / float2(int2(tex.get_width(), tex.get_height()));
     float FXAA_SPAN_MAX = 8.0;
-    float FXAA_REDUCE_MUL = 1.0 / 8.0;
-    float FXAA_REDUCE_MIN = 1.0 / 128.0;
-
-    vec3 rgbNW = sampleColor(texCoord + vec2(-1.0, -1.0) * texelSize).rgb;
-    vec3 rgbNE = sampleColor(texCoord + vec2(1.0, -1.0) * texelSize).rgb;
-    vec3 rgbSW = sampleColor(texCoord + vec2(-1.0, 1.0) * texelSize).rgb;
-    vec3 rgbSE = sampleColor(texCoord + vec2(1.0, 1.0) * texelSize).rgb;
-    vec3 rgbM = sampleColor(texCoord).rgb;
-
-    vec3 luma = vec3(0.299, 0.587, 0.114);
+    float FXAA_REDUCE_MUL = 0.125;
+    float FXAA_REDUCE_MIN = 0.0078125;
+    float2 param = texCoord + (float2(-1.0) * texelSize);
+    float3 rgbNW = sampleColor(param, _372, _381, _394, _403, _411, _419, _426, Texture, TextureSmplr).xyz;
+    float2 param_1 = texCoord + (float2(1.0, -1.0) * texelSize);
+    float3 rgbNE = sampleColor(param_1, _372, _381, _394, _403, _411, _419, _426, Texture, TextureSmplr).xyz;
+    float2 param_2 = texCoord + (float2(-1.0, 1.0) * texelSize);
+    float3 rgbSW = sampleColor(param_2, _372, _381, _394, _403, _411, _419, _426, Texture, TextureSmplr).xyz;
+    float2 param_3 = texCoord + (float2(1.0) * texelSize);
+    float3 rgbSE = sampleColor(param_3, _372, _381, _394, _403, _411, _419, _426, Texture, TextureSmplr).xyz;
+    float2 param_4 = texCoord;
+    float3 rgbM = sampleColor(param_4, _372, _381, _394, _403, _411, _419, _426, Texture, TextureSmplr).xyz;
+    float3 luma = float3(0.2989999949932098388671875, 0.58700001239776611328125, 0.114000000059604644775390625);
     float lumaNW = dot(rgbNW, luma);
     float lumaNE = dot(rgbNE, luma);
     float lumaSW = dot(rgbSW, luma);
     float lumaSE = dot(rgbSE, luma);
     float lumaM = dot(rgbM, luma);
-
-    float lumaMin = min(lumaM, min(min(lumaNW, lumaNE), min(lumaSW, lumaSE)));
-    float lumaMax = max(lumaM, max(max(lumaNW, lumaNE), max(lumaSW, lumaSE)));
-
-    vec2 dir;
+    float lumaMin = fast::min(lumaM, fast::min(fast::min(lumaNW, lumaNE), fast::min(lumaSW, lumaSE)));
+    float lumaMax = fast::max(lumaM, fast::max(fast::max(lumaNW, lumaNE), fast::max(lumaSW, lumaSE)));
+    float2 dir;
     dir.x = -((lumaNW + lumaNE) - (lumaSW + lumaSE));
-    dir.y = ((lumaNW + lumaSW) - (lumaNE + lumaSE));
-
-    float dirReduce = max((lumaNW + lumaNE + lumaSW + lumaSE) *
-                (0.25 * FXAA_REDUCE_MUL), FXAA_REDUCE_MIN);
-
-    float rcpDirMin = 1.0 / (min(abs(dir.x), abs(dir.y)) + dirReduce);
-    dir = min(vec2(FXAA_SPAN_MAX, FXAA_SPAN_MAX),
-            max(vec2(-FXAA_SPAN_MAX, -FXAA_SPAN_MAX),
-                dir * rcpDirMin)) * texelSize;
-
-    vec3 rgbA = 0.5 * (
-            sampleColor(texCoord + dir * (1.0 / 3.0 - 0.5)).rgb +
-                sampleColor(texCoord + dir * (2.0 / 3.0 - 0.5)).rgb);
-
-    vec3 rgbB = rgbA * 0.5 + 0.25 * (
-                sampleColor(texCoord + dir * -0.5).rgb +
-                    sampleColor(texCoord + dir * 0.5).rgb);
-
+    dir.y = (lumaNW + lumaSW) - (lumaNE + lumaSE);
+    float dirReduce = fast::max((((lumaNW + lumaNE) + lumaSW) + lumaSE) * (0.25 * FXAA_REDUCE_MUL), FXAA_REDUCE_MIN);
+    float rcpDirMin = 1.0 / (fast::min(abs(dir.x), abs(dir.y)) + dirReduce);
+    dir = fast::min(float2(FXAA_SPAN_MAX), fast::max(float2(-FXAA_SPAN_MAX, -FXAA_SPAN_MAX), dir * rcpDirMin)) * texelSize;
+    float2 param_5 = texCoord + (dir * (-0.16666667163372039794921875));
+    float2 param_6 = texCoord + (dir * 0.16666667163372039794921875);
+    float3 rgbA = (sampleColor(param_5, _372, _381, _394, _403, _411, _419, _426, Texture, TextureSmplr).xyz + sampleColor(param_6, _372, _381, _394, _403, _411, _419, _426, Texture, TextureSmplr).xyz) * 0.5;
+    float2 param_7 = texCoord + (dir * (-0.5));
+    float2 param_8 = texCoord + (dir * 0.5);
+    float3 rgbB = (rgbA * 0.5) + ((sampleColor(param_7, _372, _381, _394, _403, _411, _419, _426, Texture, TextureSmplr).xyz + sampleColor(param_8, _372, _381, _394, _403, _411, _419, _426, Texture, TextureSmplr).xyz) * 0.25);
     float lumaB = dot(rgbB, luma);
-
-    if ((lumaB < lumaMin) || (lumaB > lumaMax)) {
-        return vec4(rgbA, 1.0);
-    } else {
-        return vec4(rgbB, 1.0);
+    if ((lumaB < lumaMin) || (lumaB > lumaMax))
+    {
+        return float4(rgbA, 1.0);
+    }
+    else
+    {
+        return float4(rgbB, 1.0);
     }
 }
 
-vec4 composeSSR(vec4 color, vec2 uv) {
-    if (hasSSRTexture != 1) {
-        return color;
+static inline __attribute__((always_inline))
+float4 applyColorCorrection(thread const float4& color, thread const ColorCorrection& cc)
+{
+    float3 linearColor = color.xyz;
+    linearColor *= powr(2.0, cc.exposure);
+    linearColor = ((linearColor - float3(0.5)) * cc.contrast) + float3(0.5);
+    linearColor.x += (cc.temperature * 0.0500000007450580596923828125);
+    linearColor.y += (cc.tint * 0.0500000007450580596923828125);
+    float luminance = dot(linearColor, float3(0.2125999927520751953125, 0.715200006961822509765625, 0.072200000286102294921875));
+    linearColor = mix(float3(luminance), linearColor, float3(cc.saturation));
+    linearColor = fast::clamp(linearColor, float3(0.0), float3(1.0));
+    return float4(linearColor, color.w);
+}
+
+static inline __attribute__((always_inline))
+float4 applyColorEffects(thread float4& color, constant PushConstants& _372, device EffectBuffer& _381, device EffectFloat1Buffer& _394, device EffectFloat2Buffer& _403, device EffectFloat3Buffer& _411, device EffectFloat4Buffer& _419, device EffectFloat5Buffer& _426, constant Uniforms& _849, device EffectFloat6Buffer& _1049, thread float4& gl_FragCoord)
+{
+    ColorCorrection cc;
+    float3 _noise;
+    for (int i = 0; i < _372.EffectCount; i++)
+    {
+        if (_381.Effects[i] == 0)
+        {
+            color = float4(float3(1.0) - color.xyz, color.w);
+        }
+        else
+        {
+            if (_381.Effects[i] == 1)
+            {
+                float average = ((0.2125999927520751953125 * color.x) + (0.715200006961822509765625 * color.y)) + (0.072200000286102294921875 * color.z);
+                color = float4(average, average, average, color.w);
+            }
+            else
+            {
+                if (_381.Effects[i] == 5)
+                {
+                    cc.exposure = _394.EffectFloat1[i];
+                    cc.contrast = _403.EffectFloat2[i];
+                    cc.saturation = _411.EffectFloat3[i];
+                    cc.gamma = _419.EffectFloat4[i];
+                    cc.temperature = _426.EffectFloat5[i];
+                    cc.tint = _1049.EffectFloat6[i];
+                    float4 param = color;
+                    ColorCorrection param_1 = cc;
+                    color = applyColorCorrection(param, param_1);
+                }
+                else
+                {
+                    if (_381.Effects[i] == 8)
+                    {
+                        float levels = fast::max(_394.EffectFloat1[i], 1.0);
+                        float grayscale = fast::max(color.x, fast::max(color.y, color.z));
+                        if (grayscale > 9.9999997473787516355514526367188e-05)
+                        {
+                            float lower = floor(grayscale * levels) / levels;
+                            float lowerDiff = abs(grayscale - lower);
+                            float upper = ceil(grayscale * levels) / levels;
+                            float upperDiff = abs(upper - grayscale);
+                            float level0 = (lowerDiff <= upperDiff) ? lower : upper;
+                            float adjustment = level0 / fast::max(grayscale, 9.9999997473787516355514526367188e-05);
+                            color *= adjustment;
+                        }
+                    }
+                    else
+                    {
+                        if (_381.Effects[i] == 11)
+                        {
+                            float amount = _394.EffectFloat1[i];
+                            float3 seed = float3(gl_FragCoord.xy, _849.deltaTime * 100.0);
+                            float n = dot(seed, float3(12.98980045318603515625, 78.233001708984375, 45.16400146484375));
+                            _noise.x = fract(sin(n) * 43758.546875);
+                            n = dot(seed, float3(93.9889984130859375, 67.345001220703125, 12.9890003204345703125));
+                            _noise.y = fract(sin(n) * 28001.123046875);
+                            n = dot(seed, float3(39.34600067138671875, 11.1350002288818359375, 83.154998779296875));
+                            _noise.z = fract(sin(n) * 19283.45703125);
+                            float3 grain = ((_noise - float3(0.5)) * 2.0) * amount;
+                            float luminance = dot(color.xyz, float3(0.2989999949932098388671875, 0.58700001239776611328125, 0.114000000059604644775390625));
+                            float visibility = 1.0 - (abs(luminance - 0.5) * 0.5);
+                            float4 _1210 = color;
+                            float3 _1212 = _1210.xyz + (grain * visibility);
+                            color.x = _1212.x;
+                            color.y = _1212.y;
+                            color.z = _1212.z;
+                            float4 _1219 = color;
+                            float3 _1223 = fast::clamp(_1219.xyz, float3(0.0), float3(1.0));
+                            color.x = _1223.x;
+                            color.y = _1223.y;
+                            color.z = _1223.z;
+                        }
+                    }
+                }
+            }
+        }
     }
-    vec4 ssr = texture(SSRTexture, uv);
-    float reflectionWeight = clamp(ssr.a, 0.0, 1.0);
-    float baseWeight = 1.0 - reflectionWeight;
-    color.rgb = color.rgb * baseWeight + ssr.rgb * reflectionWeight;
     return color;
 }
 
-vec4 composeLighting(vec2 uv, vec4 baseColor) {
-    vec4 color = baseColor;
-    if (hasBrightTexture == 1) {
-        color += sampleBright(uv);
-    }
-    if (hasVolumetricLightTexture == 1) {
-        color += texture(VolumetricLightTexture, uv);
-    }
-    return composeSSR(color, uv);
+static inline __attribute__((always_inline))
+float LinearizeDepth(thread const float& depth, constant Uniforms& _849)
+{
+    float z = (depth * 2.0) - 1.0;
+    float linear = ((2.0 * _849.nearPlane) * _849.farPlane) / ((_849.farPlane + _849.nearPlane) - (z * (_849.farPlane - _849.nearPlane)));
+    return linear / _849.farPlane;
 }
 
-vec4 applyMotionBlur(vec2 texCoord, float size, float separation, vec4 color) {
-    vec4 fallbackColor = composeLighting(texCoord, color);
-    if (size <= 0.0 || separation <= 0.0) {
-        return fallbackColor;
-    }
-    if (hasPositionTexture != 1) {
-        return fallbackColor;
-    }
-
-    vec4 worldPos = texture(PositionTexture, texCoord);
-    if (worldPos.a <= 0.0) {
-        return fallbackColor;
-    }
-
-    vec3 viewSpacePos = (viewMatrix * worldPos).xyz;
-    float distanceToCamera = length(viewSpacePos);
-
-    if (distanceToCamera < nearPlane * 2.0) {
-        return fallbackColor;
-    }
-
-    vec4 currentClipPos = projectionMatrix * viewMatrix * worldPos;
-    currentClipPos.xyz /= currentClipPos.w;
-    vec2 currentUV = currentClipPos.xy * 0.5 + 0.5;
-
-    vec4 prevClipPos = projectionMatrix * lastViewMatrix * worldPos;
-    prevClipPos.xyz /= prevClipPos.w;
-    vec2 prevUV = prevClipPos.xy * 0.5 + 0.5;
-
-    vec2 velocity = (currentUV - prevUV) * separation;
-    float velocityLength = length(velocity);
-
-    float maxVelocity = 0.12;
-    if (velocityLength > maxVelocity) {
-        velocity = normalize(velocity) * maxVelocity;
-        velocityLength = maxVelocity;
-    }
-    if (hasSSRTexture == 1) {
-        float mirrorWeight = clamp(texture(SSRTexture, texCoord).a, 0.0, 1.0);
-        float blurDamp = mix(1.0, 0.2, mirrorWeight);
-        velocity *= blurDamp;
-        velocityLength *= blurDamp;
-    }
-
-    if (velocityLength < 0.0001) {
-        return fallbackColor;
-    }
-
-    int baseSamples = clamp(int(size), 2, 32);
-    float sampleScale =
-        mix(0.75, 1.75, clamp(velocityLength / maxVelocity, 0.0, 1.0));
-    int samples = clamp(int(float(baseSamples) * sampleScale), 3, 48);
-
-    float centerDepth = 0.0;
-    float depthSoftness = 1.0;
-    if (hasDepthTexture == 1) {
-        centerDepth = LinearizeDepth(texture(DepthTexture, texCoord).r);
-        depthSoftness = max(0.002, centerDepth * 0.02);
-    }
-
-    float jitter = (fract(sin(dot(texCoord * vec2(173.3, 97.1),
-                                  vec2(12.9898, 78.233))) *
-                          43758.5453) -
-                    0.5) *
-        0.35;
-
-    vec4 result = vec4(0.0);
-    float totalWeight = 0.0;
-
-    for (int i = 0; i < samples; i++) {
-        float t = ((float(i) + 0.5) / float(samples)) * 2.0 - 1.0;
-        t += jitter / float(samples);
-        vec2 sampleCoord = texCoord + velocity * t;
-
-        if (sampleCoord.x < 0.0 || sampleCoord.x > 1.0 ||
-            sampleCoord.y < 0.0 || sampleCoord.y > 1.0) {
-            continue;
-        }
-
-        float depthWeight = 1.0;
-        if (hasDepthTexture == 1) {
-            float sampleDepth = LinearizeDepth(texture(DepthTexture, sampleCoord).r);
-            float depthDelta = abs(sampleDepth - centerDepth);
-            depthWeight =
-                1.0 - smoothstep(depthSoftness, depthSoftness * 2.5, depthDelta);
-            if (depthWeight <= 0.0) {
-                continue;
-            }
-        }
-
-        vec4 sampled = composeLighting(sampleCoord, sampleColor(sampleCoord));
-        float gaussian = exp(-4.0 * t * t);
-        float weight = gaussian * depthWeight;
-        result += sampled * weight;
-        totalWeight += weight;
-    }
-
-    if (totalWeight > 0.0) {
-        return result / totalWeight;
-    }
-
-    return fallbackColor;
+static inline __attribute__((always_inline))
+float2 rayBoxDst(thread const float3& boundsMin, thread const float3& boundsMax, thread const float3& rayOrigin, thread const float3& rayDir)
+{
+    float3 t0 = (boundsMin - rayOrigin) / rayDir;
+    float3 t1 = (boundsMax - rayOrigin) / rayDir;
+    float3 tMin = fast::min(t0, t1);
+    float3 tMax = fast::max(t0, t1);
+    float dstA = fast::max(fast::max(tMin.x, tMin.y), tMin.z);
+    float dstB = fast::min(tMax.x, fast::min(tMax.y, tMax.z));
+    float dstToContainer = fast::max(0.0, dstA);
+    float dstInsideContainer = fast::max(0.0, dstB - dstToContainer);
+    return float2(dstToContainer, dstInsideContainer);
 }
 
-vec3 sampleLUT(vec3 rgb, float blueSlice, float sliceSize, float slicePixelOffset) {
-    float sliceY = floor(blueSlice / lutSize);
-    float sliceX = mod(blueSlice, lutSize);
-
-    vec2 uv;
-    uv.x = sliceX * sliceSize + slicePixelOffset + rgb.r * sliceSize;
-    uv.y = sliceY * sliceSize + slicePixelOffset + rgb.g * sliceSize;
-
-    return texture(LUTTexture, uv).rgb;
+static inline __attribute__((always_inline))
+float hashNoise(thread const float3& p)
+{
+    return fract(sin(dot(p, float3(12.98980045318603515625, 78.233001708984375, 37.71900177001953125))) * 43758.546875);
 }
 
-vec4 mapToLUT(vec4 color) {
-    if (hasLUTTexture != 1) {
-        return color;
+static inline __attribute__((always_inline))
+float saturate0(thread const float& v)
+{
+    return fast::clamp(v, 0.0, 1.0);
+}
+
+static inline __attribute__((always_inline))
+float calculateCloudDensity(thread const float3& worldPos, constant Clouds& _1929, texture3d<float> cloudsTexture, sampler cloudsTextureSmplr)
+{
+    float3 halfExtents = fast::max(_1929.cloudSize * 0.5, float3(9.9999997473787516355514526367188e-05));
+    float3 localPos = (worldPos - _1929.cloudPosition) / halfExtents;
+    bool _1947 = any(localPos < float3(-1.0));
+    bool _1955;
+    if (!_1947)
+    {
+        _1955 = any(localPos > float3(1.0));
     }
-
-    float sliceSize = 1.0 / lutSize;
-    float slicePixelOffset = sliceSize * 0.5;
-
-    float blueIndex = color.b * (lutSize - 1.0);
-    float sliceLow = floor(blueIndex);
-    float sliceHigh = min(sliceLow + 1.0, lutSize - 1.0);
-    float t = blueIndex - sliceLow;
-
-    vec3 lowColor = sampleLUT(color.rgb, sliceLow, sliceSize, slicePixelOffset);
-    vec3 highColor = sampleLUT(color.rgb, sliceHigh, sliceSize, slicePixelOffset);
-
-    vec3 finalRGB = mix(lowColor, highColor, t);
-
-    return vec4(finalRGB, color.a);
-}
-
-vec2 rayBoxDst(vec3 boundsMin, vec3 boundsMax, vec3 rayOrigin, vec3 rayDir) {
-    vec3 t0 = (boundsMin - rayOrigin) / rayDir;
-    vec3 t1 = (boundsMax - rayOrigin) / rayDir;
-    vec3 tMin = min(t0, t1);
-    vec3 tMax = max(t0, t1);
-
-    float dstA = max(max(tMin.x, tMin.y), tMin.z);
-    float dstB = min(tMax.x, min(tMax.y, tMax.z));
-
-    float dstToContainer = max(0.0, dstA);
-    float dstInsideContainer = max(0.0, dstB - dstToContainer);
-
-    return vec2(dstToContainer, dstInsideContainer);
-}
-
-float saturate(float v) { return clamp(v, 0.0, 1.0); }
-
-float hashNoise(vec3 p) {
-    return fract(sin(dot(p, vec3(12.9898, 78.233, 37.719))) * 43758.5453);
-}
-
-float henyeyGreenstein(float cosTheta, float g) {
-    const float PI = 3.14159265359;
-    float g2 = g * g;
-    float denom = pow(1.0 + g2 - 2.0 * g * cosTheta, 1.5);
-    return (1.0 - g2) / (4.0 * PI * max(denom, 1e-4));
-}
-
-float calculateCloudDensity(vec3 worldPos) {
-    vec3 halfExtents = max(cloudSize * 0.5, vec3(1e-4));
-    vec3 localPos = (worldPos - cloudPosition) / halfExtents;
-
-    if (any(lessThan(localPos, vec3(-1.0))) ||
-        any(greaterThan(localPos, vec3(1.0)))) {
+    else
+    {
+        _1955 = _1947;
+    }
+    if (_1955)
+    {
         return 0.0;
     }
-
-    vec3 uvw = localPos * 0.5 + 0.5;
-    float scale = max(cloudScale, 0.001);
-    vec3 noiseCoord = fract(uvw * scale + cloudOffset);
-
-    vec4 shape = texture(cloudsTexture, noiseCoord);
-    
-    float cluster = saturate(cloudClusterStrength);
-
-    float lowerFade = smoothstep(-0.95, -0.6, localPos.y);
-    float upperFade = 1.0 - smoothstep(0.35, 0.95, localPos.y);
+    float3 uvw = (localPos * 0.5) + float3(0.5);
+    float scale = fast::max(_1929.cloudScale, 0.001000000047497451305389404296875);
+    float3 noiseCoord = fract((uvw * scale) + float3(_1929.cloudOffset));
+    float4 shape = cloudsTexture.sample(cloudsTextureSmplr, noiseCoord);
+    float param = _1929.cloudClusterStrength;
+    float cluster = saturate0(param);
+    float lowerFade = smoothstep(-0.949999988079071044921875, -0.60000002384185791015625, localPos.y);
+    float upperFade = 1.0 - smoothstep(0.3499999940395355224609375, 0.949999988079071044921875, localPos.y);
     float verticalMask = lowerFade * upperFade;
-
-    float coverageThreshold = mix(0.6, 0.28, cluster);
-    float coverageSoftness = mix(0.22, 0.34, cluster);
-    float coverageNoise = mix(shape.r, shape.a, 0.4 + cluster * 0.35);
-    float coverage = smoothstep(coverageThreshold,
-                                coverageThreshold + coverageSoftness,
-                                coverageNoise);
-    coverage = pow(coverage, mix(2.0, 0.7, cluster));
-
-    float detail = mix(smoothstep(0.25, 0.75, shape.g), 
-                       smoothstep(0.2, 0.9, shape.a), 0.55);
-    detail = pow(detail, mix(1.6, 0.85, cluster));
-
-    float cavityNoise = smoothstep(0.22, 0.85, shape.b);
-    float gapMask = clamp(1.0 - cavityNoise * mix(0.25, 0.7, cluster), 0.0, 1.0);
-
-    float density = coverage * mix(detail, 1.0, cluster * 0.35);
-    density = max(density * gapMask * verticalMask - 0.02, 0.0);
-    density *= max(cloudDensityMultiplier, 0.0);
-
+    float coverageThreshold = mix(0.60000002384185791015625, 0.2800000011920928955078125, cluster);
+    float coverageSoftness = mix(0.2199999988079071044921875, 0.3400000035762786865234375, cluster);
+    float coverageNoise = mix(shape.x, shape.w, 0.4000000059604644775390625 + (cluster * 0.3499999940395355224609375));
+    float coverage = smoothstep(coverageThreshold, coverageThreshold + coverageSoftness, coverageNoise);
+    coverage = powr(coverage, mix(2.0, 0.699999988079071044921875, cluster));
+    float detail = mix(smoothstep(0.25, 0.75, shape.y), smoothstep(0.20000000298023223876953125, 0.89999997615814208984375, shape.w), 0.550000011920928955078125);
+    detail = powr(detail, mix(1.60000002384185791015625, 0.85000002384185791015625, cluster));
+    float cavityNoise = smoothstep(0.2199999988079071044921875, 0.85000002384185791015625, shape.z);
+    float gapMask = fast::clamp(1.0 - (cavityNoise * mix(0.25, 0.699999988079071044921875, cluster)), 0.0, 1.0);
+    float density = coverage * mix(detail, 1.0, cluster * 0.3499999940395355224609375);
+    density = fast::max(((density * gapMask) * verticalMask) - 0.0199999995529651641845703125, 0.0);
+    density *= fast::max(_1929.cloudDensityMultiplier, 0.0);
     return density;
 }
 
-float sampleSunTransmittance(vec3 worldPos, float stepSize) {
-    vec3 lightDir = -sunDirection;
+static inline __attribute__((always_inline))
+float sampleSunTransmittance(thread const float3& worldPos, thread const float& stepSize, constant Clouds& _1929, texture3d<float> cloudsTexture, sampler cloudsTextureSmplr)
+{
+    float3 lightDir = -_1929.sunDirection;
     float dirLength = length(lightDir);
-    if (dirLength < 1e-3) {
-        lightDir = vec3(0.0, 1.0, 0.0);
-    } else {
-        lightDir /= dirLength;
+    if (dirLength < 0.001000000047497451305389404296875)
+    {
+        lightDir = float3(0.0, 1.0, 0.0);
     }
-
-    float maxDistance = length(cloudSize) * 1.5;
+    else
+    {
+        lightDir /= float3(dirLength);
+    }
+    float maxDistance = length(_1929.cloudSize) * 1.5;
     float travel = 0.0;
     float attenuation = 1.0;
-    float lightStep = max(stepSize * cloudLightStepMultiplier, cloudMinStepLength);
-
-    int steps = max(cloudLightSteps, 1);
-    for (int i = 0; i < steps && attenuation > 0.05; ++i) {
+    float lightStep = fast::max(stepSize * _1929.cloudLightStepMultiplier, _1929.cloudMinStepLength);
+    int steps = max(_1929.cloudLightSteps, 1);
+    for (int i = 0; (i < steps) && (attenuation > 0.0500000007450580596923828125); i++)
+    {
         travel += lightStep;
         if (travel > maxDistance)
+        {
             break;
-
-        vec3 samplePos = worldPos + lightDir * travel;
-        float density = calculateCloudDensity(samplePos);
-        attenuation *= exp(-density * lightStep * cloudAbsorption);
-        lightStep = max(lightStep * cloudLightStepMultiplier, cloudMinStepLength);
+        }
+        float3 samplePos = worldPos + (lightDir * travel);
+        float3 param = samplePos;
+        float density = calculateCloudDensity(param, _1929, cloudsTexture, cloudsTextureSmplr);
+        attenuation *= exp(((-density) * lightStep) * _1929.cloudAbsorption);
+        lightStep = fast::max(lightStep * _1929.cloudLightStepMultiplier, _1929.cloudMinStepLength);
     }
-
     return attenuation;
 }
 
-vec4 cloudRendering(vec4 inColor) {
-    if (hasClouds != 1) {
+static inline __attribute__((always_inline))
+float henyeyGreenstein(thread const float& cosTheta, thread const float& g)
+{
+    float g2 = g * g;
+    float denom = powr((1.0 + g2) - ((2.0 * g) * cosTheta), 1.5);
+    return (1.0 - g2) / (12.56637096405029296875 * fast::max(denom, 9.9999997473787516355514526367188e-05));
+}
+
+static inline __attribute__((always_inline))
+float4 cloudRendering(thread const float4& inColor, thread float2& TexCoord, constant PushConstants& _372, constant Uniforms& _849, constant Clouds& _1929, texture3d<float> cloudsTexture, sampler cloudsTextureSmplr, texture2d<float> DepthTexture, sampler DepthTextureSmplr)
+{
+    if (_1929.hasClouds != 1)
+    {
         return inColor;
     }
-
-    float nonLinearDepth = hasDepthTexture == 1
-                               ? texture(DepthTexture, TexCoord).r
-                               : 1.0;
-    bool depthAvailable = hasDepthTexture == 1 && nonLinearDepth < 1.0;
+    float _2197;
+    if (_372.hasDepthTexture == 1)
+    {
+        _2197 = DepthTexture.sample(DepthTextureSmplr, TexCoord).x;
+    }
+    else
+    {
+        _2197 = 1.0;
+    }
+    float nonLinearDepth = _2197;
+    bool depthAvailable = (_372.hasDepthTexture == 1) && (nonLinearDepth < 1.0);
     float depthSample = depthAvailable ? nonLinearDepth : 1.0;
-
-    vec3 rayOrigin = cameraPosition;
-
-    vec4 clipSpace = vec4(TexCoord * 2.0 - 1.0, depthSample * 2.0 - 1.0, 1.0);
-    vec4 viewSpace = invProjectionMatrix * clipSpace;
-    viewSpace /= viewSpace.w;
-    vec3 worldPos = (invViewMatrix * vec4(viewSpace.xyz, 1.0)).xyz;
-
-    vec3 rayDir = normalize(worldPos - rayOrigin);
-
-    float sceneDistance = depthAvailable ? length(worldPos - rayOrigin) : 1e6;
-
-    vec3 boundsMin = cloudPosition - cloudSize * 0.5;
-    vec3 boundsMax = cloudPosition + cloudSize * 0.5;
-    vec2 rayBoxInfo = rayBoxDst(boundsMin, boundsMax, rayOrigin, rayDir);
-
+    float3 rayOrigin = float3(_1929.cameraPosition);
+    float4 clipSpace = float4((TexCoord * 2.0) - float2(1.0), (depthSample * 2.0) - 1.0, 1.0);
+    float4 viewSpace = _849.invProjectionMatrix * clipSpace;
+    viewSpace /= float4(viewSpace.w);
+    float3 worldPos = (_849.invViewMatrix * float4(viewSpace.xyz, 1.0)).xyz;
+    float3 rayDir = fast::normalize(worldPos - rayOrigin);
+    float _2261;
+    if (depthAvailable)
+    {
+        _2261 = length(worldPos - rayOrigin);
+    }
+    else
+    {
+        _2261 = 1000000.0;
+    }
+    float sceneDistance = _2261;
+    float3 boundsMin = _1929.cloudPosition - (_1929.cloudSize * 0.5);
+    float3 boundsMax = _1929.cloudPosition + (_1929.cloudSize * 0.5);
+    float3 param = boundsMin;
+    float3 param_1 = boundsMax;
+    float3 param_2 = rayOrigin;
+    float3 param_3 = rayDir;
+    float2 rayBoxInfo = rayBoxDst(param, param_1, param_2, param_3);
     float distToContainer = rayBoxInfo.x;
     float distInContainer = rayBoxInfo.y;
-
-    if (distInContainer <= 0.0) {
+    if (distInContainer <= 0.0)
+    {
         return inColor;
     }
-
-    float dstLimit = min(sceneDistance - distToContainer, distInContainer);
-    dstLimit = max(dstLimit, 0.0);
-    if (dstLimit <= 1e-4) {
+    float dstLimit = fast::min(sceneDistance - distToContainer, distInContainer);
+    dstLimit = fast::max(dstLimit, 0.0);
+    if (dstLimit <= 9.9999997473787516355514526367188e-05)
+    {
         return inColor;
     }
-
-    int steps = max(cloudPrimarySteps, 8);
+    int steps = max(_1929.cloudPrimarySteps, 8);
     float baseStep = dstLimit / float(steps);
-    float stepSize = max(baseStep, cloudMinStepLength);
-
-    float jitter = hashNoise(vec3(TexCoord, time)) - 0.5;
-    float travelled = clamp(jitter, -0.35, 0.35) * stepSize;
-    travelled = max(travelled, 0.0);
-
-    vec3 accumulatedLight = vec3(0.0);
+    float stepSize = fast::max(baseStep, _1929.cloudMinStepLength);
+    float3 param_4 = float3(TexCoord, _849.time);
+    float jitter = hashNoise(param_4) - 0.5;
+    float travelled = fast::clamp(jitter, -0.3499999940395355224609375, 0.3499999940395355224609375) * stepSize;
+    travelled = fast::max(travelled, 0.0);
+    float3 accumulatedLight = float3(0.0);
     float transmittance = 1.0;
-
-    vec3 sunDir = sunDirection;
+    float3 sunDir = _1929.sunDirection;
     float sunLen = length(sunDir);
-    if (sunLen > 1e-3) {
-        sunDir /= sunLen;
-    } else {
-        sunDir = vec3(0.0, 1.0, 0.0);
+    if (sunLen > 0.001000000047497451305389404296875)
+    {
+        sunDir /= float3(sunLen);
     }
-
-    float phaseG = clamp(cloudPhaseG, -0.95, 0.95);
-
-    for (int step = 0; step < steps && travelled < dstLimit;
-         ++step) {
-        if (transmittance <= 0.01) {
+    else
+    {
+        sunDir = float3(0.0, 1.0, 0.0);
+    }
+    float phaseG = fast::clamp(_1929.cloudPhaseG, -0.949999988079071044921875, 0.949999988079071044921875);
+    for (int _step = 0; (_step < steps) && (travelled < dstLimit); _step++)
+    {
+        if (transmittance <= 0.00999999977648258209228515625)
+        {
             break;
         }
-
         float remainingDistance = dstLimit - travelled;
-        if (remainingDistance <= 1e-5) {
+        if (remainingDistance <= 9.9999997473787516355514526367188e-06)
+        {
             break;
         }
-
         float current = distToContainer + travelled;
-        vec3 samplePos = rayOrigin + rayDir * current;
-
-        float density = calculateCloudDensity(samplePos);
-        if (density > 1e-4) {
+        float3 samplePos = rayOrigin + (rayDir * current);
+        float3 param_5 = samplePos;
+        float density = calculateCloudDensity(param_5, _1929, cloudsTexture, cloudsTextureSmplr);
+        if (density > 9.9999997473787516355514526367188e-05)
+        {
             float adaptiveStep = stepSize;
-            if (density < 0.02) {
+            if (density < 0.0199999995529651641845703125)
+            {
                 adaptiveStep = stepSize * 2.5;
-            } else if (density < 0.05) {
-                adaptiveStep = stepSize * 1.6;
             }
-            adaptiveStep = min(adaptiveStep, remainingDistance);
+            else
+            {
+                if (density < 0.0500000007450580596923828125)
+                {
+                    adaptiveStep = stepSize * 1.60000002384185791015625;
+                }
+            }
+            adaptiveStep = fast::min(adaptiveStep, remainingDistance);
             float sampleWeight = density * adaptiveStep;
-
-            float lightTrans = sampleSunTransmittance(samplePos, adaptiveStep);
-            float cosTheta = clamp(dot(rayDir, -sunDir), -1.0, 1.0);
-            float phase = henyeyGreenstein(cosTheta, phaseG);
-
-            vec3 directLight = sunColor * sunIntensity * lightTrans * phase;
-            vec3 ambientLight = cloudAmbientColor;
-
-            vec3 lighting = (ambientLight * 0.35 + directLight) *
-                            sampleWeight * cloudScattering;
-
-            accumulatedLight += lighting * transmittance;
-            transmittance *= exp(-density * adaptiveStep * cloudAbsorption);
+            float3 param_6 = samplePos;
+            float param_7 = adaptiveStep;
+            float lightTrans = sampleSunTransmittance(param_6, param_7, _1929, cloudsTexture, cloudsTextureSmplr);
+            float cosTheta = fast::clamp(dot(rayDir, -sunDir), -1.0, 1.0);
+            float param_8 = cosTheta;
+            float param_9 = phaseG;
+            float phase = henyeyGreenstein(param_8, param_9);
+            float3 directLight = ((float3(_1929.sunColor) * _1929.sunIntensity) * lightTrans) * phase;
+            float3 ambientLight = float3(_1929.cloudAmbientColor);
+            float3 lighting = (((ambientLight * 0.3499999940395355224609375) + directLight) * sampleWeight) * _1929.cloudScattering;
+            accumulatedLight += (lighting * transmittance);
+            transmittance *= exp(((-density) * adaptiveStep) * _1929.cloudAbsorption);
             travelled += adaptiveStep;
             continue;
         }
-
-        float emptyAdvance = min(stepSize * 2.25, remainingDistance);
-        float minAdvance = min(stepSize * 0.5, remainingDistance);
-        travelled += max(emptyAdvance, minAdvance);
+        float emptyAdvance = fast::min(stepSize * 2.25, remainingDistance);
+        float minAdvance = fast::min(stepSize * 0.5, remainingDistance);
+        travelled += fast::max(emptyAdvance, minAdvance);
     }
-
-    vec3 finalColor = inColor.rgb * transmittance + accumulatedLight;
-    return vec4(clamp(finalColor, 0.0, 1.0), inColor.a);
+    float3 finalColor = (inColor.xyz * transmittance) + accumulatedLight;
+    return float4(fast::clamp(finalColor, float3(0.0), float3(1.0)), inColor.w);
 }
 
-void main() {
-    vec4 color = sampleColor(TexCoord);
-    float depth = texture(DepthTexture, TexCoord).r;
-    vec3 viewPos = reconstructViewPos(TexCoord, depth);
-    float distance = length(viewPos);
+static inline __attribute__((always_inline))
+float4 sampleBright(thread const float2& uv, constant PushConstants& _372, device EffectBuffer& _381, device EffectFloat1Buffer& _394, device EffectFloat2Buffer& _403, device EffectFloat3Buffer& _411, device EffectFloat4Buffer& _419, device EffectFloat5Buffer& _426, texture2d<float> BrightTexture, sampler BrightTextureSmplr)
+{
+    for (int i = 0; i < _372.EffectCount; i++)
+    {
+        if (_381.Effects[i] == 7)
+        {
+            float redOffset = _394.EffectFloat1[i];
+            float greenOffset = _403.EffectFloat2[i];
+            float blueOffset = _411.EffectFloat3[i];
+            float2 focusPoint = float2(_419.EffectFloat4[i], _426.EffectFloat5[i]);
+            float2 sampleCoord = uv;
+            float2 direction = sampleCoord - focusPoint;
+            float red = BrightTexture.sample(BrightTextureSmplr, (sampleCoord + (direction * redOffset))).x;
+            float green = BrightTexture.sample(BrightTextureSmplr, (sampleCoord + (direction * greenOffset))).y;
+            float2 blue = BrightTexture.sample(BrightTextureSmplr, (sampleCoord + (direction * blueOffset))).zw;
+            return float4(red, green, blue);
+        }
+        else
+        {
+            if (_381.Effects[i] == 9)
+            {
+                float pixelSizeInPixels = _394.EffectFloat1[i];
+                float2 texSize = float2(int2(BrightTexture.get_width(), BrightTexture.get_height()));
+                float2 pixelSize = float2(pixelSizeInPixels) / texSize;
+                float2 pixelated = floor(uv / pixelSize) * pixelSize;
+                float4 color = BrightTexture.sample(BrightTextureSmplr, pixelated);
+                return color;
+            }
+            else
+            {
+                if (_381.Effects[i] == 10)
+                {
+                    float radius = _394.EffectFloat1[i];
+                    float separation = _403.EffectFloat2[i];
+                    float2 texelSize = float2(1.0) / float2(int2(BrightTexture.get_width(), BrightTexture.get_height()));
+                    float3 maxColor = BrightTexture.sample(BrightTextureSmplr, uv).xyz;
+                    int range = int(radius);
+                    float radiusSq = radius * radius;
+                    int _766 = -range;
+                    for (int x = _766; x <= range; x++)
+                    {
+                        int _777 = -range;
+                        for (int y = _777; y <= range; y++)
+                        {
+                            float distSq = float((x * x) + (y * y));
+                            if (distSq <= radiusSq)
+                            {
+                                float2 offset = (float2(float(x), float(y)) * texelSize) * separation;
+                                float3 sampled = BrightTexture.sample(BrightTextureSmplr, (uv + offset)).xyz;
+                                maxColor = fast::max(maxColor, sampled);
+                            }
+                        }
+                    }
+                    return float4(maxColor, BrightTexture.sample(BrightTextureSmplr, uv).w);
+                }
+            }
+        }
+    }
+    return BrightTexture.sample(BrightTextureSmplr, uv);
+}
 
+static inline __attribute__((always_inline))
+float4 composeSSR(thread const float4& color, thread const float2& uv, constant PushConstants& _372, texture2d<float> SSRTexture, sampler SSRTextureSmplr)
+{
+    if (_372.hasSSRTexture != 1)
+    {
+        return color;
+    }
+    float4 ssr = SSRTexture.sample(SSRTextureSmplr, uv);
+    float reflectionWeight = fast::clamp(ssr.w, 0.0, 1.0);
+    float baseWeight = 1.0 - reflectionWeight;
+    float4 result = color;
+    result.xyz = (result.xyz * baseWeight) + (ssr.xyz * reflectionWeight);
+    return result;
+}
+
+static inline __attribute__((always_inline))
+float4 composeLighting(thread const float2& uv, thread const float4& baseColor, constant PushConstants& _372, device EffectBuffer& _381, device EffectFloat1Buffer& _394, device EffectFloat2Buffer& _403, device EffectFloat3Buffer& _411, device EffectFloat4Buffer& _419, device EffectFloat5Buffer& _426, texture2d<float> BrightTexture, sampler BrightTextureSmplr, texture2d<float> VolumetricLightTexture, sampler VolumetricLightTextureSmplr, texture2d<float> SSRTexture, sampler SSRTextureSmplr)
+{
+    float4 color = baseColor;
+    if (_372.hasBrightTexture == 1)
+    {
+        color += sampleBright(uv, _372, _381, _394, _403, _411, _419, _426, BrightTexture, BrightTextureSmplr);
+    }
+    if (_372.hasVolumetricLightTexture == 1)
+    {
+        color += VolumetricLightTexture.sample(VolumetricLightTextureSmplr, uv);
+    }
+    return composeSSR(color, uv, _372, SSRTexture, SSRTextureSmplr);
+}
+
+static inline __attribute__((always_inline))
+float4 applyMotionBlur(thread const float2& texCoord, thread const float& size, thread const float& separation, thread const float4& color, constant PushConstants& _372, device EffectBuffer& _381, device EffectFloat1Buffer& _394, device EffectFloat2Buffer& _403, device EffectFloat3Buffer& _411, device EffectFloat4Buffer& _419, device EffectFloat5Buffer& _426, texture2d<float> Texture, sampler TextureSmplr, texture2d<float> BrightTexture, sampler BrightTextureSmplr, constant Uniforms& _849, texture2d<float> VolumetricLightTexture, sampler VolumetricLightTextureSmplr, texture2d<float> SSRTexture, sampler SSRTextureSmplr, texture2d<float> PositionTexture, sampler PositionTextureSmplr, texture2d<float> DepthTexture, sampler DepthTextureSmplr)
+{
+    float4 fallbackColor = composeLighting(texCoord, color, _372, _381, _394, _403, _411, _419, _426, BrightTexture, BrightTextureSmplr, VolumetricLightTexture, VolumetricLightTextureSmplr, SSRTexture, SSRTextureSmplr);
+    if ((size <= 0.0) || (separation <= 0.0))
+    {
+        return fallbackColor;
+    }
+    if (_372.hasPositionTexture != 1)
+    {
+        return fallbackColor;
+    }
+    float4 worldPos = PositionTexture.sample(PositionTextureSmplr, texCoord);
+    if (worldPos.w <= 0.0)
+    {
+        return fallbackColor;
+    }
+    float3 viewSpacePos = (_849.viewMatrix * worldPos).xyz;
+    float distanceToCamera = length(viewSpacePos);
+    if (distanceToCamera < (_849.nearPlane * 2.0))
+    {
+        return fallbackColor;
+    }
+    float4 currentClipPos = (_849.projectionMatrix * _849.viewMatrix) * worldPos;
+    float _1543 = currentClipPos.w;
+    float4 _1544 = currentClipPos;
+    float3 _1547 = _1544.xyz / float3(_1543);
+    currentClipPos.x = _1547.x;
+    currentClipPos.y = _1547.y;
+    currentClipPos.z = _1547.z;
+    float2 currentUV = (currentClipPos.xy * 0.5) + float2(0.5);
+    float4 prevClipPos = (_849.projectionMatrix * _849.lastViewMatrix) * worldPos;
+    float _1569 = prevClipPos.w;
+    float4 _1570 = prevClipPos;
+    float3 _1573 = _1570.xyz / float3(_1569);
+    prevClipPos.x = _1573.x;
+    prevClipPos.y = _1573.y;
+    prevClipPos.z = _1573.z;
+    float2 prevUV = (prevClipPos.xy * 0.5) + float2(0.5);
+    float2 velocity = (currentUV - prevUV) * separation;
+    float velocityLength = length(velocity);
+    float maxVelocity = 0.119999997317790985107421875;
+    if (velocityLength > maxVelocity)
+    {
+        velocity = fast::normalize(velocity) * maxVelocity;
+        velocityLength = maxVelocity;
+    }
+    if (_372.hasSSRTexture == 1)
+    {
+        float mirrorWeight = fast::clamp(SSRTexture.sample(SSRTextureSmplr, texCoord).w, 0.0, 1.0);
+        float blurDamp = mix(1.0, 0.20000000298023223876953125, mirrorWeight);
+        velocity *= blurDamp;
+        velocityLength *= blurDamp;
+    }
+    if (velocityLength < 9.9999997473787516355514526367188e-05)
+    {
+        return fallbackColor;
+    }
+    int baseSamples = clamp(int(size), 2, 32);
+    float sampleScale = mix(0.75, 1.75, fast::clamp(velocityLength / maxVelocity, 0.0, 1.0));
+    int samples = clamp(int(float(baseSamples) * sampleScale), 3, 48);
+    float centerDepth = 0.0;
+    float depthSoftness = 1.0;
+    if (_372.hasDepthTexture == 1)
+    {
+        float centerDepthRaw = DepthTexture.sample(DepthTextureSmplr, texCoord).x;
+        centerDepth = LinearizeDepth(centerDepthRaw, _849);
+        depthSoftness = fast::max(0.00200000009499490261077880859375, centerDepth * 0.0199999995529651641845703125);
+    }
+    float jitter = (fract(sin(dot(texCoord * float2(173.3000030517578125, 97.09999847412109375), float2(12.98980045318603515625, 78.233001708984375))) * 43758.546875) - 0.5) * 0.3499999940395355224609375;
+    float4 result = float4(0.0);
+    float totalWeight = 0.0;
+    for (int i = 0; i < samples; i++)
+    {
+        float t = (((float(i) + 0.5) / float(samples)) * 2.0) - 1.0;
+        t += jitter / float(samples);
+        float2 sampleCoord = texCoord + (velocity * t);
+        bool _1642 = sampleCoord.x < 0.0;
+        bool _1648;
+        if (!_1642)
+        {
+            _1648 = sampleCoord.x > 1.0;
+        }
+        else
+        {
+            _1648 = _1642;
+        }
+        bool _1654;
+        if (!_1648)
+        {
+            _1654 = sampleCoord.y < 0.0;
+        }
+        else
+        {
+            _1654 = _1648;
+        }
+        bool _1660;
+        if (!_1654)
+        {
+            _1660 = sampleCoord.y > 1.0;
+        }
+        else
+        {
+            _1660 = _1654;
+        }
+        if (_1660)
+        {
+            continue;
+        }
+        float depthWeight = 1.0;
+        if (_372.hasDepthTexture == 1)
+        {
+            float sampleDepthRaw = DepthTexture.sample(DepthTextureSmplr, sampleCoord).x;
+            float sampleDepth = LinearizeDepth(sampleDepthRaw, _849);
+            float depthDelta = abs(sampleDepth - centerDepth);
+            depthWeight = 1.0 - smoothstep(depthSoftness, depthSoftness * 2.5, depthDelta);
+            if (depthWeight <= 0.0)
+            {
+                continue;
+            }
+        }
+        float4 sampled = sampleColor(sampleCoord, _372, _381, _394, _403, _411, _419, _426, Texture, TextureSmplr);
+        sampled = composeLighting(sampleCoord, sampled, _372, _381, _394, _403, _411, _419, _426, BrightTexture, BrightTextureSmplr, VolumetricLightTexture, VolumetricLightTextureSmplr, SSRTexture, SSRTextureSmplr);
+        float gaussian = exp((-4.0) * t * t);
+        float weight = gaussian * depthWeight;
+        result += (sampled * weight);
+        totalWeight += weight;
+    }
+    if (totalWeight > 0.0)
+    {
+        return result / float4(totalWeight);
+    }
+    return fallbackColor;
+}
+
+static inline __attribute__((always_inline))
+float3 sampleLUT(thread const float3& rgb, thread const float& blueSlice, thread const float& sliceSize, thread const float& slicePixelOffset, constant PushConstants& _372, texture2d<float> LUTTexture, sampler LUTTextureSmplr)
+{
+    float sliceY = floor(blueSlice / _372.lutSize);
+    float sliceX = mod(blueSlice, _372.lutSize);
+    float2 uv;
+    uv.x = ((sliceX * sliceSize) + slicePixelOffset) + (rgb.x * sliceSize);
+    uv.y = ((sliceY * sliceSize) + slicePixelOffset) + (rgb.y * sliceSize);
+    return LUTTexture.sample(LUTTextureSmplr, uv).xyz;
+}
+
+static inline __attribute__((always_inline))
+float4 mapToLUT(thread const float4& color, constant PushConstants& _372, texture2d<float> LUTTexture, sampler LUTTextureSmplr)
+{
+    if (_372.hasLUTTexture != 1)
+    {
+        return color;
+    }
+    float sliceSize = 1.0 / _372.lutSize;
+    float slicePixelOffset = sliceSize * 0.5;
+    float blueIndex = color.z * (_372.lutSize - 1.0);
+    float sliceLow = floor(blueIndex);
+    float sliceHigh = fast::min(sliceLow + 1.0, _372.lutSize - 1.0);
+    float t = blueIndex - sliceLow;
+    float3 param = color.xyz;
+    float param_1 = sliceLow;
+    float param_2 = sliceSize;
+    float param_3 = slicePixelOffset;
+    float3 lowColor = sampleLUT(param, param_1, param_2, param_3, _372, LUTTexture, LUTTextureSmplr);
+    float3 param_4 = color.xyz;
+    float param_5 = sliceHigh;
+    float param_6 = sliceSize;
+    float param_7 = slicePixelOffset;
+    float3 highColor = sampleLUT(param_4, param_5, param_6, param_7, _372, LUTTexture, LUTTextureSmplr);
+    float3 finalRGB = mix(lowColor, highColor, float3(t));
+    return float4(finalRGB, color.w);
+}
+
+static inline __attribute__((always_inline))
+float3 acesToneMapping(thread const float3& color)
+{
+    float a = 2.5099999904632568359375;
+    float b = 0.02999999932944774627685546875;
+    float c = 2.4300000667572021484375;
+    float d = 0.589999973773956298828125;
+    float e = 0.14000000059604644775390625;
+    return fast::clamp((color * ((color * a) + float3(b))) / ((color * ((color * c) + float3(d))) + float3(e)), float3(0.0), float3(1.0));
+}
+
+fragment main0_out main0(main0_in in [[stage_in]], constant PushConstants& _372 [[buffer(0)]], device EffectBuffer& _381 [[buffer(1)]], device EffectFloat1Buffer& _394 [[buffer(2)]], device EffectFloat2Buffer& _403 [[buffer(3)]], device EffectFloat3Buffer& _411 [[buffer(4)]], device EffectFloat4Buffer& _419 [[buffer(5)]], device EffectFloat5Buffer& _426 [[buffer(6)]], constant Uniforms& _849 [[buffer(7)]], device EffectFloat6Buffer& _1049 [[buffer(8)]], constant Clouds& _1929 [[buffer(9)]], constant Environment& environment [[buffer(10)]], texture2d<float> Texture [[texture(0)]], texture2d<float> BrightTexture [[texture(1)]], texture2d<float> VolumetricLightTexture [[texture(2)]], texture2d<float> SSRTexture [[texture(3)]], texture2d<float> PositionTexture [[texture(4)]], texture2d<float> LUTTexture [[texture(5)]], texture3d<float> cloudsTexture [[texture(6)]], texture2d<float> DepthTexture [[texture(7)]], sampler TextureSmplr [[sampler(0)]], sampler BrightTextureSmplr [[sampler(1)]], sampler VolumetricLightTextureSmplr [[sampler(2)]], sampler SSRTextureSmplr [[sampler(3)]], sampler PositionTextureSmplr [[sampler(4)]], sampler LUTTextureSmplr [[sampler(5)]], sampler cloudsTextureSmplr [[sampler(6)]], sampler DepthTextureSmplr [[sampler(7)]], float4 gl_FragCoord [[position]])
+{
+    main0_out out = {};
+    float2 param = in.TexCoord;
+    float4 color = sampleColor(param, _372, _381, _394, _403, _411, _419, _426, Texture, TextureSmplr);
+    float depth = 1.0;
+    if (_372.hasDepthTexture == 1)
+    {
+        depth = DepthTexture.sample(DepthTextureSmplr, in.TexCoord).x;
+    }
+    float2 param_1 = in.TexCoord;
+    float param_2 = depth;
+    float3 viewPos = reconstructViewPos(param_1, param_2, _849);
+    float _distance = _372.hasDepthTexture == 1 ? length(viewPos) : _849.farPlane;
     bool useMotionBlur = false;
     float motionBlurSize = 0.0;
     float motionBlurSeparation = 0.0;
-
-    for (int i = 0; i < EffectCount; i++) {
-        if (Effects[i] == EFFECT_MOTION_BLUR) {
+    for (int i = 0; i < _372.EffectCount; i++)
+    {
+        if (_381.Effects[i] == 6)
+        {
             useMotionBlur = true;
-            motionBlurSize = EffectFloat1[i];
-            motionBlurSeparation = EffectFloat2[i];
+            motionBlurSize = _394.EffectFloat1[i];
+            motionBlurSeparation = _403.EffectFloat2[i];
         }
     }
-
-    for (int i = 0; i < EffectCount; i++) {
-        if (Effects[i] == EFFECT_SHARPEN) {
-            color = sharpen(Texture);
-        } else if (Effects[i] == EFFECT_BLUR) {
-            float radius = EffectFloat1[i];
-            color = blur(Texture, radius);
-        } else if (Effects[i] == EFFECT_EDGE_DETECTION) {
-            color = edgeDetection(Texture);
+    for (int i_1 = 0; i_1 < _372.EffectCount; i_1++)
+    {
+        if (_381.Effects[i_1] == 2)
+        {
+            color = sharpen(Texture, TextureSmplr, in.TexCoord);
+        }
+        else
+        {
+            if (_381.Effects[i_1] == 3)
+            {
+                float radius = _394.EffectFloat1[i_1];
+                float param_3 = radius;
+                color = blur(Texture, TextureSmplr, param_3, in.TexCoord);
+            }
+            else
+            {
+                if (_381.Effects[i_1] == 4)
+                {
+                    color = edgeDetection(Texture, TextureSmplr, in.TexCoord);
+                }
+            }
         }
     }
-
-    color = applyFXAA(Texture, TexCoord);
-
-    color = applyColorEffects(color);
-
-    if (hasDepthTexture == 1) {
-        float depthValue = texture(DepthTexture, TexCoord).r;
-        float linearDepth = LinearizeDepth(depthValue);
-        float coc = clamp(abs(linearDepth - focusDepth) / focusRange, 0.0, 1.0);
-        float mip = coc * float(maxMipLevel) * 1.2;
-        vec3 blurred = applyColorEffects(textureLod(Texture, TexCoord, mip)).rgb;
-        vec3 sharp = color.rgb;
-        color = cloudRendering(color);
-    } else {
-        color = cloudRendering(color);
+    float2 param_4 = in.TexCoord;
+    color = applyFXAA(Texture, TextureSmplr, param_4, _372, _381, _394, _403, _411, _419, _426, Texture, TextureSmplr);
+    float4 param_5 = color;
+    float4 _2637 = applyColorEffects(param_5, _372, _381, _394, _403, _411, _419, _426, _849, _1049, gl_FragCoord);
+    color = _2637;
+    if (_372.hasDepthTexture == 1)
+    {
+        float depthValue = DepthTexture.sample(DepthTextureSmplr, in.TexCoord).x;
+        float param_6 = depthValue;
+        float linearDepth = LinearizeDepth(param_6, _849);
+        float coc = fast::clamp(abs(linearDepth - _849.focusDepth) / _849.focusRange, 0.0, 1.0);
+        float mip = (coc * float(_849.maxMipLevel)) * 1.2000000476837158203125;
+        float4 param_7 = Texture.sample(TextureSmplr, in.TexCoord, level(mip));
+        float4 _2676 = applyColorEffects(param_7, _372, _381, _394, _403, _411, _419, _426, _849, _1049, gl_FragCoord);
+        float3 blurred = _2676.xyz;
+        float3 sharp = color.xyz;
+        float4 param_8 = color;
+        color = cloudRendering(param_8, in.TexCoord, _372, _849, _1929, cloudsTexture, cloudsTextureSmplr, DepthTexture, DepthTextureSmplr);
     }
-
-    vec4 hdrColor;
-    if (useMotionBlur) {
-        vec4 motionBlurred = applyMotionBlur(TexCoord, motionBlurSize, motionBlurSeparation, color);
-        FragColor = motionBlurred;
-        return;
-    } else {
-        hdrColor = composeLighting(TexCoord, color);
+    else
+    {
+        float4 param_9 = color;
+        color = cloudRendering(param_9, in.TexCoord, _372, _849, _1929, cloudsTexture, cloudsTextureSmplr, DepthTexture, DepthTextureSmplr);
     }
-
-    hdrColor = mapToLUT(hdrColor);
-    
-
-    hdrColor.rgb = acesToneMapping(hdrColor.rgb);
-
-
-    float fogFactor = 1.0 - exp(-distance * environment.fogIntensity);
-    vec3 finalColor = mix(hdrColor.rgb, environment.fogColor, fogFactor);
-
-    FragColor = vec4(finalColor, 1.0);
+    float4 hdrColor;
+    if (useMotionBlur)
+    {
+        float2 param_10 = in.TexCoord;
+        float param_11 = motionBlurSize;
+        float param_12 = motionBlurSeparation;
+        float4 param_13 = color;
+        float4 motionBlurred = applyMotionBlur(param_10, param_11, param_12, param_13, _372, _381, _394, _403, _411, _419, _426, Texture, TextureSmplr, BrightTexture, BrightTextureSmplr, _849, VolumetricLightTexture, VolumetricLightTextureSmplr, SSRTexture, SSRTextureSmplr, PositionTexture, PositionTextureSmplr, DepthTexture, DepthTextureSmplr);
+        out.FragColor = motionBlurred;
+        return out;
+    }
+    else
+    {
+        float2 param_14 = in.TexCoord;
+        float4 param_15 = color;
+        hdrColor = composeLighting(param_14, param_15, _372, _381, _394, _403, _411, _419, _426, BrightTexture, BrightTextureSmplr, VolumetricLightTexture, VolumetricLightTextureSmplr, SSRTexture, SSRTextureSmplr);
+    }
+    float4 param_16 = hdrColor;
+    hdrColor = mapToLUT(param_16, _372, LUTTexture, LUTTextureSmplr);
+    float3 param_17 = hdrColor.xyz;
+    float3 _2744 = acesToneMapping(param_17);
+    hdrColor.x = _2744.x;
+    hdrColor.y = _2744.y;
+    hdrColor.z = _2744.z;
+    float fogFactor = 1.0 - exp((-_distance) * environment.fogIntensity);
+    float3 finalColor = mix(hdrColor.xyz, float3(environment.fogColor), float3(fogFactor));
+    out.FragColor = float4(finalColor, 1.0);
+    return out;
 }
 )"
 ;
 
 static const char* FULLSCREEN_VERT =
-R"(#version 410 core
+R"(#include <metal_stdlib>
+#include <simd/simd.h>
 
-layout (location = 0) in vec3 aPos;
-layout (location = 1) in vec4 aColor;
-layout (location = 2) in vec2 aTexCoord;
-layout (location = 3) in vec3 aNormal;
+using namespace metal;
 
-out vec2 TexCoord;
+struct main0_out
+{
+    float2 TexCoord [[user(locn0)]];
+    float4 gl_Position [[position]];
+};
 
-void main() {
-    gl_Position = vec4(aPos.xy, 0.0, 1.0);
-    TexCoord = aTexCoord;
+struct main0_in
+{
+    float3 aPos [[attribute(0)]];
+    float2 aTexCoord [[attribute(2)]];
+};
+
+vertex main0_out main0(main0_in in [[stage_in]])
+{
+    main0_out out = {};
+    out.gl_Position = float4(in.aPos.xy, 0.0, 1.0);
+    out.TexCoord = in.aTexCoord;
+    return out;
 }
+
 )"
 ;
 
 static const char* GAUSSIAN_FRAG =
-R"(#version 410 core
-out vec4 FragColor;
+R"(#include <metal_stdlib>
+#include <simd/simd.h>
 
-in vec2 TexCoord;
+using namespace metal;
 
-uniform sampler2D image;
+struct Params
+{
+    uint horizontal;
+    float4 weight[5];
+    float radius;
+};
 
-uniform bool horizontal;
-uniform float weight[5] = float[](0.227027, 0.1945946, 0.1216216, 0.054054, 0.016216);
-uniform float radius = 1.0;
+struct main0_out
+{
+    float4 FragColor [[color(0)]];
+};
 
-void main() {
-    vec2 tex_offset = 1.0 / textureSize(image, 0) * radius; 
-    vec3 result = texture(image, TexCoord).rgb * weight[0];
-    if(horizontal)
+struct main0_in
+{
+    float2 TexCoord [[user(locn0)]];
+};
+
+fragment main0_out main0(main0_in in [[stage_in]], constant Params& _29 [[buffer(0)]], texture2d<float> image [[texture(0)]], sampler imageSmplr [[sampler(0)]])
+{
+    main0_out out = {};
+    float2 tex_offset = (float2(1.0) / float2(int2(image.get_width(), image.get_height()))) * _29.radius;
+    float3 result = image.sample(imageSmplr, in.TexCoord).xyz * _29.weight[0].x;
+    if (_29.horizontal != 0u)
     {
-        for(int i = 1; i < 5; ++i)
+        for (int i = 1; i < 5; i++)
         {
-            result += texture(image, TexCoord + vec2(tex_offset.x * i, 0.0)).rgb * weight[i];
-            result += texture(image, TexCoord - vec2(tex_offset.x * i, 0.0)).rgb * weight[i];
+            result += (image.sample(imageSmplr, (in.TexCoord + float2(tex_offset.x * float(i), 0.0))).xyz * _29.weight[i].x);
+            result += (image.sample(imageSmplr, (in.TexCoord - float2(tex_offset.x * float(i), 0.0))).xyz * _29.weight[i].x);
         }
     }
     else
     {
-        for(int i = 1; i < 5; ++i)
+        for (int i_1 = 1; i_1 < 5; i_1++)
         {
-            result += texture(image, TexCoord + vec2(0.0, tex_offset.y * i)).rgb * weight[i];
-            result += texture(image, TexCoord - vec2(0.0, tex_offset.y * i)).rgb * weight[i];
+            result += (image.sample(imageSmplr, (in.TexCoord + float2(0.0, tex_offset.y * float(i_1)))).xyz * _29.weight[i_1].x);
+            result += (image.sample(imageSmplr, (in.TexCoord - float2(0.0, tex_offset.y * float(i_1)))).xyz * _29.weight[i_1].x);
         }
     }
-    FragColor = vec4(result, 1.0);
-})"
+    out.FragColor = float4(result, 1.0);
+    return out;
+}
+
+)"
 ;
 
 static const char* LIGHT_FRAG =
-R"(#version 410 core
-layout(location = 0) out vec4 FragColor;
-layout(location = 1) out vec4 BrightColor;
+R"(#pragma clang diagnostic ignored "-Wmissing-prototypes"
+#pragma clang diagnostic ignored "-Wmissing-braces"
 
-in vec2 TexCoord;
+#include <metal_stdlib>
+#include <simd/simd.h>
 
-uniform sampler2D gPosition;
-uniform sampler2D gNormal;
-uniform sampler2D gAlbedoSpec;
-uniform sampler2D gMaterial;
-uniform sampler2D ssao;
+using namespace metal;
 
-uniform sampler2D texture1;
-uniform sampler2D texture2;
-uniform sampler2D texture3;
-uniform sampler2D texture4;
-uniform sampler2D texture5;
-uniform samplerCube cubeMap1;
-uniform samplerCube cubeMap2;
-uniform samplerCube cubeMap3;
-uniform samplerCube cubeMap4;
-uniform samplerCube cubeMap5;
-uniform samplerCube skybox;
+template <typename T, size_t Num> struct spvUnsafeArray {
+    T elements[Num ? Num : 1];
 
-struct AmbientLight {
-    vec4 color;
-    float intensity;
+    thread T &operator[](size_t pos) thread { return elements[pos]; }
+    constexpr const thread T &operator[](size_t pos) const thread {
+        return elements[pos];
+    }
+
+    device T &operator[](size_t pos) device { return elements[pos]; }
+    constexpr const device T &operator[](size_t pos) const device {
+        return elements[pos];
+    }
+
+    constexpr const constant T &operator[](size_t pos) const constant {
+        return elements[pos];
+    }
+
+    threadgroup T &operator[](size_t pos) threadgroup { return elements[pos]; }
+    constexpr const threadgroup T &operator[](size_t pos) const threadgroup {
+        return elements[pos];
+    }
+};
+
+// Implementation of the GLSL radians() function
+template <typename T> inline T radians(T d) { return d * T(0.01745329251); }
+
+// Returns the determinant of a 2x2 matrix.
+static inline __attribute__((always_inline)) float
+spvDet2x2(float a1, float a2, float b1, float b2) {
+    return a1 * b2 - b1 * a2;
+}
+
+// Returns the determinant of a 3x3 matrix.
+static inline __attribute__((always_inline)) float
+spvDet3x3(float a1, float a2, float a3, float b1, float b2, float b3, float c1,
+          float c2, float c3) {
+    return a1 * spvDet2x2(b2, b3, c2, c3) - b1 * spvDet2x2(a2, a3, c2, c3) +
+           c1 * spvDet2x2(a2, a3, b2, b3);
+}
+
+// Returns the inverse of a matrix, by using the algorithm of calculating the
+// classical adjoint and dividing by the determinant. The contents of the matrix
+// are changed.
+static inline __attribute__((always_inline)) float4x4
+spvInverse4x4(float4x4 m) {
+    float4x4 adj; // The adjoint matrix (inverse after dividing by determinant)
+
+    // Create the transpose of the cofactors, as the classical adjoint of the
+    // matrix.
+    adj[0][0] = spvDet3x3(m[1][1], m[1][2], m[1][3], m[2][1], m[2][2], m[2][3],
+                          m[3][1], m[3][2], m[3][3]);
+    adj[0][1] = -spvDet3x3(m[0][1], m[0][2], m[0][3], m[2][1], m[2][2], m[2][3],
+                           m[3][1], m[3][2], m[3][3]);
+    adj[0][2] = spvDet3x3(m[0][1], m[0][2], m[0][3], m[1][1], m[1][2], m[1][3],
+                          m[3][1], m[3][2], m[3][3]);
+    adj[0][3] = -spvDet3x3(m[0][1], m[0][2], m[0][3], m[1][1], m[1][2], m[1][3],
+                           m[2][1], m[2][2], m[2][3]);
+
+    adj[1][0] = -spvDet3x3(m[1][0], m[1][2], m[1][3], m[2][0], m[2][2], m[2][3],
+                           m[3][0], m[3][2], m[3][3]);
+    adj[1][1] = spvDet3x3(m[0][0], m[0][2], m[0][3], m[2][0], m[2][2], m[2][3],
+                          m[3][0], m[3][2], m[3][3]);
+    adj[1][2] = -spvDet3x3(m[0][0], m[0][2], m[0][3], m[1][0], m[1][2], m[1][3],
+                           m[3][0], m[3][2], m[3][3]);
+    adj[1][3] = spvDet3x3(m[0][0], m[0][2], m[0][3], m[1][0], m[1][2], m[1][3],
+                          m[2][0], m[2][2], m[2][3]);
+
+    adj[2][0] = spvDet3x3(m[1][0], m[1][1], m[1][3], m[2][0], m[2][1], m[2][3],
+                          m[3][0], m[3][1], m[3][3]);
+    adj[2][1] = -spvDet3x3(m[0][0], m[0][1], m[0][3], m[2][0], m[2][1], m[2][3],
+                           m[3][0], m[3][1], m[3][3]);
+    adj[2][2] = spvDet3x3(m[0][0], m[0][1], m[0][3], m[1][0], m[1][1], m[1][3],
+                          m[3][0], m[3][1], m[3][3]);
+    adj[2][3] = -spvDet3x3(m[0][0], m[0][1], m[0][3], m[1][0], m[1][1], m[1][3],
+                           m[2][0], m[2][1], m[2][3]);
+
+    adj[3][0] = -spvDet3x3(m[1][0], m[1][1], m[1][2], m[2][0], m[2][1], m[2][2],
+                           m[3][0], m[3][1], m[3][2]);
+    adj[3][1] = spvDet3x3(m[0][0], m[0][1], m[0][2], m[2][0], m[2][1], m[2][2],
+                          m[3][0], m[3][1], m[3][2]);
+    adj[3][2] = -spvDet3x3(m[0][0], m[0][1], m[0][2], m[1][0], m[1][1], m[1][2],
+                           m[3][0], m[3][1], m[3][2]);
+    adj[3][3] = spvDet3x3(m[0][0], m[0][1], m[0][2], m[1][0], m[1][1], m[1][2],
+                          m[2][0], m[2][1], m[2][2]);
+
+    // Calculate the determinant as a combination of the cofactors of the first
+    // row.
+    float det = (adj[0][0] * m[0][0]) + (adj[0][1] * m[1][0]) +
+                (adj[0][2] * m[2][0]) + (adj[0][3] * m[3][0]);
+
+    // Divide the classical adjoint matrix by the determinant.
+    // If determinant is zero, matrix is not invertable, so leave it unchanged.
+    return (det != 0.0f) ? (adj * (1.0f / det)) : m;
+}
+
+struct ShadowParameters {
+    float4x4 lightView;
+    float4x4 lightProjection;
+    float bias0;
+    int textureIndex;
+    float farPlane;
+    float _pad1;
+    float3 lightPos;
+    int lightType;
 };
 
 struct DirectionalLight {
-    vec3 direction;
-    vec3 diffuse;
-    vec3 specular;
+    float3 direction;
+    float _pad1;
+    float3 diffuse;
+    float _pad2;
+    float3 specular;
     float intensity;
 };
 
 struct PointLight {
-    vec3 position;
-    vec3 diffuse;
-    vec3 specular;
+    float3 position;
+    float _pad1;
+    float3 diffuse;
+    float _pad2;
+    float3 specular;
     float intensity;
-    float constant;
+    float constant0;
     float linear;
     float quadratic;
     float radius;
+    float _pad3;
 };
 
 struct SpotLight {
-    vec3 position;
-    vec3 direction;
+    float3 position;
+    float _pad1;
+    float3 direction;
     float cutOff;
     float outerCutOff;
     float intensity;
     float range;
-    vec3 diffuse;
-    vec3 specular;
+    float _pad4;
+    float3 diffuse;
+    float _pad5;
+    float3 specular;
+    float _pad6;
 };
 
-struct AreaLight {
-    vec3 position;
-    vec3 right;
-    vec3 up;
-    vec2 size;
-    vec3 diffuse;
-    vec3 specular;
-    float angle;
-    float intensity;
-    float range;
-    int castsBothSides;
-};
-
-struct ShadowParameters {
-    mat4 lightView;
-    mat4 lightProjection;
-    float bias;
-    int textureIndex;
-    float farPlane;
-    vec3 lightPos;
-    int lightType;
+struct UBO {
+    packed_float3 cameraPosition;
+    uint useIBL;
 };
 
 struct Environment {
     float rimLightIntensity;
-    vec3 rimLightColor;
+    float3 rimLightColor;
 };
 
-uniform AmbientLight ambientLight;
-uniform DirectionalLight directionalLights[4];
-uniform int directionalLightCount;
-uniform PointLight pointLights[32];
-uniform int pointLightCount;
-uniform SpotLight spotlights[32];
-uniform int spotlightCount;
-uniform AreaLight areaLights[32];
-uniform int areaLightCount;
-uniform ShadowParameters shadowParams[10];
-uniform int shadowParamCount;
-uniform vec3 cameraPosition;
-uniform bool useIBL;
+struct PushConstants {
+    int directionalLightCount;
+    int pointLightCount;
+    int spotlightCount;
+    int areaLightCount;
+    int shadowParamCount;
+};
 
-uniform Environment environment;
+struct ShadowParameters_1 {
+    float4x4 lightView;
+    float4x4 lightProjection;
+    float bias0;
+    int textureIndex;
+    float farPlane;
+    float _pad1;
+    packed_float3 lightPos;
+    int lightType;
+};
 
-const float PI = 3.14159265;
+struct ShadowParams {
+    spvUnsafeArray<ShadowParameters_1, 1> shadowParams;
+};
 
-vec4 sampleTextureAt(int textureIndex, vec2 uv) {
-    if (textureIndex == 0) return texture(texture1, uv);
-    else if (textureIndex == 1) return texture(texture2, uv);
-    else if (textureIndex == 2) return texture(texture3, uv);
-    else if (textureIndex == 3) return texture(texture4, uv);
-    else if (textureIndex == 4) return texture(texture5, uv);
-    return vec4(0.0);
+struct DirectionalLight_1 {
+    packed_float3 direction;
+    float _pad1;
+    packed_float3 diffuse;
+    float _pad2;
+    packed_float3 specular;
+    float intensity;
+};
+
+struct DirectionalLights {
+    spvUnsafeArray<DirectionalLight_1, 1> directionalLights;
+};
+
+struct PointLight_1 {
+    packed_float3 position;
+    float _pad1;
+    packed_float3 diffuse;
+    float _pad2;
+    packed_float3 specular;
+    float intensity;
+    float constant0;
+    float linear;
+    float quadratic;
+    float radius;
+    float _pad3;
+};
+
+struct PointLights {
+    spvUnsafeArray<PointLight_1, 1> pointLights;
+};
+
+struct SpotLight_1 {
+    packed_float3 position;
+    float _pad1;
+    packed_float3 direction;
+    float cutOff;
+    float outerCutOff;
+    float intensity;
+    float range;
+    float _pad4;
+    packed_float3 diffuse;
+    float _pad5;
+    packed_float3 specular;
+    float _pad6;
+};
+
+struct SpotLights {
+    spvUnsafeArray<SpotLight_1, 1> spotlights;
+};
+
+struct AreaLight {
+    packed_float3 position;
+    float _pad1;
+    packed_float3 right;
+    float _pad2;
+    packed_float3 up;
+    float _pad3;
+    float2 size;
+    float _pad4;
+    float _pad5;
+    packed_float3 diffuse;
+    float _pad6;
+    packed_float3 specular;
+    float angle;
+    int castsBothSides;
+    float intensity;
+    float range;
+    float _pad9;
+};
+
+struct AreaLights {
+    spvUnsafeArray<AreaLight, 1> areaLights;
+};
+
+struct AmbientLight {
+    float4 color;
+    float intensity;
+    float3 _pad0;
+};
+
+struct ProbeSpace {
+    float3 origin;
+    float _pad0;
+
+    float3 spacing;
+    float _pad1;
+
+    float3 probeCount;
+    float _pad2;
+
+    float4 debugColor;
+
+    float4 atlasParams;
+    // x = textureBorderSize
+    // y = probeResolution (inner)
+    // z = probesPerRow
+    // w = totalProbes  (put this here on CPU!)
+};
+
+constant spvUnsafeArray<float2, 12> _660 = spvUnsafeArray<float2, 12>(
+    {float2(-0.3260000050067901611328125, -0.4059999883174896240234375),
+     float2(-0.839999973773956298828125, -0.07400000095367431640625),
+     float2(-0.69599997997283935546875, 0.4569999873638153076171875),
+     float2(-0.20299999415874481201171875, 0.620999991893768310546875),
+     float2(0.96200001239776611328125, -0.194999992847442626953125),
+     float2(0.472999989986419677734375, -0.4799999892711639404296875),
+     float2(0.518999993801116943359375, 0.767000019550323486328125),
+     float2(0.185000002384185791015625, -0.89300000667572021484375),
+     float2(0.507000029087066650390625, 0.064000003039836883544921875),
+     float2(0.89600002765655517578125, 0.412000000476837158203125),
+     float2(-0.3219999969005584716796875, -0.933000028133392333984375),
+     float2(-0.791999995708465576171875, -0.597999989986419677734375)});
+constant spvUnsafeArray<float3, 20> _861 = spvUnsafeArray<float3, 20>(
+    {float3(0.5381000041961669921875, 0.18559999763965606689453125,
+            -0.4318999946117401123046875),
+     float3(0.13789999485015869140625, 0.248600006103515625,
+            0.4429999887943267822265625),
+     float3(0.3370999991893768310546875, 0.567900002002716064453125,
+            -0.0057000000961124897003173828125),
+     float3(-0.699899971485137939453125, -0.0450999997556209564208984375,
+            -0.0019000000320374965667724609375),
+     float3(0.068899996578693389892578125, -0.159799993038177490234375,
+            -0.854700028896331787109375),
+     float3(0.056000001728534698486328125, 0.0068999999202787876129150390625,
+            -0.184300005435943603515625),
+     float3(-0.014600000344216823577880859375, 0.14020000398159027099609375,
+            0.076200000941753387451171875),
+     float3(0.00999999977648258209228515625, -0.19239999353885650634765625,
+            -0.03440000116825103759765625),
+     float3(-0.35769999027252197265625, -0.53009998798370361328125,
+            -0.4357999861240386962890625),
+     float3(-0.3169000148773193359375, 0.10629999637603759765625,
+            0.015799999237060546875),
+     float3(0.010300000198185443878173828125, -0.5868999958038330078125,
+            0.0046000001020729541778564453125),
+     float3(-0.08969999849796295166015625, -0.4939999878406524658203125,
+            0.328700006008148193359375),
+     float3(0.7118999958038330078125, -0.015399999916553497314453125,
+            -0.091799996793270111083984375),
+     float3(-0.053300000727176666259765625, 0.0595999993383884429931640625,
+            -0.541100025177001953125),
+     float3(0.03519999980926513671875, -0.063100002706050872802734375,
+            0.546000003814697265625),
+     float3(-0.4776000082492828369140625, 0.2847000062465667724609375,
+            -0.0271000005304813385009765625),
+     float3(-0.11200000345706939697265625, 0.1234000027179718017578125,
+            -0.744599997997283935546875),
+     float3(-0.212999999523162841796875, -0.07819999754428863525390625,
+            -0.13789999485015869140625),
+     float3(0.2944000065326690673828125, -0.3111999928951263427734375,
+            -0.2644999921321868896484375),
+     float3(-0.4564000070095062255859375, 0.4174999892711639404296875,
+            -0.184300005435943603515625)});
+
+struct main0_out {
+    float4 FragColor [[color(0)]];
+    float4 BrightColor [[color(1)]];
+};
+
+struct main0_in {
+    float2 TexCoord [[user(locn0)]];
+};
+
+static inline __attribute__((always_inline)) float2 getTextureDimensions(
+    thread const int &textureIndex, texture2d<float> texture1,
+    sampler texture1Smplr, texture2d<float> texture2, sampler texture2Smplr,
+    texture2d<float> texture3, sampler texture3Smplr, texture2d<float> texture4,
+    sampler texture4Smplr, texture2d<float> texture5, sampler texture5Smplr) {
+    if (textureIndex == 0) {
+        return float2(int2(texture1.get_width(), texture1.get_height()));
+    } else {
+        if (textureIndex == 1) {
+            return float2(int2(texture2.get_width(), texture2.get_height()));
+        } else {
+            if (textureIndex == 2) {
+                return float2(
+                    int2(texture3.get_width(), texture3.get_height()));
+            } else {
+                if (textureIndex == 3) {
+                    return float2(
+                        int2(texture4.get_width(), texture4.get_height()));
+                } else {
+                    if (textureIndex == 4) {
+                        return float2(
+                            int2(texture5.get_width(), texture5.get_height()));
+                    }
+                }
+            }
+        }
+    }
+    return float2(0.0);
 }
 
-vec4 sampleCubeTextureAt(int textureIndex, vec3 direction) {
-    if (textureIndex == 0) return texture(cubeMap1, direction);
-    else if (textureIndex == 1) return texture(cubeMap2, direction);
-    else if (textureIndex == 2) return texture(cubeMap3, direction);
-    else if (textureIndex == 3) return texture(cubeMap4, direction);
-    else if (textureIndex == 4) return texture(cubeMap5, direction);
-    return vec4(0.0);
+static inline __attribute__((always_inline)) float4 sampleCubeTextureAt(
+    thread const int &textureIndex, thread const float3 &direction,
+    texturecube<float> cubeMap1, sampler cubeMap1Smplr,
+    texturecube<float> cubeMap2, sampler cubeMap2Smplr,
+    texturecube<float> cubeMap3, sampler cubeMap3Smplr,
+    texturecube<float> cubeMap4, sampler cubeMap4Smplr,
+    texturecube<float> cubeMap5, sampler cubeMap5Smplr) {
+    if (textureIndex == 0) {
+        return cubeMap1.sample(cubeMap1Smplr, direction);
+    } else {
+        if (textureIndex == 1) {
+            return cubeMap2.sample(cubeMap2Smplr, direction);
+        } else {
+            if (textureIndex == 2) {
+                return cubeMap3.sample(cubeMap3Smplr, direction);
+            } else {
+                if (textureIndex == 3) {
+                    return cubeMap4.sample(cubeMap4Smplr, direction);
+                } else {
+                    if (textureIndex == 4) {
+                        return cubeMap5.sample(cubeMap5Smplr, direction);
+                    }
+                }
+            }
+        }
+    }
+    return float4(0.0);
 }
 
-vec2 getTextureDimensions(int textureIndex) {
-    if (textureIndex == 0) return vec2(textureSize(texture1, 0));
-    else if (textureIndex == 1) return vec2(textureSize(texture2, 0));
-    else if (textureIndex == 2) return vec2(textureSize(texture3, 0));
-    else if (textureIndex == 3) return vec2(textureSize(texture4, 0));
-    else if (textureIndex == 4) return vec2(textureSize(texture5, 0));
-    return vec2(0);
-}
-
-float distributionGGX(vec3 N, vec3 H, float roughness) {
-    float a = roughness * roughness;
-    float a2 = a * a;
-    float NdotH = max(dot(N, H), 0.0);
-    float NdotH2 = NdotH * NdotH;
-
-    float num = a2;
-    float denom = (NdotH2 * (a2 - 1.0) + 1.0);
-    denom = PI * denom * denom;
-
-    return num / max(denom, 0.0001);
-}
-
-float geometrySchlickGGX(float NdotV, float roughness) {
-    float r = roughness + 1.0;
-    float k = (r * r) / 8.0;
-
-    float num = NdotV;
-    float denom = NdotV * (1.0 - k) + k;
-
-    return num / max(denom, 0.0001);
-}
-
-float geometrySmith(vec3 N, vec3 V, vec3 L, float roughness) {
-    float NdotV = max(dot(N, V), 0.0);
-    float NdotL = max(dot(N, L), 0.0);
-    float ggx2 = geometrySchlickGGX(NdotV, roughness);
-    float ggx1 = geometrySchlickGGX(NdotL, roughness);
-    return ggx1 * ggx2;
-}
-
-vec3 fresnelSchlick(float cosTheta, vec3 F0) {
-    return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
-}
-
-float calculateShadow(ShadowParameters shadowParam, vec3 fragPos, vec3 normal) {
-    vec4 fragPosLightSpace = shadowParam.lightProjection * shadowParam.lightView * vec4(fragPos, 1.0);
-    vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
-    projCoords = projCoords * 0.5 + 0.5;
-
-    if (projCoords.x < 0.0 || projCoords.x > 1.0 ||
-            projCoords.y < 0.0 || projCoords.y > 1.0 ||
-            projCoords.z > 1.0) {
+static inline __attribute__((always_inline)) float calculatePointShadow(
+    thread const ShadowParameters &shadowParam, thread const float3 &fragPos,
+    texture2d<float> texture1, sampler texture1Smplr, texture2d<float> texture2,
+    sampler texture2Smplr, texture2d<float> texture3, sampler texture3Smplr,
+    texture2d<float> texture4, sampler texture4Smplr, texture2d<float> texture5,
+    sampler texture5Smplr, texturecube<float> cubeMap1, sampler cubeMap1Smplr,
+    texturecube<float> cubeMap2, sampler cubeMap2Smplr,
+    texturecube<float> cubeMap3, sampler cubeMap3Smplr,
+    texturecube<float> cubeMap4, sampler cubeMap4Smplr,
+    texturecube<float> cubeMap5, sampler cubeMap5Smplr) {
+    int param = shadowParam.textureIndex;
+    float2 dims = getTextureDimensions(
+        param, texture1, texture1Smplr, texture2, texture2Smplr, texture3,
+        texture3Smplr, texture4, texture4Smplr, texture5, texture5Smplr);
+    bool _739 = dims.x == 0.0;
+    bool _746;
+    if (!_739) {
+        _746 = dims.y == 0.0;
+    } else {
+        _746 = _739;
+    }
+    if (_746) {
         return 0.0;
     }
-
-    float currentDepth = projCoords.z;
-
-    vec3 lightDirWorld = normalize((inverse(shadowParam.lightView) * vec4(0.0, 0.0, -1.0, 0.0)).xyz);
-    float biasValue = shadowParam.bias;
-    float ndotl = max(dot(normal, lightDirWorld), 0.0);
-    float minBias = 0.0005;
-    float bias = max(biasValue * (1.0 - ndotl), minBias);
-
+    float3 fragToLight = fragPos - shadowParam.lightPos;
+    float currentDepth = length(fragToLight);
+    float bias0 = 0.0500000007450580596923828125;
     float shadow = 0.0;
-    vec2 texelSize = 1.0 / getTextureDimensions(shadowParam.textureIndex);
+    float diskRadius = (1.0 + (currentDepth / shadowParam.farPlane)) *
+                       0.0500000007450580596923828125;
+    for (int i = 0; i < 10; i++) {
+        float3 sampleDir =
+            fast::normalize(fragToLight + (_861[i] * diskRadius));
+        int param_1 = shadowParam.textureIndex;
+        float3 param_2 = sampleDir;
+        float closestDepth =
+            sampleCubeTextureAt(param_1, param_2, cubeMap1, cubeMap1Smplr,
+                                cubeMap2, cubeMap2Smplr, cubeMap3,
+                                cubeMap3Smplr, cubeMap4, cubeMap4Smplr,
+                                cubeMap5, cubeMap5Smplr)
+                .x *
+            shadowParam.farPlane;
+        if ((currentDepth - bias0) > closestDepth) {
+            shadow += 1.0;
+        }
+    }
+    shadow /= 10.0;
+    return shadow;
+}
 
-    float distance = length(cameraPosition - fragPos);
-    vec2 shadowMapSize = getTextureDimensions(shadowParam.textureIndex);
+static inline __attribute__((always_inline)) float4 sampleTextureAt(
+    thread const int &textureIndex, thread const float2 &uv,
+    texture2d<float> texture1, sampler texture1Smplr, texture2d<float> texture2,
+    sampler texture2Smplr, texture2d<float> texture3, sampler texture3Smplr,
+    texture2d<float> texture4, sampler texture4Smplr, texture2d<float> texture5,
+    sampler texture5Smplr) {
+    if (textureIndex == 0) {
+        return texture1.sample(texture1Smplr, uv);
+    } else {
+        if (textureIndex == 1) {
+            return texture2.sample(texture2Smplr, uv);
+        } else {
+            if (textureIndex == 2) {
+                return texture3.sample(texture3Smplr, uv);
+            } else {
+                if (textureIndex == 3) {
+                    return texture4.sample(texture4Smplr, uv);
+                } else {
+                    if (textureIndex == 4) {
+                        return texture5.sample(texture5Smplr, uv);
+                    }
+                }
+            }
+        }
+    }
+    return float4(0.0);
+}
+
+static inline __attribute__((always_inline)) float calculateShadow(
+    thread const ShadowParameters &shadowParam, thread const float3 &fragPos,
+    thread const float3 &normal, texture2d<float> texture1,
+    sampler texture1Smplr, texture2d<float> texture2, sampler texture2Smplr,
+    texture2d<float> texture3, sampler texture3Smplr, texture2d<float> texture4,
+    sampler texture4Smplr, texture2d<float> texture5, sampler texture5Smplr,
+    constant UBO &_526) {
+    int param = shadowParam.textureIndex;
+    float2 dims = getTextureDimensions(
+        param, texture1, texture1Smplr, texture2, texture2Smplr, texture3,
+        texture3Smplr, texture4, texture4Smplr, texture5, texture5Smplr);
+    bool _411 = dims.x == 0.0;
+    bool _419;
+    if (!_411) {
+        _419 = dims.y == 0.0;
+    } else {
+        _419 = _411;
+    }
+    if (_419) {
+        return 0.0;
+    }
+    float4 fragPosLightSpace =
+        (shadowParam.lightProjection * shadowParam.lightView) *
+        float4(fragPos, 1.0);
+    if (fragPosLightSpace.w == 0.0) {
+        return 0.0;
+    }
+    float3 clipCoords = fragPosLightSpace.xyz / float3(fragPosLightSpace.w);
+    float2 projCoordsXY = (clipCoords.xy * 0.5) + float2(0.5);
+    float3 projCoords = float3(projCoordsXY, clipCoords.z);
+    bool _456 = projCoords.x < 0.0;
+    bool _463;
+    if (!_456) {
+        _463 = projCoords.x > 1.0;
+    } else {
+        _463 = _456;
+    }
+    bool _470;
+    if (!_463) {
+        _470 = projCoords.y < 0.0;
+    } else {
+        _470 = _463;
+    }
+    bool _477;
+    if (!_470) {
+        _477 = projCoords.y > 1.0;
+    } else {
+        _477 = _470;
+    }
+    bool _485;
+    if (!_477) {
+        _485 = projCoords.z < 0.0;
+    } else {
+        _485 = _477;
+    }
+    bool _493;
+    if (!_485) {
+        _493 = projCoords.z > 1.0;
+    } else {
+        _493 = _485;
+    }
+    if (_493) {
+        return 0.0;
+    }
+    float currentDepth = projCoords.z;
+    bool isAreaShadow = shadowParam.lightType == 2;
+    float3 lightDirWorld = fast::normalize(
+        -(spvInverse4x4(shadowParam.lightView) * float4(0.0, 0.0, -1.0, 0.0))
+             .xyz);
+    float biasValue = shadowParam.bias0;
+    if (isAreaShadow) {
+        biasValue = fast::max(biasValue, 0.0012000000569969416);
+    }
+    float ndotl = fast::max(dot(normal, lightDirWorld), 0.0);
+    float minBias =
+        fast::max(isAreaShadow ? 0.0002500000118743628
+                               : 4.9999998736893758177757263183594e-05,
+                  biasValue * (isAreaShadow ? 0.8500000238418579 : 0.25));
+    float bias0 = fast::max(biasValue * (1.0 - ndotl), minBias);
+    if (isAreaShadow) {
+        bias0 += 0.0002500000118743628;
+    }
+    float shadow = 0.0;
+    float2 texelSize = float2(1.0) / dims;
+    float _distance = length(float3(_526.cameraPosition) - fragPos);
+    float2 shadowMapSize = dims;
     float avgDim = 0.5 * (shadowMapSize.x + shadowMapSize.y);
-    float resFactor = clamp(1024.0 / max(avgDim, 1.0), 0.75, 1.25);
-    float distFactor = clamp(distance / 800.0, 0.0, 1.0);
-    float desiredKernel = mix(1.0, 1.5, distFactor) * resFactor;
-    int kernelSize = int(clamp(floor(desiredKernel + 0.5), 1.0, 2.0));
-
-    const vec2 poissonDisk[12] = vec2[](
-            vec2(-0.326, -0.406), vec2(-0.840, -0.074), vec2(-0.696, 0.457),
-            vec2(-0.203, 0.621), vec2(0.962, -0.195), vec2(0.473, -0.480),
-            vec2(0.519, 0.767), vec2(0.185, -0.893), vec2(0.507, 0.064),
-            vec2(0.896, 0.412), vec2(-0.322, -0.933), vec2(-0.792, -0.598)
-        );
-    float texelRadius = mix(1.0, 3.0, distFactor) * resFactor;
-    vec2 filterRadius = texelSize * texelRadius;
-
+    float resFactor = fast::clamp(1024.0 / fast::max(avgDim, 1.0), 0.75, 1.25);
+    float distFactor = fast::clamp(_distance / 800.0, 0.0, 1.0);
+    float texelRadius =
+        mix(isAreaShadow ? 1.7999999523162842 : 1.0,
+            isAreaShadow ? 4.199999809265137 : 3.0, distFactor) *
+        resFactor;
+    float2 filterRadius = texelSize * texelRadius;
+    int kernelSamples = isAreaShadow ? 6 : 8;
     int sampleCount = 0;
-    for (int i = 0; i < 12; ++i) {
-        vec2 offset = poissonDisk[i] * filterRadius;
-        vec2 uv = projCoords.xy + offset;
-        if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) {
+    for (int i = 0; i < kernelSamples; i++) {
+        float2 offset = _660[i] * filterRadius;
+        float2 uv = projCoords.xy + offset;
+        bool _676 = uv.x < 0.0;
+        bool _683;
+        if (!_676) {
+            _683 = uv.x > 1.0;
+        } else {
+            _683 = _676;
+        }
+        bool _690;
+        if (!_683) {
+            _690 = uv.y < 0.0;
+        } else {
+            _690 = _683;
+        }
+        bool _697;
+        if (!_690) {
+            _697 = uv.y > 1.0;
+        } else {
+            _697 = _690;
+        }
+        if (_697) {
             continue;
         }
-        float pcfDepth = sampleTextureAt(shadowParam.textureIndex, uv).r;
-        shadow += currentDepth - bias > pcfDepth ? 1.0 : 0.0;
+        int param_1 = shadowParam.textureIndex;
+        float2 param_2 = uv;
+        float pcfDepth =
+            sampleTextureAt(param_1, param_2, texture1, texture1Smplr, texture2,
+                            texture2Smplr, texture3, texture3Smplr, texture4,
+                            texture4Smplr, texture5, texture5Smplr)
+                .x;
+        shadow += float((currentDepth - bias0) > pcfDepth);
         sampleCount++;
     }
     if (sampleCount > 0) {
         shadow /= float(sampleCount);
     }
-
-    return shadow;
-}
-
-float calculatePointShadow(ShadowParameters shadowParam, vec3 fragPos) {
-    vec3 fragToLight = fragPos - shadowParam.lightPos;
-    float currentDepth = length(fragToLight);
-
-    float bias = 0.05;
-    float shadow = 0.0;
-    float diskRadius = (1.0 + (currentDepth / shadowParam.farPlane)) * 0.05;
-
-    const int samples = 20;
-    const vec3 sampleOffsetDirections[] = vec3[](
-            vec3(0.5381, 0.1856, -0.4319), vec3(0.1379, 0.2486, 0.4430),
-            vec3(0.3371, 0.5679, -0.0057), vec3(-0.6999, -0.0451, -0.0019),
-            vec3(0.0689, -0.1598, -0.8547), vec3(0.0560, 0.0069, -0.1843),
-            vec3(-0.0146, 0.1402, 0.0762), vec3(0.0100, -0.1924, -0.0344),
-            vec3(-0.3577, -0.5301, -0.4358), vec3(-0.3169, 0.1063, 0.0158),
-            vec3(0.0103, -0.5869, 0.0046), vec3(-0.0897, -0.4940, 0.3287),
-            vec3(0.7119, -0.0154, -0.0918), vec3(-0.0533, 0.0596, -0.5411),
-            vec3(0.0352, -0.0631, 0.5460), vec3(-0.4776, 0.2847, -0.0271),
-            vec3(-0.1120, 0.1234, -0.7446), vec3(-0.2130, -0.0782, -0.1379),
-            vec3(0.2944, -0.3112, -0.2645), vec3(-0.4564, 0.4175, -0.1843)
-        );
-
-    for (int i = 0; i < samples; ++i) {
-        vec3 sampleDir = normalize(fragToLight + sampleOffsetDirections[i] * diskRadius);
-        float closestDepth = sampleCubeTextureAt(shadowParam.textureIndex, sampleDir).r * shadowParam.farPlane;
-        if (currentDepth - bias > closestDepth) {
-            shadow += 1.0;
-        }
+    if (isAreaShadow) {
+        shadow = smoothstep(0.18000000715255737, 0.9200000166893005, shadow);
     }
-
-    shadow /= float(samples);
     return shadow;
 }
 
-vec3 evaluateBRDF(vec3 L, vec3 radiance, vec3 N, vec3 V, vec3 F0, vec3 albedo, float metallic, float roughness) {
-    vec3 H = normalize(V + L);
-
-    float NDF = distributionGGX(N, H, roughness);
-    float G = geometrySmith(N, V, L, roughness);
-    vec3 F = fresnelSchlick(max(dot(H, V), 0.0), F0);
-
-    vec3 kS = F;
-    vec3 kD = (vec3(1.0) - kS) * (1.0 - metallic);
-
-    float NdotV = max(dot(N, V), 0.0);
-    float NdotL = max(dot(N, L), 0.0);
-
-    vec3 numerator = NDF * G * F;
-    float denominator = max(4.0 * NdotV * NdotL, 0.0001);
-    vec3 specular = numerator / denominator;
-
-    return (kD * albedo / PI + specular) * radiance * NdotL;
+static inline __attribute__((always_inline)) float
+distributionGGX(thread const float3 &N, thread const float3 &H,
+                thread const float &roughness) {
+    float a = roughness * roughness;
+    float a2 = a * a;
+    float NdotH = fast::max(dot(N, H), 0.0);
+    float NdotH2 = NdotH * NdotH;
+    float num = a2;
+    float denom = (NdotH2 * (a2 - 1.0)) + 1.0;
+    denom = (3.1415927410125732421875 * denom) * denom;
+    return num / fast::max(denom, 9.9999997473787516355514526367188e-05);
 }
 
-vec3 calcDirectionalLight(DirectionalLight light, vec3 N, vec3 V, vec3 F0, vec3 albedo, float metallic, float roughness) {
-    vec3 L = normalize(-light.direction);
-    vec3 radiance = light.diffuse * max(light.intensity, 0.0);
-    return evaluateBRDF(L, radiance, N, V, F0, albedo, metallic, roughness);
+static inline __attribute__((always_inline)) float
+geometrySchlickGGX(thread const float &NdotV, thread const float &roughness) {
+    float r = roughness + 1.0;
+    float k = (r * r) / 8.0;
+    float num = NdotV;
+    float denom = (NdotV * (1.0 - k)) + k;
+    return num / fast::max(denom, 9.9999997473787516355514526367188e-05);
 }
 
-vec3 calcPointLight(PointLight light, vec3 fragPos, vec3 N, vec3 V, vec3 F0, vec3 albedo, float metallic, float roughness) {
-    vec3 L = light.position - fragPos;
-    float distance = length(L);
-    vec3 direction = distance > 0.0 ? (L / distance) : vec3(0.0, 0.0, 1.0);
-    float attenuation = 1.0 / max(light.constant + light.linear * distance + light.quadratic * distance * distance, 0.0001);
-    float fade = 1.0 - smoothstep(light.radius * 0.9, light.radius, distance);
-    vec3 radiance = light.diffuse * max(light.intensity, 0.0) * attenuation * fade;
-    return evaluateBRDF(direction, radiance, N, V, F0, albedo, metallic, roughness);
+static inline __attribute__((always_inline)) float
+geometrySmith(thread const float3 &N, thread const float3 &V,
+              thread const float3 &L, thread const float &roughness) {
+    float NdotV = fast::max(dot(N, V), 0.0);
+    float NdotL = fast::max(dot(N, L), 0.0);
+    float param = NdotV;
+    float param_1 = roughness;
+    float ggx2 = geometrySchlickGGX(param, param_1);
+    float param_2 = NdotL;
+    float param_3 = roughness;
+    float ggx1 = geometrySchlickGGX(param_2, param_3);
+    return ggx1 * ggx2;
 }
 
-vec3 calcSpotLight(SpotLight light, vec3 fragPos, vec3 N, vec3 V, vec3 F0, vec3 albedo, float metallic, float roughness) {
-    vec3 L = light.position - fragPos;
-    float distance = length(L);
-    vec3 direction = normalize(L);
+static inline __attribute__((always_inline)) float3
+fresnelSchlick(thread const float &cosTheta, thread const float3 &F0) {
+    return F0 + ((float3(1.0) - F0) * powr(1.0 - cosTheta, 5.0));
+}
 
-    vec3 spotDirection = normalize(light.direction);
+static inline __attribute__((always_inline)) float3
+evaluateBRDF(thread const float3 &L, thread const float3 &radiance,
+             thread const float3 &N, thread const float3 &V,
+             thread const float3 &F0, thread const float3 &albedo,
+             thread const float &metallic, thread const float &roughness) {
+    float3 H = fast::normalize(V + L);
+    float3 param = N;
+    float3 param_1 = H;
+    float param_2 = roughness;
+    float NDF = distributionGGX(param, param_1, param_2);
+    float3 param_3 = N;
+    float3 param_4 = V;
+    float3 param_5 = L;
+    float param_6 = roughness;
+    float G = geometrySmith(param_3, param_4, param_5, param_6);
+    float param_7 = fast::max(dot(H, V), 0.0);
+    float3 param_8 = F0;
+    float3 F = fresnelSchlick(param_7, param_8);
+    float3 kS = F;
+    float3 kD = (float3(1.0) - kS) * (1.0 - metallic);
+    float NdotV = fast::max(dot(N, V), 0.0);
+    float NdotL = fast::max(dot(N, L), 0.0);
+    float3 numerator = F * (NDF * G);
+    float denominator =
+        fast::max((4.0 * NdotV) * NdotL, 9.9999997473787516355514526367188e-05);
+    float3 specular = numerator / float3(denominator);
+    return ((((kD * albedo) / float3(3.1415927410125732421875)) + specular) *
+            radiance) *
+           NdotL;
+}
+
+static inline __attribute__((always_inline)) float3 calcDirectionalLight(
+    thread const DirectionalLight &light, thread const float3 &N,
+    thread const float3 &V, thread const float3 &F0,
+    thread const float3 &albedo, thread const float &metallic,
+    thread const float &roughness) {
+    float3 L = fast::normalize(-light.direction);
+    float3 radiance = light.diffuse * fast::max(light.intensity, 0.0);
+    float3 param = L;
+    float3 param_1 = radiance;
+    float3 param_2 = N;
+    float3 param_3 = V;
+    float3 param_4 = F0;
+    float3 param_5 = albedo;
+    float param_6 = metallic;
+    float param_7 = roughness;
+    return evaluateBRDF(param, param_1, param_2, param_3, param_4, param_5,
+                        param_6, param_7);
+}
+
+static inline __attribute__((always_inline)) float3
+calcPointLight(thread const PointLight &light, thread const float3 &fragPos,
+               thread const float3 &N, thread const float3 &V,
+               thread const float3 &F0, thread const float3 &albedo,
+               thread const float &metallic, thread const float &roughness) {
+    float3 L = light.position - fragPos;
+    float _distance = length(L);
+    float3 _1019;
+    if (_distance > 0.0) {
+        _1019 = L / float3(_distance);
+    } else {
+        _1019 = float3(0.0, 0.0, 1.0);
+    }
+    float3 direction = _1019;
+    float attenuation =
+        1.0 / fast::max((light.constant0 + (light.linear * _distance)) +
+                            ((light.quadratic * _distance) * _distance),
+                        9.9999997473787516355514526367188e-05);
+    float fade = 1.0 - smoothstep(light.radius * 0.89999997615814208984375,
+                                  light.radius, _distance);
+    float3 radiance =
+        ((light.diffuse * fast::max(light.intensity, 0.0)) * attenuation) *
+        fade;
+    float3 param = direction;
+    float3 param_1 = radiance;
+    float3 param_2 = N;
+    float3 param_3 = V;
+    float3 param_4 = F0;
+    float3 param_5 = albedo;
+    float param_6 = metallic;
+    float param_7 = roughness;
+    return evaluateBRDF(param, param_1, param_2, param_3, param_4, param_5,
+                        param_6, param_7);
+}
+
+static inline __attribute__((always_inline)) float3
+calcSpotLight(thread const SpotLight &light, thread const float3 &fragPos,
+              thread const float3 &N, thread const float3 &V,
+              thread const float3 &F0, thread const float3 &albedo,
+              thread const float &metallic, thread const float &roughness) {
+    float3 L = light.position - fragPos;
+    float _distance = length(L);
+    float3 direction = fast::normalize(L);
+    float3 spotDirection = fast::normalize(light.direction);
     float theta = dot(direction, -spotDirection);
-    float epsilon = max(light.cutOff - light.outerCutOff, 0.0001);
-    float intensity = clamp((theta - light.outerCutOff) / epsilon, 0.0, 1.0);
-
-    float range = max(light.range, 0.001);
-    float attenuation = 1.0 / (1.0 + (distance / range) + (distance * distance) / (range * range));
-    float fade = 1.0 - smoothstep(range * 0.9, range, distance);
-    vec3 radiance = light.diffuse * max(light.intensity, 0.0) * attenuation * intensity * fade;
-    return evaluateBRDF(direction, radiance, N, V, F0, albedo, metallic, roughness);
+    float epsilon = fast::max(light.cutOff - light.outerCutOff,
+                              9.9999997473787516355514526367188e-05);
+    float intensity =
+        fast::clamp((theta - light.outerCutOff) / epsilon, 0.0, 1.0);
+    float range = fast::max(light.range, 0.001000000047497451305389404296875);
+    float attenuation = 1.0 / ((1.0 + (_distance / range)) +
+                               ((_distance * _distance) / (range * range)));
+    float fade =
+        1.0 - smoothstep(range * 0.89999997615814208984375, range, _distance);
+    float3 radiance =
+        (((light.diffuse * fast::max(light.intensity, 0.0)) * attenuation) *
+         intensity) *
+        fade;
+    float3 param = direction;
+    float3 param_1 = radiance;
+    float3 param_2 = N;
+    float3 param_3 = V;
+    float3 param_4 = F0;
+    float3 param_5 = albedo;
+    float param_6 = metallic;
+    float param_7 = roughness;
+    return evaluateBRDF(param, param_1, param_2, param_3, param_4, param_5,
+                        param_6, param_7);
 }
 
-vec3 sampleEnvironmentRadiance(vec3 direction) {
-    return texture(skybox, direction).rgb;
-}
-
-vec3 acesToneMapping(vec3 color) {
-    float a = 2.51;
-    float b = 0.03;
-    float c = 2.43;
-    float d = 0.59;
-    float e = 0.14;
-    color = (color * (a * color + b)) / (color * (c * color + d) + e);
-    color = pow(clamp(color, 0.0, 1.0), vec3(1.0 / 2.2));
-    return color;
-}
-
-vec3 getRimLight(
-    vec3 fragPos,
-    vec3 N,
-    vec3 V,
-    vec3 F0,
-    vec3 albedo,
-    float metallic,
-    float roughness
-) {
-    N = normalize(N);
-    V = normalize(V);
-
-    float rim = pow(1.0 - max(dot(N, V), 0.0), 3.0);
-
-    rim *= mix(1.2, 0.3, roughness);
-
-    vec3 rimColor = mix(vec3(1.0), albedo, metallic) * environment.rimLightColor;
-    rimColor = mix(rimColor, F0, 0.5);
-
+static inline __attribute__((always_inline)) float3
+getRimLight(thread const float3 &fragPos, thread float3 &N, thread float3 &V,
+            thread const float3 &F0, thread const float3 &albedo,
+            thread const float &metallic, thread const float &roughness,
+            constant UBO &_526, constant Environment &environment) {
+    N = fast::normalize(N);
+    V = fast::normalize(V);
+    float rim = powr(1.0 - fast::max(dot(N, V), 0.0), 3.0);
+    rim *= mix(1.2000000476837158203125, 0.300000011920928955078125, roughness);
+    float3 rimColor =
+        mix(float3(1.0), albedo, float3(metallic)) * environment.rimLightColor;
+    rimColor = mix(rimColor, F0, float3(0.5));
     float rimIntensity = environment.rimLightIntensity;
-
-    vec3 rimLight = rimColor * rim * rimIntensity;
-
-    float dist = length(cameraPosition - fragPos);
-    rimLight /= (1.0 + dist * 0.1);
-
+    float3 rimLight = (rimColor * rim) * rimIntensity;
+    float dist = length(float3(_526.cameraPosition) - fragPos);
+    rimLight /= float3(1.0 + (dist * 0.100000001490116119384765625));
     return rimLight;
 }
 
-void main() {
-    vec3 FragPos = texture(gPosition, TexCoord).xyz;
-    vec3 N = normalize(texture(gNormal, TexCoord).xyz);
-    vec4 albedoAo = texture(gAlbedoSpec, TexCoord);
-    vec3 albedo = albedoAo.rgb;
-    vec4 matData = texture(gMaterial, TexCoord);
-    float metallic = clamp(matData.r, 0.0, 1.0);
-    float roughness = clamp(matData.g, 0.0, 1.0);
-    float ao = clamp(matData.b, 0.0, 1.0);
+static inline __attribute__((always_inline)) float3
+sampleEnvironmentRadiance(thread const float3 &direction,
+                          texturecube<float> skybox, sampler skyboxSmplr) {
+    return skybox.sample(skyboxSmplr, direction).xyz;
+}
 
-    float viewDistance = max(length(cameraPosition - FragPos), 1e-6);
-    vec3 V = (cameraPosition - FragPos) / viewDistance;
+static inline __attribute__((always_inline)) float3
+acesToneMapping(thread float3 &color) {
+    float a = 2.5099999904632568359375;
+    float b = 0.02999999932944774627685546875;
+    float c = 2.4300000667572021484375;
+    float d = 0.589999973773956298828125;
+    float e = 0.14000000059604644775390625;
+    color = (color * ((color * a) + float3(b))) /
+            ((color * ((color * c) + float3(d))) + float3(e));
+    color = powr(fast::clamp(color, float3(0.0), float3(1.0)),
+                 float3(0.4545454680919647216796875));
+    return color;
+}
 
-    vec3 F0 = mix(vec3(0.04), albedo, metallic);
+static inline float2 octEncode(float3 n) {
+    n /= (fabs(n.x) + fabs(n.y) + fabs(n.z) + 1e-6f);
+    float2 e = n.xy;
 
-    float ssaoFactor = clamp(texture(ssao, TexCoord).r, 0.0, 1.0);
-    float ssaoDesaturated = mix(1.0, ssaoFactor, 0.35);
-    float occlusion = clamp(ao * (0.2 + 0.8 * ssaoDesaturated), 0.0, 1.0);
-    float lightingOcclusion = clamp(ssaoDesaturated, 0.2, 1.0);
+    if (n.z < 0.0f) {
+        float2 signNotZero =
+            float2(e.x >= 0.0f ? 1.0f : -1.0f, e.y >= 0.0f ? 1.0f : -1.0f);
+        e = (1.0f - fabs(e.yx)) * signNotZero;
+    }
+    return e;
+}
 
+static inline float3 safeNormalizeDDGI(float3 v, float3 fallback) {
+    float len2 = dot(v, v);
+    if (len2 > 1e-10f) {
+        return v * rsqrt(len2);
+    }
+    return fallback;
+}
+
+static inline uint probeIndexFromCoord(uint3 c, uint3 counts) {
+    return c.x + counts.x * (c.y + counts.y * c.z);
+}
+
+static inline float2 ddgiAtlasUV(uint probeIndex, float3 dirWS,
+                                 constant ProbeSpace &ps, uint atlasW,
+                                 uint atlasH) {
+    if (atlasW == 0u || atlasH == 0u) {
+        return float2(0.5f);
+    }
+
+    uint border = (uint)ps.atlasParams.x;
+    uint innerRes = (uint)ps.atlasParams.y;
+    uint probesPerRow = (uint)ps.atlasParams.z;
+    if (innerRes == 0u || probesPerRow == 0u) {
+        return float2(0.5f);
+    }
+
+    uint tileRes = innerRes + 2u * border;
+
+    uint tileX = probeIndex % probesPerRow;
+    uint tileY = probeIndex / probesPerRow;
+
+    float dirLen = length(dirWS);
+    float3 safeDir =
+        (dirLen > 1e-6f) ? (dirWS / float3(dirLen)) : float3(0.0f, 1.0f, 0.0f);
+    float2 e = octEncode(safeDir);
+    float2 innerUV = e * 0.5f + 0.5f;
+
+    float2 innerPx = float2((float)(tileX * tileRes + border),
+                            (float)(tileY * tileRes + border)) +
+                     innerUV * float(innerRes - 1u);
+
+    return (innerPx + 0.5f) / float2((float)atlasW, (float)atlasH);
+}
+
+static inline float4 sampleDDGITextureBilinear(texture2d<float> tex,
+                                               float2 uv) {
+    uint w = tex.get_width();
+    uint h = tex.get_height();
+    if (w == 0u || h == 0u) {
+        return float4(0.0f);
+    }
+
+    float2 pixel = uv * float2((float)w, (float)h) - 0.5f;
+    int2 p0 = int2(floor(pixel));
+    int2 p1 = p0 + int2(1, 0);
+    int2 p2 = p0 + int2(0, 1);
+    int2 p3 = p0 + int2(1, 1);
+
+    int maxX = int(w) - 1;
+    int maxY = int(h) - 1;
+    p0 = int2(clamp(p0.x, 0, maxX), clamp(p0.y, 0, maxY));
+    p1 = int2(clamp(p1.x, 0, maxX), clamp(p1.y, 0, maxY));
+    p2 = int2(clamp(p2.x, 0, maxX), clamp(p2.y, 0, maxY));
+    p3 = int2(clamp(p3.x, 0, maxX), clamp(p3.y, 0, maxY));
+
+    float2 f = fract(pixel);
+    float4 c00 = tex.read(uint2((uint)p0.x, (uint)p0.y));
+    float4 c10 = tex.read(uint2((uint)p1.x, (uint)p1.y));
+    float4 c01 = tex.read(uint2((uint)p2.x, (uint)p2.y));
+    float4 c11 = tex.read(uint2((uint)p3.x, (uint)p3.y));
+    float4 cx0 = mix(c00, c10, f.x);
+    float4 cx1 = mix(c01, c11, f.x);
+    return mix(cx0, cx1, f.y);
+}
+
+static inline float4
+sampleProbeDirectionalRadiance(texture2d<float> ddgiTexture,
+                               constant ProbeSpace &ps, uint probeIndex,
+                               uint atlasW, uint atlasH, float3 dirWS) {
+    float2 uv = ddgiAtlasUV(probeIndex, dirWS, ps, atlasW, atlasH);
+    return sampleDDGITextureBilinear(ddgiTexture, uv);
+}
+
+static inline float3 sampleDDGIIrradiance(texture2d<float> ddgiTexture,
+                                          constant ProbeSpace &ps, float3 posWS,
+                                          float3 normalWS) {
+    uint3 counts = uint3((uint)ps.probeCount.x, (uint)ps.probeCount.y,
+                         (uint)ps.probeCount.z);
+
+    if (counts.x == 0u || counts.y == 0u || counts.z == 0u)
+        return float3(0.0);
+
+    uint atlasW = ddgiTexture.get_width();
+    uint atlasH = ddgiTexture.get_height();
+    if (atlasW == 0u || atlasH == 0u) {
+        return float3(0.0);
+    }
+
+    float normalLen = length(normalWS);
+    float3 safeNormal = (normalLen > 1e-6f) ? (normalWS / float3(normalLen))
+                                            : float3(0.0f, 1.0f, 0.0f);
+
+    float3 safeSpacing = max(ps.spacing, float3(1e-4f));
+    float spacingScale =
+        max(max(safeSpacing.x, max(safeSpacing.y, safeSpacing.z)), 1e-4f);
+    float3 grid = (posWS - ps.origin) / safeSpacing;
+
+    if (counts.x < 2u || counts.y < 2u || counts.z < 2u) {
+        float3 maxCoord = max(float3(0.0f), float3((float)counts.x - 1.0f,
+                                                   (float)counts.y - 1.0f,
+                                                   (float)counts.z - 1.0f));
+        float3 clampedGrid = clamp(grid, float3(0.0f), maxCoord);
+        uint3 nearest = uint3(
+            (uint)clamp(int(floor(clampedGrid.x + 0.5f)), 0, int(counts.x) - 1),
+            (uint)clamp(int(floor(clampedGrid.y + 0.5f)), 0, int(counts.y) - 1),
+            (uint)clamp(int(floor(clampedGrid.z + 0.5f)), 0,
+                        int(counts.z) - 1));
+        uint pIndex = probeIndexFromCoord(nearest, counts);
+        float4 nearestSample = sampleProbeDirectionalRadiance(
+            ddgiTexture, ps, pIndex, atlasW, atlasH, safeNormal);
+        float nearestValidity = isfinite(nearestSample.w)
+                                    ? clamp(nearestSample.w, 0.0f, 1.0f)
+                                    : 0.0f;
+        nearestValidity = mix(0.05f, 1.0f, nearestValidity);
+        float3 nearestIrr =
+            all(isfinite(nearestSample.xyz)) ? nearestSample.xyz : float3(0.0f);
+        nearestIrr *= nearestValidity;
+        return max(nearestIrr, float3(0.0f));
+    }
+
+    float3 maxGrid =
+        float3((float)counts.x - 1.0001f, (float)counts.y - 1.0001f,
+               (float)counts.z - 1.0001f);
+    float3 clampedGrid = clamp(grid, float3(0.0f), maxGrid);
+
+    float3 baseF = floor(clampedGrid);
+    float3 frac = clampedGrid - baseF;
+    int3 baseI = int3(baseF);
+    int3 maxBase =
+        int3(int(counts.x) - 2, int(counts.y) - 2, int(counts.z) - 2);
+    baseI = clamp(baseI, int3(0), maxBase);
+
+    float3 result = float3(0.0f);
+    float weightSum = 0.0f;
+    float3 resultNoBackface = float3(0.0f);
+    float weightSumNoBackface = 0.0f;
+
+    for (uint dz = 0; dz <= 1u; dz++) {
+        for (uint dy = 0; dy <= 1u; dy++) {
+            for (uint dx = 0; dx <= 1u; dx++) {
+
+                uint3 pc = uint3(uint(baseI.x) + dx, uint(baseI.y) + dy,
+                                 uint(baseI.z) + dz);
+                uint pIndex = probeIndexFromCoord(pc, counts);
+
+                float trilinearW = ((dx == 0u) ? (1.0f - frac.x) : frac.x) *
+                                   ((dy == 0u) ? (1.0f - frac.y) : frac.y) *
+                                   ((dz == 0u) ? (1.0f - frac.z) : frac.z);
+
+                float3 probePos = ps.origin + float3(pc) * safeSpacing;
+                float3 surfaceToProbe = probePos - posWS;
+                float sDist = length(surfaceToProbe);
+                float3 dirToProbe = (sDist > 1e-4f) ? surfaceToProbe / sDist
+                                                    : float3(0.0f, 1.0f, 0.0f);
+                float frontW = max(dot(safeNormal, dirToProbe), 0.0f);
+                float backfaceW =
+                    mix(0.180000007152557373046875, 1.0f, frontW * frontW);
+                float distNorm = sDist / spacingScale;
+                float distNorm2 = distNorm * distNorm;
+                float distanceW =
+                    1.0f / (1.0f + distNorm2 * 0.85000002384185791015625);
+
+                float w = trilinearW * backfaceW * distanceW;
+
+                float4 irrSample = sampleProbeDirectionalRadiance(
+                    ddgiTexture, ps, pIndex, atlasW, atlasH, safeNormal);
+                float probeValidity = isfinite(irrSample.w)
+                                          ? clamp(irrSample.w, 0.0f, 1.0f)
+                                          : 0.0f;
+                float validityW = mix(0.05f, 1.0f, probeValidity);
+                float3 irr = irrSample.xyz;
+                if (!all(isfinite(irr))) {
+                    irr = float3(0.0f);
+                    validityW = 0.0f;
+                }
+                irr = max(irr, float3(0.0f));
+                float weightedW = w * validityW;
+                result += irr * weightedW;
+                weightSum += weightedW;
+                float noBackfaceW = trilinearW * distanceW * validityW;
+                resultNoBackface += irr * noBackfaceW;
+                weightSumNoBackface += noBackfaceW;
+            }
+        }
+    }
+
+    if (weightSum > 1e-5f) {
+        return result / weightSum;
+    }
+    if (weightSumNoBackface > 1e-5f) {
+        return resultNoBackface / weightSumNoBackface;
+    }
+
+    uint3 nearest = uint3(
+        (uint)clamp(int(floor(clampedGrid.x + 0.5f)), 0, int(counts.x) - 1),
+        (uint)clamp(int(floor(clampedGrid.y + 0.5f)), 0, int(counts.y) - 1),
+        (uint)clamp(int(floor(clampedGrid.z + 0.5f)), 0, int(counts.z) - 1));
+    uint nearestIndex = probeIndexFromCoord(nearest, counts);
+    float4 fallbackSample = sampleProbeDirectionalRadiance(
+        ddgiTexture, ps, nearestIndex, atlasW, atlasH, safeNormal);
+    float fallbackValidity =
+        isfinite(fallbackSample.w) ? clamp(fallbackSample.w, 0.0f, 1.0f) : 0.0f;
+    fallbackValidity = mix(0.05f, 1.0f, fallbackValidity);
+    float3 fallback =
+        all(isfinite(fallbackSample.xyz)) ? fallbackSample.xyz : float3(0.0f);
+    fallback *= fallbackValidity;
+    if (!all(isfinite(fallback))) {
+        fallback = float3(0.0f);
+    }
+    return max(fallback, float3(0.0f));
+}
+
+fragment main0_out main0(
+    main0_in in [[stage_in]], constant UBO &_526 [[buffer(0)]],
+    constant Environment &environment [[buffer(1)]],
+    constant PushConstants &_1355 [[buffer(2)]],
+    device ShadowParams &_1372 [[buffer(3)]],
+    device DirectionalLights &_1422 [[buffer(4)]],
+    device PointLights &_1465 [[buffer(5)]],
+    device SpotLights &_1510 [[buffer(6)]],
+    device AreaLights &_1552 [[buffer(7)]],
+    constant AmbientLight &ambientLight [[buffer(8)]],
+    constant ProbeSpace &ps [[buffer(9)]],
+    texture2d<float> texture1 [[texture(0)]],
+    texture2d<float> texture2 [[texture(1)]],
+    texture2d<float> texture3 [[texture(2)]],
+    texture2d<float> texture4 [[texture(3)]],
+    texture2d<float> texture5 [[texture(4)]],
+    texturecube<float> cubeMap1 [[texture(5)]],
+    texturecube<float> cubeMap2 [[texture(6)]],
+    texturecube<float> cubeMap3 [[texture(7)]],
+    texturecube<float> cubeMap4 [[texture(8)]],
+    texturecube<float> cubeMap5 [[texture(9)]],
+    texturecube<float> skybox [[texture(10)]],
+    texture2d<float> gPosition [[texture(11)]],
+    texture2d<float> gNormal [[texture(12)]],
+    texture2d<float> gAlbedoSpec [[texture(13)]],
+    texture2d<float> gMaterial [[texture(14)]],
+    texture2d<float> ssao [[texture(15)]],
+    texture2d<float> irradianceMap [[texture(16)]],
+    sampler texture1Smplr [[sampler(0)]], sampler texture2Smplr [[sampler(1)]],
+    sampler texture3Smplr [[sampler(2)]], sampler texture4Smplr [[sampler(3)]],
+    sampler texture5Smplr [[sampler(4)]], sampler cubeMap1Smplr [[sampler(5)]],
+    sampler cubeMap2Smplr [[sampler(6)]], sampler cubeMap3Smplr [[sampler(7)]],
+    sampler cubeMap4Smplr [[sampler(8)]], sampler cubeMap5Smplr [[sampler(9)]],
+    sampler skyboxSmplr [[sampler(10)]], sampler gPositionSmplr [[sampler(11)]],
+    sampler gNormalSmplr [[sampler(12)]],
+    sampler gAlbedoSpecSmplr [[sampler(13)]],
+    sampler gMaterialSmplr [[sampler(14)]], sampler ssaoSmplr [[sampler(15)]]) {
+    main0_out out{};
+    float4 gPositionSample = gPosition.sample(gPositionSmplr, in.TexCoord);
+    float3 FragPos = gPositionSample.xyz;
+    if (!all(isfinite(FragPos))) {
+        FragPos = float3(0.0);
+    }
+    float depthSample = gPositionSample.w;
+    float3 sampledNormal = gNormal.sample(gNormalSmplr, in.TexCoord).xyz;
+    float normalLength = length(sampledNormal);
+    bool hasNormal = all(isfinite(sampledNormal)) &&
+                     normalLength > 9.9999997473787516355514526367188e-06;
+    bool hasDepth =
+        isfinite(depthSample) && depthSample < 0.999989986419677734375;
+    bool hasGeometry = hasNormal || hasDepth;
+    if (!hasGeometry) {
+        float2 ndc = in.TexCoord * 2.0f - 1.0f;
+        float3 backgroundDir = fast::normalize(float3(ndc.x, -ndc.y, 1.0f));
+        float3 backgroundColor =
+            sampleEnvironmentRadiance(backgroundDir, skybox, skyboxSmplr);
+        out.FragColor = float4(acesToneMapping(backgroundColor), 1.0);
+        out.BrightColor = float4(0.0, 0.0, 0.0, 1.0);
+        return out;
+    }
+    float3 N = float3(0.0, 1.0, 0.0);
+    if (hasNormal) {
+        N = sampledNormal / float3(normalLength);
+    } else {
+        float3 geomN = cross(dfdx(FragPos), dfdy(FragPos));
+        float geomNLen = length(geomN);
+        if (all(isfinite(geomN)) &&
+            geomNLen > 9.9999997473787516355514526367188e-06) {
+            N = geomN / float3(geomNLen);
+        }
+    }
+    float3 geomNormal = cross(dfdx(FragPos), dfdy(FragPos));
+    float geomNormalLen = length(geomNormal);
+    bool hasGeomNormal = all(isfinite(geomNormal)) &&
+                         geomNormalLen > 9.9999997473787516355514526367188e-06;
+    float3 shadowNormal = N;
+    float3 ddgiNormal = N;
+    if (hasGeomNormal) {
+        geomNormal /= float3(geomNormalLen);
+        if (dot(N, geomNormal) < 0.0) {
+            geomNormal = -geomNormal;
+        }
+        shadowNormal = geomNormal;
+        ddgiNormal = geomNormal;
+    }
+    float4 albedoAo = gAlbedoSpec.sample(gAlbedoSpecSmplr, in.TexCoord);
+    float3 albedo = fast::clamp(albedoAo.xyz, float3(0.0), float3(1.0));
+    if (!all(isfinite(albedo))) {
+        albedo = float3(0.0);
+    }
+    float4 matData = gMaterial.sample(gMaterialSmplr, in.TexCoord);
+    float metallic = fast::clamp(matData.x, 0.0, 1.0);
+    float roughness = fast::clamp(matData.y, 0.0, 1.0);
+    float ao = fast::clamp(matData.z, 0.0, 1.0);
+
+    float viewDistance =
+        fast::max(length(float3(_526.cameraPosition) - FragPos),
+                  9.9999999747524270787835121154785e-07);
+    float3 V = (float3(_526.cameraPosition) - FragPos) / float3(viewDistance);
+    float3 F0 =
+        mix(float3(0.039999999105930328369140625), albedo, float3(metallic));
+    float ssaoFactor =
+        fast::clamp(ssao.sample(ssaoSmplr, in.TexCoord).x, 0.0, 1.0);
+
+    float ssaoContrast =
+        fast::clamp(powr(ssaoFactor, 1.10000002384185791015625), 0.0, 1.0);
+    float occlusion =
+        fast::clamp(ao * (0.0500000007450580596923828125 +
+                          (0.949999988079071044921875 * ssaoContrast)),
+                    0.0, 1.0);
+    float lightingOcclusion =
+        fast::clamp(0.0500000007450580596923828125 +
+                        (0.949999988079071044921875 * ssaoContrast),
+                    0.0500000007450580596923828125, 1.0);
     float directionalShadow = 0.0;
     float spotShadow = 0.0;
     float areaShadow = 0.0;
+    int areaShadowCount = 0;
     float pointShadow = 0.0;
-    for (int i = 0; i < shadowParamCount; ++i) {
-        if (shadowParams[i].lightType == 3) {
-            pointShadow = max(pointShadow, calculatePointShadow(shadowParams[i], FragPos));
-        } else if (shadowParams[i].lightType == 1) {
-            spotShadow = max(spotShadow, calculateShadow(shadowParams[i], FragPos, N));
-        } else if (shadowParams[i].lightType == 2) {
-            areaShadow = max(areaShadow, calculateShadow(shadowParams[i], FragPos, N));
+    int shadowCount = _1355.shadowParamCount;
+    for (int i = 0; i < shadowCount; i++) {
+        if (_1372.shadowParams[i].lightType == 3) {
+            ShadowParameters _1386;
+            _1386.lightView = _1372.shadowParams[i].lightView;
+            _1386.lightProjection = _1372.shadowParams[i].lightProjection;
+            _1386.bias0 = _1372.shadowParams[i].bias0;
+            _1386.textureIndex = _1372.shadowParams[i].textureIndex;
+            _1386.farPlane = _1372.shadowParams[i].farPlane;
+            _1386._pad1 = _1372.shadowParams[i]._pad1;
+            _1386.lightPos = float3(_1372.shadowParams[i].lightPos);
+            _1386.lightType = _1372.shadowParams[i].lightType;
+            ShadowParameters param = _1386;
+            float3 param_1 = FragPos;
+            pointShadow =
+                fast::max(pointShadow,
+                          calculatePointShadow(
+                              param, param_1, texture1, texture1Smplr, texture2,
+                              texture2Smplr, texture3, texture3Smplr, texture4,
+                              texture4Smplr, texture5, texture5Smplr, cubeMap1,
+                              cubeMap1Smplr, cubeMap2, cubeMap2Smplr, cubeMap3,
+                              cubeMap3Smplr, cubeMap4, cubeMap4Smplr, cubeMap5,
+                              cubeMap5Smplr));
+        } else if (_1372.shadowParams[i].lightType == 1) {
+            ShadowParameters _1397;
+            _1397.lightView = _1372.shadowParams[i].lightView;
+            _1397.lightProjection = _1372.shadowParams[i].lightProjection;
+            _1397.bias0 = _1372.shadowParams[i].bias0;
+            _1397.textureIndex = _1372.shadowParams[i].textureIndex;
+            _1397.farPlane = _1372.shadowParams[i].farPlane;
+            _1397._pad1 = _1372.shadowParams[i]._pad1;
+            _1397.lightPos = float3(_1372.shadowParams[i].lightPos);
+            _1397.lightType = _1372.shadowParams[i].lightType;
+            ShadowParameters param_2 = _1397;
+            float3 param_3 = FragPos;
+            float3 param_4 = shadowNormal;
+            spotShadow = fast::max(
+                spotShadow,
+                calculateShadow(param_2, param_3, param_4, texture1,
+                                texture1Smplr, texture2, texture2Smplr,
+                                texture3, texture3Smplr, texture4,
+                                texture4Smplr, texture5, texture5Smplr, _526));
+        } else if (_1372.shadowParams[i].lightType == 2) {
+            ShadowParameters _1397;
+            _1397.lightView = _1372.shadowParams[i].lightView;
+            _1397.lightProjection = _1372.shadowParams[i].lightProjection;
+            _1397.bias0 = _1372.shadowParams[i].bias0;
+            _1397.textureIndex = _1372.shadowParams[i].textureIndex;
+            _1397.farPlane = _1372.shadowParams[i].farPlane;
+            _1397._pad1 = _1372.shadowParams[i]._pad1;
+            _1397.lightPos = float3(_1372.shadowParams[i].lightPos);
+            _1397.lightType = _1372.shadowParams[i].lightType;
+            ShadowParameters param_2 = _1397;
+            float3 param_3 = FragPos;
+            float3 param_4 = shadowNormal;
+            areaShadow += calculateShadow(
+                param_2, param_3, param_4, texture1, texture1Smplr, texture2,
+                texture2Smplr, texture3, texture3Smplr, texture4, texture4Smplr,
+                texture5, texture5Smplr, _526);
+            areaShadowCount++;
         } else {
-            directionalShadow = max(directionalShadow, calculateShadow(shadowParams[i], FragPos, N));
+            ShadowParameters _1397;
+            _1397.lightView = _1372.shadowParams[i].lightView;
+            _1397.lightProjection = _1372.shadowParams[i].lightProjection;
+            _1397.bias0 = _1372.shadowParams[i].bias0;
+            _1397.textureIndex = _1372.shadowParams[i].textureIndex;
+            _1397.farPlane = _1372.shadowParams[i].farPlane;
+            _1397._pad1 = _1372.shadowParams[i]._pad1;
+            _1397.lightPos = float3(_1372.shadowParams[i].lightPos);
+            _1397.lightType = _1372.shadowParams[i].lightType;
+            ShadowParameters param_2 = _1397;
+            float3 param_3 = FragPos;
+            float3 param_4 = shadowNormal;
+            directionalShadow = fast::max(
+                directionalShadow,
+                calculateShadow(param_2, param_3, param_4, texture1,
+                                texture1Smplr, texture2, texture2Smplr,
+                                texture3, texture3Smplr, texture4,
+                                texture4Smplr, texture5, texture5Smplr, _526));
         }
     }
-    directionalShadow = clamp(directionalShadow * 0.85, 0.0, 1.0);
-    spotShadow = clamp(spotShadow * 0.85, 0.0, 1.0);
-    areaShadow = clamp(areaShadow * 0.85, 0.0, 1.0);
-    pointShadow = clamp(pointShadow * 0.85, 0.0, 1.0);
-
-    vec3 directionalResult = vec3(0.0);
-    for (int i = 0; i < directionalLightCount; ++i) {
-        directionalResult += calcDirectionalLight(directionalLights[i], N, V, F0, albedo, metallic, roughness);
+    if (areaShadowCount > 0) {
+        areaShadow /= float(areaShadowCount);
+    }
+    directionalShadow =
+        fast::clamp(directionalShadow * 0.85000002384185791015625, 0.0, 1.0);
+    spotShadow = fast::clamp(spotShadow * 0.85000002384185791015625, 0.0, 1.0);
+    areaShadow = fast::clamp(areaShadow * 0.449999988079071044921875, 0.0, 1.0);
+    pointShadow =
+        fast::clamp(pointShadow * 0.85000002384185791015625, 0.0, 1.0);
+    float3 directionalResult = float3(0.0);
+    for (int i_1 = 0; i_1 < _1355.directionalLightCount; i_1++) {
+        DirectionalLight _1428;
+        _1428.direction = float3(_1422.directionalLights[i_1].direction);
+        _1428._pad1 = _1422.directionalLights[i_1]._pad1;
+        _1428.diffuse = float3(_1422.directionalLights[i_1].diffuse);
+        _1428._pad2 = _1422.directionalLights[i_1]._pad2;
+        _1428.specular = float3(_1422.directionalLights[i_1].specular);
+        _1428.intensity = _1422.directionalLights[i_1].intensity;
+        DirectionalLight param_5 = _1428;
+        float3 param_6 = N;
+        float3 param_7 = V;
+        float3 param_8 = F0;
+        float3 param_9 = albedo;
+        float param_10 = metallic;
+        float param_11 = roughness;
+        directionalResult += calcDirectionalLight(
+            param_5, param_6, param_7, param_8, param_9, param_10, param_11);
     }
     directionalResult *= (1.0 - directionalShadow);
-
-    vec3 pointResult = vec3(0.0);
-    for (int i = 0; i < pointLightCount; ++i) {
-        pointResult += calcPointLight(pointLights[i], FragPos, N, V, F0, albedo, metallic, roughness);
+    float3 pointResult = float3(0.0);
+    for (int i_2 = 0; i_2 < _1355.pointLightCount; i_2++) {
+        PointLight _1471;
+        _1471.position = float3(_1465.pointLights[i_2].position);
+        _1471._pad1 = _1465.pointLights[i_2]._pad1;
+        _1471.diffuse = float3(_1465.pointLights[i_2].diffuse);
+        _1471._pad2 = _1465.pointLights[i_2]._pad2;
+        _1471.specular = float3(_1465.pointLights[i_2].specular);
+        _1471.intensity = _1465.pointLights[i_2].intensity;
+        _1471.constant0 = _1465.pointLights[i_2].constant0;
+        _1471.linear = _1465.pointLights[i_2].linear;
+        _1471.quadratic = _1465.pointLights[i_2].quadratic;
+        _1471.radius = _1465.pointLights[i_2].radius;
+        _1471._pad3 = _1465.pointLights[i_2]._pad3;
+        PointLight param_12 = _1471;
+        float3 param_13 = FragPos;
+        float3 param_14 = N;
+        float3 param_15 = V;
+        float3 param_16 = F0;
+        float3 param_17 = albedo;
+        float param_18 = metallic;
+        float param_19 = roughness;
+        pointResult += calcPointLight(param_12, param_13, param_14, param_15,
+                                      param_16, param_17, param_18, param_19);
     }
     pointResult *= (1.0 - pointShadow);
-
-    vec3 spotResult = vec3(0.0);
-    for (int i = 0; i < spotlightCount; ++i) {
-        spotResult += calcSpotLight(spotlights[i], FragPos, N, V, F0, albedo, metallic, roughness);
+    float3 spotResult = float3(0.0);
+    for (int i_3 = 0; i_3 < _1355.spotlightCount; i_3++) {
+        SpotLight _1516;
+        _1516.position = float3(_1510.spotlights[i_3].position);
+        _1516._pad1 = _1510.spotlights[i_3]._pad1;
+        _1516.direction = float3(_1510.spotlights[i_3].direction);
+        _1516.cutOff = _1510.spotlights[i_3].cutOff;
+        _1516.outerCutOff = _1510.spotlights[i_3].outerCutOff;
+        _1516.intensity = _1510.spotlights[i_3].intensity;
+        _1516.range = _1510.spotlights[i_3].range;
+        _1516._pad4 = _1510.spotlights[i_3]._pad4;
+        _1516.diffuse = float3(_1510.spotlights[i_3].diffuse);
+        _1516._pad5 = _1510.spotlights[i_3]._pad5;
+        _1516.specular = float3(_1510.spotlights[i_3].specular);
+        _1516._pad6 = _1510.spotlights[i_3]._pad6;
+        SpotLight param_20 = _1516;
+        float3 param_21 = FragPos;
+        float3 param_22 = N;
+        float3 param_23 = V;
+        float3 param_24 = F0;
+        float3 param_25 = albedo;
+        float param_26 = metallic;
+        float param_27 = roughness;
+        spotResult += calcSpotLight(param_20, param_21, param_22, param_23,
+                                    param_24, param_25, param_26, param_27);
     }
     spotResult *= (1.0 - spotShadow);
-
-    vec3 areaResult = vec3(0.0);
-    for (int i = 0; i < areaLightCount; ++i) {
-        vec3 P = areaLights[i].position;
-        vec3 R = normalize(areaLights[i].right);
-        vec3 U = normalize(areaLights[i].up);
-        vec2 halfSize = areaLights[i].size * 0.5;
-
-        vec3 toPoint = FragPos - P;
-        float s = clamp(dot(toPoint, R), -halfSize.x, halfSize.x);
-        float t = clamp(dot(toPoint, U), -halfSize.y, halfSize.y);
-        vec3 Q = P + R * s + U * t;
-
-        vec3 Lvec = Q - FragPos;
+    float3 areaResult = float3(0.0);
+    float _1639;
+    for (int i_4 = 0; i_4 < _1355.areaLightCount; i_4++) {
+        float3 P = float3(_1552.areaLights[i_4].position);
+        float3 R = fast::normalize(float3(_1552.areaLights[i_4].right));
+        float3 U = fast::normalize(float3(_1552.areaLights[i_4].up));
+        float2 halfSize = _1552.areaLights[i_4].size * 0.5;
+        float3 toPoint = FragPos - P;
+        float s = fast::clamp(dot(toPoint, R), -halfSize.x, halfSize.x);
+        float t = fast::clamp(dot(toPoint, U), -halfSize.y, halfSize.y);
+        float3 Q = (P + (R * s)) + (U * t);
+        float3 Lvec = Q - FragPos;
         float dist = length(Lvec);
-        if (dist > 0.0001) {
-            vec3 L = Lvec / dist;
-            vec3 Nl = normalize(cross(R, U));
+        if (dist > 9.9999997473787516355514526367188e-05) {
+            float3 L = Lvec / float3(dist);
+            float3 Nl = fast::normalize(cross(R, U));
             float ndotl = dot(Nl, -L);
-
-            float facing = (areaLights[i].castsBothSides != 0) ? abs(ndotl) : max(ndotl, 0.0);
-            float cosTheta = cos(radians(areaLights[i].angle));
-
-            if (facing >= cosTheta && facing > 0.0) {
-                float range = max(areaLights[i].range, 0.001);
-                float attenuation = 1.0 / (1.0 + (dist / range) + (dist * dist) / (range * range));
-                float fade = 1.0 - smoothstep(range * 0.9, range, dist);
-                vec3 radiance = areaLights[i].diffuse * max(areaLights[i].intensity, 0.0) * attenuation * facing * fade;
-                areaResult += evaluateBRDF(L, radiance, N, V, F0, albedo, metallic, roughness);
+            if (_1552.areaLights[i_4].castsBothSides != 0) {
+                _1639 = abs(ndotl);
+            } else {
+                _1639 = fast::max(ndotl, 0.0);
+            }
+            float facing = _1639;
+            float cosTheta = cos(radians(_1552.areaLights[i_4].angle));
+            if ((facing >= cosTheta) && (facing > 0.0)) {
+                float range = fast::max(_1552.areaLights[i_4].range,
+                                        0.001000000047497451305389404296875);
+                float attenuation = 1.0 / ((1.0 + (dist / range)) +
+                                           ((dist * dist) / (range * range)));
+                float fade = 1.0 - smoothstep(range * 0.89999997615814208984375,
+                                              range, dist);
+                float3 radiance =
+                    (((float3(_1552.areaLights[i_4].diffuse) *
+                       fast::max(_1552.areaLights[i_4].intensity, 0.0)) *
+                      attenuation) *
+                     facing) *
+                    fade;
+                float3 param_28 = L;
+                float3 param_29 = radiance;
+                float3 param_30 = N;
+                float3 param_31 = V;
+                float3 param_32 = F0;
+                float3 param_33 = albedo;
+                float param_34 = metallic;
+                float param_35 = roughness;
+                areaResult +=
+                    evaluateBRDF(param_28, param_29, param_30, param_31,
+                                 param_32, param_33, param_34, param_35);
             }
         }
     }
     areaResult *= (1.0 - areaShadow);
+    float3 param_36 = FragPos;
+    float3 param_37 = N;
+    float3 param_38 = V;
+    float3 param_39 = F0;
+    float3 param_40 = albedo;
+    float param_41 = metallic;
+    float param_42 = roughness;
+    float3 _1714 = getRimLight(param_36, param_37, param_38, param_39, param_40,
+                               param_41, param_42, _526, environment);
+    float3 rimResult = _1714;
+    float3 lighting =
+        ((((directionalResult + pointResult) + spotResult) + areaResult) +
+         rimResult) *
+        lightingOcclusion;
+    float3 ambientBase =
+        ((ambientLight.color.xyz * ambientLight.intensity) * albedo) *
+        occlusion;
+    float3 ambient = ambientBase;
 
-    vec3 rimResult = getRimLight(FragPos, N, V, F0, albedo, metallic, roughness);
-    vec3 lighting = (directionalResult + pointResult + spotResult + areaResult + rimResult) * lightingOcclusion;
+    float ddgiSampleBias =
+        max(max(ps.spacing.x, max(ps.spacing.y, ps.spacing.z)) * 0.05f, 0.002f);
+    float3 ddgiSamplePos = FragPos + ddgiNormal * ddgiSampleBias;
+    float3 ddgiIrradiance =
+        sampleDDGIIrradiance(irradianceMap, ps, ddgiSamplePos, ddgiNormal);
+    if (!all(isfinite(ddgiIrradiance))) {
+        ddgiIrradiance = float3(0.0f);
+    }
+    ddgiIrradiance = max(ddgiIrradiance, float3(0.0f));
 
-    vec3 ambient = ambientLight.color.rgb * ambientLight.intensity * albedo * occlusion;
-
-    vec3 iblContribution = vec3(0.0);
-    if (useIBL) {
-        vec3 irradiance = sampleEnvironmentRadiance(N);
-        vec3 diffuseIBL = irradiance * albedo;
-
-        vec3 reflection = reflect(-V, N);
-        vec3 specularEnv = sampleEnvironmentRadiance(reflection);
-
-        vec3 F = fresnelSchlick(max(dot(N, V), 0.0), F0);
-        vec3 kS = F;
-        vec3 kD = (vec3(1.0) - kS) * (1.0 - metallic);
-
-        float roughnessAttenuation = mix(1.0, 0.15, clamp(roughness, 0.0, 1.0));
-        vec3 specularIBL = specularEnv * roughnessAttenuation;
-
-        iblContribution = (kD * diffuseIBL + kS * specularIBL) * occlusion;
+    float ddgiDebugMode = ps.debugColor.w;
+    float3 ddgiGain = max(ps.debugColor.xyz, float3(0.0f));
+    if (ddgiGain.x < 1e-4f && ddgiGain.y < 1e-4f && ddgiGain.z < 1e-4f) {
+        ddgiGain = float3(1.0f);
     }
 
-    vec3 finalColor = ambient + lighting + iblContribution;
+    const float INV_PI = 0.31830988618379067153776752674503;
+    float ddgiLuma = dot(ddgiIrradiance, float3(0.2126f, 0.7152f, 0.0722f));
+    float3 ddgiChroma = ddgiIrradiance - float3(ddgiLuma);
+    float3 boostedIrradiance =
+        max(float3(ddgiLuma * 0.1500000059604644775390625) +
+                ddgiChroma * 1.35000002384185791015625,
+            float3(0.0f));
+    float3 bleedAlbedo = albedo;
+    float3 ddgiDiffuse = boostedIrradiance * bleedAlbedo * INV_PI *
+                         (1.0f - metallic) * ddgiGain *
+                         0.85000002384185791015625;
+    float sideFactor = clamp(1.0f - abs(N.y), 0.0f, 1.0f);
+    float ddgiSurfaceFactor =
+        0.550000011920928955078125 + sideFactor * 0.449999988079071044921875;
+    ddgiDiffuse *= ddgiSurfaceFactor;
+    float ddgiDiffuseLuma = dot(ddgiDiffuse, float3(0.2126f, 0.7152f, 0.0722f));
+    float sceneRefLuma =
+        dot(ambientBase + lighting * 0.35f, float3(0.2126f, 0.7152f, 0.0722f));
+    float ddgiLumaCap =
+        sceneRefLuma * 0.85000002384185791015625 + 0.07999999821186065673828125;
+    if (ddgiDiffuseLuma > ddgiLumaCap) {
+        ddgiDiffuse *= (ddgiLumaCap / ddgiDiffuseLuma);
+    }
+    ddgiDiffuse = max(ddgiDiffuse, float3(0.0f));
+    ambient += ddgiDiffuse;
 
-    if (!useIBL) {
-        vec3 I = normalize(FragPos - cameraPosition);
-        vec3 R = reflect(-I, N);
-
-        vec3 F = fresnelSchlick(max(dot(N, -I), 0.0), F0);
-        vec3 kS = F;
-        vec3 kD = (vec3(1.0) - kS) * (1.0 - metallic);
-
-        vec3 envColor = texture(skybox, R).rgb;
-        vec3 reflection = envColor * kS;
-
-        finalColor = mix(finalColor, reflection, F0);
+    float3 ddgiSpecular = float3(0.0f);
+    if (ps.atlasParams.w > 0.0f && roughness < 0.7f) {
+        float3 reflectionDir = reflect(-V, N);
+        float3 ddgiReflection = sampleDDGIIrradiance(
+            irradianceMap, ps, ddgiSamplePos, reflectionDir);
+        if (!all(isfinite(ddgiReflection))) {
+            ddgiReflection = float3(0.0f);
+        }
+        ddgiReflection = max(ddgiReflection, float3(0.0f));
+        float3 Fddgi = fresnelSchlick(fast::max(dot(N, V), 0.0), F0);
+        float specGain = mix(0.03f, 0.004f, roughness);
+        ddgiReflection *= (0.5f + ddgiSurfaceFactor * 0.5f);
+        ddgiSpecular = ddgiReflection * Fddgi * specGain * INV_PI * ddgiGain;
     }
 
-    FragColor = vec4(finalColor, 1.0);
+    float3 iblContribution = float3(0.0);
+    if (_526.useIBL != 0u) {
+        float3 param_43 = N;
+        float3 irradiance =
+            sampleEnvironmentRadiance(param_43, skybox, skyboxSmplr);
+        float3 diffuseIBL = irradiance * albedo;
+        float3 reflection = reflect(-V, N);
+        float3 param_44 = reflection;
+        float3 specularEnv =
+            sampleEnvironmentRadiance(param_44, skybox, skyboxSmplr);
+        float param_45 = fast::max(dot(N, V), 0.0);
+        float3 param_46 = F0;
+        float3 F = fresnelSchlick(param_45, param_46);
+        float3 kS = F;
+        float3 kD = (float3(1.0) - kS) * (1.0 - metallic);
+        float roughnessAttenuation = mix(1.0, 0.1500000059604644775390625,
+                                         fast::clamp(roughness, 0.0, 1.0));
+        float3 specularIBL = specularEnv * roughnessAttenuation;
+        iblContribution = ((kD * diffuseIBL) + (kS * specularIBL)) * occlusion;
+    }
+    float3 finalColor = (ambient + lighting + ddgiSpecular) + iblContribution;
 
-    float brightness = dot(FragColor.rgb, vec3(0.2126, 0.7152, 0.0722));
-    if (brightness > 1.0) {
-        BrightColor = vec4(FragColor.rgb, 1.0);
+    // Debug AO view mode:
+    // ps.debugColor.w >= 9.5f -> visualize SSAO directly in grayscale.
+    if (ddgiDebugMode >= 9.5f && ddgiDebugMode < 19.5f) {
+        finalColor = float3(ssaoFactor);
+    } else if (ddgiDebugMode >= 39.5f) {
+        finalColor =
+            max(ddgiDiffuse * 3.0f + ddgiSpecular * 2.0f, float3(0.0f));
+    } else if (ddgiDebugMode >= 29.5f) {
+        finalColor = ddgiIrradiance * ddgiGain )"
+R"(* 4.0f;
+    } else if (ddgiDebugMode >= 19.5f) {
+        finalColor = ddgiDiffuse * 3.0f;
+    } else if (!(_526.useIBL != 0u)) {
+        float3 I = fast::normalize(FragPos - float3(_526.cameraPosition));
+        float3 R_1 = reflect(-I, N);
+        float param_47 = fast::max(dot(N, -I), 0.0);
+        float3 param_48 = F0;
+        float3 F_1 = fresnelSchlick(param_47, param_48);
+        float3 kS_1 = F_1;
+        float3 envColor = skybox.sample(skyboxSmplr, R_1).xyz;
+        float3 reflection_1 = envColor * kS_1;
+        float3 envMix = F0 * (1.0f - roughness) * 0.20f;
+        finalColor = mix(finalColor, reflection_1, envMix);
+    }
+    out.FragColor = float4(finalColor, 1.0);
+    float brightness =
+        dot(out.FragColor.xyz,
+            float3(0.2125999927520751953125, 0.715200006961822509765625,
+                   0.072200000286102294921875));
+    if (brightness > 0.75) {
+        out.BrightColor = float4(out.FragColor.xyz, 1.0);
     } else {
-        BrightColor = vec4(0.0, 0.0, 0.0, 1.0);
+        out.BrightColor = float4(0.0, 0.0, 0.0, 1.0);
     }
-
-    FragColor.rgb = acesToneMapping(FragColor.rgb);
+    float3 param_49 = out.FragColor.xyz;
+    float3 _1897 = acesToneMapping(param_49);
+    out.FragColor.x = _1897.x;
+    out.FragColor.y = _1897.y;
+    out.FragColor.z = _1897.z;
+    return out;
 }
 )"
 ;
 
 static const char* LIGHT_VERT =
-R"(#version 410 core
-layout(location = 0) in vec3 aPos;
-layout(location = 2) in vec2 aTexCoord;
+R"(#include <metal_stdlib>
+#include <simd/simd.h>
 
-out vec2 TexCoord;
+using namespace metal;
 
-void main() {
-    TexCoord = aTexCoord;
-    gl_Position = vec4(aPos, 1.0);
+struct main0_out
+{
+    float2 TexCoord [[user(locn0)]];
+    float4 gl_Position [[position]];
+};
+
+struct main0_in
+{
+    float3 aPos [[attribute(0)]];
+    float2 aTexCoord [[attribute(2)]];
+};
+
+vertex main0_out main0(main0_in in [[stage_in]])
+{
+    main0_out out = {};
+    out.TexCoord = in.aTexCoord;
+    out.gl_Position = float4(in.aPos, 1.0);
+    return out;
 }
 )"
 ;
 
 static const char* MAIN_FRAG =
-R"(#version 410 core
-layout(location = 0) out vec4 FragColor;
-layout(location = 1) out vec4 BrightColor;
+R"(#pragma clang diagnostic ignored "-Wmissing-prototypes"
+#pragma clang diagnostic ignored "-Wmissing-braces"
 
-in vec2 TexCoord;
-in vec4 outColor;
-in vec3 Normal;
-in vec3 FragPos;
-in mat3 TBN;
+#include <metal_stdlib>
+#include <simd/simd.h>
 
-const int TEXTURE_COLOR = 0;
-const int TEXTURE_SPECULAR = 1;
-const int TEXTURE_DEPTH_CUBE = 4;
-const int TEXTURE_NORMAL = 5;
-const int TEXTURE_PARALLAX = 6;
-const int TEXTURE_METALLIC = 9;
-const int TEXTURE_ROUGHNESS = 10;
-const int TEXTURE_AO = 11;
-const int TEXTURE_OPACITY = 12;
-const int TEXTURE_HDR_ENVIRONMENT = 13;
+using namespace metal;
 
-const float PI = 3.14159265;
+template<typename T, size_t Num>
+struct spvUnsafeArray
+{
+    T elements[Num ? Num : 1];
+    
+    thread T& operator [] (size_t pos) thread
+    {
+        return elements[pos];
+    }
+    constexpr const thread T& operator [] (size_t pos) const thread
+    {
+        return elements[pos];
+    }
+    
+    device T& operator [] (size_t pos) device
+    {
+        return elements[pos];
+    }
+    constexpr const device T& operator [] (size_t pos) const device
+    {
+        return elements[pos];
+    }
+    
+    constexpr const constant T& operator [] (size_t pos) const constant
+    {
+        return elements[pos];
+    }
+    
+    threadgroup T& operator [] (size_t pos) threadgroup
+    {
+        return elements[pos];
+    }
+    constexpr const threadgroup T& operator [] (size_t pos) const threadgroup
+    {
+        return elements[pos];
+    }
+};
 
-vec2 texCoord;
+// Implementation of the GLSL radians() function
+template<typename T>
+inline T radians(T d)
+{
+    return d * T(0.01745329251);
+}
 
-// ----- Structures -----
-struct AmbientLight {
-    vec4 color;
+static inline __attribute__((always_inline))
+float spvDet2x2(float a1, float a2, float b1, float b2)
+{
+    return a1 * b2 - b1 * a2;
+}
+
+static inline __attribute__((always_inline))
+float spvDet3x3(float a1, float a2, float a3, float b1, float b2, float b3, float c1, float c2, float c3)
+{
+    return a1 * spvDet2x2(b2, b3, c2, c3) - b1 * spvDet2x2(a2, a3, c2, c3) + c1 * spvDet2x2(a2, a3, b2, b3);
+}
+
+static inline __attribute__((always_inline))
+float4x4 spvInverse4x4(float4x4 m)
+{
+    float4x4 adj;
+    adj[0][0] =  spvDet3x3(m[1][1], m[1][2], m[1][3], m[2][1], m[2][2], m[2][3], m[3][1], m[3][2], m[3][3]);
+    adj[0][1] = -spvDet3x3(m[0][1], m[0][2], m[0][3], m[2][1], m[2][2], m[2][3], m[3][1], m[3][2], m[3][3]);
+    adj[0][2] =  spvDet3x3(m[0][1], m[0][2], m[0][3], m[1][1], m[1][2], m[1][3], m[3][1], m[3][2], m[3][3]);
+    adj[0][3] = -spvDet3x3(m[0][1], m[0][2], m[0][3], m[1][1], m[1][2], m[1][3], m[2][1], m[2][2], m[2][3]);
+    adj[1][0] = -spvDet3x3(m[1][0], m[1][2], m[1][3], m[2][0], m[2][2], m[2][3], m[3][0], m[3][2], m[3][3]);
+    adj[1][1] =  spvDet3x3(m[0][0], m[0][2], m[0][3], m[2][0], m[2][2], m[2][3], m[3][0], m[3][2], m[3][3]);
+    adj[1][2] = -spvDet3x3(m[0][0], m[0][2], m[0][3], m[1][0], m[1][2], m[1][3], m[3][0], m[3][2], m[3][3]);
+    adj[1][3] =  spvDet3x3(m[0][0], m[0][2], m[0][3], m[1][0], m[1][2], m[1][3], m[2][0], m[2][2], m[2][3]);
+    adj[2][0] =  spvDet3x3(m[1][0], m[1][1], m[1][3], m[2][0], m[2][1], m[2][3], m[3][0], m[3][1], m[3][3]);
+    adj[2][1] = -spvDet3x3(m[0][0], m[0][1], m[0][3], m[2][0], m[2][1], m[2][3], m[3][0], m[3][1], m[3][3]);
+    adj[2][2] =  spvDet3x3(m[0][0], m[0][1], m[0][3], m[1][0], m[1][1], m[1][3], m[3][0], m[3][1], m[3][3]);
+    adj[2][3] = -spvDet3x3(m[0][0], m[0][1], m[0][3], m[1][0], m[1][1], m[1][3], m[2][0], m[2][1], m[2][3]);
+    adj[3][0] = -spvDet3x3(m[1][0], m[1][1], m[1][2], m[2][0], m[2][1], m[2][2], m[3][0], m[3][1], m[3][2]);
+    adj[3][1] =  spvDet3x3(m[0][0], m[0][1], m[0][2], m[2][0], m[2][1], m[2][2], m[3][0], m[3][1], m[3][2]);
+    adj[3][2] = -spvDet3x3(m[0][0], m[0][1], m[0][2], m[1][0], m[1][1], m[1][2], m[3][0], m[3][1], m[3][2]);
+    adj[3][3] =  spvDet3x3(m[0][0], m[0][1], m[0][2], m[1][0], m[1][1], m[1][2], m[2][0], m[2][1], m[2][2]);
+    float det = (adj[0][0] * m[0][0]) + (adj[0][1] * m[1][0]) + (adj[0][2] * m[2][0]) + (adj[0][3] * m[3][0]);
+    return (det != 0.0f) ? (adj * (1.0f / det)) : m;
+}
+
+struct ShadowParameters
+{
+    float4x4 lightView;
+    float4x4 lightProjection;
+    float bias0;
+    int textureIndex;
+    float farPlane;
+    float _pad1;
+    float3 lightPos;
+    int lightType;
+};
+
+struct Uniforms
+{
+    int4 textureTypes[16];
+    int textureCount;
+    float3 cameraPosition;
+    float normalMapStrength;
+    uint useNormalMap;
+};
+
+struct Environment
+{
+    float rimLightIntensity;
+    float3 rimLightColor;
+};
+
+struct PushConstants
+{
+    uint useTexture;
+    uint useColor;
+    uint useIBL;
+    int directionalLightCount;
+    int pointLightCount;
+    int spotlightCount;
+    int areaLightCount;
+    int shadowParamCount;
+};
+
+struct DirectionalLight
+{
+    packed_float3 direction;
+    float _pad1;
+    packed_float3 diffuse;
+    float _pad2;
+    packed_float3 specular;
     float intensity;
 };
 
-struct Material {
-    vec3 albedo;
+struct DirectionalLightsUBO
+{
+    spvUnsafeArray<DirectionalLight, 1> directionalLights;
+};
+
+struct PointLight
+{
+    packed_float3 position;
+    float _pad1;
+    packed_float3 diffuse;
+    float _pad2;
+    packed_float3 specular;
+    float intensity;
+    float constant0;
+    float linear;
+    float quadratic;
+    float radius;
+    float _pad3;
+};
+
+struct PointLightsUBO
+{
+    spvUnsafeArray<PointLight, 1> pointLights;
+};
+
+struct SpotLight
+{
+    packed_float3 position;
+    float _pad1;
+    packed_float3 direction;
+    float cutOff;
+    float outerCutOff;
+    float intensity;
+    float range;
+    float _pad4;
+    packed_float3 diffuse;
+    float _pad5;
+    packed_float3 specular;
+    float _pad6;
+};
+
+struct SpotLightsUBO
+{
+    spvUnsafeArray<SpotLight, 1> spotlights;
+};
+
+struct Material
+{
+    packed_float3 albedo;
     float metallic;
     float roughness;
     float ao;
     float reflectivity;
 };
 
-struct DirectionalLight {
-    vec3 direction;
-    vec3 diffuse;
-    vec3 specular;
-    float intensity;
-};
-
-struct PointLight {
-    vec3 position;
-
-    vec3 diffuse;
-    vec3 specular;
-
-    float constant;
-    float linear;
-    float quadratic;
-    float intensity;
-    float range;
-};
-
-struct SpotLight {
-    vec3 position;
-    vec3 direction;
-    float cutOff;
-    float outerCutOff;
-    float intensity;
-    float range;
-
-    vec3 diffuse;
-    vec3 specular;
-};
-
-struct AreaLight {
-    vec3 position;
-    vec3 right;
-    vec3 up;
-    vec2 size;
-    vec3 diffuse;
-    vec3 specular;
-    float angle;
-    float intensity;
-    float range;
-    int castsBothSides;
-};
-
-struct ShadowParameters {
-    mat4 lightView;
-    mat4 lightProjection;
-    float bias;
+struct ShadowParameters_1
+{
+    float4x4 lightView;
+    float4x4 lightProjection;
+    float bias0;
     int textureIndex;
     float farPlane;
-    vec3 lightPos;
+    float _pad1;
+    packed_float3 lightPos;
     int lightType;
 };
 
-struct Environment {
-    float rimLightIntensity;
-    vec3 rimLightColor;
+struct ShadowParametersUBO
+{
+    spvUnsafeArray<ShadowParameters_1, 1> shadowParams;
 };
 
-// ----- Textures -----
-uniform sampler2D texture1;
-uniform sampler2D texture2;
-uniform sampler2D texture3;
-uniform sampler2D texture4;
-uniform sampler2D texture5;
-uniform sampler2D texture6;
-uniform sampler2D texture7;
-uniform sampler2D texture8;
-uniform sampler2D texture9;
-uniform sampler2D texture10;
-uniform samplerCube skybox;
-uniform samplerCube cubeMap1;
-uniform samplerCube cubeMap2;
-uniform samplerCube cubeMap3;
-uniform samplerCube cubeMap4;
-uniform samplerCube cubeMap5;
+struct AreaLight
+{
+    packed_float3 position;
+    float _pad1;
+    packed_float3 right;
+    float _pad2;
+    packed_float3 up;
+    float _pad3;
+    float2 size;
+    float _pad4;
+    float _pad5;
+    packed_float3 diffuse;
+    float _pad6;
+    packed_float3 specular;
+    float angle;
+    int castsBothSides;
+    float intensity;
+    float range;
+    float _pad9;
+};
 
-// ----- Uniforms -----
-uniform int textureTypes[16];
-uniform int textureCount;
+struct AreaLightsUBO
+{
+    spvUnsafeArray<AreaLight, 1> areaLights;
+};
 
-uniform AmbientLight ambientLight;
-uniform Material material;
+struct AmbientLight
+{
+    float4 color;
+    float intensity;
+    float3 _pad0;
+};
 
-uniform DirectionalLight directionalLights[4];
-uniform int directionalLightCount;
+constant spvUnsafeArray<float3, 54> _1657 = spvUnsafeArray<float3, 54>({ float3(0.5381000041961669921875, 0.18559999763965606689453125, -0.4318999946117401123046875), float3(0.13789999485015869140625, 0.248600006103515625, 0.4429999887943267822265625), float3(0.3370999991893768310546875, 0.567900002002716064453125, -0.0057000000961124897003173828125), float3(-0.699899971485137939453125, -0.0450999997556209564208984375, -0.0019000000320374965667724609375), float3(0.068899996578693389892578125, -0.159799993038177490234375, -0.854700028896331787109375), float3(0.056000001728534698486328125, 0.0068999999202787876129150390625, -0.184300005435943603515625), float3(-0.014600000344216823577880859375, 0.14020000398159027099609375, 0.076200000941753387451171875), float3(0.00999999977648258209228515625, -0.19239999353885650634765625, -0.03440000116825103759765625), float3(-0.35769999027252197265625, -0.53009998798370361328125, -0.4357999861240386962890625), float3(-0.3169000148773193359375, 0.10629999637603759765625, 0.015799999237060546875), float3(0.010300000198185443878173828125, -0.5868999958038330078125, 0.0046000001020729541778564453125), float3(-0.08969999849796295166015625, -0.4939999878406524658203125, 0.328700006008148193359375), float3(0.7118999958038330078125, -0.015399999916553497314453125, -0.091799996793270111083984375), float3(-0.053300000727176666259765625, 0.0595999993383884429931640625, -0.541100025177001953125), float3(0.03519999980926513671875, -0.063100002706050872802734375, 0.546000003814697265625), float3(-0.4776000082492828369140625, 0.2847000062465667724609375, -0.0271000005304813385009765625), float3(-0.11200000345706939697265625, 0.1234000027179718017578125, -0.744599997997283935546875), float3(-0.212999999523162841796875, -0.07819999754428863525390625, -0.13789999485015869140625), float3(0.2944000065326690673828125, -0.3111999928951263427734375, -0.2644999921321868896484375), float3(-0.4564000070095062255859375, 0.4174999892711639404296875, -0.184300005435943603515625), float3(0.1234000027179718017578125, -0.567799985408782958984375, 0.788999974727630615234375), float3(-0.6789000034332275390625, 0.23450000584125518798828125, -0.4566999971866607666015625), float3(0.34560000896453857421875, -0.788999974727630615234375, 0.1234000027179718017578125), float3(-0.23450000584125518798828125, 0.567799985408782958984375, -0.6789000034332275390625), float3(0.788999974727630615234375, 0.1234000027179718017578125, 0.567799985408782958984375), float3(-0.567799985408782958984375, -0.6789000034332275390625, 0.23450000584125518798828125), float3(0.4566999971866607666015625, 0.788999974727630615234375, -0.23450000584125518798828125), float3(-0.788999974727630615234375, 0.34560000896453857421875, -0.567799985408782958984375), float3(0.6789000034332275390625, -0.23450000584125518798828125, 0.788999974727630615234375), float3(-0.1234000027179718017578125, 0.6789000034332275390625, -0.4566999971866607666015625), float3(0.23450000584125518798828125, -0.567799985408782958984375, 0.6789000034332275390625), float3(-0.34560000896453857421875, 0.788999974727630615234375, -0.1234000027179718017578125), float3(0.567799985408782958984375, 0.23450000584125518798828125, -0.788999974727630615234375), float3(-0.6789000034332275390625, -0.567799985408782958984375, 0.34560000896453857421875), float3(0.788999974727630615234375, -0.34560000896453857421875, 0.4566999971866607666015625), float3(-0.23450000584125518798828125, 0.1234000027179718017578125, -0.6789000034332275390625), float3(0.4566999971866607666015625, 0.788999974727630615234375, -0.567799985408782958984375), float3(-0.567799985408782958984375, 0.23450000584125518798828125, 0.6789000034332275390625), float3(0.34560000896453857421875, -0.788999974727630615234375, -0.1234000027179718017578125), float3(-0.788999974727630615234375, 0.567799985408782958984375, -0.23450000584125518798828125), float3(0.6789000034332275390625, -0.1234000027179718017578125, 0.34560000896453857421875), float3(-0.4566999971866607666015625, 0.788999974727630615234375, 0.23450000584125518798828125), float3(0.567799985408782958984375, -0.6789000034332275390625, 0.788999974727630615234375), float3(-0.34560000896453857421875, 0.567799985408782958984375, -0.6789000034332275390625), float3(0.23450000584125518798828125, -0.788999974727630615234375, 0.567799985408782958984375), float3(-0.6789000034332275390625, 0.23450000584125518798828125, -0.1234000027179718017578125), float3(0.788999974727630615234375, -0.34560000896453857421875, -0.567799985408782958984375), float3(-0.567799985408782958984375, 0.6789000034332275390625, 0.23450000584125518798828125), float3(0.4566999971866607666015625, -0.788999974727630615234375, 0.34560000896453857421875), float3(-0.23450000584125518798828125, 0.1234000027179718017578125, -0.788999974727630615234375), float3(0.34560000896453857421875, -0.567799985408782958984375, 0.6789000034332275390625), float3(-0.788999974727630615234375, 0.4566999971866607666015625, -0.34560000896453857421875), float3(0.6789000034332275390625, -0.1234000027179718017578125, -0.567799985408782958984375), float3(-0.4566999971866607666015625, 0.23450000584125518798828125, 0.788999974727630615234375) });
 
-uniform PointLight pointLights[32];
-uniform int pointLightCount;
+struct main0_out
+{
+    float4 FragColor [[color(0)]];
+    float4 BrightColor [[color(1)]];
+};
 
-uniform SpotLight spotlights[32];
-uniform int spotlightCount;
+struct main0_in
+{
+    float2 TexCoord [[user(locn0)]];
+    float3 Normal [[user(locn2)]];
+    float3 FragPos [[user(locn3)]];
+    float3 TBN_0 [[user(locn4)]];
+    float3 TBN_1 [[user(locn5)]];
+    float3 TBN_2 [[user(locn6)]];
+};
 
-uniform AreaLight areaLights[32];
-uniform int areaLightCount;
-
-uniform ShadowParameters shadowParams[10];
-uniform int shadowParamCount;
-
-uniform vec3 cameraPosition;
-
-uniform bool useTexture;
-uniform bool useColor;
-uniform bool useIBL;
-
-uniform Environment environment;
-
-// ----- Helper Functions -----
-vec4 enableTextures(int type) {
-    vec4 color = vec4(0.0);
-    int count = 0;
-    for (int i = 0; i < textureCount; i++) {
-        if (textureTypes[i] == type) {
-            if (i == 0) color += texture(texture1, texCoord);
-            else if (i == 1) color += texture(texture2, texCoord);
-            else if (i == 2) color += texture(texture3, texCoord);
-            else if (i == 3) color += texture(texture4, texCoord);
-            else if (i == 4) color += texture(texture5, texCoord);
-            else if (i == 5) color += texture(texture6, texCoord);
-            else if (i == 6) color += texture(texture7, texCoord);
-            else if (i == 7) color += texture(texture8, texCoord);
-            else if (i == 8) color += texture(texture9, texCoord);
-            else if (i == 9) color += texture(texture10, texCoord);
-            count++;
+static inline __attribute__((always_inline))
+float4 sampleTextureAt(thread const int& textureIndex, thread const float2& uv, texture2d<float> texture1, sampler texture1Smplr, texture2d<float> texture2, sampler texture2Smplr, texture2d<float> texture3, sampler texture3Smplr, texture2d<float> texture4, sampler texture4Smplr, texture2d<float> texture5, sampler texture5Smplr, texture2d<float> texture6, sampler texture6Smplr, texture2d<float> texture7, sampler texture7Smplr, texture2d<float> texture8, sampler texture8Smplr, texture2d<float> texture9, sampler texture9Smplr, texture2d<float> texture10, sampler texture10Smplr)
+{
+    if (textureIndex == 0)
+    {
+        return texture1.sample(texture1Smplr, uv);
+    }
+    else
+    {
+        if (textureIndex == 1)
+        {
+            return texture2.sample(texture2Smplr, uv);
+        }
+        else
+        {
+            if (textureIndex == 2)
+            {
+                return texture3.sample(texture3Smplr, uv);
+            }
+            else
+            {
+                if (textureIndex == 3)
+                {
+                    return texture4.sample(texture4Smplr, uv);
+                }
+                else
+                {
+                    if (textureIndex == 4)
+                    {
+                        return texture5.sample(texture5Smplr, uv);
+                    }
+                    else
+                    {
+                        if (textureIndex == 5)
+                        {
+                            return texture6.sample(texture6Smplr, uv);
+                        }
+                        else
+                        {
+                            if (textureIndex == 6)
+                            {
+                                return texture7.sample(texture7Smplr, uv);
+                            }
+                            else
+                            {
+                                if (textureIndex == 7)
+                                {
+                                    return texture8.sample(texture8Smplr, uv);
+                                }
+                                else
+                                {
+                                    if (textureIndex == 8)
+                                    {
+                                        return texture9.sample(texture9Smplr, uv);
+                                    }
+                                    else
+                                    {
+                                        if (textureIndex == 9)
+                                        {
+                                            return texture10.sample(texture10Smplr, uv);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
-    if (count > 0) color /= float(count);
-    if (count == 0) return vec4(-1.0);
-    return color;
+    return float4(0.0);
 }
 
-vec4 enableCubeMaps(int type, vec3 direction) {
-    vec4 color = vec4(0.0);
-    int count = 0;
-    for (int i = 0; i < 8; i++) {
-        if (type == i + 10) {
-            if (i == 0) color += texture(cubeMap1, direction);
-            else if (i == 1) color += texture(cubeMap2, direction);
-            else if (i == 2) color += texture(cubeMap3, direction);
-            else if (i == 3) color += texture(cubeMap4, direction);
-            else if (i == 4) color += texture(cubeMap5, direction);
-            count++;
-        }
-    }
-    if (count > 0) color /= float(count);
-    if (count == 0) return vec4(-1.0);
-    return color;
-}
-
-vec4 sampleCubeTextureAt(int textureIndex, vec3 direction) {
-    if (textureIndex == 0) return texture(cubeMap1, direction);
-    else if (textureIndex == 1) return texture(cubeMap2, direction);
-    else if (textureIndex == 2) return texture(cubeMap3, direction);
-    else if (textureIndex == 3) return texture(cubeMap4, direction);
-    else if (textureIndex == 4) return texture(cubeMap5, direction);
-    return vec4(0.0);
-}
-
-vec2 getTextureDimensions(int textureIndex) {
-    if (textureIndex == 0) return vec2(textureSize(texture1, 0));
-    else if (textureIndex == 1) return vec2(textureSize(texture2, 0));
-    else if (textureIndex == 2) return vec2(textureSize(texture3, 0));
-    else if (textureIndex == 3) return vec2(textureSize(texture4, 0));
-    else if (textureIndex == 4) return vec2(textureSize(texture5, 0));
-    else if (textureIndex == 5) return vec2(textureSize(texture6, 0));
-    else if (textureIndex == 6) return vec2(textureSize(texture7, 0));
-    else if (textureIndex == 7) return vec2(textureSize(texture8, 0));
-    else if (textureIndex == 8) return vec2(textureSize(texture9, 0));
-    else if (textureIndex == 9) return vec2(textureSize(texture10, 0));
-    return vec2(0);
-}
-
-vec4 sampleTextureAt(int textureIndex, vec2 uv) {
-    if (textureIndex == 0) return texture(texture1, uv);
-    else if (textureIndex == 1) return texture(texture2, uv);
-    else if (textureIndex == 2) return texture(texture3, uv);
-    else if (textureIndex == 3) return texture(texture4, uv);
-    else if (textureIndex == 4) return texture(texture5, uv);
-    else if (textureIndex == 5) return texture(texture6, uv);
-    else if (textureIndex == 6) return texture(texture7, uv);
-    else if (textureIndex == 7) return texture(texture8, uv);
-    else if (textureIndex == 8) return texture(texture9, uv);
-    else if (textureIndex == 9) return texture(texture10, uv);
-    return vec4(0.0);
-}
-
-vec3 getSpecularColor() {
-    vec4 specTex = enableTextures(TEXTURE_SPECULAR);
-    vec3 specColor = material.albedo;
-    if (specTex.r != -1.0 || specTex.g != -1.0 || specTex.b != -1.0) {
-        specColor *= specTex.rgb;
-    }
-    return specColor;
-}
-
-vec4 applyGammaCorrection(vec4 color, float gamma) {
-    return vec4(pow(color.rgb, vec3(1.0 / gamma)), color.a);
-}
-
-vec2 directionToEquirect(vec3 direction) {
-    vec3 dir = normalize(direction);
-    float phi = atan(dir.z, dir.x);
-    float theta = acos(clamp(dir.y, -1.0, 1.0));
-    return vec2((phi + PI) / (2.0 * PI), theta / PI);
-}
-
-vec3 sampleHDRTexture(int textureIndex, vec3 direction) {
-    vec2 uv = directionToEquirect(direction);
-    return sampleTextureAt(textureIndex, uv).rgb;
-}
-
-vec3 sampleEnvironmentRadiance(vec3 direction) {
-    vec3 envColor = vec3(0.0);
-    int count = 0;
-    for (int i = 0; i < textureCount; i++) {
-        if (textureTypes[i] == TEXTURE_HDR_ENVIRONMENT) {
-            envColor += sampleHDRTexture(i, direction);
-            count++;
-        }
-    }
-    if (count == 0) {
-        return vec3(0.0);
-    }
-    return envColor / float(count);
-}
-
-vec2 parallaxMapping(vec2 texCoords, vec3 viewDir) {
-    const float minLayers = 8.0;
-    const float maxLayers = 32.0;
-    vec3 v = normalize(viewDir);
-    float numLayers = mix(maxLayers, minLayers, abs(dot(vec3(0.0, 0.0, 1.0), v)));
+static inline __attribute__((always_inline))
+float2 parallaxMapping(thread const float2& texCoords, thread const float3& viewDir, constant Uniforms& _163, texture2d<float> texture1, sampler texture1Smplr, texture2d<float> texture2, sampler texture2Smplr, texture2d<float> texture3, sampler texture3Smplr, texture2d<float> texture4, sampler texture4Smplr, texture2d<float> texture5, sampler texture5Smplr, texture2d<float> texture6, sampler texture6Smplr, texture2d<float> texture7, sampler texture7Smplr, texture2d<float> texture8, sampler texture8Smplr, texture2d<float> texture9, sampler texture9Smplr, texture2d<float> texture10, sampler texture10Smplr)
+{
+    float3 v = fast::normalize(viewDir);
+    float numLayers = mix(32.0, 8.0, abs(dot(float3(0.0, 0.0, 1.0), v)));
     float layerDepth = 1.0 / numLayers;
     float currentLayerDepth = 0.0;
-
-    const float heightScale = 0.04;
-    vec2 P = (v.xy / max(v.z, 0.05)) * heightScale;
-    vec2 deltaTexCoords = P / numLayers;
-
-    vec2 currentTexCoords = texCoords;
+    float2 P = (v.xy / float2(fast::max(v.z, 0.0500000007450580596923828125))) * 0.039999999105930328369140625;
+    float2 deltaTexCoords = P / float2(numLayers);
+    float2 currentTexCoords = texCoords;
     int textureIndex = -1;
-    for (int i = 0; i < textureCount; i++) {
-        if (textureTypes[i] == TEXTURE_PARALLAX) {
+    for (int i = 0; i < _163.textureCount; i++)
+    {
+        if (_163.textureTypes[i].x == 6)
+        {
             textureIndex = i;
             break;
         }
     }
-    if (textureIndex == -1) return texCoords;
-    float currentDepthMapValue = sampleTextureAt(textureIndex, currentTexCoords).r;
-
-    while (currentLayerDepth < currentDepthMapValue) {
-        currentTexCoords = clamp(currentTexCoords - deltaTexCoords, vec2(0.0), vec2(1.0));
-        currentDepthMapValue = sampleTextureAt(textureIndex, currentTexCoords).r;
+    if (textureIndex == (-1))
+    {
+        return texCoords;
+    }
+    int param = textureIndex;
+    float2 param_1 = currentTexCoords;
+    float currentDepthMapValue = sampleTextureAt(param, param_1, texture1, texture1Smplr, texture2, texture2Smplr, texture3, texture3Smplr, texture4, texture4Smplr, texture5, texture5Smplr, texture6, texture6Smplr, texture7, texture7Smplr, texture8, texture8Smplr, texture9, texture9Smplr, texture10, texture10Smplr).x;
+    while (currentLayerDepth < currentDepthMapValue)
+    {
+        currentTexCoords = fast::clamp(currentTexCoords - deltaTexCoords, float2(0.0), float2(1.0));
+        int param_2 = textureIndex;
+        float2 param_3 = currentTexCoords;
+        currentDepthMapValue = sampleTextureAt(param_2, param_3, texture1, texture1Smplr, texture2, texture2Smplr, texture3, texture3Smplr, texture4, texture4Smplr, texture5, texture5Smplr, texture6, texture6Smplr, texture7, texture7Smplr, texture8, texture8Smplr, texture9, texture9Smplr, texture10, texture10Smplr).x;
         currentLayerDepth += layerDepth;
     }
-
-    vec2 prevTexCoords = currentTexCoords + deltaTexCoords;
+    float2 prevTexCoords = currentTexCoords + deltaTexCoords;
     float afterDepth = currentDepthMapValue - currentLayerDepth;
-    float beforeDepth = sampleTextureAt(textureIndex, prevTexCoords).r - (currentLayerDepth - layerDepth);
+    int param_4 = textureIndex;
+    float2 param_5 = prevTexCoords;
+    float beforeDepth = sampleTextureAt(param_4, param_5, texture1, texture1Smplr, texture2, texture2Smplr, texture3, texture3Smplr, texture4, texture4Smplr, texture5, texture5Smplr, texture6, texture6Smplr, texture7, texture7Smplr, texture8, texture8Smplr, texture9, texture9Smplr, texture10, texture10Smplr).x - (currentLayerDepth - layerDepth);
     float weight = afterDepth / (afterDepth - beforeDepth);
-    currentTexCoords = prevTexCoords * weight + currentTexCoords * (1.0 - weight);
-
-    return clamp(currentTexCoords, vec2(0.0), vec2(1.0));
+    currentTexCoords = (prevTexCoords * weight) + (currentTexCoords * (1.0 - weight));
+    return fast::clamp(currentTexCoords, float2(0.0), float2(1.0));
 }
 
-vec3 reinhardToneMapping(vec3 hdrColor) {
-    vec3 color = vec3(1.0) - exp(-hdrColor * 1.0);
-    color = pow(color, vec3(1.0 / 2.2));
+static inline __attribute__((always_inline))
+float4 enableTextures(thread const int& type, constant Uniforms& _163, texture2d<float> texture1, sampler texture1Smplr, thread float2& texCoord, texture2d<float> texture2, sampler texture2Smplr, texture2d<float> texture3, sampler texture3Smplr, texture2d<float> texture4, sampler texture4Smplr, texture2d<float> texture5, sampler texture5Smplr, texture2d<float> texture6, sampler texture6Smplr, texture2d<float> texture7, sampler texture7Smplr, texture2d<float> texture8, sampler texture8Smplr, texture2d<float> texture9, sampler texture9Smplr, texture2d<float> texture10, sampler texture10Smplr)
+{
+    float4 color = float4(0.0);
+    int count = 0;
+    for (int i = 0; i < _163.textureCount; i++)
+    {
+        if (_163.textureTypes[i].x == type)
+        {
+            if (i == 0)
+            {
+                color += texture1.sample(texture1Smplr, texCoord);
+            }
+            else
+            {
+                if (i == 1)
+                {
+                    color += texture2.sample(texture2Smplr, texCoord);
+                }
+                else
+                {
+                    if (i == 2)
+                    {
+                        color += texture3.sample(texture3Smplr, texCoord);
+                    }
+                    else
+                    {
+                        if (i == 3)
+                        {
+                            color += texture4.sample(texture4Smplr, texCoord);
+                        }
+                        else
+                        {
+                            if (i == 4)
+                            {
+                                color += texture5.sample(texture5Smplr, texCoord);
+                            }
+                            else
+                            {
+                                if (i == 5)
+                                {
+                                    color += texture6.sample(texture6Smplr, texCoord);
+                                }
+                                else
+                                {
+                                    if (i == 6)
+                                    {
+                                        color += texture7.sample(texture7Smplr, texCoord);
+                                    }
+                                    else
+                                    {
+                                        if (i == 7)
+                                        {
+                                            color += texture8.sample(texture8Smplr, texCoord);
+                                        }
+                                        else
+                                        {
+                                            if (i == 8)
+                                            {
+                                                color += texture9.sample(texture9Smplr, texCoord);
+                                            }
+                                            else
+                                            {
+                                                if (i == 9)
+                                                {
+                                                    color += texture10.sample(texture10Smplr, texCoord);
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            count++;
+        }
+    }
+    if (count > 0)
+    {
+        color /= float4(float(count));
+    }
+    if (count == 0)
+    {
+        return float4(-1.0);
+    }
     return color;
 }
 
-vec3 acesToneMapping(vec3 color) {
-    float a = 2.51;
-    float b = 0.03;
-    float c = 2.43;
-    float d = 0.59;
-    float e = 0.14;
-    color = (color * (a * color + b)) / (color * (c * color + d) + e);
-    color = pow(clamp(color, 0.0, 1.0), vec3(1.0 / 2.2));
-    return color;
-}
-
-// ----- Environment Mapping -----
-vec4 getEnvironmentReflected(vec4 color) {
-    vec3 I = normalize(FragPos - cameraPosition);
-    vec3 R = reflect(I, normalize(Normal));
-    return mix(color, vec4(texture(skybox, R).rgb, 1.0), material.reflectivity);
-}
-
-// ----- Rim Light -----
-vec3 getRimLight(
-    vec3 fragPos,
-    vec3 N,
-    vec3 V,
-    vec3 F0,
-    vec3 albedo,
-    float metallic,
-    float roughness
-) {
-    N = normalize(N);
-    V = normalize(V);
-
-    float rim = pow(1.0 - max(dot(N, V), 0.0), 3.0);
-
-    rim *= mix(1.2, 0.3, roughness);
-
-    vec3 rimColor = mix(vec3(1.0), albedo, metallic) * environment.rimLightColor;
-    rimColor = mix(rimColor, F0, 0.5);
-
-    float rimIntensity = environment.rimLightIntensity;
-
-    vec3 rimLight = rimColor * rim * rimIntensity;
-
-    float dist = length(cameraPosition - fragPos);
-    rimLight /= (1.0 + dist * 0.1);
-
-    return rimLight;
-}
-
-// ----- PBR -----
-float distributionGGX(vec3 N, vec3 H, float roughness) {
-    float a = roughness * roughness;
-    float a2 = a * a;
-    float NdotH = max(dot(N, H), 0.0);
-    float NdotH2 = NdotH * NdotH;
-
-    float num = a2;
-    float denom = (NdotH2 * (a2 - 1.0) + 1.0);
-    denom = 3.14159265 * denom * denom;
-
-    return num / denom;
-}
-
-float geometrySchlickGGX(float NdotV, float roughness) {
-    float r = (roughness + 1.0);
-    float k = (r * r) / 8.0;
-
-    float num = NdotV;
-    float denom = NdotV * (1.0 - k) + k;
-
-    return num / denom;
-}
-
-float geometrySmith(vec3 N, vec3 V, vec3 L, float roughness) {
-    float NdotV = max(dot(N, V), 0.0);
-    float NdotL = max(dot(N, L), 0.0);
-    float ggx2 = geometrySchlickGGX(NdotV, roughness);
-    float ggx1 = geometrySchlickGGX(NdotL, roughness);
-
-    return ggx1 * ggx2;
-}
-
-vec3 fresnelSchlick(float cosTheta, vec3 F0) {
-    return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
-}
-
-vec3 calculatePBR(vec3 N, vec3 V, vec3 L, vec3 F0, vec3 radiance, vec3 albedo, float metallic, float roughness, float reflectivity) {
-    vec3 H = normalize(V + L);
-
-    float NDF = distributionGGX(N, H, roughness);
-    float G = geometrySmith(N, V, L, roughness);
-    vec3 F = fresnelSchlick(max(dot(H, V), 0.0), F0);
-
-    vec3 kS = F;
-    vec3 kD = vec3(1.0) - kS;
-    kD *= 1.0 - metallic;
-
-    vec3 numerator = NDF * G * F;
-    float denominator = 4.0 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0) + 0.0001;
-    vec3 specular = numerator / denominator;
-
-    float NdotL = max(dot(N, L), 0.0);
-
-    vec3 Lo = (kD * albedo / 3.14159265 + specular) * radiance * NdotL;
-    return Lo;
-}
-
-vec3 calculatePBRWithAttenuation(vec3 N, vec3 V, vec3 L, vec3 F0, vec3 radianceAttenuated, vec3 albedo, float metallic, float roughness, float reflectivity) {
-    vec3 H = normalize(V + L);
-
-    float NDF = distributionGGX(N, H, roughness);
-    float G = geometrySmith(N, V, L, roughness);
-    vec3 F = fresnelSchlick(max(dot(H, V), 0.0), F0);
-
-    vec3 kS = F;
-    vec3 kD = vec3(1.0) - kS;
-    kD *= 1.0 - metallic;
-
-    vec3 numerator = NDF * G * F;
-    float denominator = 4.0 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0) + 0.0001;
-    vec3 specular = numerator / denominator;
-
-    float NdotL = max(dot(N, L), 0.0);
-
-    vec3 Lo = (kD * albedo / 3.14159265 + specular) * radianceAttenuated * NdotL;
-    return Lo;
-}
-
-// ----- Directional Light -----
-vec3 calcAllDirectionalLights(vec3 N, vec3 V, vec3 albedo, float metallic, float roughness, vec3 F0, float reflectivity) {
-    vec3 Lo = vec3(0.0);
-
-    for (int i = 0; i < directionalLightCount; i++) {
-        vec3 L = normalize(-directionalLights[i].direction);
-        vec3 radiance = directionalLights[i].diffuse * max(directionalLights[i].intensity, 0.0);
-        Lo += calculatePBR(N, V, L, F0, radiance, albedo, metallic, roughness, reflectivity);
+static inline __attribute__((always_inline))
+float2 getTextureDimensions(thread const int& textureIndex, texture2d<float> texture1, sampler texture1Smplr, texture2d<float> texture2, sampler texture2Smplr, texture2d<float> texture3, sampler texture3Smplr, texture2d<float> texture4, sampler texture4Smplr, texture2d<float> texture5, sampler texture5Smplr, texture2d<float> texture6, sampler texture6Smplr, texture2d<float> texture7, sampler texture7Smplr, texture2d<float> texture8, sampler texture8Smplr, texture2d<float> texture9, sampler texture9Smplr, texture2d<float> texture10, sampler texture10Smplr)
+{
+    if (textureIndex == 0)
+    {
+        return float2(int2(texture1.get_width(), texture1.get_height()));
     }
-
-    return Lo;
-}
-
-// ----- Point Light -----
-float calcAttenuation(PointLight light, vec3 fragPos) {
-    float distance = length(light.position - fragPos);
-    return 1.0 / (light.constant + light.linear * distance + light.quadratic * distance);
-}
-
-vec3 calcAllPointLights(vec3 fragPos, vec3 N, vec3 V, vec3 albedo, float metallic, float roughness, vec3 F0, float reflectivity) {
-    vec3 Lo = vec3(0.0);
-    for (int i = 0; i < pointLightCount; i++) {
-        vec3 L = pointLights[i].position - fragPos;
-        float distance = length(L);
-
-        distance = max(distance, 0.001);
-
-        L = normalize(L);
-
-        float range = max(pointLights[i].range, 0.001);
-        vec3 radiance = pointLights[i].diffuse * max(pointLights[i].intensity, 0.0);
-        float attenuation = 1.0 / (1.0 + (distance / range) + (distance * distance) / (range * range));
-        float fade = 1.0 - smoothstep(range * 0.9, range, distance);
-        vec3 radianceAttenuated = radiance * attenuation;
-        radianceAttenuated *= fade;
-
-        vec3 H = normalize(V + L);
-
-        float NDF = distributionGGX(N, H, roughness);
-        float G = geometrySmith(N, V, L, roughness);
-        vec3 F = fresnelSchlick(max(dot(H, V), 0.0), F0);
-
-        vec3 kS = F;
-        vec3 kD = vec3(1.0) - kS;
-        kD *= 1.0 - metallic;
-
-        vec3 numerator = NDF * G * F;
-        float denominator = 4.0 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0) + 0.0001;
-        vec3 specular = numerator / denominator;
-
-        float NdotL = max(dot(N, L), 0.0);
-
-        Lo += (kD * albedo / 3.14159265 + specular) * radianceAttenuated * NdotL;
+    else
+    {
+        if (textureIndex == 1)
+        {
+            return float2(int2(texture2.get_width(), texture2.get_height()));
+        }
+        else
+        {
+            if (textureIndex == 2)
+            {
+                return float2(int2(texture3.get_width(), texture3.get_height()));
+            }
+            else
+            {
+                if (textureIndex == 3)
+                {
+                    return float2(int2(texture4.get_width(), texture4.get_height()));
+                }
+                else
+                {
+                    if (textureIndex == 4)
+                    {
+                        return float2(int2(texture5.get_width(), texture5.get_height()));
+                    }
+                    else
+                    {
+                        if (textureIndex == 5)
+                        {
+                            return float2(int2(texture6.get_width(), texture6.get_height()));
+                        }
+                        else
+                        {
+                            if (textureIndex == 6)
+                            {
+                                return float2(int2(texture7.get_width(), texture7.get_height()));
+                            }
+                            else
+                            {
+                                if (textureIndex == 7)
+                                {
+                                    return float2(int2(texture8.get_width(), texture8.get_height()));
+                                }
+                                else
+                                {
+                                    if (textureIndex == 8)
+                                    {
+                                        return float2(int2(texture9.get_width(), texture9.get_height()));
+                                    }
+                                    else
+                                    {
+                                        if (textureIndex == 9)
+                                        {
+                                            return float2(int2(texture10.get_width(), texture10.get_height()));
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
-    return Lo;
+    return float2(0.0);
 }
 
-// ----- Spot Light -----
-vec3 calcAllSpotLights(vec3 N, vec3 fragPos, vec3 L, vec3 viewDir, vec3 albedo, float metallic, float roughness, vec3 F0, float reflectivity) {
-    vec3 Lo = vec3(0.0);
-
-    for (int i = 0; i < spotlightCount; i++) {
-        vec3 L = normalize(spotlights[i].position - fragPos);
-
-        vec3 spotDirection = normalize(spotlights[i].direction);
-        float theta = dot(L, -spotDirection);
-        float intensity = smoothstep(spotlights[i].outerCutOff, spotlights[i].cutOff, theta);
-
-        float distance = length(spotlights[i].position - fragPos);
-        distance = max(distance, 0.001);
-        float range = max(spotlights[i].range, 0.001);
-        float attenuation = 1.0 / (1.0 + (distance / range) + (distance * distance) / (range * range));
-        float fade = 1.0 - smoothstep(range * 0.9, range, distance);
-
-        vec3 radiance = spotlights[i].diffuse * max(spotlights[i].intensity, 0.0) * attenuation * intensity * fade;
-
-        Lo += calculatePBR(N, viewDir, L, F0, radiance, albedo, metallic, roughness, reflectivity);
+static inline __attribute__((always_inline))
+float calculateShadow(thread const ShadowParameters& shadowParam, thread const float4& fragPosLightSpace, constant Uniforms& _163, texture2d<float> texture1, sampler texture1Smplr, texture2d<float> texture2, sampler texture2Smplr, texture2d<float> texture3, sampler texture3Smplr, texture2d<float> texture4, sampler texture4Smplr, texture2d<float> texture5, sampler texture5Smplr, texture2d<float> texture6, sampler texture6Smplr, texture2d<float> texture7, sampler texture7Smplr, texture2d<float> texture8, sampler texture8Smplr, texture2d<float> texture9, sampler texture9Smplr, texture2d<float> texture10, sampler texture10Smplr, device DirectionalLightsUBO& _1083, thread float3& Normal, thread float3& FragPos)
+{
+    float3 projCoords = fragPosLightSpace.xyz / float3(fragPosLightSpace.w);
+    projCoords = (projCoords * 0.5) + float3(0.5);
+    bool _1362 = projCoords.x < 0.0;
+    bool _1369;
+    if (!_1362)
+    {
+        _1369 = projCoords.x > 1.0;
     }
-
-    return Lo;
-}
-
-// ----- Shadow Calculations -----
-float calculateShadow(ShadowParameters shadowParam, vec4 fragPosLightSpace) {
-    vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
-    projCoords = projCoords * 0.5 + 0.5;
-
-    if (projCoords.x < 0.0 || projCoords.x > 1.0 ||
-            projCoords.y < 0.0 || projCoords.y > 1.0 ||
-            projCoords.z > 1.0) {
+    else
+    {
+        _1369 = _1362;
+    }
+    bool _1376;
+    if (!_1369)
+    {
+        _1376 = projCoords.y < 0.0;
+    }
+    else
+    {
+        _1376 = _1369;
+    }
+    bool _1383;
+    if (!_1376)
+    {
+        _1383 = projCoords.y > 1.0;
+    }
+    else
+    {
+        _1383 = _1376;
+    }
+    bool _1390;
+    if (!_1383)
+    {
+        _1390 = projCoords.z < 0.0;
+    }
+    else
+    {
+        _1390 = _1383;
+    }
+    bool _1398;
+    if (!_1390)
+    {
+        _1398 = projCoords.z > 1.0;
+    }
+    else
+    {
+        _1398 = _1390;
+    }
+    if (_1398)
+    {
         return 0.0;
     }
-
     float currentDepth = projCoords.z;
-
-    vec3 lightDir = normalize((inverse(shadowParam.lightView) * vec4(0.0, 0.0, -1.0, 0.0)).xyz);
-    vec3 normal = normalize(Normal);
-    float biasValue = shadowParam.bias;
-    float bias = max(biasValue * (1.0 - dot(normal, lightDir)), biasValue);
-
+    float3 lightDir = fast::normalize(-(spvInverse4x4(shadowParam.lightView) * float4(0.0, 0.0, -1.0, 0.0)).xyz);
+    float3 normal = fast::normalize(Normal);
+    float biasValue = shadowParam.bias0;
+    float bias0 = fast::max(biasValue * (1.0 - dot(normal, lightDir)), biasValue);
     float shadow = 0.0;
-    vec2 texelSize = 1.0 / getTextureDimensions(shadowParam.textureIndex);
-
-    float distance = length(cameraPosition - FragPos);
-    int kernelSize = int(mix(1.0, 3.0, clamp(distance / 100.0, 0.0, 1.0)));
-
+    int param = shadowParam.textureIndex;
+    float2 texelSize = float2(1.0) / getTextureDimensions(param, texture1, texture1Smplr, texture2, texture2Smplr, texture3, texture3Smplr, texture4, texture4Smplr, texture5, texture5Smplr, texture6, texture6Smplr, texture7, texture7Smplr, texture8, texture8Smplr, texture9, texture9Smplr, texture10, texture10Smplr);
+    float _distance = length(_163.cameraPosition - FragPos);
+    int kernelSize = int(mix(1.0, 3.0, fast::clamp(_distance / 100.0, 0.0, 1.0)));
     int sampleCount = 0;
-    for (int x = -kernelSize; x <= kernelSize; ++x) {
-        for (int y = -kernelSize; y <= kernelSize; ++y) {
-            float pcfDepth = sampleTextureAt(shadowParam.textureIndex,
-                    projCoords.xy + vec2(x, y) * texelSize).r;
-            shadow += currentDepth - bias > pcfDepth ? 1.0 : 0.0;
+    int _1444 = -kernelSize;
+    for (int x = _1444; x <= kernelSize; x++)
+    {
+        int _1455 = -kernelSize;
+        for (int y = _1455; y <= kernelSize; y++)
+        {
+            int param_1 = shadowParam.textureIndex;
+            float2 param_2 = projCoords.xy + (float2(float(x), float(y)) * texelSize);
+            float pcfDepth = sampleTextureAt(param_1, param_2, texture1, texture1Smplr, texture2, texture2Smplr, texture3, texture3Smplr, texture4, texture4Smplr, texture5, texture5Smplr, texture6, texture6Smplr, texture7, texture7Smplr, texture8, texture8Smplr, texture9, texture9Smplr, texture10, texture10Smplr).x;
+            shadow += float((currentDepth - bias0) > pcfDepth);
             sampleCount++;
         }
     }
     shadow /= float(sampleCount);
-
     return shadow;
 }
 
-float calculateShadowRaw(ShadowParameters shadowParam, vec4 fragPosLightSpace) {
-    vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
-    projCoords = projCoords * 0.5 + 0.5;
-
-    if (projCoords.x < 0.0 || projCoords.x > 1.0 ||
-            projCoords.y < 0.0 || projCoords.y > 1.0 ||
-            projCoords.z < 0.0 || projCoords.z > 1.0) {
-        return 0.0;
-    }
-
-    float currentDepth = projCoords.z;
-    float closestDepth = sampleTextureAt(shadowParam.textureIndex, projCoords.xy).r;
-
-    return currentDepth > closestDepth ? 1.0 : 0.0;
-}
-
-float calculateAllShadows() {
-    float totalShadow = 0.0;
-    for (int i = 0; i < shadowParamCount; i++) {
-        vec4 fragPosLightSpace = shadowParams[i].lightProjection * shadowParams[i].lightView * vec4(FragPos, 1.0);
-        float shadow = calculateShadow(shadowParams[i], fragPosLightSpace);
-        totalShadow = max(totalShadow, shadow);
-    }
-    return totalShadow;
-}
-
-float calculatePointShadow(ShadowParameters shadowParam, vec3 fragPos)
+static inline __attribute__((always_inline))
+float4 sampleCubeTextureAt(thread const int& textureIndex, thread const float3& direction, texturecube<float> cubeMap1, sampler cubeMap1Smplr, texturecube<float> cubeMap2, sampler cubeMap2Smplr, texturecube<float> cubeMap3, sampler cubeMap3Smplr, texturecube<float> cubeMap4, sampler cubeMap4Smplr, texturecube<float> cubeMap5, sampler cubeMap5Smplr)
 {
-    vec3 fragToLight = fragPos - shadowParam.lightPos;
-    float currentDepth = length(fragToLight);
-
-    float bias = 0.05;
-    float shadow = 0.0;
-
-    float diskRadius = (1.0 + (currentDepth / shadowParam.farPlane)) * 0.05;
-
-    const int samples = 54;
-    const vec3 sampleOffsetDirections[] = vec3[](
-            vec3(0.5381, 0.1856, -0.4319), vec3(0.1379, 0.2486, 0.4430),
-            vec3(0.3371, 0.5679, -0.0057), vec3(-0.6999, -0.0451, -0.0019),
-            vec3(0.0689, -0.1598, -0.8547), vec3(0.0560, 0.0069, -0.1843),
-            vec3(-0.0146, 0.1402, 0.0762), vec3(0.0100, -0.1924, -0.0344),
-            vec3(-0.3577, -0.5301, -0.4358), vec3(-0.3169, 0.1063, 0.0158),
-            vec3(0.0103, -0.5869, 0.0046), vec3(-0.0897, -0.4940, 0.3287),
-            vec3(0.7119, -0.0154, -0.0918), vec3(-0.0533, 0.0596, -0.5411),
-            vec3(0.0352, -0.0631, 0.5460), vec3(-0.4776, 0.2847, -0.0271),
-            vec3(-0.1120, 0.1234, -0.7446), vec3(-0.2130, -0.0782, -0.1379),
-            vec3(0.2944, -0.3112, -0.2645), vec3(-0.4564, 0.4175, -0.1843),
-            // remaining random-ish points
-            vec3(0.1234, -0.5678, 0.7890), vec3(-0.6789, 0.2345, -0.4567),
-            vec3(0.3456, -0.7890, 0.1234), vec3(-0.2345, 0.5678, -0.6789),
-            vec3(0.7890, 0.1234, 0.5678), vec3(-0.5678, -0.6789, 0.2345),
-            vec3(0.4567, 0.7890, -0.2345), vec3(-0.7890, 0.3456, -0.5678),
-            vec3(0.6789, -0.2345, 0.7890), vec3(-0.1234, 0.6789, -0.4567),
-            vec3(0.2345, -0.5678, 0.6789), vec3(-0.3456, 0.7890, -0.1234),
-            vec3(0.5678, 0.2345, -0.7890), vec3(-0.6789, -0.5678, 0.3456),
-            vec3(0.7890, -0.3456, 0.4567), vec3(-0.2345, 0.1234, -0.6789),
-            vec3(0.4567, 0.7890, -0.5678), vec3(-0.5678, 0.2345, 0.6789),
-            vec3(0.3456, -0.7890, -0.1234), vec3(-0.7890, 0.5678, -0.2345),
-            vec3(0.6789, -0.1234, 0.3456), vec3(-0.4567, 0.7890, 0.2345),
-            vec3(0.5678, -0.6789, 0.7890), vec3(-0.3456, 0.5678, -0.6789),
-            vec3(0.2345, -0.7890, 0.5678), vec3(-0.6789, 0.2345, -0.1234),
-            vec3(0.7890, -0.3456, -0.5678), vec3(-0.5678, 0.6789, 0.2345),
-            vec3(0.4567, -0.7890, 0.3456), vec3(-0.2345, 0.1234, -0.7890),
-            vec3(0.3456, -0.5678, 0.6789), vec3(-0.7890, 0.4567, -0.3456),
-            vec3(0.6789, -0.1234, -0.5678), vec3(-0.4567, 0.2345, 0.7890)
-        );
-
-    for (int i = 0; i < samples; ++i)
+    if (textureIndex == 0)
     {
-        vec3 sampleDir = normalize(fragToLight + sampleOffsetDirections[i] * diskRadius);
-        float closestDepth = sampleCubeTextureAt(shadowParam.textureIndex, sampleDir).r * shadowParam.farPlane;
-        if (currentDepth - bias > closestDepth)
-            shadow += 1.0;
+        return cubeMap1.sample(cubeMap1Smplr, direction);
     }
-
-    shadow /= float(samples);
-    return shadow;
-}
-
-float calculateAllPointShadows(vec3 fragPos) {
-    float totalShadow = 0.0;
-    for (int i = 0; i < shadowParamCount; i++) {
-        if (shadowParams[i].lightType == 3) {
-            float shadow = calculatePointShadow(shadowParams[i], fragPos);
-            totalShadow = max(totalShadow, shadow);
+    else
+    {
+        if (textureIndex == 1)
+        {
+            return cubeMap2.sample(cubeMap2Smplr, direction);
+        }
+        else
+        {
+            if (textureIndex == 2)
+            {
+                return cubeMap3.sample(cubeMap3Smplr, direction);
+            }
+            else
+            {
+                if (textureIndex == 3)
+                {
+                    return cubeMap4.sample(cubeMap4Smplr, direction);
+                }
+                else
+                {
+                    if (textureIndex == 4)
+                    {
+                        return cubeMap5.sample(cubeMap5Smplr, direction);
+                    }
+                }
+            }
         }
     }
-    return totalShadow;
+    return float4(0.0);
 }
 
-// ----- Main -----
-void main() {
-    texCoord = TexCoord;
+static inline __attribute__((always_inline))
+float calculatePointShadow(thread const ShadowParameters& shadowParam, thread const float3& fragPos, texturecube<float> cubeMap1, sampler cubeMap1Smplr, texturecube<float> cubeMap2, sampler cubeMap2Smplr, texturecube<float> cubeMap3, sampler cubeMap3Smplr, texturecube<float> cubeMap4, sampler cubeMap4Smplr, texturecube<float> cubeMap5, sampler cubeMap5Smplr)
+{
+    float3 fragToLight = fragPos - shadowParam.lightPos;
+    float currentDepth = length(fragToLight);
+    float bias0 = 0.0500000007450580596923828125;
+    float shadow = 0.0;
+    float diskRadius = (1.0 + (currentDepth / shadowParam.farPlane)) * 0.0500000007450580596923828125;
+    for (int i = 0; i < 54; i++)
+    {
+        float3 sampleDir = fast::normalize(fragToLight + (_1657[i] * diskRadius));
+        int param = shadowParam.textureIndex;
+        float3 param_1 = sampleDir;
+        float closestDepth = sampleCubeTextureAt(param, param_1, cubeMap1, cubeMap1Smplr, cubeMap2, cubeMap2Smplr, cubeMap3, cubeMap3Smplr, cubeMap4, cubeMap4Smplr, cubeMap5, cubeMap5Smplr).x * shadowParam.farPlane;
+        if ((currentDepth - bias0) > closestDepth)
+        {
+            shadow += 1.0;
+        }
+    }
+    shadow /= 54.0;
+    return shadow;
+}
 
+static inline __attribute__((always_inline))
+float distributionGGX(thread const float3& N, thread const float3& H, thread const float& roughness)
+{
+    float a = roughness * roughness;
+    float a2 = a * a;
+    float NdotH = fast::max(dot(N, H), 0.0);
+    float NdotH2 = NdotH * NdotH;
+    float num = a2;
+    float denom = (NdotH2 * (a2 - 1.0)) + 1.0;
+    denom = (3.1415927410125732421875 * denom) * denom;
+    return num / denom;
+}
+
+static inline __attribute__((always_inline))
+float geometrySchlickGGX(thread const float& NdotV, thread const float& roughness)
+{
+    float r = roughness + 1.0;
+    float k = (r * r) / 8.0;
+    float num = NdotV;
+    float denom = (NdotV * (1.0 - k)) + k;
+    return num / denom;
+}
+
+static inline __attribute__((always_inline))
+float geometrySmith(thread const float3& N, thread const float3& V, thread const float3& L, thread const float& roughness)
+{
+    float NdotV = fast::max(dot(N, V), 0.0);
+    float NdotL = fast::max(dot(N, L), 0.0);
+    float param = NdotV;
+    float param_1 = roughness;
+    float ggx2 = geometrySchlickGGX(param, param_1);
+    float param_2 = NdotL;
+    float param_3 = roughness;
+    float ggx1 = geometrySchlickGGX(param_2, param_3);
+    return ggx1 * ggx2;
+}
+
+static inline __attribute__((always_inline))
+float3 fresnelSchlick(thread const float& cosTheta, thread const float3& F0)
+{
+    return F0 + ((float3(1.0) - F0) * powr(1.0 - cosTheta, 5.0));
+}
+
+static inline __attribute__((always_inline))
+float3 calculatePBR(thread const float3& N, thread const float3& V, thread const float3& L, thread const float3& F0, thread const float3& radiance, thread const float3& albedo, thread const float& metallic, thread const float& roughness, thread const float& reflectivity)
+{
+    float3 H = fast::normalize(V + L);
+    float3 param = N;
+    float3 param_1 = H;
+    float param_2 = roughness;
+    float NDF = distributionGGX(param, param_1, param_2);
+    float3 param_3 = N;
+    float3 param_4 = V;
+    float3 param_5 = L;
+    float param_6 = roughness;
+    float G = geometrySmith(param_3, param_4, param_5, param_6);
+    float param_7 = fast::max(dot(H, V), 0.0);
+    float3 param_8 = F0;
+    float3 F = fresnelSchlick(param_7, param_8);
+    float3 kS = F;
+    float3 kD = float3(1.0) - kS;
+    kD *= (1.0 - metallic);
+    float3 numerator = F * (NDF * G);
+    float denominator = ((4.0 * fast::max(dot(N, V), 0.0)) * fast::max(dot(N, L), 0.0)) + 9.9999997473787516355514526367188e-05;
+    float3 specular = numerator / float3(denominator);
+    float NdotL = fast::max(dot(N, L), 0.0);
+    float3 Lo = ((((kD * albedo) / float3(3.1415927410125732421875)) + specular) * radiance) * NdotL;
+    return Lo;
+}
+
+static inline __attribute__((always_inline))
+float3 calcAllDirectionalLights(thread const float3& N, thread const float3& V, thread const float3& albedo, thread const float& metallic, thread const float& roughness, thread const float3& F0, thread const float& reflectivity, constant PushConstants& _1073, device DirectionalLightsUBO& _1083)
+{
+    float3 Lo = float3(0.0);
+    for (int i = 0; i < _1073.directionalLightCount; i++)
+    {
+        float3 L = fast::normalize(-float3(_1083.directionalLights[i].direction));
+        float3 radiance = float3(_1083.directionalLights[i].diffuse) * fast::max(_1083.directionalLights[i].intensity, 0.0);
+        float3 param = N;
+        float3 param_1 = V;
+        float3 param_2 = L;
+        float3 param_3 = F0;
+        float3 param_4 = radiance;
+        float3 param_5 = albedo;
+        float param_6 = metallic;
+        float param_7 = roughness;
+        float param_8 = reflectivity;
+        Lo += calculatePBR(param, param_1, param_2, param_3, param_4, param_5, param_6, param_7, param_8);
+    }
+    return Lo;
+}
+
+static inline __attribute__((always_inline))
+float3 calcAllPointLights(thread const float3& fragPos, thread const float3& N, thread const float3& V, thread const float3& albedo, thread const float& metallic, thread const float& roughness, thread const float3& F0, thread const float& reflectivity, constant PushConstants& _1073, device PointLightsUBO& _1136)
+{
+    float3 Lo = float3(0.0);
+    for (int i = 0; i < _1073.pointLightCount; i++)
+    {
+        float3 L = float3(_1136.pointLights[i].position) - fragPos;
+        float _distance = length(L);
+        _distance = fast::max(_distance, 0.001000000047497451305389404296875);
+        L = fast::normalize(L);
+        float range = fast::max(_1136.pointLights[i].radius, 0.001000000047497451305389404296875);
+        float3 radiance = float3(_1136.pointLights[i].diffuse) * fast::max(_1136.pointLights[i].intensity, 0.0);
+        float attenuation = 1.0 / ((1.0 + (_distance / range)) + ((_distance * _distance) / (range * range)));
+        float fade = 1.0 - smoothstep(range * 0.89999997615814208984375, range, _distance);
+        float3 radianceAttenuated = radiance * attenuation;
+        radianceAttenuated *= fade;
+        float3 H = fast::normalize(V + L);
+        float3 param = N;
+        float3 param_1 = H;
+        float param_2 = roughness;
+        float NDF = distributionGGX(param, param_1, param_2);
+        float3 param_3 = N;
+        float3 param_4 = V;
+        float3 param_5 = L;
+        float param_6 = roughness;
+        float G = geometrySmith(param_3, param_4, param_5, param_6);
+        float param_7 = fast::max(dot(H, V), 0.0);
+        float3 param_8 = F0;
+        float3 F = fresnelSchlick(param_7, param_8);
+        float3 kS = F;
+        float3 kD = float3(1.0) - kS;
+        kD *= (1.0 - metallic);
+        float3 numerator = F * (NDF * G);
+        float denominator = ((4.0 * fast::max(dot(N, V), 0.0)) * fast::max(dot(N, L), 0.0)) + 9.9999997473787516355514526367188e-05;
+        float3 specular = numerator / float3(denominator);
+        float NdotL = fast::max(dot(N, L), 0.0);
+        Lo += (((((kD * albedo) / float3(3.1415927410125732421875)) + specular) * radianceAttenuated) * NdotL);
+    }
+    return Lo;
+}
+
+static inline __attribute__((always_inline))
+float3 calcAllSpotLights(thread const float3& N, thread const float3& fragPos, thread const float3& L, thread const float3& viewDir, thread const float3& albedo, thread const float& metallic, thread const float& roughness, thread const float3& F0, thread const float& reflectivity, constant PushConstants& _1073, device SpotLightsUBO& _1268)
+{
+    float3 Lo = float3(0.0);
+    for (int i = 0; i < _1073.spotlightCount; i++)
+    {
+        float3 L_1 = fast::normalize(float3(_1268.spotlights[i].position) - fragPos);
+        float3 spotDirection = fast::normalize(float3(_1268.spotlights[i].direction));
+        float theta = dot(L_1, -spotDirection);
+        float intensity = smoothstep(_1268.spotlights[i].outerCutOff, _1268.spotlights[i].cutOff, theta);
+        float _distance = length(float3(_1268.spotlights[i].position) - fragPos);
+        _distance = fast::max(_distance, 0.001000000047497451305389404296875);
+        float range = fast::max(_1268.spotlights[i].range, 0.001000000047497451305389404296875);
+        float attenuation = 1.0 / ((1.0 + (_distance / range)) + ((_distance * _distance) / (range * range)));
+        float fade = 1.0 - smoothstep(range * 0.89999997615814208984375, range, _distance);
+        float3 radiance = (((float3(_1268.spotlights[i].diffuse) * fast::max(_1268.spotlights[i].intensity, 0.0)) * attenuation) * intensity) * fade;
+        float3 param = N;
+        float3 param_1 = viewDir;
+        float3 param_2 = L_1;
+        float3 param_3 = F0;
+        float3 param_4 = radiance;
+        float3 param_5 = albedo;
+        float param_6 = metallic;
+        float param_7 = roughness;
+        float param_8 = reflectivity;
+        Lo += calculatePBR(param, param_1, param_2, param_3, param_4, param_5, param_6, param_7, param_8);
+    }
+    return Lo;
+}
+
+static inline __attribute__((always_inline))
+float3 getRimLight(thread const float3& fragPos, thread float3& N, thread float3& V, thread const float3& F0, thread const float3& albedo, thread const float& metallic, thread const float& roughness, constant Uniforms& _163, constant Environment& environment)
+{
+    N = fast::normalize(N);
+    V = fast::normalize(V);
+    float rim = powr(1.0 - fast::max(dot(N, V), 0.0), 3.0);
+    rim *= mix(1.2000000476837158203125, 0.300000011920928955078125, roughness);
+    float3 rimColor = mix(float3(1.0), albedo, float3(metallic)) * environment.rimLightColor;
+    rimColor = mix(rimColor, F0, float3(0.5));
+    float rimIntensity = environment.rimLightIntensity;
+    float3 rimLight = (rimColor * rim) * rimIntensity;
+    float dist = length(_163.cameraPosition - fragPos);
+    rimLight /= float3(1.0 + (dist * 0.100000001490116119384765625));
+    return rimLight;
+}
+
+static inline __attribute__((always_inline))
+float2 directionToEquirect(thread const float3& direction)
+{
+    float3 dir = fast::normalize(direction);
+    float phi = precise::atan2(dir.z, dir.x);
+    float theta = acos(fast::clamp(dir.y, -1.0, 1.0));
+    return float2((phi + 3.1415927410125732421875) / 6.283185482025146484375, theta / 3.1415927410125732421875);
+}
+
+static inline __attribute__((always_inline))
+float3 sampleHDRTexture(thread const int& textureIndex, thread const float3& direction, texture2d<float> texture1, sampler texture1Smplr, texture2d<float> texture2, sampler texture2Smplr, texture2d<float> texture3, sampler texture3Smplr, texture2d<float> texture4, sampler texture4Smplr, texture2d<float> texture5, sampler texture5Smplr, texture2d<float> texture6, sampler texture6Smplr, texture2d<float> texture7, sampler texture7Smplr, texture2d<float> texture8, sampler texture8Smplr, texture2d<float> texture9, sampler texture9Smplr, texture2d<float> texture10, sampler texture10Smplr)
+{
+    float3 param = direction;
+    float2 uv = directionToEquirect(param);
+    int param_1 = textureIndex;
+    float2 param_2 = uv;
+    return sampleTextureAt(param_1, param_2, texture1, texture1Smplr, texture2, texture2Smplr, texture3, texture3Smplr, texture4, texture4Smplr, texture5, texture5Smplr, texture6, texture6Smplr, texture7, texture7Smplr, texture8, texture8Smplr, texture9, texture9Smplr, texture10, texture10Smplr).xyz;
+}
+
+static inline __attribute__((always_inline))
+float3 sampleEnvironmentRadiance(thread const float3& direction, constant Uniforms& _163, texture2d<float> texture1, sampler texture1Smplr, texture2d<float> texture2, sampler texture2Smplr, texture2d<float> texture3, sampler texture3Smplr, texture2d<float> texture4, sampler texture4Smplr, texture2d<float> texture5, sampler texture5Smplr, texture2d<float> texture6, sampler texture6Smplr, texture2d<float> texture7, sampler texture7Smplr, texture2d<float> texture8, sampler texture8Smplr, texture2d<float> texture9, sampler texture9Smplr, texture2d<float> texture10, sampler texture10Smplr)
+{
+    float3 envColor = float3(0.0);
+    int count = 0;
+    for (int i = 0; i < _163.textureCount; i++)
+    {
+        if (_163.textureTypes[i].x == 13)
+        {
+            int param = i;
+            float3 param_1 = direction;
+            envColor += sampleHDRTexture(param, param_1, texture1, texture1Smplr, texture2, texture2Smplr, texture3, texture3Smplr, texture4, texture4Smplr, texture5, texture5Smplr, texture6, texture6Smplr, texture7, texture7Smplr, texture8, texture8Smplr, texture9, texture9Smplr, texture10, texture10Smplr);
+            count++;
+        }
+    }
+    if (count == 0)
+    {
+        return float3(0.0);
+    }
+    return envColor / float3(float(count));
+}
+
+static inline __attribute__((always_inline))
+float3 acesToneMapping(thread float3& color)
+{
+    float a = 2.5099999904632568359375;
+    float b = 0.02999999932944774627685546875;
+    float c = 2.4300000667572021484375;
+    float d = 0.589999973773956298828125;
+    float e = 0.14000000059604644775390625;
+    color = (color * ((color * a) + float3(b))) / ((color * ((color * c) + float3(d))) + float3(e));
+    color = powr(fast::clamp(color, float3(0.0), float3(1.0)), float3(0.4545454680919647216796875));
+    return color;
+}
+
+fragment main0_out main0(main0_in in [[stage_in]], constant Uniforms& _163 [[buffer(0)]], constant Environment& environment [[buffer(1)]], constant PushConstants& _1073 [[buffer(2)]], device DirectionalLightsUBO& _1083 [[buffer(3)]], device PointLightsUBO& _1136 [[buffer(4)]], device SpotLightsUBO& _1268 [[buffer(5)]], constant Material& material [[buffer(6)]], device ShadowParametersUBO& _1905 [[buffer(7)]], device AreaLightsUBO& _2058 [[buffer(8)]], constant AmbientLight& ambientLight [[buffer(9)]], texture2d<float> texture1 [[texture(0)]], texture2d<float> texture2 [[texture(1)]], texture2d<float> texture3 [[texture(2)]], texture2d<float> texture4 [[texture(3)]], texture2d<float> texture5 [[texture(4)]], texture2d<float> texture6 [[texture(5)]], texture2d<float> texture7 [[texture(6)]], texture2d<float> texture8 [[texture(7)]], texture2d<float> texture9 [[texture(8)]], texture2d<float> texture10 [[texture(9)]], texturecube<float> cubeMap1 [[texture(10)]], texturecube<float> cubeMap2 [[texture(11)]], texturecube<float> cubeMap3 [[texture(12)]], texturecube<float> cubeMap4 [[texture(13)]], texturecube<float> cubeMap5 [[texture(14)]], sampler texture1Smplr [[sampler(0)]], sampler texture2Smplr [[sampler(1)]], sampler texture3Smplr [[sampler(2)]], sampler texture4Smplr [[sampler(3)]], sampler texture5Smplr [[sampler(4)]], sampler texture6Smplr [[sampler(5)]], sampler texture7Smplr [[sampler(6)]], sampler texture8Smplr [[sampler(7)]], sampler texture9Smplr [[sampler(8)]], sampler texture10Smplr [[sampler(9)]], sampler cubeMap1Smplr [[sampler(10)]], sampler cubeMap2Smplr [[sampler(11)]], sampler cubeMap3Smplr [[sampler(12)]], sampler cubeMap4Smplr [[sampler(13)]], sampler cubeMap5Smplr [[sampler(14)]])
+{
+    main0_out out = {};
+    float3x3 TBN = {};
+    TBN[0] = in.TBN_0;
+    TBN[1] = in.TBN_1;
+    TBN[2] = in.TBN_2;
+    float2 texCoord = in.TexCoord;
     bool hasParallaxMap = false;
-    for (int i = 0; i < textureCount; i++) {
-        if (textureTypes[i] == TEXTURE_PARALLAX) {
+    for (int i = 0; i < _163.textureCount; i++)
+    {
+        if (_163.textureTypes[i].x == 6)
+        {
             hasParallaxMap = true;
             break;
         }
     }
-
-    if (hasParallaxMap) {
-        vec3 tangentViewDir = normalize(transpose(TBN) * (cameraPosition - FragPos));
-        texCoord = parallaxMapping(texCoord, tangentViewDir);
-        if (texCoord.x > 1.0 || texCoord.y > 1.0 || texCoord.x < 0.0 || texCoord.y < 0.0)
-            discard;
-    }
-
-    vec4 normTexture = enableTextures(TEXTURE_NORMAL);
-    vec3 N;
-
-    if (normTexture.r != -1.0 && normTexture.g != -1.0 && normTexture.b != -1.0) {
-        vec3 tangentNormal = normalize(normTexture.rgb * 2.0 - 1.0);
-        N = normalize(TBN * tangentNormal);
-    } else {
-        N = normalize(Normal);
-    }
-
-    N = normalize(N);
-    vec3 V = normalize(cameraPosition - FragPos);
-
-    vec3 albedo = material.albedo;
-    vec4 albedoTex = enableTextures(TEXTURE_COLOR);
-    if (albedoTex != vec4(-1.0)) {
-        albedo *= albedoTex.rgb;
-    }
-    vec4 opacityTex = enableTextures(TEXTURE_OPACITY);
-    if (opacityTex != vec4(-1.0)) {
-        if (opacityTex.r < 0.1) {
-            discard;
+    if (hasParallaxMap)
+    {
+        float3 tangentViewDir = fast::normalize(transpose(TBN) * (_163.cameraPosition - in.FragPos));
+        float2 param = texCoord;
+        float3 param_1 = tangentViewDir;
+        texCoord = parallaxMapping(param, param_1, _163, texture1, texture1Smplr, texture2, texture2Smplr, texture3, texture3Smplr, texture4, texture4Smplr, texture5, texture5Smplr, texture6, texture6Smplr, texture7, texture7Smplr, texture8, texture8Smplr, texture9, texture9Smplr, texture10, texture10Smplr);
+        bool _1744 = texCoord.x > 1.0;
+        bool _1751;
+        if (!_1744)
+        {
+            _1751 = texCoord.y > 1.0;
         }
-    } else if (material.albedo.a < 0.999 && albedoTex != vec4(-1.0) && albedoTex.a < 0.1) {
-        discard;
+        else
+        {
+            _1751 = _1744;
+        }
+        bool _1758;
+        if (!_1751)
+        {
+            _1758 = texCoord.x < 0.0;
+        }
+        else
+        {
+            _1758 = _1751;
+        }
+        bool _1765;
+        if (!_1758)
+        {
+            _1765 = texCoord.y < 0.0;
+        }
+        else
+        {
+            _1765 = _1758;
+        }
+        if (_1765)
+        {
+            discard_fragment();
+        }
     }
-
+    int param_2 = 5;
+    float4 normTexture = enableTextures(param_2, _163, texture1, texture1Smplr, texCoord, texture2, texture2Smplr, texture3, texture3Smplr, texture4, texture4Smplr, texture5, texture5Smplr, texture6, texture6Smplr, texture7, texture7Smplr, texture8, texture8Smplr, texture9, texture9Smplr, texture10, texture10Smplr);
+    bool _1774 = normTexture.x != (-1.0);
+    bool _1780;
+    if (_1774)
+    {
+        _1780 = normTexture.y != (-1.0);
+    }
+    else
+    {
+        _1780 = _1774;
+    }
+    bool _1786;
+    if (_1780)
+    {
+        _1786 = normTexture.z != (-1.0);
+    }
+    else
+    {
+        _1786 = _1780;
+    }
+    float normalStrength = fast::max(_163.normalMapStrength, 0.0f);
+    bool useNormalMap = (_163.useNormalMap != 0u) && (normalStrength > 0.0f);
+    float3 N;
+    if (_1786 && useNormalMap)
+    {
+        float3 tangentNormal = (normTexture.xyz * 2.0) - float3(1.0);
+        tangentNormal.xy *= normalStrength;
+        tangentNormal = fast::normalize(tangentNormal);
+        N = fast::normalize(TBN * tangentNormal);
+    }
+    else
+    {
+        N = fast::normalize(in.Normal);
+    }
+    N = fast::normalize(N);
+    float3 V = fast::normalize(_163.cameraPosition - in.FragPos);
+    float3 albedo = float3(material.albedo);
+    int param_3 = 0;
+    float4 albedoTex = enableTextures(param_3, _163, texture1, texture1Smplr, texCoord, texture2, texture2Smplr, texture3, texture3Smplr, texture4, texture4Smplr, texture5, texture5Smplr, texture6, texture6Smplr, texture7, texture7Smplr, texture8, texture8Smplr, texture9, texture9Smplr, texture10, texture10Smplr);
+    if (any(albedoTex != float4(-1.0)))
+    {
+        albedo *= albedoTex.xyz;
+    }
+    int param_3a = 12;
+    float4 opacityTex = enableTextures(param_3a, _163, texture1, texture1Smplr, texCoord, texture2, texture2Smplr, texture3, texture3Smplr, texture4, texture4Smplr, texture5, texture5Smplr, texture6, texture6Smplr, texture7, texture7Smplr, texture8, texture8Smplr, texture9, texture9Smplr, texture10, texture10Smplr);
+    if (any(opacityTex != float4(-1.0)))
+    {
+        if (opacityTex.x < 0.100000001490116119384765625)
+        {
+            discard_fragment();
+        }
+    }
+    else
+    {
+        if ((albedoTex.w < 0.100000001490116119384765625) && (material.albedo[3] < 0.999000012874603271484375))
+        {
+            discard_fragment();
+        }
+    }
     float metallic = material.metallic;
-    vec4 metallicTex = enableTextures(TEXTURE_METALLIC);
-    if (metallicTex != vec4(-1.0)) {
-        metallic *= metallicTex.r;
+    int param_4 = 9;
+    float4 metallicTex = enableTextures(param_4, _163, texture1, texture1Smplr, texCoord, texture2, texture2Smplr, texture3, texture3Smplr, texture4, texture4Smplr, texture5, texture5Smplr, texture6, texture6Smplr, texture7, texture7Smplr, texture8, texture8Smplr, texture9, texture9Smplr, texture10, texture10Smplr);
+    if (any(metallicTex != float4(-1.0)))
+    {
+        metallic *= metallicTex.x;
     }
-
     float roughness = material.roughness;
-    vec4 roughnessTex = enableTextures(TEXTURE_ROUGHNESS);
-    if (roughnessTex != vec4(-1.0)) {
-        roughness *= roughnessTex.r;
+    int param_5 = 10;
+    float4 roughnessTex = enableTextures(param_5, _163, texture1, texture1Smplr, texCoord, texture2, texture2Smplr, texture3, texture3Smplr, texture4, texture4Smplr, texture5, texture5Smplr, texture6, texture6Smplr, texture7, texture7Smplr, texture8, texture8Smplr, texture9, texture9Smplr, texture10, texture10Smplr);
+    if (any(roughnessTex != float4(-1.0)))
+    {
+        roughness *= roughnessTex.x;
     }
-
     float ao = material.ao;
-    vec4 aoTex = enableTextures(TEXTURE_AO);
-    if (aoTex != vec4(-1.0)) {
-        ao *= aoTex.r;
+    int param_6 = 11;
+    float4 aoTex = enableTextures(param_6, _163, texture1, texture1Smplr, texCoord, texture2, texture2Smplr, texture3, texture3Smplr, texture4, texture4Smplr, texture5, texture5Smplr, texture6, texture6Smplr, texture7, texture7Smplr, texture8, texture8Smplr, texture9, texture9Smplr, texture10, texture10Smplr);
+    if (any(aoTex != float4(-1.0)))
+    {
+        ao *= aoTex.x;
     }
-
-    vec3 F0 = vec3(0.04);
-    F0 = mix(F0, albedo, metallic);
-
+    float3 F0 = float3(0.039999999105930328369140625);
+    F0 = mix(F0, albedo, float3(metallic));
     float directionalShadow = 0.0;
     float spotShadow = 0.0;
     float areaShadow = 0.0;
     float pointShadow = 0.0;
-
-    if (shadowParamCount > 0) {
-        for (int i = 0; i < shadowParamCount; i++) {
-            if (shadowParams[i].lightType == 0) {
-                vec4 fragPosLightSpace = shadowParams[i].lightProjection *
-                        shadowParams[i].lightView *
-                        vec4(FragPos, 1.0);
-                directionalShadow = max(directionalShadow, calculateShadow(shadowParams[i], fragPosLightSpace));
-            } else if (shadowParams[i].lightType == 1) {
-                vec4 fragPosLightSpace = shadowParams[i].lightProjection *
-                        shadowParams[i].lightView *
-                        vec4(FragPos, 1.0);
-                spotShadow = max(spotShadow, calculateShadow(shadowParams[i], fragPosLightSpace));
-            } else if (shadowParams[i].lightType == 2) {
-                vec4 fragPosLightSpace = shadowParams[i].lightProjection *
-                        shadowParams[i].lightView *
-                        vec4(FragPos, 1.0);
-                areaShadow = max(areaShadow, calculateShadow(shadowParams[i], fragPosLightSpace));
-            } else if (shadowParams[i].lightType == 3) {
-                pointShadow = max(pointShadow, calculatePointShadow(shadowParams[i], FragPos));
-            }
-        }
-    }
-
-    float reflectivity = material.reflectivity;
-    vec3 viewDir = normalize(cameraPosition - FragPos);
-
-    vec3 lighting = vec3(0.0);
-
-    lighting += calcAllDirectionalLights(N, V, albedo, metallic, roughness, F0, reflectivity) * (1.0 - directionalShadow);
-    lighting += calcAllPointLights(FragPos, N, V, albedo, metallic, roughness, F0, reflectivity) * (1.0 - pointShadow);
-    lighting += calcAllSpotLights(N, FragPos, V, viewDir, albedo, metallic, roughness, F0, reflectivity) * (1.0 - spotShadow);
-    lighting += getRimLight(FragPos, N, V, F0, albedo, metallic, roughness);
-
+    if (_1073.shadowParamCount > 0)
     {
-        vec3 areaResult = vec3(0.0);
-        for (int i = 0; i < areaLightCount; ++i) {
-            vec3 P = areaLights[i].position;
-            vec3 R = normalize(areaLights[i].right);
-            vec3 U = normalize(areaLights[i].up);
-            vec2 halfSize = areaLights[i].size * 0.5;
-
-            vec3 toPoint = FragPos - P;
-            float s = clamp(dot(toPoint, R), -halfSize.x, halfSize.x);
-            float t = clamp(dot(toPoint, U), -halfSize.y, halfSize.y);
-            vec3 Q = P + R * s + U * t;
-
-            vec3 Lvec = Q - FragPos;
-            float dist = length(Lvec);
-            if (dist > 0.0001) {
-                vec3 L = Lvec / dist;
-                vec3 Nl = normalize(cross(R, U));
-                float ndotl = dot(Nl, -L);
-                float facing = (areaLights[i].castsBothSides != 0) ? abs(ndotl) : max(ndotl, 0.0);
-                float cosTheta = cos(radians(areaLights[i].angle));
-                if (facing >= cosTheta && facing > 0.0) {
-                    float range = max(areaLights[i].range, 0.001);
-                    float attenuation = 1.0 / (1.0 + (dist / range) + (dist * dist) / (range * range));
-                    float fade = 1.0 - smoothstep(range * 0.9, range, dist);
-                    vec3 radiance = areaLights[i].diffuse * max(areaLights[i].intensity, 0.0) * attenuation * facing * fade;
-                    vec3 H = normalize(V + L);
-                    float NDF = distributionGGX(N, H, roughness);
-                    float G = geometrySmith(N, V, L, roughness);
-                    vec3 F = fresnelSchlick(max(dot(H, V), 0.0), F0);
-                    vec3 kS = F;
-                    vec3 kD = (vec3(1.0) - kS) * (1.0 - metallic);
-                    vec3 numerator = NDF * G * F;
-                    float denominator = max(4.0 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0), 0.0001);
-                    vec3 specular = numerator / denominator;
-                    float NdotL = max(dot(N, L), 0.0);
-                    areaResult += (kD * albedo / PI + specular) * radiance * NdotL;
-                }
+        for (int i_1 = 0; i_1 < _1073.shadowParamCount; i_1++)
+        {
+            if (_1905.shadowParams[i_1].lightType == 0)
+            {
+                float4 fragPosLightSpace = (_1905.shadowParams[i_1].lightProjection * _1905.shadowParams[i_1].lightView) * float4(in.FragPos, 1.0);
+                ShadowParameters _1934;
+                _1934.lightView = _1905.shadowParams[i_1].lightView;
+                _1934.lightProjection = _1905.shadowParams[i_1].lightProjection;
+                _1934.bias0 = _1905.shadowParams[i_1].bias0;
+                _1934.textureIndex = _1905.shadowParams[i_1].textureIndex;
+                _1934.farPlane = _1905.shadowParams[i_1].farPlane;
+                _1934._pad1 = _1905.shadowParams[i_1]._pad1;
+                _1934.lightPos = float3(_1905.shadowParams[i_1].lightPos);
+                _1934.lightType = _1905.shadowParams[i_1].lightType;
+                ShadowParameters param_7 = _1934;
+                float4 param_8 = fragPosLightSpace;
+                areaShadow = fast::max(areaShadow, calculateShadow(param_7, param_8, _163, texture1, texture1Smplr, texture2, texture2Smplr, texture3, texture3Smplr, texture4, texture4Smplr, texture5, texture5Smplr, texture6, texture6Smplr, texture7, texture7Smplr, texture8, texture8Smplr, texture9, texture9Smplr, texture10, texture10Smplr, _1083, in.Normal, in.FragPos));
+            }
+            else if (_1905.shadowParams[i_1].lightType == 1)
+            {
+                float4 fragPosLightSpace = (_1905.shadowParams[i_1].lightProjection * _1905.shadowParams[i_1].lightView) * float4(in.FragPos, 1.0);
+                ShadowParameters _1934;
+                _1934.lightView = _1905.shadowParams[i_1].lightView;
+                _1934.lightProjection = _1905.shadowParams[i_1].lightProjection;
+                _1934.bias0 = _1905.shadowParams[i_1].bias0;
+                _1934.textureIndex = _1905.shadowParams[i_1].textureIndex;
+                _1934.farPlane = _1905.shadowParams[i_1].farPlane;
+                _1934._pad1 = _1905.shadowParams[i_1]._pad1;
+                _1934.lightPos = float3(_1905.shadowParams[i_1].lightPos);
+                _1934.lightType = _1905.shadowParams[i_1].lightType;
+                ShadowParameters param_7 = _1934;
+                float4 param_8 = fragPosLightSpace;
+                spotShadow = fast::max(spotShadow, calculateShadow(param_7, param_8, _163, texture1, texture1Smplr, texture2, texture2Smplr, texture3, texture3Smplr, texture4, texture4Smplr, texture5, texture5Smplr, texture6, texture6Smplr, texture7, texture7Smplr, texture8, texture8Smplr, texture9, texture9Smplr, texture10, texture10Smplr, _1083, in.Normal, in.FragPos));
+            }
+            else if (_1905.shadowParams[i_1].lightType == 2)
+            {
+                float4 fragPosLightSpace = (_1905.shadowParams[i_1].lightProjection * _1905.shadowParams[i_1].lightView) * float4(in.FragPos, 1.0);
+                ShadowParameters _1934;
+                _1934.lightView = _1905.shadowParams[i_1].lightView;
+                _1934.lightProjection = _1905.shadowParams[i_1].lightProjection;
+                _1934.bias0 = _1905.shadowParams[i_1].bias0;
+                _1934.textureIndex = _1905.shadowParams[i_1].textureIndex;
+                _1934.farPlane = _1905.shadowParams[i_1].farPlane;
+                _1934._pad1 = _1905.shadowParams[i_1]._pad1;
+                _1934.lightPos = float3(_1905.shadowParams[i_1].lightPos);
+                _1934.lightType = _1905.shadowParams[i_1].lightType;
+                ShadowParameters param_7 = _1934;
+                float4 param_8 = fragPosLightSpace;
+                directionalShadow = fast::max(directionalShadow, calculateShadow(param_7, param_8, _163, texture1, texture1Smplr, texture2, texture2Smplr, texture3, texture3Smplr, texture4, texture4Smplr, texture5, texture5Smplr, texture6, texture6Smplr, texture7, texture7Smplr, texture8, texture8Smplr, texture9, texture9Smplr, texture10, texture10Smplr, _1083, in.Normal, in.FragPos));
+            }
+            else
+            {
+                ShadowParameters _1945;
+                _1945.lightView = _1905.shadowParams[i_1].lightView;
+                _1945.lightProjection = _1905.shadowParams[i_1].lightProjection;
+                _1945.bias0 = _1905.shadowParams[i_1].bias0;
+                _1945.textureIndex = _1905.shadowParams[i_1].textureIndex;
+                _1945.farPlane = _1905.shadowParams[i_1].farPlane;
+                _1945._pad1 = _1905.shadowParams[i_1]._pad1;
+                _1945.lightPos = float3(_1905.shadowParams[i_1].lightPos);
+                _1945.lightType = _1905.shadowParams[i_1].lightType;
+                ShadowParameters param_9 = _1945;
+                float3 param_10 = in.FragPos;
+                pointShadow = fast::max(pointShadow, calculatePointShadow(param_9, param_10, cubeMap1, cubeMap1Smplr, cubeMap2, cubeMap2Smplr, cubeMap3, cubeMap3Smplr, cubeMap4, cubeMap4Smplr, cubeMap5, cubeMap5Smplr));
             }
         }
-        lighting += areaResult * (1.0 - areaShadow);
     }
-
-    vec3 ambient = albedo * ambientLight.intensity * ambientLight.color.rgb * ao;
-
-    vec3 iblContribution = vec3(0.0);
-    if (useIBL) {
-        vec3 irradiance = sampleEnvironmentRadiance(N);
-        vec3 diffuseIBL = irradiance * albedo;
-
-        vec3 reflection = reflect(-V, N);
-        vec3 specularEnv = sampleEnvironmentRadiance(reflection);
-
-        vec3 F = fresnelSchlick(max(dot(N, V), 0.0), F0);
-        vec3 kS = F;
-        vec3 kD = vec3(1.0) - kS;
-        kD *= 1.0 - metallic;
-
-        float roughnessAttenuation = mix(1.0, 0.15, clamp(roughness, 0.0, 1.0));
-        vec3 specularIBL = specularEnv * roughnessAttenuation;
-
-        iblContribution = (kD * diffuseIBL + kS * specularIBL) * ao;
+    float reflectivity = material.reflectivity;
+    float3 viewDir = fast::normalize(_163.cameraPosition - in.FragPos);
+    float3 lighting = float3(0.0);
+    float3 param_11 = N;
+    float3 param_12 = V;
+    float3 param_13 = albedo;
+    float param_14 = metallic;
+    float param_15 = roughness;
+    float3 param_16 = F0;
+    float param_17 = reflectivity;
+    lighting += (calcAllDirectionalLights(param_11, param_12, param_13, param_14, param_15, param_16, param_17, _1073, _1083) * (1.0 - directionalShadow));
+    float3 param_18 = in.FragPos;
+    float3 param_19 = N;
+    float3 param_20 = V;
+    float3 param_21 = albedo;
+    float param_22 = metallic;
+    float param_23 = roughness;
+    float3 param_24 = F0;
+    float param_25 = reflectivity;
+    lighting += (calcAllPointLights(param_18, param_19, param_20, param_21, param_22, param_23, param_24, param_25, _1073, _1136) * (1.0 - pointShadow));
+    float3 param_26 = N;
+    float3 param_27 = in.FragPos;
+    float3 param_28 = V;
+    float3 param_29 = viewDir;
+    float3 param_30 = albedo;
+    float param_31 = metallic;
+    float param_32 = roughness;
+    float3 param_33 = F0;
+    float param_34 = reflectivity;
+    lighting += calcAllSpotLights(param_26, param_27, param_28, param_29, param_30, param_31, param_32, param_33, param_34, _1073, _1268) * (1.0 - spotShadow);
+    float3 param_35 = in.FragPos;
+    float3 param_36 = N;
+    float3 param_37 = V;
+    float3 param_38 = F0;
+    float3 param_39 = albedo;
+    float param_40 = metallic;
+    float param_41 = roughness;
+    float3 _2039 = getRimLight(param_35, param_36, param_37, param_38, param_39, param_40, param_41, _163, environment);
+    lighting += _2039;
+    float3 areaResult = float3(0.0);
+    float _2144;
+    for (int i_2 = 0; i_2 < _1073.areaLightCount; i_2++)
+    {
+        float3 P = float3(_2058.areaLights[i_2].position);
+        float3 R = fast::normalize(float3(_2058.areaLights[i_2].right));
+        float3 U = fast::normalize(float3(_2058.areaLights[i_2].up));
+        float2 halfSize = _2058.areaLights[i_2].size * 0.5;
+        float3 toPoint = in.FragPos - P;
+        float s = fast::clamp(dot(toPoint, R), -halfSize.x, halfSize.x);
+        float t = fast::clamp(dot(toPoint, U), -halfSize.y, halfSize.y);
+        float3 Q = (P + (R * s)) + (U * t);
+        float3 Lvec = Q - in.FragPos;
+        float dist = length(Lvec);
+        if (dist > 9.9999997473787516355514526367188e-05)
+        {
+            float3 L = Lvec / float3(dist);
+            float3 Nl = fast::normalize(cross(R, U));
+            float ndotl = dot(Nl, -L);
+            if (_2058.areaLights[i_2].castsBothSides != 0)
+            {
+                _2144 = abs(ndotl);
+            }
+            else
+            {
+                _2144 = fast::max(ndotl, 0.0);
+            }
+            float facing = _2144;
+            float cosTheta = cos(radians(_2058.areaLights[i_2].angle));
+            if ((facing >= cosTheta) && (facing > 0.0))
+            {
+                float range = fast::max(_2058.areaLights[i_2].range, 0.001000000047497451305389404296875);
+                float attenuation = 1.0 / ((1.0 + (dist / range)) + ((dist * dist) / (range * range)));
+                float fade = 1.0 - smoothstep(range * 0.89999997615814208984375, range, dist);
+                float3 radiance = (((float3(_2058.areaLights[i_2].diffuse) * fast::max(_2058.areaLights[i_2].intensity, 0.0)) * attenuation) * facing) * fade;
+                float3 H = fast::normalize(V + L);
+                float3 param_42 = N;
+                float3 param_43 = H;
+                float param_44 = roughness;
+                float NDF = distributionGGX(param_42, param_43, param_44);
+                float3 param_45 = N;
+                float3 param_46 = V;
+                float3 param_47 = L;
+                float param_48 = roughness;
+                float G = geometrySmith(param_45, param_46, param_47, param_48);
+                float param_49 = fast::max(dot(H, V), 0.0);
+                float3 param_50 = F0;
+                float3 F = fresnelSchlick(param_49, param_50);
+                float3 kS = F;
+                float3 kD = (float3(1.0) - kS) * (1.0 - metallic);
+                float3 numerator = F * (NDF * G);
+                float denominator = fast::max((4.0 * fast::max(dot(N, V), 0.0)) * fast::max(dot(N, L), 0.0), 9.9999997473787516355514526367188e-05);
+                float3 specular = numerator / float3(denominator);
+                float NdotL = fast::max(dot(N, L), 0.0);
+                areaResult += (((((kD * albedo) / float3(3.1415927410125732421875)) + specular) * radiance) * NdotL);
+            }
+        }
     }
-
-    vec3 color = ambient + lighting + iblContribution;
-
-    FragColor = vec4(color, 1.0);
-
-    float brightness = dot(color, vec3(0.2126, 0.7152, 0.0722));
-    if (brightness > 1.0)
-        BrightColor = vec4(color, 1.0);
+    lighting += areaResult * (1.0 - areaShadow);
+    float aoClamped = fast::clamp(ao, 0.0, 1.0);
+    float aoWithFloor = fast::max(aoClamped, 0.20000000298023223876953125);
+    float ambientIntensity = ambientLight.intensity;
+    float3 ambientColor = ambientLight.color.xyz;
+    if (ambientIntensity <= 9.9999997473787516355514526367188e-05)
+    {
+        ambientIntensity = 0.02999999932944774627685546875;
+    }
+    if (dot(ambientColor, ambientColor) <= 9.9999999747524270787835121154785e-07)
+    {
+        ambientColor = float3(1.0);
+    }
+    float3 ambient = ((albedo * ambientIntensity) * ambientColor) * aoWithFloor;
+    float3 iblContribution = float3(0.0);
+    if (_1073.useIBL != 0u)
+    {
+        float3 param_51 = N;
+        float3 irradiance = sampleEnvironmentRadiance(param_51, _163, texture1, texture1Smplr, texture2, texture2Smplr, texture3, texture3Smplr, texture4, texture4Smplr, texture5, texture5Smplr, texture6, texture6Smplr, texture7, texture7Smplr, texture8, te)"
+R"(xture8Smplr, texture9, texture9Smplr, texture10, texture10Smplr);
+        float3 diffuseIBL = irradiance * albedo;
+        float3 reflection = reflect(-V, N);
+        float3 param_52 = reflection;
+        float3 specularEnv = sampleEnvironmentRadiance(param_52, _163, texture1, texture1Smplr, texture2, texture2Smplr, texture3, texture3Smplr, texture4, texture4Smplr, texture5, texture5Smplr, texture6, texture6Smplr, texture7, texture7Smplr, texture8, texture8Smplr, texture9, texture9Smplr, texture10, texture10Smplr);
+        float param_53 = fast::max(dot(N, V), 0.0);
+        float3 param_54 = F0;
+        float3 F_1 = fresnelSchlick(param_53, param_54);
+        float3 kS_1 = F_1;
+        float3 kD_1 = float3(1.0) - kS_1;
+        kD_1 *= (1.0 - metallic);
+        float roughnessAttenuation = mix(1.0, 0.1500000059604644775390625, fast::clamp(roughness, 0.0, 1.0));
+        float3 specularIBL = specularEnv * roughnessAttenuation;
+        iblContribution = ((kD_1 * diffuseIBL) + (kS_1 * specularIBL)) * aoWithFloor;
+    }
+    float3 color = (ambient + lighting) + iblContribution;
+    out.FragColor = float4(color, 1.0);
+    float brightness = dot(color, float3(0.2125999927520751953125, 0.715200006961822509765625, 0.072200000286102294921875));
+    if (brightness > 0.75)
+    {
+        out.BrightColor = float4(color, 1.0);
+    }
     else
-        BrightColor = vec4(0.0, 0.0, 0.0, 1.0);
-
-    FragColor.rgb = acesToneMapping(FragColor.rgb);
+    {
+        out.BrightColor = float4(0.0, 0.0, 0.0, 1.0);
+    }
+    float3 param_55 = out.FragColor.xyz;
+    float3 _2399 = acesToneMapping(param_55);
+    out.FragColor.x = _2399.x;
+    out.FragColor.y = _2399.y;
+    out.FragColor.z = _2399.z;
+    return out;
 }
 )"
 ;
 
 static const char* MAIN_VERT =
-R"(#version 410 core
-layout(location = 0) in vec3 aPos;
-layout(location = 1) in vec4 aColor;
-layout(location = 2) in vec2 aTexCoord;
-layout(location = 3) in vec3 aNormal;
-layout(location = 4) in vec3 aTangent;
-layout(location = 5) in vec3 aBitangent;
-layout(location = 6) in mat4 instanceModel;
+R"(#pragma clang diagnostic ignored "-Wmissing-prototypes"
 
-uniform mat4 model;
-uniform mat4 view;
-uniform mat4 projection;
-uniform bool isInstanced = true;
+#include <metal_stdlib>
+#include <simd/simd.h>
 
-out vec4 outColor;
-out vec2 TexCoord;
-out vec3 Normal;
-out vec3 FragPos;
-out mat3 TBN;
+using namespace metal;
 
-void main() {
-    mat4 modelMatrix = model;
-    if (isInstanced) {
+// Returns the determinant of a 2x2 matrix.
+static inline __attribute__((always_inline))
+float spvDet2x2(float a1, float a2, float b1, float b2)
+{
+    return a1 * b2 - b1 * a2;
+}
+
+// Returns the inverse of a matrix, by using the algorithm of calculating the classical
+// adjoint and dividing by the determinant. The contents of the matrix are changed.
+static inline __attribute__((always_inline))
+float3x3 spvInverse3x3(float3x3 m)
+{
+    float3x3 adj;	// The adjoint matrix (inverse after dividing by determinant)
+
+    // Create the transpose of the cofactors, as the classical adjoint of the matrix.
+    adj[0][0] =  spvDet2x2(m[1][1], m[1][2], m[2][1], m[2][2]);
+    adj[0][1] = -spvDet2x2(m[0][1], m[0][2], m[2][1], m[2][2]);
+    adj[0][2] =  spvDet2x2(m[0][1], m[0][2], m[1][1], m[1][2]);
+
+    adj[1][0] = -spvDet2x2(m[1][0], m[1][2], m[2][0], m[2][2]);
+    adj[1][1] =  spvDet2x2(m[0][0], m[0][2], m[2][0], m[2][2]);
+    adj[1][2] = -spvDet2x2(m[0][0], m[0][2], m[1][0], m[1][2]);
+
+    adj[2][0] =  spvDet2x2(m[1][0], m[1][1], m[2][0], m[2][1]);
+    adj[2][1] = -spvDet2x2(m[0][0], m[0][1], m[2][0], m[2][1]);
+    adj[2][2] =  spvDet2x2(m[0][0], m[0][1], m[1][0], m[1][1]);
+
+    // Calculate the determinant as a combination of the cofactors of the first row.
+    float det = (adj[0][0] * m[0][0]) + (adj[0][1] * m[1][0]) + (adj[0][2] * m[2][0]);
+
+    // Divide the classical adjoint matrix by the determinant.
+    // If determinant is zero, matrix is not invertable, so leave it unchanged.
+    return (det != 0.0f) ? (adj * (1.0f / det)) : m;
+}
+
+struct UBO
+{
+    float4x4 model;
+    float4x4 view;
+    float4x4 projection;
+    uint isInstanced;
+};
+
+struct main0_out
+{
+    float2 TexCoord [[user(locn0)]];
+    float4 outColor [[user(locn1)]];
+    float3 Normal [[user(locn2)]];
+    float3 FragPos [[user(locn3)]];
+    float3 TBN_0 [[user(locn4)]];
+    float3 TBN_1 [[user(locn5)]];
+    float3 TBN_2 [[user(locn6)]];
+    float4 gl_Position [[position, invariant]];
+};
+
+struct main0_in
+{
+    float3 aPos [[attribute(0)]];
+    float4 aColor [[attribute(1)]];
+    float2 aTexCoord [[attribute(2)]];
+    float3 aNormal [[attribute(3)]];
+    float3 aTangent [[attribute(4)]];
+    float3 aBitangent [[attribute(5)]];
+    float4 instanceModel_0 [[attribute(6)]];
+    float4 instanceModel_1 [[attribute(7)]];
+    float4 instanceModel_2 [[attribute(8)]];
+    float4 instanceModel_3 [[attribute(9)]];
+};
+
+vertex main0_out main0(main0_in in [[stage_in]], constant UBO& uniforms [[buffer(0)]])
+{
+    main0_out out = {};
+    float3x3 TBN = {};
+    float4x4 instanceModel = {};
+    instanceModel[0] = in.instanceModel_0;
+    instanceModel[1] = in.instanceModel_1;
+    instanceModel[2] = in.instanceModel_2;
+    instanceModel[3] = in.instanceModel_3;
+    float4x4 modelMatrix = uniforms.model;
+    bool hasInstanceMatrix = abs(instanceModel[3].w) > 0.5;
+    if ((uniforms.isInstanced != 0u) && hasInstanceMatrix)
+    {
         modelMatrix = instanceModel;
     }
-
-    mat4 mvp = projection * view * modelMatrix;
-    gl_Position = mvp * vec4(aPos, 1.0);
-
-    FragPos = vec3(modelMatrix * vec4(aPos, 1.0));
-    TexCoord = aTexCoord;
-    outColor = aColor;
-
-    mat3 normalMatrix = transpose(inverse(mat3(modelMatrix)));
-    Normal = normalize(normalMatrix * aNormal);
-    vec3 N = Normal;
-    vec3 T = normalize(normalMatrix * aTangent);
-    vec3 B = normalize(normalMatrix * aBitangent);
-    TBN = mat3(T, B, N);
+    float4x4 mvp = (uniforms.projection * uniforms.view) * modelMatrix;
+    float4 _56 = float4(in.aPos, 1.0);
+    float4 _57 = mvp * _56;
+    out.gl_Position = _57;
+    out.FragPos = float3((modelMatrix * float4(in.aPos, 1.0)).xyz);
+    out.TexCoord = float2(in.aTexCoord.x, 1.0 - in.aTexCoord.y);
+    out.outColor = in.aColor;
+    float3x3 normalMatrix = transpose(spvInverse3x3(float3x3(modelMatrix[0].xyz, modelMatrix[1].xyz, modelMatrix[2].xyz)));
+    out.Normal = fast::normalize(normalMatrix * in.aNormal);
+    float3 N = out.Normal;
+    float3 T = fast::normalize(normalMatrix * in.aTangent);
+    float3 B = fast::normalize(normalMatrix * in.aBitangent);
+    TBN = float3x3(float3(T), float3(B), float3(N));
+    out.TBN_0 = TBN[0];
+    out.TBN_1 = TBN[1];
+    out.TBN_2 = TBN[2];
+    return out;
 }
 )"
 ;
 
 static const char* PARTICLE_FRAG =
-R"(#version 410 core
-in vec2 fragTexCoord;
-in vec4 fragColor;
-out vec4 FragColor;
-uniform sampler2D particleTexture;
-uniform bool useTexture;
+R"(#include <metal_stdlib>
+#include <simd/simd.h>
 
-void main() {
-    if (useTexture) {
-        vec4 texColor = texture(particleTexture, fragTexCoord);
-        if (texColor.a < 0.01) discard;
-        FragColor = texColor * fragColor;
-    } else {
-        vec2 center = vec2(0.5, 0.5);
-        float dist = distance(fragTexCoord, center);
-        
-        float alpha = 1.0 - smoothstep(0.3, 0.5, dist);
-        
-        FragColor = vec4(fragColor.rgb, fragColor.a * alpha);
-        
-        if (FragColor.a < 0.01) discard;
+using namespace metal;
+
+struct Params
+{
+    uint useTexture;
+};
+
+struct main0_out
+{
+    float4 FragColor [[color(0)]];
+};
+
+struct main0_in
+{
+    float2 fragTexCoord [[user(locn0)]];
+    float4 fragColor [[user(locn1)]];
+};
+
+fragment main0_out main0(main0_in in [[stage_in]], constant Params& _9 [[buffer(0)]], texture2d<float> particleTexture [[texture(0)]], sampler particleTextureSmplr [[sampler(0)]])
+{
+    main0_out out = {};
+    if (_9.useTexture != 0u)
+    {
+        float4 texColor = particleTexture.sample(particleTextureSmplr, in.fragTexCoord);
+        if (texColor.w < 0.00999999977648258209228515625)
+        {
+            discard_fragment();
+        }
+        out.FragColor = texColor * in.fragColor;
     }
-})"
+    else
+    {
+        float2 center = float2(0.5);
+        float dist = distance(in.fragTexCoord, center);
+        float alpha = 1.0 - smoothstep(0.300000011920928955078125, 0.5, dist);
+        out.FragColor = float4(in.fragColor.xyz, in.fragColor.w * alpha);
+        if (out.FragColor.w < 0.00999999977648258209228515625)
+        {
+            discard_fragment();
+        }
+    }
+    return out;
+}
+
+)"
 ;
 
 static const char* PARTICLE_VERT =
-R"(#version 410 core
+R"(#include <metal_stdlib>
+#include <simd/simd.h>
 
-layout(location = 0) in vec3 quadVertex;
-layout(location = 1) in vec2 texCoord;
+using namespace metal;
 
-layout(location = 2) in vec3 particlePos;
-layout(location = 3) in vec4 particleColor;
-layout(location = 4) in float particleSize;
+struct UniformBufferObject
+{
+    float4x4 view;
+    float4x4 projection;
+    float4x4 model;
+    uint isAmbient;
+};
 
-uniform mat4 view;
-uniform mat4 projection;
-uniform mat4 model;
-uniform bool isAmbient;
+struct main0_out
+{
+    float2 fragTexCoord [[user(locn0)]];
+    float4 fragColor [[user(locn1)]];
+    float4 gl_Position [[position]];
+};
 
-out vec2 fragTexCoord;
-out vec4 fragColor;
+struct main0_in
+{
+    float3 quadVertex [[attribute(0)]];
+    float2 texCoord [[attribute(1)]];
+    float3 particlePos [[attribute(2)]];
+    float4 particleColor [[attribute(3)]];
+    float particleSize [[attribute(4)]];
+};
 
-void main() {
-    if (isAmbient) {
-        vec4 viewParticlePos = view * vec4(particlePos, 1.0);
+vertex main0_out main0(main0_in in [[stage_in]], constant UniformBufferObject& _12 [[buffer(0)]])
+{
+    main0_out out = {};
+    if (_12.isAmbient != 0u)
+    {
+        float4 viewParticlePos = _12.view * float4(in.particlePos, 1.0);
+        float3 viewPosition = viewParticlePos.xyz + float3(in.quadVertex.x * in.particleSize, in.quadVertex.y * in.particleSize, 0.0);
+        out.gl_Position = (_12.projection * _12.model) * float4(viewPosition, 1.0);
+    }
+    else
+    {
+        float3 cameraRight = float3(_12.view[0].x, _12.view[1].x, _12.view[2].x);
+        float3 cameraUp = float3(_12.view[0].y, _12.view[1].y, _12.view[2].y);
+        float3 worldPosition = (in.particlePos + ((cameraRight * in.quadVertex.x) * in.particleSize)) + ((cameraUp * in.quadVertex.y) * in.particleSize);
+        out.gl_Position = (_12.projection * _12.view) * float4(worldPosition, 1.0);
+    }
+    out.fragTexCoord = in.texCoord;
+    out.fragColor = in.particleColor;
+    return out;
+}
 
-        vec3 viewPosition =
-            viewParticlePos.xyz +
-            vec3(quadVertex.x * particleSize, quadVertex.y * particleSize, 0.0);
+)"
+;
 
-        gl_Position = projection * model * vec4(viewPosition, 1.0);
+static const char* PATH =
+R"(#include <metal_stdlib>
+#include <metal_raytracing>
+using namespace metal;
+using namespace raytracing;
+
+struct CameraUniforms {
+    float4x4 invViewProj;
+    float3 camPos;
+    float _pad0;
+};
+
+struct Material {
+    float4 albedo;
+    float metallic;
+    float roughness;
+    float ao;
+    float emissiveIntensity;
+    packed_float3 emissiveColor;
+    float _pad0;
+    int albedoTextureIndex;
+    int normalTextureIndex;
+    int metallicTextureIndex;
+    int roughnessTextureIndex;
+    int aoTextureIndex;
+    int opacityTextureIndex;
+    float _pad1[2];
+
+    float transmittance;
+    float ior;
+    float _pad2[2];
+};
+
+struct MeshData {
+    uint vertexOffset;
+    uint indexOffset;
+    uint _pad0;
+    uint _pad1;
+};
+
+struct VertexData {
+    packed_float3 normal;
+    packed_float2 uv;
+    packed_float3 tangent;
+    packed_float3 bitangent;
+};
+
+struct InstanceData {
+    float4x4 model;
+    float4 normalCol0;
+    float4 normalCol1;
+    float4 normalCol2;
+};
+
+struct DirectionalLightData {
+    float3 direction;
+    float intensity;
+    float3 color;
+    float _pad0;
+};
+
+struct PointLight {
+    packed_float3 position;
+    float intensity;
+    packed_float3 color;
+    float range;
+};
+
+struct SpotLight {
+    packed_float3 position;
+    float intensity;
+
+    packed_float3 direction;
+    float innerCos;
+    packed_float3 color;
+    float outerCos;
+
+    float range;
+    float _pad0[3];
+};
+
+struct AreaLight {
+    packed_float3 position;
+    float intensity;
+
+    packed_float3 right;
+    float halfWidth;
+
+    packed_float3 up;
+    float halfHeight;
+
+    packed_float3 color;
+    float twoSided;
+};
+
+struct SceneData {
+    uint numDirectionalLights;
+    uint numPointLights;
+    uint numSpotLights;
+    uint numAreaLights;
+
+    uint frameIndex;
+    uint raysPerPixel;
+    uint maxBounces;
+    float indirectStrength;
+    float ambientIntensity;
+    uint materialTextureCount;
+    uint _pad0;
+};
+
+float pow5(float x) {
+    float x2 = x * x;
+    return x2 * x2 * x;
+}
+
+float luminance(float3 c) { return dot(c, float3(0.2126, 0.7152, 0.0722)); }
+
+float3 clampLuminance(float3 c, float maxL) {
+    float l = luminance(c);
+    if (l > maxL && l > 1e-6) {
+        c *= maxL / l;
+    }
+    return c;
+}
+
+uint wang_hash(uint s) {
+    s = (s ^ 61u) ^ (s >> 16u);
+    s *= 9u;
+    s = s ^ (s >> 4u);
+    s *= 0x27d4eb2du;
+    s = s ^ (s >> 15u);
+    return s;
+}
+
+float rand(thread uint &state) {
+    state = wang_hash(state);
+    return float(state) / 4294967296.0;
+}
+
+uint seedBase(uint2 gid, uint w, uint frame, uint sampleIndex) {
+    return gid.x + gid.y * w + frame * 9781u + sampleIndex * 6271u + 1u;
+}
+
+constexpr sampler skyboxSampler(coord::normalized, address::clamp_to_edge,
+                                filter::linear, mip_filter::linear);
+
+float3 skyColor(float3 dir, float intensity, texturecube<float> skybox) {
+    float3 sampleDir = dir;
+    float len2 = dot(sampleDir, sampleDir);
+    if (len2 > 1e-10) {
+        sampleDir *= rsqrt(len2);
     } else {
-        vec3 cameraRight = vec3(view[0][0], view[1][0], view[2][0]);
-        vec3 cameraUp = vec3(view[0][1], view[1][1], view[2][1]);
+        sampleDir = float3(0.0, 1.0, 0.0);
+    }
+    float3 sky = skybox.sample(skyboxSampler, sampleDir).xyz;
+    float scale = intensity > 0.0 ? intensity : 1.0;
+    return sky * scale;
+}
 
-        vec3 worldPosition = particlePos +
-                             (quadVertex.x * cameraRight * particleSize) +
-                             (quadVertex.y * cameraUp * particleSize);
+float3 cosineSampleHemisphere(float2 u) {
+    float r = sqrt(u.x);
+    float theta = 2.0 * M_PI_F * u.y;
 
-        gl_Position = projection * view * vec4(worldPosition, 1.0);
+    float x = r * cos(theta);
+    float y = r * sin(theta);
+    float z = sqrt(max(0.0, 1.0 - u.x));
+
+    return float3(x, y, z);
+}
+
+float3x3 buildOrthonormalBasis(float3 N) {
+    float3 T = normalize(abs(N.x) > 0.1 ? cross(float3(0, 1, 0), N)
+                                        : cross(float3(1, 0, 0), N));
+    float3 B = cross(N, T);
+    return float3x3(T, B, N);
+}
+
+float3 normalizeOr(float3 v, float3 fallback) {
+    float len2 = dot(v, v);
+    if (len2 > 1e-10) {
+        return v * rsqrt(len2);
+    }
+    return fallback;
+}
+
+constexpr sampler materialTexSampler(coord::normalized, address::repeat,
+                                     filter::linear, mip_filter::linear);
+
+#define PT_MATERIAL_TEXTURE_PARAMS                                             \
+    texture2d<float> materialTexture0, texture2d<float> materialTexture1,      \
+        texture2d<float> materialTexture2, texture2d<float> materialTexture3,  \
+        texture2d<float> materialTexture4, texture2d<float> materialTexture5,  \
+        texture2d<float> materialTexture6, texture2d<float> materialTexture7,  \
+        texture2d<float> materialTexture8, texture2d<float> materialTexture9,  \
+        texture2d<float> materialTexture10,                                    \
+        texture2d<float> materialTexture11,                                    \
+        texture2d<float> materialTexture12,                                    \
+        texture2d<float> materialTexture13,                                    \
+        texture2d<float> materialTexture14,                                    \
+        texture2d<float> materialTexture15,                                    \
+        texture2d<float> materialTexture16,                                    \
+        texture2d<float> materialTexture17,                                    \
+        texture2d<float> materialTexture18,                                    \
+        texture2d<float> materialTexture19,                                    \
+        texture2d<float> materialTexture20,                                    \
+        texture2d<float> materialTexture21,                                    \
+        texture2d<float> materialTexture22,                                    \
+        texture2d<float> materialTexture23,                                    \
+        texture2d<float> materialTexture24,                                    \
+        texture2d<float> materialTexture25,                                    \
+        texture2d<float> materialTexture26,                                    \
+        texture2d<float> materialTexture27,                                    \
+        texture2d<float> materialTexture28,                                    \
+        texture2d<float> materialTexture29,                                    \
+        texture2d<float> materialTexture30,                                    \
+        texture2d<float> materialTexture31,                                    \
+        texture2d<float> materialTexture32,                                    \
+        texture2d<float> materialTexture33,                                    \
+        texture2d<float> materialTexture34,                                    \
+        texture2d<float> materialTexture35,                                    \
+        texture2d<float> materialTexture36,                                    \
+        texture2d<float> materialTexture37,                                    \
+        texture2d<float> materialTexture38,                                    \
+        texture2d<float> materialTexture39,                                    \
+        texture2d<float> materialTexture40,                                    \
+        texture2d<float> materialTexture41,                                    \
+        texture2d<float> materialTexture42,                                    \
+        texture2d<float> materialTexture43,                                    \
+        texture2d<float> materialTexture44,                                    \
+        texture2d<float> materialTexture45,                                    \
+        texture2d<float> materialTexture46, texture2d<float> materialTexture47
+
+#define PT_MATERIAL_TEXTURE_ARGS                                               \
+    materialTexture0, materialTexture1, materialTexture2, materialTexture3,    \
+        materialTexture4, materialTexture5, materialTexture6,                  \
+        materialTexture7, materialTexture8, materialTexture9,                  \
+        materialTexture10, materialTexture11, materialTexture12,               \
+        materialTexture13, materialTexture14, materialTexture15,               \
+        materialTexture16, materialTexture17, materialTexture18,               \
+        materialTexture19, materialTexture20, materialTexture21,               \
+        materialTexture22, materialTexture23, materialTexture24,               \
+        materialTexture25, materialTexture26, materialTexture27,               \
+        materialTexture28, materialTexture29, materialTexture30,               \
+        materialTexture31, materialTexture32, materialTexture33,               \
+        materialTexture34, materialTexture35, materialTexture36,               \
+        materialTexture37, materialTexture38, materialTexture39,               \
+        materialTexture40, materialTexture41, materialTexture42,               \
+        materialTexture43, materialTexture44, materialTexture45,               \
+        materialTexture46, materialTexture47
+
+#define PT_MATERIAL_TEXTURE_BINDINGS                                           \
+    texture2d<float> materialTexture0 [[texture(12)]],                         \
+        texture2d<float> materialTexture1 [[texture(13)]],                     \
+        texture2d<float> materialTexture2 [[texture(14)]],                     \
+        texture2d<float> materialTexture3 [[texture(15)]],                     \
+        texture2d<float> materialTexture4 [[texture(16)]],                     \
+        texture2d<float> materialTexture5 [[texture(17)]],                     \
+        texture2d<float> materialTexture6 [[texture(18)]],                     \
+        texture2d<float> materialTexture7 [[texture(19)]],                     \
+        texture2d<float> materialTexture8 [[texture(20)]],                     \
+        texture2d<float> materialTexture9 [[texture(21)]],                     \
+        texture2d<float> materialTexture10 [[texture(22)]],                    \
+        texture2d<float> materialTexture11 [[texture(23)]],                    \
+        texture2d<float> materialTexture12 [[texture(24)]],                    \
+        texture2d<float> materialTexture13 [[texture(25)]],                    \
+        texture2d<float> materialTexture14 [[texture(26)]],                    \
+        texture2d<float> materialTexture15 [[texture(27)]],                    \
+        texture2d<float> materialTexture16 [[texture(28)]],                    \
+        texture2d<float> materialTexture17 [[texture(29)]],                    \
+        texture2d<float> materialTexture18 [[texture(30)]],                    \
+        texture2d<float> materialTexture19 [[texture(31)]],                    \
+        texture2d<float> materialTexture20 [[texture(32)]],                    \
+        texture2d<float> materialTexture21 [[texture(33)]],                    \
+        texture2d<float> materialTexture22 [[texture(34)]],                    \
+        texture2d<float> materialTexture23 [[texture(35)]],                    \
+        texture2d<float> materialTexture24 [[texture(36)]],                    \
+        texture2d<float> materialTexture25 [[texture(37)]],                    \
+        texture2d<float> materialTexture26 [[texture(38)]],                    \
+        texture2d<float> materialTexture27 [[texture(39)]],                    \
+        texture2d<float> materialTexture28 [[texture(40)]],                    \
+        texture2d<float> materialTexture29 [[texture(41)]],                    \
+        texture2d<float> materialTexture30 [[texture(42)]],                    \
+        texture2d<float> materialTexture31 [[texture(43)]],                    \
+        texture2d<float> materialTexture32 [[texture(44)]],                    \
+        texture2d<float> materialTexture33 [[texture(45)]],                    \
+        texture2d<float> materialTexture34 [[texture(46)]],                    \
+        texture2d<float> materialTexture35 [[texture(47)]],                    \
+        texture2d<float> materialTexture36 [[texture(48)]],                    \
+        texture2d<float> materialTexture37 [[texture(49)]],                    \
+        texture2d<float> materialTexture38 [[texture(50)]],                    \
+        texture2d<float> materialTexture39 [[texture(51)]],                    \
+        texture2d<float> materialTexture40 [[texture(52)]],                    \
+        texture2d<float> materialTexture41 [[texture(53)]],                    \
+        texture2d<float> materialTexture42 [[texture(54)]],                    \
+        texture2d<float> materialTexture43 [[texture(55)]],                    \
+        texture2d<float> materialTexture44 [[texture(56)]],                    \
+        texture2d<float> materialTexture45 [[texture(57)]],                    \
+        texture2d<float> materialTexture46 [[texture(58)]],                    \
+        texture2d<float> materialTexture47 [[texture(59)]]
+
+float4 sampleMaterialTexture(int textureIndex, float2 uv,
+                             PT_MATERIAL_TEXTURE_PARAMS) {
+    switch (textureIndex) {
+    case 0:
+        return materialTexture0.sample(materialTexSampler, uv);
+    case 1:
+        return materialTexture1.sample(materialTexSampler, uv);
+    case 2:
+        return materialTexture2.sample(materialTexSampler, uv);
+    case 3:
+        return materialTexture3.sample(materialTexSampler, uv);
+    case 4:
+        return materialTexture4.sample(materialTexSampler, uv);
+    case 5:
+        return materialTexture5.sample(materialTexSampler, uv);
+    case 6:
+        return materialTexture6.sample(materialTexSampler, uv);
+    case 7:
+        return materialTexture7.sample(materialTexSampler, uv);
+    case 8:
+        return materialTexture8.sample(materialTexSampler, uv);
+    case 9:
+        return materialTexture9.sample(materialTexSampler, uv);
+    case 10:
+        return materialTexture10.sample(materialTexSampler, uv);
+    case 11:
+        return materialTexture11.sample(materialTexSampler, uv);
+    case 12:
+        return materialTexture12.sample(materialTexSampler, uv);
+    case 13:
+        return materialTexture13.sample(materialTexSampler, uv);
+    case 14:
+        return materialTexture14.sample(materialTexSampler, uv);
+    case 15:
+        return materialTexture15.sample(materialTexSampler, uv);
+    case 16:
+        return materialTexture16.sample(materialTexSampler, uv);
+    case 17:
+        return materialTexture17.sample(materialTexSampler, uv);
+    case 18:
+        return materialTexture18.sample(materialTexSampler, uv);
+    case 19:
+        return materialTexture19.sample(materialTexSampler, uv);
+    case 20:
+        return materialTexture20.sample(materialTexSampler, uv);
+    case 21:
+        return materialTexture21.sample(materialTexSampler, uv);
+    case 22:
+        return materialTexture22.sample(materialTexSampler, uv);
+    case 23:
+        return materialTexture23.sample(materialTexSampler, uv);
+    case 24:
+        return materialTexture24.sample(materialTexSampler, uv);
+    case 25:
+        return materialTexture25.sample(materialTexSampler, uv);
+    case 26:
+        return materialTexture26.sample(materialTexSampler, uv);
+    case 27:
+        return materialTexture27.sample(materialTexSampler, uv);
+    case 28:
+        return materialTexture28.sample(materialTexSampler, uv);
+    case 29:
+        return materialTexture29.sample(materialTexSampler, uv);
+    case 30:
+        return materialTexture30.sample(materialTexSampler, uv);
+    case 31:
+        return materialTexture31.sample(materialTexSampler, uv);
+    case 32:
+        return materialTexture32.sample(materialTexSampler, uv);
+    case 33:
+        return materialTexture33.sample(materialTexSampler, uv);
+    case 34:
+        return materialTexture34.sample(materialTexSampler, uv);
+    case 35:
+        return materialTexture35.sample(materialTexSampler, uv);
+    case 36:
+        return materialTexture36.sample(materialTexSampler, uv);
+    case 37:
+        return materialTexture37.sample(materialTexSampler, uv);
+    case 38:
+        return materialTexture38.sample(materialTexSampler, uv);
+    case 39:
+        return materialTexture39.sample(materialTexSampler, uv);
+    case 40:
+        return materialTexture40.sample(materialTexSampler, uv);
+    case 41:
+        return materialTexture41.sample(materialTexSampler, uv);
+    case 42:
+        return materialTexture42.sample(materialTexSampler, uv);
+    case 43:
+        return materialTexture43.sample(materialTexSampler, uv);
+    case 44:
+        return materialTexture44.sample(materialTexSampler, uv);
+    case 45:
+        return materialTexture45.sample(materialTexSampler, uv);
+    case 46:
+        return materialTexture46.sample(materialTexSampler, uv);
+    case 47:
+        return materialTexture47.sample(materialTexSampler, uv);
+    default:
+        break;
+    }
+    return float4(0.0);
+}
+
+void resolveMaterialParameters(Material mat, float2 uv, uint textureCount,
+                               PT_MATERIAL_TEXTURE_PARAMS,
+                               thread float3 &albedo, thread float &metallic,
+                               thread float &roughness, thread float &ao,
+                               thread float3 &emissive, thread float &outIor,
+                               thread float &outTransmittance) {
+    albedo = clamp(mat.albedo.xyz, float3(0.0), float3(1.0));
+    metallic = mat.metallic;
+    roughness = mat.roughness;
+    ao = mat.ao;
+    emissive = clampLuminance(float3(mat.emissiveColor) *
+                                  min(max(mat.emissiveIntensity, 0.0), 8.0),
+                              8.0);
+
+    outIor = max(mat.ior, 1.0);
+    outTransmittance = clamp(mat.transmittance, 0.0, 1.0);
+
+    if (mat.albedoTextureIndex >= 0 &&
+        uint(mat.albedoTextureIndex) < textureCount) {
+        albedo *= clamp(sampleMaterialTexture(mat.albedoTextureIndex, uv,
+                                              PT_MATERIAL_TEXTURE_ARGS)
+                            .xyz,
+                        float3(0.0), float3(1.0));
+    }
+    if (mat.metallicTextureIndex >= 0 &&
+        uint(mat.metallicTextureIndex) < textureCount) {
+        float4 metallicSample = sampleMaterialTexture(
+            mat.metallicTextureIndex, uv, PT_MATERIAL_TEXTURE_ARGS);
+        float metallicValue = metallicSample.x;
+        if (mat.roughnessTextureIndex == mat.metallicTextureIndex) {
+            metallicValue = metallicSample.z;
+        }
+        metallic *= clamp(metallicValue, 0.0, 1.0);
+    }
+    if (mat.roughnessTextureIndex >= 0 &&
+        uint(mat.roughnessTextureIndex) < textureCount) {
+        float4 roughnessSample = sampleMaterialTexture(
+            mat.roughnessTextureIndex, uv, PT_MATERIAL_TEXTURE_ARGS);
+        float roughnessValue = roughnessSample.x;
+        if (mat.roughnessTextureIndex == mat.metallicTextureIndex) {
+            roughnessValue = roughnessSample.y;
+        }
+        roughness *= clamp(roughnessValue, 0.0, 1.0);
+    }
+    if (mat.aoTextureIndex >= 0 && uint(mat.aoTextureIndex) < textureCount) {
+        ao *= clamp(sampleMaterialTexture(mat.aoTextureIndex, uv,
+                                          PT_MATERIAL_TEXTURE_ARGS)
+                        .x,
+                    0.0, 1.0);
     }
 
-    fragTexCoord = texCoord;
-    fragColor = particleColor;
-})"
+    albedo = clamp(albedo, float3(0.0), float3(1.0));
+    metallic = clamp(metallic, 0.0, 1.0);
+    roughness = clamp(roughness, 0.001, 1.0);
+    ao = clamp(ao, 0.0, 1.0);
+}
+
+float3 resolveShadingNormal(Material mat, float2 uv, float3 localN,
+                            float3 localT, float3 localB, InstanceData inst,
+                            uint textureCount, PT_MATERIAL_TEXTURE_PARAMS) {
+    float3x3 normalMatrix =
+        float3x3(inst.normalCol0.xyz, inst.normalCol1.xyz, inst.normalCol2.xyz);
+    float3 N = normalizeOr(normalMatrix * localN, float3(0.0, 1.0, 0.0));
+
+    float3 T = normalizeOr((inst.model * float4(localT, 0.0)).xyz,
+                           float3(1.0, 0.0, 0.0));
+    float3 B = normalizeOr((inst.model * float4(localB, 0.0)).xyz,
+                           float3(0.0, 0.0, 1.0));
+    T = normalizeOr(T - N * dot(N, T), float3(1.0, 0.0, 0.0));
+    B = normalizeOr(B - N * dot(N, B), cross(N, T));
+    if (dot(cross(T, B), cross(T, B)) <= 1e-10) {
+        float3x3 basis = buildOrthonormalBasis(N);
+        T = basis[0];
+        B = basis[1];
+    }
+
+    bool useNormalMap = mat._pad1[0] != 0;
+    float normalStrength = max(mat._pad0, 0.0f);
+    if (useNormalMap && normalStrength > 0.0 && mat.normalTextureIndex >= 0 &&
+        uint(mat.normalTextureIndex) < textureCount) {
+        float3 tangentNormal = sampleMaterialTexture(mat.normalTextureIndex, uv,
+                                                     PT_MATERIAL_TEXTURE_ARGS)
+                                   .xyz;
+        tangentNormal = tangentNormal * 2.0 - 1.0;
+        tangentNormal.xy *= normalStrength;
+        tangentNormal = normalizeOr(tangentNormal, float3(0.0, 0.0, 1.0));
+        N = normalizeOr(float3x3(T, B, N) * tangentNormal, N);
+    }
+
+    return N;
+}
+
+float3 lambert(float3 albedo, float3 N, float3 L, float3 lightColor,
+               float intensity) {
+    float ndl = max(dot(N, L), 0.0);
+    return albedo * lightColor * intensity * ndl;
+}
+
+bool isOccluded(intersector<triangle_data, instancing> isect,
+                instance_acceleration_structure sceneAS, float3 P, float3 N,
+                float3 L, float maxDistance) {
+    float ndlAbs = abs(dot(N, L));
+    float shadowBias = mix(0.003, 0.0008, ndlAbs);
+    ray shadowRay;
+    shadowRay.origin = P + N * shadowBias;
+    shadowRay.direction = L;
+    shadowRay.min_distance = shadowBias;
+    shadowRay.max_distance = max(maxDistance - shadowBias, shadowBias + 1e-4);
+
+    auto shadowHit = isect.intersect(shadowRay, sceneAS, 0xFF);
+    return shadowHit.type != intersection_type::none;
+}
+
+bool isOccludedDirectionalLight(DirectionalLightData light, float3 P, float3 N,
+                                thread uint &rng,
+                                intersector<triangle_data, instancing> isect,
+                                instance_acceleration_structure sceneAS) {
+    float3 baseL = normalize(-light.direction);
+    float3x3 basis = buildOrthonormalBasis(baseL);
+    float sunRadius = 0.0025;
+    float2 u = float2(rand(rng), rand(rng));
+    float r = sunRadius * sqrt(u.x);
+    float phi = 2.0 * M_PI_F * u.y;
+    float3 jittered =
+        baseL + basis[0] * (r * cos(phi)) + basis[1] * (r * sin(phi));
+    float3 L = normalize(jittered);
+    return isOccluded(isect, sceneAS, P, N, L, 1e30);
+}
+
+bool isOccludedPointLight(PointLight light, float3 P, float3 N,
+                          thread uint &rng,
+                          intersector<triangle_data, instancing> isect,
+                          instance_acceleration_structure sceneAS) {
+    float lightRadius = clamp(light.range * 0.006, 0.005, 0.04);
+    float2 u = float2(rand(rng), rand(rng));
+    float z = u.x * 2.0 - 1.0;
+    float r = sqrt(max(0.0, 1.0 - z * z));
+    float phi = 2.0 * M_PI_F * u.y;
+    float3 sphereOffset =
+        float3(r * cos(phi), r * sin(phi), z) * lightRadius;
+    float3 sampledLightPos = light.position + sphereOffset;
+
+    float3 toLight = sampledLightPos - P;
+    float dist2 = max(dot(toLight, toLight), 0.001);
+    float dist = sqrt(dist2);
+    float3 L = toLight / dist;
+    return isOccluded(isect, sceneAS, P, N, L, dist - 0.001);
+}
+
+bool isOccludedSpotLight(SpotLight light, float3 P, float3 N,
+                         thread uint &rng,
+                         intersector<triangle_data, instancing> isect,
+                         instance_acceleration_structure sceneAS) {
+    float lightRadius = clamp(light.range * 0.004, 0.004, 0.03);
+    float2 u = float2(rand(rng), rand(rng));
+    float z = u.x * 2.0 - 1.0;
+    float r = sqrt(max(0.0, 1.0 - z * z));
+    float phi = 2.0 * M_PI_F * u.y;
+    float3 sphereOffset =
+        float3(r * cos(phi), r * sin(phi), z) * lightRadius;
+    float3 sampledLightPos = light.position + sphereOffset;
+
+    float3 toLight = sampledLightPos - P;
+    float dist2 = max(dot(toLight, toLight), 1e-4);
+    float dist = sqrt(dist2);
+    float3 L = toLight / dist;
+    return isOccluded(isect, sceneAS, P, N, L, dist - 0.001);
+}
+
+bool isOccludedAreaLight(AreaLight light, float3 P, float3 N,
+                         thread uint &rng,
+                         intersector<triangle_data, instancing> isect,
+                         instance_acceleration_structure sceneAS) {
+    float2 u = float2(rand(rng), rand(rng));
+    float2 rect = (u * 2.0 - 1.0) * 0.25;
+    float3 sampledLightPos = light.position + light.right * rect.x +
+                             light.up * rect.y;
+
+    float3 toLight = sampledLightPos - P;
+    float dist2 = max(dot(toLight, toLight), 1e-4);
+    float dist = sqrt(dist2);
+    float3 L = toLight / dist;
+    return isOccluded(isect, sceneAS, P, N, L, dist - 0.001);
+}
+
+// ---------------------------------------------------------------------------
+// PBR helpers: GGX / Cook-Torrance
+// ---------------------------------------------------------------------------
+
+float D_GGX(float NdotH, float roughness) {
+    float a = max(roughness * roughness, 1e-4);
+    float a2 = a * a;
+    float d = (NdotH * NdotH) * (a2 - 1.0) + 1.0;
+    return a2 / max(M_PI_F * d * d, 1e-6);
+}
+
+float3 F_Schlick(float cosTheta, float3 F0) {
+    float c = clamp(1.0 - cosTheta, 0.0, 1.0);
+    return F0 + (1.0 - F0) * pow5(c);
+}
+
+float G_Smith(float NdotV, float NdotL, float roughness) {
+    float r = roughness + 1.0;
+    float k = (r * r) / 8.0;
+    float gV = NdotV / (NdotV * (1.0 - k) + k);
+    float gL = NdotL / (NdotL * (1.0 - k) + k);
+    return gV * gL;
+}
+
+float disneyDiffuseFactor(float NdotV, float NdotL, float LdotH,
+                          float roughness) {
+    float fd90 = 0.5 + 2.0 * LdotH * LdotH * roughness;
+    float lightScatter = 1.0 + (fd90 - 1.0) * pow5(1.0 - NdotL);
+    float viewScatter = 1.0 + (fd90 - 1.0) * pow5(1.0 - NdotV);
+    return lightScatter * viewScatter;
+}
+
+// GGX importance-sampled microfacet half-vector (in local TBN space, Z=up)
+float3 sampleGGX(float2 u, float roughness) {
+    float a = roughness * roughness;
+    float phi = 2.0 * M_PI_F * u.x;
+    float cosTheta = sqrt((1.0 - u.y) / max(1.0 + (a * a - 1.0) * u.y, 1e-7));
+    float sinTheta = sqrt(max(0.0, 1.0 - cosTheta * cosTheta));
+    return float3(sinTheta * cos(phi), sinTheta * sin(phi), cosTheta);
+}
+
+// Full Cook-Torrance PBR for a single analytic light
+float3 evalPBR(float3 albedo, float metallic, float roughness, float3 N,
+               float3 V, float3 L, float3 lightColor, float intensity) {
+    float3 H = normalize(V + L);
+    float NdotL = max(dot(N, L), 0.0);
+    float NdotV = max(dot(N, V), 1e-4);
+    float NdotH = max(dot(N, H), 0.0);
+    float VdotH = max(dot(V, H), 0.0);
+
+    float clampedRoughness = clamp(roughness, 0.045, 1.0);
+    float3 F0 = mix(float3(0.04), albedo, clamp(metallic, 0.0, 1.0));
+    float3 F = F_Schlick(VdotH, F0);
+    float D = D_GGX(NdotH, clampedRoughness);
+    float G = G_Smith(NdotV, NdotL, clampedRoughness);
+
+    float3 specular = (D * G * F) / max(4.0 * NdotV * NdotL, 1e-4);
+    float3 kD = (1.0 - F) * (1.0 - clamp(metallic, 0.0, 1.0));
+    float diffuseFactor = disneyDiffuseFactor(NdotV, NdotL, max(dot(L, H), 0.0),
+                                              clampedRoughness);
+    float3 diffuse = (kD * albedo * diffuseFactor) / M_PI_F;
+
+    return (diffuse + specular) * lightColor * intensity * NdotL;
+}
+
+float3 evalSubsurface(float3 albedo, float3 N, float3 V, float3 L,
+                      float3 lightColor, float intensity, float roughness,
+                      float sssStrength, float sssThickness) {
+    float NdotL = dot(N, L);
+    float NdotV = max(dot(N, V), 0.0);
+    float backLit = clamp(-NdotL, 0.0, 1.0);
+    float wrapAmount = mix(0.2, 0.7, clamp(roughness, 0.0, 1.0));
+    float wrapped = clamp((NdotL + wrapAmount) / (1.0 + wrapAmount), 0.0, 1.0);
+    float viewScatter = pow(clamp(1.0 - max(dot(V, L), 0.0), 0.0, 1.0), 2.0);
+    float transmission = backLit * (0.35 + 0.65 * viewScatter);
+    float diffuseBleed = wrapped * (0.5 + 0.5 * (1.0 - NdotV));
+    float profile = mix(diffuseBleed, transmission, 0.65);
+    float thicknessFalloff = exp(-max(sssThickness, 0.01) * (1.0 - backLit));
+    return (albedo * lightColor * intensity * sssStrength * profile *
+            thicknessFalloff) /
+           M_PI_F;
+}
+
+float3 evalTransmission(float3 albedo, float3 N, float3 V, float3 L,
+                        float3 lightColor, float intensity, float roughness,
+                        float ior) {
+    float3 H = normalize(V + L);
+    float NdotL = max(dot(N, -L), 0.0);
+    float VdotH = max(dot(V, H), 0.0);
+    float3 F0 = float3(pow((ior - 1.0) / (ior + 1.0), 2.0));
+    float3 F = F_Schlick(VdotH, F0);
+    float3 transmitTint = mix(float3(1.0), albedo, 0.1);
+    float3 transmitFactor = (1.0 - F) * transmitTint;
+    float D = D_GGX(max(dot(N, H), 0.0), roughness);
+    return transmitFactor * lightColor * intensity * D * NdotL * 2.2 / M_PI_F;
+}
+
+// ---------------------------------------------------------------------------
+// Direct lighting with full PBR (replaces old evalDirectLighting)
+// ---------------------------------------------------------------------------
+
+float3 evalDirectLightingPBR(intersector<triangle_data, instancing> isect,
+                             instance_acceleration_structure sceneAS, float3 P,
+                             float3 N, float3 V, float3 albedo, float metallic,
+                             float roughness, float ior, float transmittance,
+                             float sssStrength, float sssThickness,
+                             thread uint &rng,
+                             constant DirectionalLightData &dirLight,
+                             constant SceneData &sceneData,
+                             constant PointLight *pointLights,
+                             constant SpotLight *spotLights,
+                             constant AreaLight *areaLights) {
+    float3 lighting = float3(0.0);
+    float surfaceOpacity =
+        clamp(1.0 - transmittance * (1.0 - metallic), 0.0, 1.0);
+
+    // Directional
+    if (sceneData.numDirectionalLights > 0) {
+        float3 L = normalize(-dirLight.direction);
+        float3 c = evalPBR(albedo, metallic, roughness, N, V, L, dirLight.color,
+                           max(dirLight.intensity, 0.0));
+        float3 s = evalSubsurface(albedo, N, V, L, dirLight.color,
+                                  max(dirLight.intensity, 0.0), roughness,
+                                  sssStrength, sssThickness);
+        float3 t =
+            evalTransmission(albedo, N, V, L, dirLight.color,
+                             max(dirLight.intensity, 0.0), roughness, ior) *
+            transmittance;
+        if (!isOccludedDirectionalLight(dirLight, P, N, rng, isect, sceneAS)) {
+            float3 lightContribution = clampLuminance((c + s) * surfaceOpacity, 8.0);
+            lighting += lightContribution;
+            lighting += clampLuminance(t, 12.0);
+        }
+    }
+
+    // Point lights
+    for (uint i = 0; i < sceneData.numPointLights; ++i) {
+        float3 toLight = pointLights[i].position - P;
+        float dist = max(length(toLight), 1e-4);
+        float3 L = toLight / dist;
+        float lightRange = max(pointLights[i].range, 1e-4);
+        float minDist = max(lightRange * 0.08, 0.15);
+        float distSq = dist * dist + minDist * minDist;
+        float rangeFade = 1.0 - smoothstep(lightRange * 0.75, lightRange, dist);
+        float atten = rangeFade / max(distSq, 1e-4);
+        float intensity = max(pointLights[i].intensity, 0.0) * atten;
+        float3 c = evalPBR(albedo, metallic, roughness, N, V, L,
+                           pointLights[i].color, intensity);
+        float3 s =
+            evalSubsurface(albedo, N, V, L, pointLights[i].color, intensity,
+                           roughness, sssStrength, sssThickness);
+        float3 t = evalTransmission(albedo, N, V, L, pointLights[i].color,
+                                    intensity, roughness, ior) *
+                   transmittance;
+        if (!isOccludedPointLight(pointLights[i], P, N, rng, isect, sceneAS)) {
+            float3 lightContribution = clampLuminance((c + s) * surfaceOpacity, 8.0);
+            lighting += lightContribution;
+            lighting += clampLuminance(t, 12.0);
+        }
+    }
+
+    // Spot lights
+    for (uint i = 0; i < sceneData.numSpotLights; ++i) {
+        float3 toLight = spotLights[i].position - P;
+        float dist = max(length(toLight), 1e-4);
+        float3 L = toLight / dist;
+        float3 fwd = normalize(spotLights[i].direction);
+        float spotCos = dot(-L, fwd);
+        float spot =
+            smoothstep(spotLights[i].outerCos, spotLights[i].innerCos, spotCos);
+        float lightRange = max(spotLights[i].range, 1e-4);
+        float minDist = max(lightRange * 0.08, 0.15);
+        float distSq = dist * dist + minDist * minDist;
+        float rangeFade = 1.0 - smoothstep(lightRange * 0.75, lightRange, dist);
+        float atten = rangeFade / max(distSq, 1e-4);
+        float intensity = max(spotLights[i].intensity, 0.0) * atten * spot;
+        float3 c = evalPBR(albedo, metallic, roughness, N, V, L,
+                           spotLights[i].color, intensity);
+        float3 s =
+            evalSubsurface(albedo, N, V, L, spotLights[i].color, intensity,
+                           roughness, sssStrength, sssThickness);
+        float3 t = evalTransmission(albedo, N, V, L, spotLights[i].color,
+                                    intensity, roughness, ior) *
+                   transmittance;
+        if (!isOccludedSpotLight(spotLights[i], P, N, rng, isect, sceneAS)) {
+            float3 lightContribution = clampLuminance((c + s) * surfaceOpacity, 8.0);
+            lighting += lightContribution;
+            lighting += clampLuminance(t, 12.0);
+        }
+    }
+
+    // Area lights
+    for (uint i = 0; i < sceneData.numAreaLights; ++i) {
+        float3 toLight = areaLights[i].position - P;
+        float dist = max(length(toLight), 1e-4);
+        float3 L = toLight / dist;
+        float3 lightNorm =
+            normalize(cross(areaLights[i].right, areaLights[i].up));
+        float cosLight = areaLights[i].twoSided > 0.5
+                             ? abs(dot(lightNorm, -L))
+                             : max(dot(lightNorm, -L), 0.0);
+        float area = 4.0 * areaLights[i].halfWidth * areaLights[i].halfHeight;
+        float minDist = max(
+            max(areaLights[i].halfWidth, areaLights[i].halfHeight) * 0.5, 0.15);
+        float distSq = dist * dist + minDist * minDist;
+        float atten = (cosLight * area) / max(distSq, 1e-4);
+        float intensity = max(areaLights[i].intensity, 0.0) * atten;
+        float3 c = evalPBR(albedo, metallic, roughness, N, V, L,
+                           areaLights[i].color, intensity);
+        float3 s =
+            evalSubsurface(albedo, N, V, L, areaLights[i].color, intensity,
+                           roughness, sssStrength, sssThickness);
+        float3 t = evalTransmission(albedo, N, V, L, areaLights[i].color,
+                                    intensity, roughness, ior) *
+                   transmittance;
+        if (!isOccludedAreaLight(areaLights[i], P, N, rng, isect, sceneAS)) {
+            float3 lightContribution = clampLuminance((c + s) * surfaceOpacity, 8.0);
+            lighting += lightContribution;
+            lighting += clampLuminance(t, 12.0);
+        }
+    }
+
+    return lighting;
+}
+
+// ---------------------------------------------------------------------------
+// sampleRadiance — primary path with GGX importance-sampled indirect bounce
+// ---------------------------------------------------------------------------
+
+float3 sampleRadiance(uint2 gid, uint sampleIndex, uint w,
+                      intersector<triangle_data, instancing> isect,
+                      instance_acceleration_structure sceneAS, ray primaryRay,
+                      constant Material *materials, constant MeshData *meshData,
+                      constant VertexData *vertices, constant uint *indices,
+                      constant InstanceData *instanceData,
+                      constant DirectionalLightData &dirLight,
+                      constant SceneData &sceneData,
+                      constant PointLight *pointLights,
+                      constant SpotLight *spotLights,
+                      constant AreaLight *areaLights,
+                      PT_MATERIAL_TEXTURE_PARAMS, texturecube<float> skybox) {
+    uint rng = seedBase(gid, w, sceneData.frameIndex, sampleIndex);
+
+    ray surfaceRay = primaryRay;
+    auto hit = isect.intersect(surfaceRay, sceneAS, 0xFF);
+    Material mat{};
+    MeshData mesh{};
+    InstanceData inst{};
+    float2 texUV = float2(0.0);
+    float3 localN = float3(0.0, 1.0, 0.0);
+    float3 localT = float3(1.0, 0.0, 0.0);
+    float3 localB = float3(0.0, 0.0, 1.0);
+    bool foundOpaqueSurface = false;
+
+    for (uint step = 0; step < 8; ++step) {
+        if (hit.type == intersection_type::none) {
+            return skyColor(surfaceRay.direction, 0.0, skybox);
+        }
+
+        uint instanceIndex = hit.instance_id;
+        uint primitiveIndex = hit.primitive_id;
+
+        mat = materials[instanceIndex];
+        mesh = meshData[instanceIndex];
+        inst = instanceData[instanceIndex];
+
+        uint i0 = indices[mesh.indexOffset + primitiveIndex * 3 + 0];
+        uint i1 = indices[mesh.indexOffset + primitiveIndex * 3 + 1];
+        uint i2 = indices[mesh.indexOffset + primitiveIndex * 3 + 2];
+
+        float2 bary = hit.triangle_barycentric_coord;
+        float b0 = 1.0 - bary.x - bary.y;
+        float b1 = bary.x;
+        float b2 = bary.y;
+
+        texUV = float2(vertices[i0].uv) * b0 + float2(vertices[i1].uv) * b1 +
+                float2(vertices[i2].uv) * b2;
+        localN = normalizeOr(float3(vertices[i0].normal) * b0 +
+                                 float3(vertices[i1].normal) * b1 +
+                                 float3(vertices[i2].normal) * b2,
+                             float3(0.0, 1.0, 0.0));
+        localT = normalizeOr(float3(vertices[i0].tangent) * b0 +
+                                 float3(vertices[i1].tangent) * b1 +
+                                 float3(vertices[i2].tangent) * b2,
+                             float3(1.0, 0.0, 0.0));
+        localB = normalizeOr(float3(vertices[i0].bitangent) * b0 +
+                                 float3(vertices[i1].bitangent) * b1 +
+                                 float3(vertices[i2].bitangent) * b2,
+                             float3(0.0, 0.0, 1.0));
+
+        float alpha = 1.0;
+        if (mat.opacityTextureIndex >= 0 &&
+            uint(mat.opacityTextureIndex) < sceneData.materialTextureCount) {
+            alpha = clamp(sampleMaterialTexture(mat.opacityTextureIndex, texUV,
+                                                PT_MATERIAL_TEXTURE_ARGS)
+                              .x,
+                          0.0, 1.0);
+        }
+
+        if (alpha >= 0.1) {
+            foundOpaqueSurface = true;
+            break;
+        }
+
+        surfaceRay.origin =
+            surfaceRay.origin + surfaceRay.direction * (hit.distance + 0.001);
+        surfaceRay.min_distance = 0.0;
+        surfaceRay.max_distance = primaryRay.max_distance;
+        hit = isect.intersect(surfaceRay, sceneAS, 0xFF);
+    }
+
+    if (!foundOpaqueSurface) {
+        return skyColor(surfaceRay.direction, 0.0, skybox);
+    }
+
+    float3 N = resolveShadingNormal(mat, texUV, localN, localT, localB, inst,
+                                    sceneData.materialTextureCount,
+                                    PT_MATERIAL_TEXTURE_ARGS);
+    float3 P = surfaceRay.origin + surfaceRay.direction * hit.distance;
+    float3 V = normalize(-surfaceRay.direction);
+    if (dot(N, V) < 0.0) {
+        N = -N;
+    }
+
+    float3 albedo;
+    float metallic;
+    float roughness;
+    float ao;
+    float3 emissive;
+    float ior;
+    float transmittance;
+    resolveMaterialParameters(mat, texUV, sceneData.materialTextureCount,
+                              PT_MATERIAL_TEXTURE_ARGS, albedo, metallic,
+                              roughness, ao, emissive, ior, transmittance);
+    float sssStrength = clamp(1.0 - mat.albedo.w, 0.0, 1.0) * (1.0 - metallic);
+    float sssThickness = mix(0.25, 1.75, ao);
+
+    float3 direct = evalDirectLightingPBR(
+        isect, sceneAS, P, N, V, albedo, metallic, roughness, ior,
+        transmittance, sssStrength, sssThickness, rng, dirLight, sceneData,
+        pointLights, spotLights, areaLights);
+
+    float3 indirect = float3(0.0);
+
+    if (sceneData.maxBounces > 0) {
+        float3 F0 = mix(float3(0.04), albedo, metallic);
+        float3 F_approx = F_Schlick(max(dot(N, V), 0.0), F0);
+
+        float dielectricF0 = pow((ior - 1.0) / (ior + 1.0), 2.0);
+        float dielectricSpec =
+            F_Schlick(max(dot(N, V), 0.0), float3(dielectricF0)).x;
+        float specProb = metallic * mix(0.35, 0.9, 1.0 - roughness) +
+                         (1.0 - metallic) * dielectricSpec;
+        float transmitProb =
+            transmittance * (1.0 - metallic) * (1.0 - dielectricSpec);
+        float diffuseProb = (1.0 - metallic) * (1.0 - transmittance);
+        float probSum = max(specProb + transmitProb + diffuseProb, 1e-4);
+        specProb /= probSum;
+        transmitProb /= probSum;
+        diffuseProb /= probSum;
+
+        float3x3 basis = buildOrthonormalBasis(N);
+        ray bounceRay;
+        bounceRay.origin = P + N * 0.001;
+        bounceRay.min_distance = 0.0;
+        bounceRay.max_distance = 1.0e30;
+
+        float3 brdfWeight;
+        float chooseSplit = rand(rng);
+        bool choseTransmission = false;
+
+        if (specProb > 1e-4 && chooseSplit < specProb) {
+            float2 u = float2(rand(rng), rand(rng));
+            float3 localH = sampleGGX(u, max(roughness, 0.001));
+            float3 H_world = normalize(basis * localH);
+            float3 bounceDir = reflect(-V, H_world);
+
+            if (dot(bounceDir, N) <= 0.0)
+                bounceDir = reflect(-V, N);
+
+            bounceRay.direction = bounceDir;
+
+            float NdotL2 = max(dot(N, bounceDir), 1e-4);
+            float NdotV2 = max(dot(N, V), 1e-4);
+            float3 Fs = F_Schlick(max(dot(V, H_world), 0.0), F0);
+            float Gs = G_Smith(NdotV2, NdotL2, roughness);
+
+            brdfWeight =
+                (Fs * Gs / max(4.0 * NdotV2, 1e-4)) / max(specProb, 1e-4);
+
+        } else if (transmitProb > 1e-4 && chooseSplit < specProb + transmitProb) {
+            choseTransmission = true;
+            bool entering = dot(N, V) > 0.0;
+            float eta = entering ? (1.0 / ior) : ior;
+            float3 faceN = entering ? N : -N;
+
+            float3 refractDir = refract(-V, faceN, eta);
+
+            if (length(refractDir) < 1e-5) {
+                refractDir = reflect(-V, faceN);
+            }
+
+            bounceRay.origin = P - faceN * 0.002;
+            bounceRay.direction = normalize(refractDir);
+
+            float3 F0t = float3(pow((ior - 1.0) / (ior + 1.0), 2.0));
+            float3 Ft = F_Schlick(max(dot(V, faceN), 0.0), F0t);
+            float3 kT = (1.0 - Ft) * mix(float3(1.0), albedo, 0.15);
+
+            float3 absorption = exp(-(1.0 - albedo) * 0.12);
+
+            brdfWeight = (kT * absorption) / max(transmitProb, 1e-4);
+
+        } else {
+            float2 u = float2(rand(rng), rand(rng));
+            float3 localBounce = cosineSampleHemisphere(u);
+            bounceRay.direction = normalize(basis * localBounce);
+
+            float3 kD = (1.0 - F_approx) * (1.0 - metallic);
+            brdfWeight = (kD * albedo) / max(diffuseProb, 1e-4);
+        }
+
+        brdfWeight = clamp(brdfWeight, float3(0.0), float3(8.0));
+
+        auto bounceHit = isect.intersect(bounceRay, sceneAS, 0xFF);
+        auto resolvedBounceHit = bounceHit;
+        ray resolvedBounceRay = bounceRay;
+
+        if (choseTransmission) {
+            for (uint shellStep = 0; shellStep < 8; ++shellStep) {
+                if (resolvedBounceHit.type == intersection_type::none) {
+                    break;
+                }
+
+                uint ti = resolvedBounceHit.instance_id;
+                uint tp = resolvedBounceHit.primitive_id;
+
+                Material tmat = materials[ti];
+                MeshData tmesh = meshData[ti];
+                InstanceData tinst = instanceData[ti];
+
+                uint tj0 = indices[tmesh.indexOffset + tp * 3 + 0];
+                uint tj1 = indices[tmesh.indexOffset + tp * 3 + 1];
+                uint tj2 = indices[tmesh.indexOffset + tp * 3 + 2];
+
+                float2 tbary = resolvedBounceHit.triangle_barycentric_coord;
+                float tb0 = 1.0 - tbary.x - tbary.y;
+                float tb1 = tbary.x;
+                float tb2 = tbary.y;
+
+                float2 tUV = float2(vertices[tj0].uv) * tb0 +
+                             float2(vertices[tj1].uv) * tb1 +
+                             float2(vertices[tj2].uv) * tb2;
+                float3 tLocalN = normalizeOr(float3(vertices[tj0].normal) * tb0 +
+                                                 float3(vertices[tj1].normal) * tb1 +
+                                                 float3(vertices[tj2].normal) * tb2,
+                                             float3(0.0, 1.0, 0.0));
+                float3 tLocalT = normalizeOr(float3(vertices[tj0].tangent) * tb0 +
+                                                 float3(vertices[tj1].tangent) * tb1 +
+                                                 float3(vertices[tj2].tangent) * tb2,
+                                             float3(1.0, 0.0, 0.0));
+                float3 tLocalB = normalizeOr(float3(vertices[tj0].bitangent) * tb0 +
+                                                 float3(vertices[tj1].bitangent) * tb1 +
+                                                 float3(vertices[tj2].bitangent) * tb2,
+                                             float3(0.0, 0.0, 1.0));
+
+                float3 tN = resolveShadingNormal(tmat, tUV, tLocalN, tLocalT,
+                                                 tLocalB, tinst,
+                                                 sceneData.materialTextureCount,
+                                                 PT_MATERIAL_TEXTURE_ARGS);
+                float3 tP = resolvedBounceRay.origin +
+                            resolvedBounceRay.direction * resolvedBounceHit.distance;
+                float3 tV = normalize(-resolvedBounceRay.direction);
+                if (dot(tN, tV) < 0.0) {
+                    tN = -tN;
+                }
+
+                float3 tAlbedo;
+                float tMetallic;
+                float tRoughness;
+                float tAo;
+                float3 tEmissive;
+                float tIor;
+                float tTransmittance;
+                resolveMaterialParameters(
+                    tmat, tUV, sceneData.materialTextureCount,
+                    PT_MATERIAL_TEXTURE_ARGS, tAlbedo, tMetallic, tRoughness, tAo,
+                    tEmissive, tIor, tTransmittance);
+
+                if (tTransmittance < 0.5 || tMetallic > 0.5) {
+                    break;
+                }
+
+                bool enteringShell = dot(tN, tV) > 0.0;
+                float etaShell = enteringShell ? (1.0 / tIor) : tIor;
+                float3 faceNShell = enteringShell ? tN : -tN;
+                float3 refractShell = refract(-tV, faceNShell, etaShell);
+                if (length(refractShell) < 1e-5) {
+                    refractShell = reflect(-tV, faceNShell);
+                }
+
+                resolvedBounceRay.origin = tP - faceNShell * 0.002;
+                resolvedBounceRay.direction = normalize(refractShell);
+                resolvedBounceRay.min_distance = 0.0;
+                resolvedBounceRay.max_distance = 1.0e30;
+                resolvedBounceHit =
+                    isect.intersect(resolvedBounceRay, sceneAS, 0xFF);
+            }
+        }
+
+        if (resolvedBounceHit.type == intersection_type::none) {
+            indirect = brdfWeight *
+                       skyColor(resolvedBounceRay.direction, 0.0, skybox) *
+                       sceneData.indirectStrength;
+        } else {
+            uint bi = resolvedBounceHit.instance_id;
+            uint bp = resolvedBounceHit.primitive_id;
+
+            Material bmat = materials[bi];
+            MeshData bmesh = meshData[bi];
+            InstanceData binst = instanceData[bi];
+
+            uint bj0 = indices[bmesh.indexOffset + bp * 3 + 0];
+            uint bj1 = indices[bmesh.indexOffset + bp * 3 + 1];
+            uint bj2 = indices[bmesh.indexOffset + bp * 3 + 2];
+
+            float2 bbary = resolvedBounceHit.triangle_barycentric_coord;
+            float bb0 = 1.0 - bbary.x - bbary.y;
+            float bb1 = bbary.x;
+            float bb2 = bbary.y;
+
+            float2 bUV = float2(vertices[bj0].uv) * bb0 +
+                         float2(vertices[bj1].uv) * bb1 +
+                         float2(vertices[bj2].uv) * bb2;
+            float3 bLocalN =
+                normalizeOr(float3(vertices[bj0].normal) * bb0 +
+                                float3(vertices[bj1].normal) * bb1 +
+                                float3(vertices[bj2].normal) * bb2,
+                            float3(0.0, 1.0, 0.0));
+            float3 bLocalT =
+                normalizeOr(float3(vertices[bj0].tangent) * bb0 +
+                                float3(vertices[bj1].tangent) * bb1 +
+                                float3(vertices[bj2].tangent) * bb2,
+                            float3(1.0, 0.0, 0.0));
+            float3 bLocalB =
+                normalizeOr(float3(vertices[bj0].bitangent) * bb0 +
+                                float3(vertices[bj1].bitangent) * bb1 +
+                                float3(vertices[bj2].bitangent) * bb2,
+                            float3(0.0, 0.0, 1.0));
+            float3 bN = resolveShadingNormal(
+                bmat, bUV, bLocalN, bLocalT, bLocalB, binst,
+                sceneData.materialTextureCount, PT_MATERIAL_TEXTURE_ARGS);
+            float3 bP = resolvedBounceRay.origin +
+                        resolvedBounceRay.direction * resolvedBounceHit.distance;
+            float3 bV = normalize(-resolvedBounceRay.direction);
+            if (dot(bN, bV) < 0.0) {
+                bN = -bN;
+            }
+
+            float3 bAlbedo;
+            float bMetallic;
+            float bRoughness;
+            float bAo;
+            float3 bEmissive;
+            float bIor;
+            float bTransmittance;
+            resolveMaterialParameters(bmat, bUV, sceneData.materialTextureCount,
+                                      PT_MATERIAL_TEXTURE_ARGS, bAlbedo,
+                                      bMetallic, bRoughness, bAo, bEmissive,
+                                      bIor, bTransmittance);
+
+            float bSssStrength =
+                clamp(1.0 - bmat.albedo.w, 0.0, 1.0) * (1.0 - bMetallic);
+            float bSssThickness = mix(0.25, 1.75, bAo);
+
+            float3 bounceDirect = evalDirectLightingPBR(
+                isect, sceneAS, bP, bN, bV, bAlbedo, bMetallic, bRoughness,
+                bIor, bTransmittance, bSssStrength, bSssThickness, rng, dirLight,
+                sceneData, pointLights, spotLights, areaLights);
+
+            float3 bAmbient = bAlbedo * max(sceneData.ambientIntensity, 0.0) *
+                              (1.0 - bMetallic) * bAo;
+            indirect = brdfWeight * (bAmbient + bounceDirect + bEmissive) *
+                       sceneData.indirectStrength;
+        }
+
+        indirect = clampLuminance(indirect, 16.0);
+    }
+
+    float3 ambient =
+        albedo * max(sceneData.ambientIntensity, 0.0) * (1.0 - metallic) * ao *
+        (1.0 - transmittance);
+    return clampLuminance(ambient + direct + emissive + indirect, 24.0);
+}
+
+kernel void main0(texture2d<float, access::write> outTex [[texture(0)]],
+                  texture2d<float, access::read> prevTex [[texture(1)]],
+                  instance_acceleration_structure sceneAS [[buffer(0)]],
+                  constant CameraUniforms &cam [[buffer(1)]],
+                  constant Material *materials [[buffer(2)]],
+                  constant MeshData *meshData [[buffer(3)]],
+                  constant VertexData *vertices [[buffer(4)]],
+                  constant uint *indices [[buffer(5)]],
+                  constant InstanceData *instanceData [[buffer(6)]],
+                  constant DirectionalLightData &dirLight [[buffer(7)]],
+                  constant SceneData &sceneData [[buffer(8)]],
+                  constant PointLight *pointLights [[buffer(9)]],
+                  constant SpotLight *spotLights [[buffer(10)]],
+                  constant AreaLight *areaLights [[buffer(11)]],
+                  PT_MATERIAL_TEXTURE_BINDINGS,
+                  texturecube<float> skybox [[texture(60)]],
+                  uint2 gid [[thread_position_in_grid]]) {
+    uint w = outTex.get_width();
+    uint h = outTex.get_height();
+    if (gid.x >= w || gid.y >= h)
+        return;
+
+    float2 uv = (float2(gid) + 0.5) / float2(w, h);
+    float2 ndc = uv * 2.0 - 1.0;
+    ndc.y = -ndc.y;
+
+    float4 clip = float4(ndc, 1.0, 1.0);
+    float4 worldH = cam.invViewProj * clip;
+    float3 worldP = worldH.xyz / worldH.w;
+
+    float3 ro = cam.camPos;
+    float3 rd = normalize(worldP - ro);
+
+    intersector<triangle_data, instancing> isect;
+    isect.assume_geometry_type(geometry_type::triangle);
+    isect.set_triangle_cull_mode(triangle_cull_mode::none);
+
+    float3 color = float3(0.0);
+
+    uint spp = max(sceneData.raysPerPixel, 1u);
+    for (uint s = 0; s < spp; ++s) {
+        ray primaryRay;
+        primaryRay.origin = ro;
+        primaryRay.direction = rd;
+        primaryRay.min_distance = 0.001;
+        primaryRay.max_distance = 1.0e30;
+
+        float3 sample = sampleRadiance(
+            gid, s, w, isect, sceneAS, primaryRay, materials, meshData,
+            vertices, indices, instanceData, dirLight, sceneData, pointLights,
+            spotLights, areaLights, PT_MATERIAL_TEXTURE_ARGS, skybox);
+        color += clampLuminance(sample, 24.0);
+    }
+
+    color /= float(spp);
+
+    int frameIndex = int(sceneData.frameIndex);
+
+    float4 prevColor = prevTex.read(gid);
+    if (frameIndex == 0)
+        prevColor = float4(0, 0, 0, 1);
+
+    if (frameIndex > 2) {
+        float prevL = luminance(prevColor.xyz);
+        float currL = luminance(color);
+        float maxAllowed = max(prevL * 1.6 + 0.15, 0.75);
+        if (currL > maxAllowed && currL > 1e-6) {
+            color *= maxAllowed / currL;
+        }
+    }
+
+    float3 accum = (prevColor.xyz * frameIndex + color) / (frameIndex + 1);
+    accum = clampLuminance(accum, 24.0);
+    outTex.write(float4(accum, 1.0), gid);
+}
+)"
 ;
 
 static const char* POINT_DEPTH_FRAG =
-R"(#version 410 core
-in vec4 FragPos;
+R"(#include <metal_stdlib>
+#include <simd/simd.h>
 
-uniform vec3 lightPos;
-uniform float far_plane;
+using namespace metal;
 
-void main() {
-    float lightDistance = length(FragPos.xyz - lightPos);
-    
-    lightDistance = lightDistance / far_plane;
+struct Uniforms
+{
+    packed_float3 lightPos;
+    float far_plane;
+};
 
-    gl_FragDepth = lightDistance;
-})"
+struct main0_out
+{
+    float gl_FragDepth [[depth(any)]];
+};
+
+struct main0_in
+{
+    float4 FragPos [[user(locn0)]];
+};
+
+fragment main0_out main0(main0_in in [[stage_in]], constant Uniforms& _17 [[buffer(0)]])
+{
+    main0_out out = {};
+    float lightDistance = length(in.FragPos.xyz - float3(_17.lightPos));
+    lightDistance /= _17.far_plane;
+    out.gl_FragDepth = lightDistance;
+    return out;
+}
+
+)"
 ;
 
 static const char* POINT_DEPTH_GEOM =
-R"(#version 410 core
-layout(triangles) in;
-layout(triangle_strip, max_vertices = 18) out;
+R"(#include <metal_stdlib>
+#include <simd/simd.h>
 
-uniform mat4 shadowMatrices[6];
+using namespace metal;
 
-out vec4 FragPos;
+struct ShadowMatrices
+{
+    float4x4 shadowMatrices[6];
+};
 
-void main() {
-    for (int face = 0; face < 6; face++) {
-        gl_Layer = face;
-        for (int i = 0; i < 3; i++) {
-            FragPos = gl_in[i].gl_Position;
-            gl_Position = shadowMatrices[face] * FragPos;
+struct main0_out
+{
+    float4 FragPos;
+    float4 gl_Position;
+    uint gl_Layer;
+};
+
+unknown main0_out main0(constant ShadowMatrices& _55 [[buffer(0)]])
+{
+    main0_out out = {};
+    for (int face = 0; face < 6; face++)
+    {
+        out.gl_Layer = uint(face);
+        for (int i = 0; i < 3; i++)
+        {
+            out.FragPos = _RESERVED_IDENTIFIER_FIXUP_gl_in[i].out.gl_Position;
+            out.gl_Position = _55.shadowMatrices[face] * out.FragPos;
             EmitVertex();
         }
         EndPrimitive();
     }
+    return out;
+}
+
+)"
+;
+
+static const char* POINT_DEPTH_NOGEOM_FRAG =
+R"(#include <metal_stdlib>
+#include <simd/simd.h>
+
+using namespace metal;
+
+struct Uniforms
+{
+    packed_float3 lightPos;
+    float far_plane;
+};
+
+struct main0_out
+{
+    float gl_FragDepth [[depth(any)]];
+};
+
+struct main0_in
+{
+    float4 FragPos [[user(locn0)]];
+};
+
+fragment main0_out main0(main0_in in [[stage_in]], constant Uniforms& _17 [[buffer(0)]])
+{
+    main0_out out = {};
+    float lightDistance = length(in.FragPos.xyz - float3(_17.lightPos));
+    lightDistance /= _17.far_plane;
+    out.gl_FragDepth = lightDistance;
+    return out;
+}
+
+)"
+;
+
+static const char* POINT_DEPTH_NOGEOM_VERT =
+R"(#include <metal_stdlib>
+#include <simd/simd.h>
+
+using namespace metal;
+
+struct UBO
+{
+    float4x4 model;
+    uint isInstanced;
+};
+
+struct ShadowUniforms
+{
+    float4x4 shadowMatrix;
+    int faceIndex;
+};
+
+struct main0_out
+{
+    float4 FragPos [[user(locn0)]];
+    float4 gl_Position [[position]];
+};
+
+struct main0_in
+{
+    float3 aPos [[attribute(0)]];
+    float4 instanceModel_0 [[attribute(6)]];
+    float4 instanceModel_1 [[attribute(7)]];
+    float4 instanceModel_2 [[attribute(8)]];
+    float4 instanceModel_3 [[attribute(9)]];
+};
+
+vertex main0_out main0(main0_in in [[stage_in]], constant UBO& _12 [[buffer(0)]], constant ShadowUniforms& _62 [[buffer(1)]])
+{
+    main0_out out = {};
+    float4x4 instanceModel = {};
+    instanceModel[0] = in.instanceModel_0;
+    instanceModel[1] = in.instanceModel_1;
+    instanceModel[2] = in.instanceModel_2;
+    instanceModel[3] = in.instanceModel_3;
+    float4 worldPos;
+    bool hasInstanceMatrix = abs(instanceModel[3].w) > 0.5;
+    if ((_12.isInstanced != 0u) && hasInstanceMatrix)
+    {
+        worldPos = (_12.model * instanceModel) * float4(in.aPos, 1.0);
+    }
+    else
+    {
+        worldPos = _12.model * float4(in.aPos, 1.0);
+    }
+    out.FragPos = worldPos;
+    out.gl_Position = _62.shadowMatrix * worldPos;
+    return out;
 }
 )"
 ;
 
 static const char* POINT_DEPTH_VERT =
-R"(#version 410 core
-layout(location = 0) in vec3 aPos;
-layout(location = 6) in mat4 instanceModel;
+R"(#include <metal_stdlib>
+#include <simd/simd.h>
 
-uniform mat4 model;
-uniform bool isInstanced = true;
+using namespace metal;
 
-void main() {
-    if (isInstanced) {
-        gl_Position = model * instanceModel * vec4(aPos, 1.0);
-    } else {
-        gl_Position = model * vec4(aPos, 1.0);
+struct UBO
+{
+    float4x4 model;
+    uint isInstanced;
+};
+
+struct main0_out
+{
+    float4 gl_Position [[position]];
+};
+
+struct main0_in
+{
+    float3 aPos [[attribute(0)]];
+    float4 instanceModel_0 [[attribute(6)]];
+    float4 instanceModel_1 [[attribute(7)]];
+    float4 instanceModel_2 [[attribute(8)]];
+    float4 instanceModel_3 [[attribute(9)]];
+};
+
+vertex main0_out main0(main0_in in [[stage_in]], constant UBO& _12 [[buffer(0)]])
+{
+    main0_out out = {};
+    float4x4 instanceModel = {};
+    instanceModel[0] = in.instanceModel_0;
+    instanceModel[1] = in.instanceModel_1;
+    instanceModel[2] = in.instanceModel_2;
+    instanceModel[3] = in.instanceModel_3;
+    bool hasInstanceMatrix = abs(instanceModel[3].w) > 0.5;
+    if ((_12.isInstanced != 0u) && hasInstanceMatrix)
+    {
+        out.gl_Position = (_12.model * instanceModel) * float4(in.aPos, 1.0);
     }
-})"
-;
-
-static const char* SKYBOX_FRAG =
-R"(#version 410 core
-out vec4 FragColor;
-in vec3 TexCoords;
-uniform samplerCube skybox;
-uniform vec3 sunDirection;
-uniform vec4 sunColor;
-uniform vec3 moonDirection;
-uniform vec4 moonColor;
-uniform int hasDayNight;
-
-uniform float sunTintStrength;
-uniform float moonTintStrength;
-uniform float sunSizeMultiplier;
-uniform float moonSizeMultiplier;
-uniform float starDensity;
-
-float hash21(vec2 p) {
-    p = fract(p * vec2(123.34, 456.21));
-    p += dot(p, p + 45.32);
-    return fract(p.x * p.y);
-}
-
-float valueNoise(vec2 p) {
-    vec2 i = floor(p);
-    vec2 f = fract(p);
-    f = f * f * (3.0 - 2.0 * f);
-    
-    float a = hash21(i);
-    float b = hash21(i + vec2(1.0, 0.0));
-    float c = hash21(i + vec2(0.0, 1.0));
-    float d = hash21(i + vec2(1.0, 1.0));
-    
-    return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
-}
-
-float layeredNoise(vec2 p) {
-    float total = valueNoise(p) + valueNoise(p * 2.0) * 0.5;
-    return total / 1.5;
-}
-
-float hash13(vec3 p) {
-    p = fract(p * 443.897);
-    p += dot(p, p.yzx + 19.19);
-    return fract((p.x + p.y) * p.z);
-}
-
-vec3 generateStars(vec3 dir, float density, float nightFactor) {
-    if (density <= 0.0 || nightFactor <= 0.0) {
-        return vec3(0.0);
+    else
+    {
+        out.gl_Position = _12.model * float4(in.aPos, 1.0);
     }
-    
-    vec3 starSpace = dir * 50.0;
-    vec3 cell = floor(starSpace);
-    vec3 localPos = fract(starSpace);
-    
-    float rand = hash13(cell);
-    
-    if (rand < density * 0.3) {
-        float randX = hash13(cell + vec3(12.34, 56.78, 90.12));
-        float randY = hash13(cell + vec3(23.45, 67.89, 1.23));
-        float randZ = hash13(cell + vec3(34.56, 78.90, 12.34));
-        
-        vec3 starPos = vec3(randX, randY, randZ);
-        float dist = length(localPos - starPos);
-        
-        float starSize = 0.02 + hash13(cell + vec3(45.67, 89.01, 23.45)) * 0.03;
-        float brightness = 0.5 + hash13(cell + vec3(56.78, 90.12, 34.56)) * 0.5;
-        
-        float star = smoothstep(starSize, 0.0, dist) * brightness;
-        float twinkle = 0.8 + 0.2 * sin(hash13(cell + vec3(67.89, 1.23, 45.67)) * 100.0);
-        star *= twinkle * nightFactor;
-        
-        vec3 starColor = vec3(1.0);
-        if (rand > 0.9) starColor = vec3(0.8, 0.9, 1.0);
-        else if (rand > 0.8) starColor = vec3(1.0, 0.9, 0.8);
-        
-        return starColor * star;
-    }
-    
-    return vec3(0.0);
-}
-
-vec3 generateMoonTexture(vec2 uv, float distanceFromCenter, vec3 tintColor) {
-    float angle = 0.5;
-    float ca = cos(angle);
-    float sa = sin(angle);
-    uv = vec2(ca * uv.x - sa * uv.y, sa * uv.x + ca * uv.y);
-    
-    float largeFeatures = valueNoise(uv * 2.0);
-    largeFeatures = smoothstep(0.3, 0.7, largeFeatures);
-    
-    float mediumCraters = valueNoise(uv * 8.0);
-    
-    vec2 craterUV = uv * 6.0;
-    vec2 craterCell = floor(craterUV);
-    vec2 craterLocal = fract(craterUV);
-    
-    float craters = 1.0;
-    for (int i = 0; i < 4; i++) {
-        vec2 neighbor = vec2(float(i % 2), float(i / 2));
-        vec2 cellPoint = craterCell + neighbor;
-        
-        vec2 craterCenter = vec2(hash21(cellPoint), hash21(cellPoint + vec2(13.7, 27.3)));
-        float dist = length(craterLocal - neighbor - craterCenter);
-        
-        float craterSize = 0.15 + 0.25 * hash21(cellPoint + vec2(5.3, 9.7));
-        
-        if (dist < craterSize) {
-            float crater = smoothstep(craterSize, craterSize * 0.3, dist);
-            craters = min(craters, 1.0 - crater * 0.7);
-        }
-    }
-    
-    float surface = largeFeatures * 0.5 + mediumCraters * 0.5;
-    surface *= craters;
-    
-    float intensity = mix(0.30, 0.75, surface);
-    
-    float limb = 1.0 - smoothstep(0.6, 1.0, distanceFromCenter);
-    intensity *= 0.4 + 0.6 * limb;
-    intensity *= 1.3;
-    
-    return clamp(tintColor * intensity, 0.0, 1.0);
-}
-
-void main()
-{    
-    vec3 dir = normalize(TexCoords);
-    vec3 color = texture(skybox, TexCoords).rgb;
-    
-    if (hasDayNight == 1) {
-        vec3 normSunDir = normalize(sunDirection);
-        vec3 normMoonDir = normalize(moonDirection);
-        
-        float sunDot = dot(dir, normSunDir);
-        float moonDot = dot(dir, normMoonDir);
-        
-        float nightFactor = smoothstep(0.15, -0.2, sunDirection.y);
-        
-        if (starDensity > 0.0) {
-            color += generateStars(dir, starDensity, nightFactor);
-        }
-        
-        float sunHorizonFade = smoothstep(-0.15, 0.05, sunDirection.y);
-        
-        if (sunDirection.y > -0.15) {
-            float sizeAdjust = 1.0 - (sunSizeMultiplier - 1.0) * 0.001;
-            float sunSize = 0.9995 * sizeAdjust;
-            float sunGlowSize = 0.998 * (1.0 - (sunSizeMultiplier - 1.0) * 0.003);
-            float sunHaloSize = 0.99 * (1.0 - (sunSizeMultiplier - 1.0) * 0.015);
-            
-            float sunDisk = smoothstep(sunSize - 0.0002, sunSize, sunDot);
-            float sunGlow = smoothstep(sunGlowSize, sunSize, sunDot) * (1.0 - sunDisk);
-            float sunHalo = smoothstep(sunHaloSize, sunSize, sunDot) * 
-                           (1.0 - smoothstep(sunSize, sunGlowSize, sunDot));
-            
-            float horizonBoost = smoothstep(0.1, -0.05, sunDirection.y) * 2.0;
-            sunHalo *= (0.3 + horizonBoost);
-            
-            color += sunColor.rgb * (sunDisk * 5.0 + sunGlow * 0.5 + sunHalo) * sunHorizonFade;
-        }
-        
-        float moonHorizonFade = smoothstep(-0.15, 0.05, moonDirection.y);
-        
-        if (moonDirection.y > -0.15) {
-            float sizeAdjust = 1.0 - (moonSizeMultiplier - 1.0) * 0.001;
-            float moonSize = 0.9996 * sizeAdjust;
-            float moonGlowSize = 0.9985 * (1.0 - (moonSizeMultiplier - 1.0) * 0.003);
-            float moonHaloSize = 0.992 * (1.0 - (moonSizeMultiplier - 1.0) * 0.015);
-            
-            float moonDisk = smoothstep(moonSize - 0.0002, moonSize, moonDot);
-            
-            if (moonDisk > 0.01) {
-                vec3 up = abs(normMoonDir.y) < 0.999 ? vec3(0.0, 1.0, 0.0) : vec3(1.0, 0.0, 0.0);
-                vec3 right = normalize(cross(up, normMoonDir));
-                vec3 actualUp = cross(normMoonDir, right);
-                
-                vec3 relativeDir = dir - normMoonDir * moonDot;
-                float u = dot(relativeDir, right);
-                float v = dot(relativeDir, actualUp);
-                
-                float distFromCenter = length(vec2(u, v)) / sqrt(1.0 - moonSize * moonSize);
-                
-                if (distFromCenter < 1.0) {
-                    vec2 moonUV = vec2(u, v) * 200.0;
-                    vec3 moonTexture = generateMoonTexture(moonUV, distFromCenter, moonColor.rgb);
-                    color += moonTexture * moonDisk * 1.5 * moonHorizonFade;
-                } else {
-                    color += moonColor.rgb * moonDisk * 1.5 * moonHorizonFade;
-                }
-            }
-            
-            float moonGlow = smoothstep(moonGlowSize, moonSize, moonDot) * (1.0 - moonDisk);
-            float moonHalo = smoothstep(moonHaloSize, moonSize, moonDot) * 
-                            (1.0 - smoothstep(moonSize, moonGlowSize, moonDot));
-            
-            float moonHorizonBoost = smoothstep(0.1, -0.05, moonDirection.y) * 2.0;
-            moonHalo *= (0.2 + moonHorizonBoost);
-            
-            color += moonColor.rgb * (moonGlow * 0.3 + moonHalo) * moonHorizonFade;
-        }
-        
-        if (sunDirection.y > -0.1 && sunTintStrength > 0.0) {
-            float sunSkyInfluence = smoothstep(0.7, 0.95, sunDot) * 
-                                   smoothstep(-0.1, 0.2, sunDirection.y);
-            color = mix(color, color * sunColor.rgb, sunSkyInfluence * 0.3 * sunTintStrength);
-            
-            float sunProximity = smoothstep(0.3, 0.8, sunDot) * 
-                               smoothstep(-0.1, 0.3, sunDirection.y);
-            color += sunColor.rgb * sunProximity * 0.15 * sunTintStrength;
-            
-            float globalSunTint = smoothstep(-0.1, 0.5, sunDirection.y);
-            color = mix(color, sunColor.rgb, globalSunTint * sunTintStrength * 0.08);
-        }
-        
-        if (moonDirection.y > -0.1 && moonTintStrength > 0.0) {
-            float moonSkyInfluence = smoothstep(0.8, 0.95, moonDot) * 
-                                    smoothstep(-0.1, 0.2, moonDirection.y);
-            color = mix(color, color * moonColor.rgb, moonSkyInfluence * 0.2 * moonTintStrength);
-            
-            float moonProximity = smoothstep(0.5, 0.85, moonDot) * 
-                                smoothstep(-0.1, 0.3, moonDirection.y);
-            color += moonColor.rgb * moonProximity * 0.08 * moonTintStrength;
-            
-            float globalMoonTint = smoothstep(-0.1, 0.5, moonDirection.y);
-            color = mix(color, moonColor.rgb, globalMoonTint * moonTintStrength * 0.05);
-        }
-    }
-    
-    FragColor = vec4(color, 1.0);
-})"
-;
-
-static const char* SKYBOX_VERT =
-R"(#version 410 core
-layout(location = 0) in vec3 aPos;
-
-out vec3 TexCoords;
-
-uniform mat4 projection;
-uniform mat4 view;
-
-void main() {
-    TexCoords = aPos;
-    // Drop translation so the cube stays centered on the camera
-    mat4 viewNoTranslation = mat4(mat3(view));
-    vec4 pos = projection * viewNoTranslation * vec4(aPos, 1.0);
-    gl_Position = pos.xyww;
+    return out;
 }
 )"
 ;
 
-static const char* SSAO_BLUR_FRAG =
-R"(#version 410 core
-out float FragColor;
+static const char* SKYBOX_FRAG =
+R"(#pragma clang diagnostic ignored "-Wmissing-prototypes"
 
-in vec2 TexCoord;
+#include <metal_stdlib>
+#include <simd/simd.h>
 
-uniform sampler2D inSSAO;
+using namespace metal;
 
-void main() {
-    vec2 texelSize = 1.0 / vec2(textureSize(inSSAO, 0));
-    float result = 0.0;
-    for (int x = -2; x <= 2; x++) {
-        for (int y = -2; y <= 2; y++) {
-            vec2 offset = vec2(float(x), float(y)) * texelSize;
-            result += texture(inSSAO, TexCoord + offset).r;
+struct Params
+{
+    float3 sunDirection;
+    float4 sunColor;
+    float3 moonDirection;
+    float4 moonColor;
+    int hasDayNight;
+};
+
+struct AtmosphereParams
+{
+    float sunTintStrength;
+    float moonTintStrength;
+    float sunSizeMultiplier;
+    float moonSizeMultiplier;
+    float starDensity;
+};
+
+struct main0_out
+{
+    float4 FragColor [[color(0)]];
+};
+
+struct main0_in
+{
+    float3 TexCoords [[user(locn0)]];
+};
+
+static inline __attribute__((always_inline))
+float hash13(thread float3& p)
+{
+    p = fract(p * 443.897003173828125);
+    p += float3(dot(p, p.yzx + float3(19.1900005340576171875)));
+    return fract((p.x + p.y) * p.z);
+}
+
+static inline __attribute__((always_inline))
+float3 generateStars(thread const float3& dir, thread const float& density, thread const float& nightFactor)
+{
+    if ((density <= 0.0) || (nightFactor <= 0.0))
+    {
+        return float3(0.0);
+    }
+    float3 starSpace = dir * 50.0;
+    float3 cell = floor(starSpace);
+    float3 localPos = fract(starSpace);
+    float3 param = cell;
+    float _165 = hash13(param);
+    float rand = _165;
+    if (rand < (density * 0.300000011920928955078125))
+    {
+        float3 param_1 = cell + float3(12.340000152587890625, 56.779998779296875, 90.12000274658203125);
+        float _181 = hash13(param_1);
+        float randX = _181;
+        float3 param_2 = cell + float3(23.450000762939453125, 67.8899993896484375, 1.230000019073486328125);
+        float _190 = hash13(param_2);
+        float randY = _190;
+        float3 param_3 = cell + float3(34.560001373291015625, 78.90000152587890625, 12.340000152587890625);
+        float _198 = hash13(param_3);
+        float randZ = _198;
+        float3 starPos = float3(randX, randY, randZ);
+        float dist = length(localPos - starPos);
+        float3 param_4 = cell + float3(45.6699981689453125, 89.01000213623046875, 23.450000762939453125);
+        float _217 = hash13(param_4);
+        float starSize = 0.0199999995529651641845703125 + (_217 * 0.02999999932944774627685546875);
+        float3 param_5 = cell + float3(56.779998779296875, 90.12000274658203125, 34.560001373291015625);
+        float _227 = hash13(param_5);
+        float brightness = 0.5 + (_227 * 0.5);
+        float star = smoothstep(starSize, 0.0, dist) * brightness;
+        float3 param_6 = cell + float3(67.8899993896484375, 1.230000019073486328125, 45.6699981689453125);
+        float _243 = hash13(param_6);
+        float twinkle = 0.800000011920928955078125 + (0.20000000298023223876953125 * sin(_243 * 100.0));
+        star *= (twinkle * nightFactor);
+        float3 starColor = float3(1.0);
+        if (rand > 0.89999997615814208984375)
+        {
+            starColor = float3(0.800000011920928955078125, 0.89999997615814208984375, 1.0);
+        }
+        else
+        {
+            if (rand > 0.800000011920928955078125)
+            {
+                starColor = float3(1.0, 0.89999997615814208984375, 0.800000011920928955078125);
+            }
+        }
+        return starColor * star;
+    }
+    return float3(0.0);
+}
+
+static inline __attribute__((always_inline))
+float hash21(thread float2& p)
+{
+    p = fract(p * float2(123.339996337890625, 456.209991455078125));
+    p += float2(dot(p, p + float2(45.31999969482421875)));
+    return fract(p.x * p.y);
+}
+
+static inline __attribute__((always_inline))
+float valueNoise(thread const float2& p)
+{
+    float2 i = floor(p);
+    float2 f = fract(p);
+    f = (f * f) * (float2(3.0) - (f * 2.0));
+    float2 param = i;
+    float _80 = hash21(param);
+    float a = _80;
+    float2 param_1 = i + float2(1.0, 0.0);
+    float _88 = hash21(param_1);
+    float b = _88;
+    float2 param_2 = i + float2(0.0, 1.0);
+    float _94 = hash21(param_2);
+    float c = _94;
+    float2 param_3 = i + float2(1.0);
+    float _100 = hash21(param_3);
+    float d = _100;
+    return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
+}
+
+static inline __attribute__((always_inline))
+float3 generateMoonTexture(thread float2& uv, thread const float& distanceFromCenter, thread const float3& tintColor)
+{
+    float angle = 0.5;
+    float ca = cos(angle);
+    float sa = sin(angle);
+    uv = float2((ca * uv.x) - (sa * uv.y), (sa * uv.x) + (ca * uv.y));
+    float2 param = uv * 2.0;
+    float largeFeatures = valueNoise(param);
+    largeFeatures = smoothstep(0.300000011920928955078125, 0.699999988079071044921875, largeFeatures);
+    float2 param_1 = uv * 8.0;
+    float mediumCraters = valueNoise(param_1);
+    float2 craterUV = uv * 6.0;
+    float2 craterCell = floor(craterUV);
+    float2 craterLocal = fract(craterUV);
+    float craters = 1.0;
+    for (int i = 0; i < 4; i++)
+    {
+        float2 neighbor = float2(float(i % 2), float(i / 2));
+        float2 cellPoint = craterCell + neighbor;
+        float2 param_2 = cellPoint;
+        float _353 = hash21(param_2);
+        float2 param_3 = cellPoint + float2(13.69999980926513671875, 27.299999237060546875);
+        float _360 = hash21(param_3);
+        float2 craterCenter = float2(_353, _360);
+        float dist = length((craterLocal - neighbor) - craterCenter);
+        float2 param_4 = cellPoint + float2(5.30000019073486328125, 9.69999980926513671875);
+        float _378 = hash21(param_4);
+        float craterSize = 0.1500000059604644775390625 + (0.25 * _378);
+        if (dist < craterSize)
+        {
+            float crater = smoothstep(craterSize, craterSize * 0.300000011920928955078125, dist);
+            craters = fast::min(craters, 1.0 - (crater * 0.699999988079071044921875));
         }
     }
-    FragColor = result / 25.0;
-})"
+    float surface = (largeFeatures * 0.5) + (mediumCraters * 0.5);
+    surface *= craters;
+    float intensity = mix(0.300000011920928955078125, 0.75, surface);
+    float limb = 1.0 - smoothstep(0.60000002384185791015625, 1.0, distanceFromCenter);
+    intensity *= (0.4000000059604644775390625 + (0.60000002384185791015625 * limb));
+    intensity *= 1.2999999523162841796875;
+    return fast::clamp(tintColor * intensity, float3(0.0), float3(1.0));
+}
+
+fragment main0_out main0(main0_in in [[stage_in]], constant Params& _452 [[buffer(0)]], constant AtmosphereParams& _484 [[buffer(1)]], texturecube<float> skybox [[texture(0)]], sampler skyboxSmplr [[sampler(0)]])
+{
+    main0_out out = {};
+    float3 dir = fast::normalize(in.TexCoords);
+    float3 color = skybox.sample(skyboxSmplr, in.TexCoords).xyz;
+    if (_452.hasDayNight == 1)
+    {
+        float3 normSunDir = fast::normalize(_452.sunDirection);
+        float3 normMoonDir = fast::normalize(_452.moonDirection);
+        float sunDot = dot(dir, normSunDir);
+        float moonDot = dot(dir, normMoonDir);
+        float nightFactor = smoothstep(0.1500000059604644775390625, -0.20000000298023223876953125, _452.sunDirection.y);
+        if (_484.starDensity > 0.0)
+        {
+            float3 param = dir;
+            float param_1 = _484.starDensity;
+            float param_2 = nightFactor;
+            color += generateStars(param, param_1, param_2);
+        }
+        float sunHorizonFade = smoothstep(-0.1500000059604644775390625, 0.0500000007450580596923828125, _452.sunDirection.y);
+        if (_452.sunDirection.y > (-0.1500000059604644775390625))
+        {
+            float sizeAdjust = 1.0 - ((_484.sunSizeMultiplier - 1.0) * 0.001000000047497451305389404296875);
+            float sunSize = 0.999499976634979248046875 * sizeAdjust;
+            float sunGlowSize = 0.99800002574920654296875 * (1.0 - ((_484.sunSizeMultiplier - 1.0) * 0.0030000000260770320892333984375));
+            float sunHaloSize = 0.9900000095367431640625 * (1.0 - ((_484.sunSizeMultiplier - 1.0) * 0.014999999664723873138427734375));
+            float sunDisk = smoothstep(sunSize - 0.00019999999494757503271102905273438, sunSize, sunDot);
+            float sunGlow = smoothstep(sunGlowSize, sunSize, sunDot) * (1.0 - sunDisk);
+            float sunHalo = smoothstep(sunHaloSize, sunSize, sunDot) * (1.0 - smoothstep(sunSize, sunGlowSize, sunDot));
+            float horizonBoost = smoothstep(0.100000001490116119384765625, -0.0500000007450580596923828125, _452.sunDirection.y) * 2.0;
+            sunHalo *= (0.300000011920928955078125 + horizonBoost);
+            color += ((_452.sunColor.xyz * (((sunDisk * 5.0) + (sunGlow * 0.5)) + sunHalo)) * sunHorizonFade);
+        }
+        float moonHorizonFade = smoothstep(-0.1500000059604644775390625, 0.0500000007450580596923828125, _452.moonDirection.y);
+        if (_452.moonDirection.y > (-0.1500000059604644775390625))
+        {
+            float sizeAdjust_1 = 1.0 - ((_484.moonSizeMultiplier - 1.0) * 0.001000000047497451305389404296875);
+            float moonSize = 0.999599993228912353515625 * sizeAdjust_1;
+            float moonGlowSize = 0.99849998950958251953125 * (1.0 - ((_484.moonSizeMultiplier - 1.0) * 0.0030000000260770320892333984375));
+            float moonHaloSize = 0.99199998378753662109375 * (1.0 - ((_484.moonSizeMultiplier - 1.0) * 0.014999999664723873138427734375));
+            float moonDisk = smoothstep(moonSize - 0.00019999999494757503271102905273438, moonSize, moonDot);
+            if (moonDisk > 0.00999999977648258209228515625)
+            {
+                float3 up = (abs(normMoonDir.y) < 0.999000012874603271484375) ? float3(0.0, 1.0, 0.0) : float3(1.0, 0.0, 0.0);
+                float3 right = fast::normalize(cross(up, normMoonDir));
+                float3 actualUp = cross(normMoonDir, right);
+                float3 relativeDir = dir - (normMoonDir * moonDot);
+                float u = dot(relativeDir, right);
+                float v = dot(relativeDir, actualUp);
+                float distFromCenter = length(float2(u, v)) / sqrt(1.0 - (moonSize * moonSize));
+                if (distFromCenter < 1.0)
+                {
+                    float2 moonUV = float2(u, v) * 200.0;
+                    float2 param_3 = moonUV;
+                    float param_4 = distFromCenter;
+                    float3 param_5 = _452.moonColor.xyz;
+                    float3 _703 = generateMoonTexture(param_3, param_4, param_5);
+                    float3 moonTexture = _703;
+                    color += (((moonTexture * moonDisk) * 1.5) * moonHorizonFade);
+                }
+                else
+                {
+                    color += (((_452.moonColor.xyz * moonDisk) * 1.5) * moonHorizonFade);
+                }
+            }
+            float moonGlow = smoothstep(moonGlowSize, moonSize, moonDot) * (1.0 - moonDisk);
+            float moonHalo = smoothstep(moonHaloSize, moonSize, moonDot) * (1.0 - smoothstep(moonSize, moonGlowSize, moonDot));
+            float moonHorizonBoost = smoothstep(0.100000001490116119384765625, -0.0500000007450580596923828125, _452.moonDirection.y) * 2.0;
+            moonHalo *= (0.20000000298023223876953125 + moonHorizonBoost);
+            color += ((_452.moonColor.xyz * ((moonGlow * 0.300000011920928955078125) + moonHalo)) * moonHorizonFade);
+        }
+        bool _767 = _452.sunDirection.y > (-0.100000001490116119384765625);
+        bool _773;
+        if (_767)
+        {
+            _773 = _484.sunTintStrength > 0.0;
+        }
+        else
+        {
+            _773 = _767;
+        }
+        if (_773)
+        {
+            float sunSkyInfluence = smoothstep(0.699999988079071044921875, 0.949999988079071044921875, sunDot) * smoothstep(-0.100000001490116119384765625, 0.20000000298023223876953125, _452.sunDirection.y);
+            color = mix(color, color * _452.sunColor.xyz, float3((sunSkyInfluence * 0.300000011920928955078125) * _484.sunTintStrength));
+            float sunProximity = smoothstep(0.300000011920928955078125, 0.800000011920928955078125, sunDot) * smoothstep(-0.100000001490116119384765625, 0.300000011920928955078125, _452.sunDirection.y);
+            color += (((_452.sunColor.xyz * sunProximity) * 0.1500000059604644775390625) * _484.sunTintStrength);
+            float globalSunTint = smoothstep(-0.100000001490116119384765625, 0.5, _452.sunDirection.y);
+            color = mix(color, _452.sunColor.xyz, float3((globalSunTint * _484.sunTintStrength) * 0.07999999821186065673828125));
+        }
+        bool _833 = _452.moonDirection.y > (-0.100000001490116119384765625);
+        bool _839;
+        if (_833)
+        {
+            _839 = _484.moonTintStrength > 0.0;
+        }
+        else
+        {
+            _839 = _833;
+        }
+        if (_839)
+        {
+            float moonSkyInfluence = smoothstep(0.800000011920928955078125, 0.949999988079071044921875, moonDot) * smoothstep(-0.100000001490116119384765625, 0.20000000298023223876953125, _452.moonDirection.y);
+            color = mix(color, color * _452.moonColor.xyz, float3((moonSkyInfluence * 0.20000000298023223876953125) * _484.moonTintStrength));
+            float moonProximity = smoothstep(0.5, 0.85000002384185791015625, moonDot) * smoothstep(-0.100000001490116119384765625, 0.300000011920928955078125, _452.moonDirection.y);
+            color += (((_452.moonColor.xyz * moonProximity) * 0.07999999821186065673828125) * _484.moonTintStrength);
+            float globalMoonTint = smoothstep(-0.100000001490116119384765625, 0.5, _452.moonDirection.y);
+            color = mix(color, _452.moonColor.xyz, float3((globalMoonTint * _484.moonTintStrength) * 0.0500000007450580596923828125));
+        }
+    }
+    out.FragColor = float4(color, 1.0);
+    return out;
+}
+
+)"
+;
+
+static const char* SKYBOX_VERT =
+R"(#include <metal_stdlib>
+#include <simd/simd.h>
+
+using namespace metal;
+
+struct UniformBufferObject
+{
+    float4x4 projection;
+    float4x4 view;
+};
+
+struct main0_out
+{
+    float3 TexCoords [[user(locn0)]];
+    float4 gl_Position [[position]];
+};
+
+struct main0_in
+{
+    float3 aPos [[attribute(0)]];
+};
+
+vertex main0_out main0(main0_in in [[stage_in]], constant UniformBufferObject& _19 [[buffer(0)]])
+{
+    main0_out out = {};
+    out.TexCoords = in.aPos;
+    float3x3 _32 = float3x3(_19.view[0].xyz, _19.view[1].xyz, _19.view[2].xyz);
+    float4x4 viewNoTranslation = float4x4(float4(_32[0].x, _32[0].y, _32[0].z, 0.0), float4(_32[1].x, _32[1].y, _32[1].z, 0.0), float4(_32[2].x, _32[2].y, _32[2].z, 0.0), float4(0.0, 0.0, 0.0, 1.0));
+    float4 pos = (_19.projection * viewNoTranslation) * float4(in.aPos, 1.0);
+    out.gl_Position = pos.xyww;
+    return out;
+}
+
+)"
+;
+
+static const char* SSAO_BLUR_FRAG =
+R"(#include <metal_stdlib>
+#include <simd/simd.h>
+
+using namespace metal;
+
+struct main0_out
+{
+    float FragColor [[color(0)]];
+};
+
+struct main0_in
+{
+    float2 TexCoord [[user(locn0)]];
+};
+
+fragment main0_out main0(main0_in in [[stage_in]], texture2d<float> inSSAO [[texture(0)]], sampler inSSAOSmplr [[sampler(0)]])
+{
+    main0_out out = {};
+    float2 texelSize = float2(1.0) / float2(int2(inSSAO.get_width(), inSSAO.get_height()));
+    float result = 0.0;
+    for (int x = -2; x <= 2; x++)
+    {
+        for (int y = -2; y <= 2; y++)
+        {
+            float2 offset = float2(float(x), float(y)) * texelSize;
+            result += inSSAO.sample(inSSAOSmplr, (in.TexCoord + offset)).x;
+        }
+    }
+    out.FragColor = result / 25.0;
+    return out;
+}
+
+)"
 ;
 
 static const char* SSAO_FRAG =
-R"(#version 410 core
-out float FragColor;
-in vec2 TexCoord;
+R"(#include <metal_stdlib>
+#include <simd/simd.h>
 
-uniform sampler2D gPosition;   
-uniform sampler2D gNormal;
-uniform sampler2D texNoise;
-uniform vec3 samples[64];
-uniform mat4 projection;
-uniform mat4 view;
-uniform vec2 noiseScale;
+using namespace metal;
 
-const int kernelSize = 64;
-const float radius = 0.5;
-const float bias = 0.025;
+struct Paramters {
+    float4x4 projection;
+    float4x4 inverseProjection;
+    float4x4 view;
+    float2 noiseScale;
+};
 
-void main() {
-    vec3 fragPosWorld = texture(gPosition, TexCoord).xyz;
-    vec3 normalWorld = texture(gNormal, TexCoord).rgb;
-    
-    if (length(normalWorld) < 0.001) {
-        // Treat missing/invalid normals as fully lit (no occlusion)
-        FragColor = 1.0;
-        return;
+struct Samples {
+    float3 samples[64];
+};
+
+struct main0_out {
+    float FragColor [[color(0)]];
+};
+
+struct main0_in {
+    float2 TexCoord [[user(locn0)]];
+};
+
+static inline float3 reconstructViewPos(float2 uv, float depth,
+                                        float4x4 inverseProjection) {
+    float2 ndc;
+    ndc.x = uv.x * 2.0 - 1.0;
+    ndc.y = (1.0 - uv.y) * 2.0 - 1.0;
+    float ndcZ = depth * 2.0 - 1.0;
+    float4 clip = float4(ndc, ndcZ, 1.0);
+    float4 viewPos = inverseProjection * clip;
+    float invW = 1.0 / max(abs(viewPos.w), 1e-6);
+    return viewPos.xyz * invW;
+}
+
+fragment main0_out main0(main0_in in [[stage_in]],
+                         constant Paramters &_43 [[buffer(0)]],
+                         constant Samples &_137 [[buffer(1)]],
+                         texture2d<float> gPosition [[texture(0)]],
+                         texture2d<float> gNormal [[texture(1)]],
+                         texture2d<float> texNoise [[texture(2)]],
+                         sampler gPositionSmplr [[sampler(0)]],
+                         sampler gNormalSmplr [[sampler(1)]],
+                         sampler texNoiseSmplr [[sampler(2)]]) {
+    main0_out out = {};
+    float3 sampledNormalWorld = gNormal.sample(gNormalSmplr, in.TexCoord).xyz;
+    float sampledNormalLength = length(sampledNormalWorld);
+    if (!all(isfinite(sampledNormalWorld)) ||
+        sampledNormalLength <= 0.001000000047497451305389404296875) {
+        out.FragColor = 1.0;
+        return out;
     }
-    
-    vec3 fragPos = (view * vec4(fragPosWorld, 1.0)).xyz;
-    vec3 normal = normalize((view * vec4(normalWorld, 0.0)).xyz);
-    
-    vec3 randomVec = normalize(texture(texNoise, TexCoord * noiseScale).xyz * 2.0 - 1.0);
-    vec3 tangent = normalize(randomVec - normal * dot(randomVec, normal));
-    vec3 bitangent = cross(normal, tangent);
-    mat3 TBN = mat3(tangent, bitangent, normal);
-    
+    float4 gPositionCenter = gPosition.sample(gPositionSmplr, in.TexCoord);
+    float centerDepth = gPositionCenter.w;
+    if (!isfinite(centerDepth)) {
+        out.FragColor = 1.0;
+        return out;
+    }
+    centerDepth = clamp(centerDepth, 0.0, 1.0);
+    float3 fragPos = reconstructViewPos(in.TexCoord, centerDepth,
+                                        _43.inverseProjection);
+    float3 normalWorld = sampledNormalWorld / sampledNormalLength;
+    float3 normal = fast::normalize((_43.view * float4(normalWorld, 0.0)).xyz);
+    float3 randomVec = fast::normalize(
+        (texNoise.sample(texNoiseSmplr, (in.TexCoord * _43.noiseScale)).xyz *
+         2.0) -
+        float3(1.0));
+    float3 tangent =
+        fast::normalize(randomVec - (normal * dot(randomVec, normal)));
+    float3 bitangent = cross(normal, tangent);
+    float3x3 TBN = float3x3(float3(tangent), float3(bitangent), float3(normal));
+    float viewDepth = abs(fragPos.z);
+    float baseRadius =
+        mix(0.550000011920928955078125, 2.2000000476837158203125,
+            clamp(viewDepth / 140.0, 0.0, 1.0));
+    float3 dPosDx = dfdx(fragPos);
+    float3 dPosDy = dfdy(fragPos);
+    float pixelWorldScale = max(length(dPosDx), length(dPosDy));
+    if (!isfinite(pixelWorldScale)) {
+        pixelWorldScale = 0.0;
+    }
+    float sampleRadius =
+        clamp(max(baseRadius, pixelWorldScale * 6.0), 0.3499999940395355,
+              12.0);
+    float depthBias = clamp(
+        max(mix(0.006000000052154064178466796875,
+                0.0240000002086162567138671875,
+                clamp(viewDepth / 180.0, 0.0, 1.0)),
+            sampleRadius * 0.009999999776482582),
+        0.003000000026077032, 0.07999999821186066);
     float occlusion = 0.0;
     int validSamples = 0;
-    
-    for (int i = 0; i < kernelSize; i++) {
-        vec3 samplePos = TBN * samples[i];
-        samplePos = fragPos + samplePos * radius;
-        
-        vec4 offset = projection * vec4(samplePos, 1.0);
-        offset.xyz /= offset.w;
-        offset.xy = offset.xy * 0.5 + 0.5;
-        
-        if (offset.x < 0.0 || offset.x > 1.0 || offset.y < 0.0 || offset.y > 1.0) {
+    for (int i = 0; i < 64; i++) {
+        float3 samplePos = TBN * _137.samples[i];
+        samplePos = fragPos + (samplePos * sampleRadius);
+        float4 offset = _43.projection * float4(samplePos, 1.0);
+        float _160 = offset.w;
+        float4 _161 = offset;
+        float3 _164 = _161.xyz / float3(_160);
+        offset.x = _164.x;
+        offset.y = _164.y;
+        offset.z = _164.z;
+        float4 _174 = offset;
+        float2 _178 = (_174.xy * 0.5) + float2(0.5);
+        offset.x = _178.x;
+        offset.y = 1.0 - _178.y;
+        bool _185 = offset.x < 0.0;
+        bool _192;
+        if (!_185) {
+            _192 = offset.x > 1.0;
+        } else {
+            _192 = _185;
+        }
+        bool _199;
+        if (!_192) {
+            _199 = offset.y < 0.0;
+        } else {
+            _199 = _192;
+        }
+        bool _206;
+        if (!_199) {
+            _206 = offset.y > 1.0;
+        } else {
+            _206 = _199;
+        }
+        if (_206) {
             continue;
         }
-        
-        vec3 samplePosWorld = texture(gPosition, offset.xy).xyz;
-        float sampleDepth = (view * vec4(samplePosWorld, 1.0)).z;
-        
-        float rangeCheck = smoothstep(0.0, 1.0, radius / (abs(fragPos.z - sampleDepth) + 0.001));
-        
-        occlusion += (sampleDepth >= samplePos.z + bias ? 1.0 : 0.0) * rangeCheck;
+        float sampleDepth = gPosition.sample(gPositionSmplr, offset.xy).w;
+        if (!isfinite(sampleDepth)) {
+            continue;
+        }
+        sampleDepth = clamp(sampleDepth, 0.0, 1.0);
+        float3 sampleViewPos =
+            reconstructViewPos(offset.xy, sampleDepth, _43.inverseProjection);
+        float rangeCheck =
+            smoothstep(0.0, 1.0,
+                       sampleRadius / (abs(fragPos.z - sampleViewPos.z) +
+                                        0.0005000000237487256526947021484375));
+        occlusion +=
+            (float(sampleViewPos.z >= (samplePos.z + depthBias)) * rangeCheck);
         validSamples++;
     }
-    
     if (validSamples > 0) {
         occlusion = 1.0 - (occlusion / float(validSamples));
     } else {
         occlusion = 1.0;
     }
-
-    FragColor = occlusion;
-})"
+    out.FragColor = occlusion;
+    return out;
+}
+)"
 ;
 
 static const char* SSR_BLUR_FRAG =
-R"()"
+R"(#include <metal_stdlib>
+#include <simd/simd.h>
+
+using namespace metal;
+
+fragment void main0()
+{
+}
+
+)"
 ;
 
 static const char* SSR_FRAG =
-R"(#version 410 core
-out vec4 FragColor;
+R"(#pragma clang diagnostic ignored "-Wmissing-prototypes"
 
-in vec2 TexCoord;
+#include <metal_stdlib>
+#include <simd/simd.h>
 
-uniform sampler2D gPosition;
-uniform sampler2D gNormal;
-uniform sampler2D gAlbedoSpec;
-uniform sampler2D gMaterial;
-uniform sampler2D sceneColor;  
-uniform sampler2D gDepth;     
-uniform samplerCube skybox;
+using namespace metal;
 
-uniform mat4 projection;
-uniform mat4 view;
-uniform mat4 inverseProjection;
-uniform mat4 inverseView;
-uniform vec3 cameraPosition;
+struct Uniforms
+{
+    float4x4 inverseProjection;
+    float4x4 inverseView;
+    float4x4 projection;
+    float4x4 view;
+    float3 cameraPosition;
+};
 
-uniform float maxDistance = 30.0;   
-uniform float resolution = 0.5;     
-uniform int steps = 64;            
-uniform float thickness = 2.0;      
-uniform float maxRoughness = 0.5;  
+struct SSRParameters
+{
+    float maxDistance;
+    float resolution;
+    int steps;
+    float thickness;
+    float maxRoughness;
+};
 
-const float PI = 3.14159265359;
+struct main0_out
+{
+    float4 FragColor [[color(0)]];
+};
 
-float LinearizeDepth(float depth, float near, float far) {
-    float z = depth * 2.0 - 1.0;
-    return (2.0 * near * far) / (far + near - z * (far - near));
+struct main0_in
+{
+    float2 TexCoord [[user(locn0)]];
+};
+
+static inline __attribute__((always_inline))
+float3 fresnelSchlick(thread const float& cosTheta, thread const float3& F0)
+{
+    return F0 + ((float3(1.0) - F0) * powr(1.0 - cosTheta, 5.0));
 }
 
-float hash(vec2 p) {
-    vec3 p3 = fract(vec3(p.xyx) * 0.1031);
-    p3 += dot(p3, p3.yzx + 33.33);
-    return fract((p3.x + p3.y) * p3.z);
-}
-
-vec3 fresnelSchlick(float cosTheta, vec3 F0) {
-    return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
-}
-
-vec3 sampleSkyReflection(vec3 normal, vec3 viewDir, vec3 albedo, float metallic) {
-    vec3 reflected = reflect(-normalize(viewDir), normalize(normal));
-    vec3 skyColor = texture(skybox, reflected).rgb;
-    float skyLuma = dot(skyColor, vec3(0.2126, 0.7152, 0.0722));
-    if (skyLuma < 0.001) {
-        float t = clamp(reflected.y * 0.5 + 0.5, 0.0, 1.0);
-        vec3 horizon = vec3(0.74, 0.79, 0.88);
-        vec3 zenith = vec3(0.50, 0.64, 0.84);
-        skyColor = mix(horizon, zenith, t);
+static inline __attribute__((always_inline))
+float3 sampleSkyReflection(thread const float3& normal, thread const float3& viewDir, thread const float3& albedo, thread const float& metallic, texturecube<float> skybox, sampler skyboxSmplr)
+{
+    float3 reflected = reflect(-fast::normalize(viewDir), fast::normalize(normal));
+    float3 skyColor = skybox.sample(skyboxSmplr, reflected).xyz;
+    float skyLuma = dot(skyColor, float3(0.2125999927520751953125, 0.715200006961822509765625, 0.072200000286102294921875));
+    if (skyLuma < 0.001000000047497451305389404296875)
+    {
+        float t = fast::clamp((reflected.y * 0.5) + 0.5, 0.0, 1.0);
+        float3 horizon = float3(0.7400000095367431640625, 0.790000021457672119140625, 0.87999999523162841796875);
+        float3 zenith = float3(0.5, 0.63999998569488525390625, 0.839999973773956298828125);
+        skyColor = mix(horizon, zenith, float3(t));
     }
-    float tintStrength = metallic * 0.35;
-    vec3 tint = mix(vec3(1.0), albedo, tintStrength);
+    float tintStrength = metallic * 0.3499999940395355224609375;
+    float3 tint = mix(float3(1.0), albedo, float3(tintStrength));
     return skyColor * tint;
 }
 
-vec4 SSR(vec3 worldPos, vec3 normal, vec3 viewDir, float roughness, float metallic, vec3 albedo) {
-    vec3 viewPos = (view * vec4(worldPos, 1.0)).xyz;
-    vec3 viewNormal = normalize((view * vec4(normal, 0.0)).xyz);
-    float mirrorFactor = clamp(metallic * (1.0 - roughness), 0.0, 1.0);
-    vec3 skyReflection = sampleSkyReflection(normal, viewDir, albedo, metallic);
-    
-    vec3 viewDirection = normalize(viewPos);
-    vec3 viewReflect = normalize(reflect(viewDirection, viewNormal));
-    
-    if (viewReflect.z > 0.0) {
-        return vec4(skyReflection, mirrorFactor);
+static inline __attribute__((always_inline))
+float4 SSR(thread const float3& worldPos, thread const float3& normal, thread const float3& viewDir, thread const float& roughness, thread const float& metallic, thread const float3& albedo, constant Uniforms& _42, constant SSRParameters& _96, thread float4& gl_FragCoord, texture2d<float> gPosition, sampler gPositionSmplr, texture2d<float> sceneColor, sampler sceneColorSmplr, texture2d<float> gNormal, sampler gNormalSmplr, texture2d<float> gDepth, sampler gDepthSmplr, texturecube<float> skybox, sampler skyboxSmplr)
+{
+    float3 viewPos = (_42.view * float4(worldPos, 1.0)).xyz;
+    float3 viewNormal = fast::normalize((_42.view * float4(normal, 0.0)).xyz);
+    float mirrorFactor = fast::clamp(metallic * (1.0 - roughness), 0.0, 1.0);
+    float3 skyReflection = sampleSkyReflection(normal, viewDir, albedo, metallic, skybox, skyboxSmplr);
+    float3 viewDirection = fast::normalize(viewPos);
+    float3 viewReflect = fast::normalize(reflect(viewDirection, viewNormal));
+    if (viewReflect.z > 0.0)
+    {
+        return float4(skyReflection, mirrorFactor);
     }
-    
-    vec3 rayOrigin = viewPos + viewNormal * 0.01;
-    vec3 rayDir = viewReflect;
-    
-    float stepSize = maxDistance / float(steps);
-    vec3 currentPos = rayOrigin;
-    
-    float jitter = hash(gl_FragCoord.xy) * roughness * 0.25;
-    currentPos += rayDir * stepSize * jitter;
-    
-    vec2 hitUV = vec2(-1.0);
+    float3 rayOrigin = viewPos + (viewNormal * 0.00999999977648258209228515625);
+    float3 rayDir = viewReflect;
+    float stepSize = _96.maxDistance / float(_96.steps);
+    float3 currentPos = rayOrigin;
+    float jitter = fract(sin(dot(gl_FragCoord.xy, float2(12.98980045318603515625, 78.233001708984375))) * 43758.546875) * roughness * 0.25;
+    currentPos += ((rayDir * stepSize) * jitter);
+    float2 hitUV = float2(-1.0);
     float hitDepth = 0.0;
     bool hit = false;
-    vec2 fallbackUV = TexCoord;
+    float2 fallbackUV = float2(0.0);
     bool hasFallbackUV = false;
-    
-    vec3 lastPos = currentPos;
-    
-    for (int i = 0; i < steps; i++) {
-        float t = float(i) / float(steps);
-        float adaptiveStep = mix(0.3, 1.0, t);
-        currentPos += rayDir * stepSize * adaptiveStep;
-        
-        vec4 projectedPos = projection * vec4(currentPos, 1.0);
-        projectedPos.xyz /= projectedPos.w;
-        vec2 screenUV = projectedPos.xy * 0.5 + 0.5;
-        
-        if (screenUV.x >= 0.0 && screenUV.x <= 1.0 &&
-            screenUV.y >= 0.0 && screenUV.y <= 1.0) {
+    float3 lastPos = currentPos;
+    for (int i = 0; i < _96.steps; i++)
+    {
+        float t = float(i) / float(_96.steps);
+        float adaptiveStep = mix(0.300000011920928955078125, 1.0, t);
+        currentPos += ((rayDir * stepSize) * adaptiveStep);
+        float4 projectedPos = _42.projection * float4(currentPos, 1.0);
+        float _186 = projectedPos.w;
+        float4 _187 = projectedPos;
+        float3 _190 = _187.xyz / float3(_186);
+        projectedPos.x = _190.x;
+        projectedPos.y = _190.y;
+        projectedPos.z = _190.z;
+        float2 screenUV = (projectedPos.xy * 0.5) + float2(0.5);
+        bool _208 = screenUV.x < 0.0;
+        bool _215;
+        if (!_208)
+        {
+            _215 = screenUV.x > 1.0;
+        }
+        else
+        {
+            _215 = _208;
+        }
+        bool _222;
+        if (!_215)
+        {
+            _222 = screenUV.y < 0.0;
+        }
+        else
+        {
+            _222 = _215;
+        }
+        bool _229;
+        if (!_222)
+        {
+            _229 = screenUV.y > 1.0;
+        }
+        else
+        {
+            _229 = _222;
+        }
+        if (!_229)
+        {
             fallbackUV = screenUV;
             hasFallbackUV = true;
-        } else {
+        }
+        else
+        {
             break;
         }
-
-        float rawDepth = texture(gDepth, screenUV).r;
-        if (rawDepth >= 0.9999) {
+        float rawDepth = gDepth.sample(gDepthSmplr, screenUV).x;
+        if (rawDepth >= 0.99989998340606689453125)
+        {
             lastPos = currentPos;
             continue;
         }
-        
-        vec3 sampleWorldPos = texture(gPosition, screenUV).xyz;
-        vec3 sampleNormal = texture(gNormal, screenUV).xyz;
-        if (dot(sampleNormal, sampleNormal) < 0.01) {
+        float3 sampleWorldPos = gPosition.sample(gPositionSmplr, screenUV).xyz;
+        float3 sampleNormal = gNormal.sample(gNormalSmplr, screenUV).xyz;
+        if (dot(sampleNormal, sampleNormal) < 0.00999999977648258209228515625)
+        {
             lastPos = currentPos;
             continue;
         }
-        if (length(sampleWorldPos - worldPos) < 0.08) {
+        if (length(sampleWorldPos - worldPos) < 0.07999999821186065673828125)
+        {
             lastPos = currentPos;
             continue;
         }
-        vec3 sampleViewPos = (view * vec4(sampleWorldPos, 1.0)).xyz;
-        
+        float3 sampleViewPos = (_42.view * float4(sampleWorldPos, 1.0)).xyz;
         float sampleDepth = -sampleViewPos.z;
         float currentDepth = -currentPos.z;
-        vec3 sampleViewNormal = normalize((view * vec4(sampleNormal, 0.0)).xyz);
-        if (dot(sampleViewNormal, viewNormal) > 0.92 &&
-            abs(sampleDepth - currentDepth) < thickness * 1.5) {
+        float3 sampleViewNormal = fast::normalize((_42.view * float4(sampleNormal, 0.0)).xyz);
+        if ((dot(sampleViewNormal, viewNormal) > 0.920000016689300537109375) && (abs(sampleDepth - currentDepth) < (_96.thickness * 1.5)))
+        {
             lastPos = currentPos;
             continue;
         }
-        
         float depthDiff = sampleDepth - currentDepth;
-        
-        if (depthDiff > 0.0 && depthDiff < thickness) {
-            vec3 binarySearchStart = lastPos;
-            vec3 binarySearchEnd = currentPos;
-            
-            for (int j = 0; j < 8; j++) {  
-                vec3 midPoint = (binarySearchStart + binarySearchEnd) * 0.5;
-                
-                vec4 midProj = projection * vec4(midPoint, 1.0);
-                midProj.xyz /= midProj.w;
-                vec2 midUV = midProj.xy * 0.5 + 0.5;
-                if (midUV.x < 0.0 || midUV.x > 1.0 || midUV.y < 0.0 || midUV.y > 1.0) {
+        bool _265 = depthDiff > 0.0;
+        bool _272;
+        if (_265)
+        {
+            _272 = depthDiff < _96.thickness;
+        }
+        else
+        {
+            _272 = _265;
+        }
+        if (_272)
+        {
+            float3 binarySearchStart = lastPos;
+            float3 binarySearchEnd = currentPos;
+            for (int j = 0; j < 8; j++)
+            {
+                float3 midPoint = (binarySearchStart + binarySearchEnd) * 0.5;
+                float4 midProj = _42.projection * float4(midPoint, 1.0);
+                float _303 = midProj.w;
+                float4 _304 = midProj;
+                float3 _307 = _304.xyz / float3(_303);
+                midProj.x = _307.x;
+                midProj.y = _307.y;
+                midProj.z = _307.z;
+                float2 midUV = (midProj.xy * 0.5) + float2(0.5);
+                bool _321 = midUV.x < 0.0;
+                bool _328;
+                if (!_321)
+                {
+                    _328 = midUV.x > 1.0;
+                }
+                else
+                {
+                    _328 = _321;
+                }
+                bool _335;
+                if (!_328)
+                {
+                    _335 = midUV.y < 0.0;
+                }
+                else
+                {
+                    _335 = _328;
+                }
+                bool _342;
+                if (!_335)
+                {
+                    _342 = midUV.y > 1.0;
+                }
+                else
+                {
+                    _342 = _335;
+                }
+                if (_342)
+                {
                     break;
                 }
-
-                float midRawDepth = texture(gDepth, midUV).r;
-                if (midRawDepth >= 0.9999) {
+                float midRawDepth = gDepth.sample(gDepthSmplr, midUV).x;
+                if (midRawDepth >= 0.99989998340606689453125)
+                {
                     binarySearchStart = midPoint;
                     continue;
                 }
-                
-                vec3 midSampleWorldPos = texture(gPosition, midUV).xyz;
-                vec3 midSampleViewPos = (view * vec4(midSampleWorldPos, 1.0)).xyz;
-                float midSampleDepth = -midSampleViewPos.z;  
-                float midCurrentDepth = -midPoint.z;        
-                
-                if (midCurrentDepth < midSampleDepth) {
+                float3 midSampleWorldPos = gPosition.sample(gPositionSmplr, midUV).xyz;
+                float3 midSampleViewPos = (_42.view * float4(midSampleWorldPos, 1.0)).xyz;
+                float midSampleDepth = -midSampleViewPos.z;
+                float midCurrentDepth = -midPoint.z;
+                if (midCurrentDepth < midSampleDepth)
+                {
                     binarySearchStart = midPoint;
-                } else {
+                }
+                else
+                {
                     binarySearchEnd = midPoint;
                 }
             }
-            
-            vec4 finalProj = projection * vec4(binarySearchEnd, 1.0);
-            finalProj.xyz /= finalProj.w;
-            hitUV = finalProj.xy * 0.5 + 0.5;
+            float4 finalProj = _42.projection * float4(binarySearchEnd, 1.0);
+            float _364 = finalProj.w;
+            float4 _365 = finalProj;
+            float3 _368 = _365.xyz / float3(_364);
+            finalProj.x = _368.x;
+            finalProj.y = _368.y;
+            finalProj.z = _368.z;
+            hitUV = (finalProj.xy * 0.5) + float2(0.5);
             hitDepth = length(currentPos - rayOrigin);
             hit = true;
             break;
         }
-        
         lastPos = currentPos;
     }
-    
-    if (!hit) {
-        vec3 fallbackReflection = skyReflection;
-        if (hasFallbackUV) {
+    if (!hit)
+    {
+        float3 fallbackReflection = skyReflection;
+        if (hasFallbackUV)
+        {
             float mipLevel = roughness * 5.0;
-            vec3 screenFallback = textureLod(sceneColor, fallbackUV, mipLevel).rgb;
-            float fallbackDepth = texture(gDepth, fallbackUV).r;
-            float screenValidity = 1.0 - smoothstep(0.998, 1.0, fallbackDepth);
-            float fallbackLuma = dot(screenFallback, vec3(0.2126, 0.7152, 0.0722));
-            screenValidity *= smoothstep(0.005, 0.03, fallbackLuma);
-            float tintStrength = metallic * 0.35;
-            vec3 metalTint = mix(vec3(1.0), albedo, tintStrength);
-            fallbackReflection = mix(
-                skyReflection, screenFallback * metalTint, screenValidity);
+            float3 screenFallback = sceneColor.sample(sceneColorSmplr, fallbackUV, level(mipLevel)).xyz;
+            float fallbackDepth = gDepth.sample(gDepthSmplr, fallbackUV).x;
+            float screenValidity = 1.0 - smoothstep(0.99800002574920654296875, 1.0, fallbackDepth);
+            float fallbackLuma = dot(screenFallback, float3(0.2125999927520751953125, 0.715200006961822509765625, 0.072200000286102294921875));
+            screenValidity *= smoothstep(0.004999999888241291046142578125, 0.02999999932944774627685546875, fallbackLuma);
+            float tintStrength = metallic * 0.3499999940395355224609375;
+            float3 metalTint = mix(float3(1.0), albedo, float3(tintStrength));
+            fallbackReflection = mix(skyReflection, screenFallback * metalTint, float3(screenValidity));
         }
-        return vec4(fallbackReflection, mirrorFactor);
+        return float4(fallbackReflection, mirrorFactor);
     }
-    
     float mipLevel = roughness * 5.0;
-    vec3 hitColor = textureLod(sceneColor, hitUV, mipLevel).rgb;
-    float tintStrength = metallic * 0.35;
-    vec3 metalTint = mix(vec3(1.0), albedo, tintStrength);
+    float3 hitColor = sceneColor.sample(sceneColorSmplr, hitUV, level(mipLevel)).xyz;
+    float tintStrength = metallic * 0.3499999940395355224609375;
+    float3 metalTint = mix(float3(1.0), albedo, float3(tintStrength));
     hitColor *= metalTint;
-    float hitDepthRaw = texture(gDepth, hitUV).r;
-    vec3 hitNormalSample = texture(gNormal, hitUV).xyz;
+    float hitDepthRaw = gDepth.sample(gDepthSmplr, hitUV).x;
+    float3 hitNormalSample = gNormal.sample(gNormalSmplr, hitUV).xyz;
     float hitNormalLenSq = dot(hitNormalSample, hitNormalSample);
-    vec3 hitNormalDir = hitNormalLenSq > 1e-5
-        ? hitNormalSample * inversesqrt(hitNormalLenSq)
-        : -rayDir;
-    float geometryValidity = 1.0 - smoothstep(0.998, 1.0, hitDepthRaw);
-    geometryValidity *= smoothstep(0.01, 0.1, hitNormalLenSq);
-    float normalFacing = max(dot(hitNormalDir, -rayDir), 0.0);
-    geometryValidity *= smoothstep(0.05, 0.25, normalFacing);
-    float hitLuma = dot(hitColor, vec3(0.2126, 0.7152, 0.0722));
-    float skyLuma = dot(skyReflection, vec3(0.2126, 0.7152, 0.0722));
-    float luminanceValidity = smoothstep(0.002, 0.03, hitLuma + skyLuma * 0.1);
-    
-    vec2 edgeFade = smoothstep(0.0, 0.15, hitUV) * (1.0 - smoothstep(0.85, 1.0, hitUV));
+    float3 hitNormalDir = (hitNormalLenSq > 9.9999997473787516355514526367188e-06) ? (hitNormalSample * rsqrt(hitNormalLenSq)) : (-rayDir);
+    float geometryValidity = 1.0 - smoothstep(0.99800002574920654296875, 1.0, hitDepthRaw);
+    geometryValidity *= smoothstep(0.00999999977648258209228515625, 0.100000001490116119384765625, hitNormalLenSq);
+    float normalFacing = fast::max(dot(hitNormalDir, -rayDir), 0.0);
+    geometryValidity *= smoothstep(0.0500000007450580596923828125, 0.25, normalFacing);
+    float hitLuma = dot(hitColor, float3(0.2125999927520751953125, 0.715200006961822509765625, 0.072200000286102294921875));
+    float skyLuma = dot(skyReflection, float3(0.2125999927520751953125, 0.715200006961822509765625, 0.072200000286102294921875));
+    float luminanceValidity = smoothstep(0.00200000009499490261077880859375, 0.02999999932944774627685546875, hitLuma + (skyLuma * 0.100000001490116119384765625));
+    float2 edgeFade = smoothstep(float2(0.0), float2(0.1500000059604644775390625), hitUV) * (float2(1.0) - smoothstep(float2(0.85000002384185791015625), float2(1.0), hitUV));
     float edgeFactor = edgeFade.x * edgeFade.y;
-    
-    float distanceFade = 1.0 - smoothstep(maxDistance * 0.5, maxDistance, hitDepth);
-    
-    float roughnessFade = 1.0 - smoothstep(0.0, maxRoughness, roughness);
-    float hitConfidence = edgeFactor * distanceFade * roughnessFade;
+    float distanceFade = 1.0 - smoothstep(_96.maxDistance * 0.5, _96.maxDistance, hitDepth);
+    float roughnessFade = 1.0 - smoothstep(0.0, _96.maxRoughness, roughness);
+    float hitConfidence = (edgeFactor * distanceFade) * roughnessFade;
     hitConfidence *= geometryValidity * luminanceValidity;
-    
-    vec3 F0 = mix(vec3(0.04), albedo, metallic);
-    vec3 V = normalize(viewDir);
-    float cosTheta = max(dot(normal, V), 0.0);
-    vec3 fresnel = fresnelSchlick(cosTheta, F0);
-    float fresnelFactor = (fresnel.r + fresnel.g + fresnel.b) / 3.0;
+    float3 F0 = mix(float3(0.039999999105930328369140625), albedo, float3(metallic));
+    float3 V = fast::normalize(viewDir);
+    float cosTheta = fast::max(dot(normal, V), 0.0);
+    float param = cosTheta;
+    float3 param_1 = F0;
+    float3 fresnel = fresnelSchlick(param, param_1);
+    float fresnelFactor = ((fresnel.x + fresnel.y) + fresnel.z) / 3.0;
     float fresnelWeight = mix(fresnelFactor, 1.0, mirrorFactor);
-    
-    vec3 reflectionColor = mix(skyReflection, hitColor, hitConfidence);
+    float3 reflectionColor = mix(skyReflection, hitColor, float3(hitConfidence));
     float finalFade = mix(hitConfidence * fresnelWeight, 1.0, mirrorFactor);
-    finalFade = clamp(finalFade, 0.0, 1.0);
-    
-    return vec4(reflectionColor, finalFade);
+    finalFade = fast::clamp(finalFade, 0.0, 1.0);
+    return float4(reflectionColor, finalFade);
 }
 
-void main() {
-    vec3 worldPos = texture(gPosition, TexCoord).xyz;
-    vec3 normal = normalize(texture(gNormal, TexCoord).xyz);
-    vec3 albedo = texture(gAlbedoSpec, TexCoord).rgb;
-    vec4 material = texture(gMaterial, TexCoord);
-    
-    float metallic = material.r;
-    float roughness = material.g;
-    
-    if (length(normal) < 0.001) {
-        FragColor = vec4(0.0, 0.0, 0.0, 0.0);
-        return;
+fragment main0_out main0(main0_in in [[stage_in]], constant Uniforms& _42 [[buffer(0)]], constant SSRParameters& _96 [[buffer(1)]], texture2d<float> gPosition [[texture(0)]], texture2d<float> sceneColor [[texture(1)]], texture2d<float> gNormal [[texture(2)]], texture2d<float> gAlbedoSpec [[texture(3)]], texture2d<float> gMaterial [[texture(4)]], texture2d<float> gDepth [[texture(5)]], texturecube<float> skybox [[texture(6)]], sampler gPositionSmplr [[sampler(0)]], sampler sceneColorSmplr [[sampler(1)]], sampler gNormalSmplr [[sampler(2)]], sampler gAlbedoSpecSmplr [[sampler(3)]], sampler gMaterialSmplr [[sampler(4)]], sampler gDepthSmplr [[sampler(5)]], sampler skyboxSmplr [[sampler(6)]], float4 gl_FragCoord [[position]])
+{
+    main0_out out = {};
+    float3 worldPos = gPosition.sample(gPositionSmplr, in.TexCoord).xyz;
+    float3 normal = fast::normalize(gNormal.sample(gNormalSmplr, in.TexCoord).xyz);
+    float3 albedo = gAlbedoSpec.sample(gAlbedoSpecSmplr, in.TexCoord).xyz;
+    float4 material = gMaterial.sample(gMaterialSmplr, in.TexCoord);
+    float metallic = material.x;
+    float roughness = material.y;
+    if (length(normal) < 0.001000000047497451305389404296875)
+    {
+        out.FragColor = float4(0.0);
+        return out;
     }
-    
-    if (roughness > maxRoughness) {
-        FragColor = vec4(0.0, 0.0, 0.0, 0.0);
-        return;
+    if (roughness > _96.maxRoughness)
+    {
+        out.FragColor = float4(0.0);
+        return out;
     }
-    
-    vec3 viewDir = normalize(cameraPosition - worldPos);
-    
-    vec4 reflection = SSR(worldPos, normal, viewDir, roughness, metallic, albedo);
-    
-    FragColor = reflection;
+    float3 viewDir = fast::normalize(_42.cameraPosition - worldPos);
+    float3 param = worldPos;
+    float3 param_1 = normal;
+    float3 param_2 = viewDir;
+    float param_3 = roughness;
+    float param_4 = metallic;
+    float3 param_5 = albedo;
+    float4 reflection = SSR(param, param_1, param_2, param_3, param_4, param_5, _42, _96, gl_FragCoord, gPosition, gPositionSmplr, sceneColor, sceneColorSmplr, gNormal, gNormalSmplr, gDepth, gDepthSmplr, skybox, skyboxSmplr);
+    out.FragColor = reflection;
+    return out;
 }
 )"
 ;
 
 static const char* TERRAIN_CONTROL_TESC =
-R"(#version 410 core
+R"(#include <metal_stdlib>
+#include <simd/simd.h>
 
-layout(vertices = 4) out;
+using namespace metal;
 
-uniform mat4 model;
-uniform mat4 view;
+struct UBO
+{
+    float4x4 model;
+    float4x4 view;
+    float4x4 projection;
+};
 
-in vec2 TexCoord[];
-out vec2 TextureCoord[];
+struct main0_out
+{
+    float2 TextureCoord;
+    float4 gl_Position;
+};
 
-in gl_PerVertex {
-    vec4 gl_Position;
-    float gl_PointSize;
-    float gl_ClipDistance[];
-}
-gl_in[gl_MaxPatchVertices];
+struct main0_in
+{
+    float2 TexCoord [[attribute(0)]];
+    float4 gl_Position [[attribute(1)]];
+};
 
-void main() {
+kernel void main0(main0_in in [[stage_in]], constant UBO& _56 [[buffer(0)]], uint gl_InvocationID [[thread_index_in_threadgroup]], uint gl_PrimitiveID [[threadgroup_position_in_grid]], device main0_out* spvOut [[buffer(28)]], constant uint* spvIndirectParams [[buffer(29)]], device MTLQuadTessellationFactorsHalf* spvTessLevel [[buffer(26)]], threadgroup main0_in* gl_in [[threadgroup(0)]])
+{
+    device main0_out* gl_out = &spvOut[gl_PrimitiveID * 4];
+    if (gl_InvocationID < spvIndirectParams[0])
+        gl_in[gl_InvocationID] = in;
+    threadgroup_barrier(mem_flags::mem_threadgroup);
+    if (gl_InvocationID >= 4)
+        return;
     gl_out[gl_InvocationID].gl_Position = gl_in[gl_InvocationID].gl_Position;
-    TextureCoord[gl_InvocationID] = TexCoord[gl_InvocationID];
-
-    if (gl_InvocationID == 0) {
-        const int MIN_TESS_LEVEL = 4;
-        const int MAX_TESS_LEVEL = 64;
-        const float MIN_DISTANCE = 20;
-        const float MAX_DISTANCE = 800;
-
-        vec4 eyeSpacePos00 = view * model * gl_in[0].gl_Position;
-        vec4 eyeSpacePos01 = view * model * gl_in[1].gl_Position;
-        vec4 eyeSpacePos10 = view * model * gl_in[2].gl_Position;
-        vec4 eyeSpacePos11 = view * model * gl_in[3].gl_Position;
-
-        float dist00 = clamp((abs(eyeSpacePos00.z) - MIN_DISTANCE) /
-                                 (MAX_DISTANCE - MIN_DISTANCE),
-                             0.0, 1.0);
-        float dist01 = clamp((abs(eyeSpacePos01.z) - MIN_DISTANCE) /
-                                 (MAX_DISTANCE - MIN_DISTANCE),
-                             0.0, 1.0);
-        float dist10 = clamp((abs(eyeSpacePos10.z) - MIN_DISTANCE) /
-                                 (MAX_DISTANCE - MIN_DISTANCE),
-                             0.0, 1.0);
-        float dist11 = clamp((abs(eyeSpacePos11.z) - MIN_DISTANCE) /
-                                 (MAX_DISTANCE - MIN_DISTANCE),
-                             0.0, 1.0);
-
-        float tessLevel0 = mix(float(MAX_TESS_LEVEL), float(MIN_TESS_LEVEL),
-                               min(dist10, dist00));
-        float tessLevel1 = mix(float(MAX_TESS_LEVEL), float(MIN_TESS_LEVEL),
-                               min(dist00, dist01));
-        float tessLevel2 = mix(float(MAX_TESS_LEVEL), float(MIN_TESS_LEVEL),
-                               min(dist01, dist11));
-        float tessLevel3 = mix(float(MAX_TESS_LEVEL), float(MIN_TESS_LEVEL),
-                               min(dist11, dist10));
-
-        gl_TessLevelOuter[0] = tessLevel0;
-        gl_TessLevelOuter[1] = tessLevel1;
-        gl_TessLevelOuter[2] = tessLevel2;
-        gl_TessLevelOuter[3] = tessLevel3;
-
-        gl_TessLevelInner[0] = max(tessLevel1, tessLevel3);
-        gl_TessLevelInner[1] = max(tessLevel0, tessLevel2);
+    gl_out[gl_InvocationID].TextureCoord = gl_in[gl_InvocationID].TexCoord;
+    if (gl_InvocationID == 0)
+    {
+        float4 eyeSpacePos00 = (_56.view * _56.model) * gl_in[0].gl_Position;
+        float4 eyeSpacePos01 = (_56.view * _56.model) * gl_in[1].gl_Position;
+        float4 eyeSpacePos10 = (_56.view * _56.model) * gl_in[2].gl_Position;
+        float4 eyeSpacePos11 = (_56.view * _56.model) * gl_in[3].gl_Position;
+        float dist00 = fast::clamp((abs(eyeSpacePos00.z) - 20.0) / 780.0, 0.0, 1.0);
+        float dist01 = fast::clamp((abs(eyeSpacePos01.z) - 20.0) / 780.0, 0.0, 1.0);
+        float dist10 = fast::clamp((abs(eyeSpacePos10.z) - 20.0) / 780.0, 0.0, 1.0);
+        float dist11 = fast::clamp((abs(eyeSpacePos11.z) - 20.0) / 780.0, 0.0, 1.0);
+        float tessLevel0 = mix(64.0, 4.0, fast::min(dist10, dist00));
+        float tessLevel1 = mix(64.0, 4.0, fast::min(dist00, dist01));
+        float tessLevel2 = mix(64.0, 4.0, fast::min(dist01, dist11));
+        float tessLevel3 = mix(64.0, 4.0, fast::min(dist11, dist10));
+        spvTessLevel[gl_PrimitiveID].edgeTessellationFactor[0] = half(tessLevel0);
+        spvTessLevel[gl_PrimitiveID].edgeTessellationFactor[1] = half(tessLevel1);
+        spvTessLevel[gl_PrimitiveID].edgeTessellationFactor[2] = half(tessLevel2);
+        spvTessLevel[gl_PrimitiveID].edgeTessellationFactor[3] = half(tessLevel3);
+        spvTessLevel[gl_PrimitiveID].insideTessellationFactor[0] = half(fast::max(tessLevel1, tessLevel3));
+        spvTessLevel[gl_PrimitiveID].insideTessellationFactor[1] = half(fast::max(tessLevel0, tessLevel2));
     }
-})"
+}
+
+)"
 ;
 
 static const char* TERRAIN_EVAL_TESE =
-R"(#version 410 core
-layout(quads, fractional_odd_spacing, ccw) in;
+R"(#include <metal_stdlib>
+#include <simd/simd.h>
 
-uniform sampler2D heightMap;
-uniform mat4 model;
-uniform mat4 view;
-uniform mat4 projection;
-uniform mat4 lightViewProj = mat4(1.0);
-uniform float maxPeak = 48.0;
-uniform float seaLevel = 16.0;
-uniform bool isFromMap = false;
+using namespace metal;
 
-in vec2 TextureCoord[];
+struct Uniforms
+{
+    float4x4 lightViewProj;
+    float maxPeak;
+    float seaLevel;
+    uint isFromMap;
+};
 
-out float Height;
-out vec2 TexCoord;
-out vec3 FragPos;
-out vec4 FragPosLightSpace;
+struct UBO
+{
+    float4x4 model;
+    float4x4 view;
+    float4x4 projection;
+};
 
-void main() {
+struct main0_out
+{
+    float2 TexCoord [[user(locn0)]];
+    float3 FragPos [[user(locn1)]];
+    float Height [[user(locn2)]];
+    float4 FragPosLightSpace [[user(locn3)]];
+    float4 gl_Position [[position]];
+};
+
+struct main0_in
+{
+    float2 TextureCoord [[attribute(0)]];
+    float4 gl_Position [[attribute(1)]];
+};
+
+struct main0_patchIn
+{
+    patch_control_point<main0_in> gl_in;
+};
+
+[[ patch(quad, 0) ]] vertex main0_out main0(main0_patchIn patchIn [[stage_in]], constant Uniforms& _84 [[buffer(0)]], constant UBO& _145 [[buffer(1)]], texture2d<float> heightMap [[texture(0)]], sampler heightMapSmplr [[sampler(0)]], float2 gl_TessCoordIn [[position_in_patch]])
+{
+    main0_out out = {};
+    float3 gl_TessCoord = float3(gl_TessCoordIn.x, gl_TessCoordIn.y, 0.0);
     float u = gl_TessCoord.x;
     float v = gl_TessCoord.y;
+    float2 t00 = patchIn.gl_in[0].TextureCoord;
+    float2 t01 = patchIn.gl_in[1].TextureCoord;
+    float2 t10 = patchIn.gl_in[2].TextureCoord;
+    float2 t11 = patchIn.gl_in[3].TextureCoord;
+    float2 t0 = ((t01 - t00) * u) + t00;
+    float2 t1 = ((t11 - t10) * u) + t10;
+    float2 texCoord = ((t1 - t0) * v) + t0;
+    out.Height = (heightMap.sample(heightMapSmplr, texCoord, level(0.0)).x * _84.maxPeak) - _84.seaLevel;
+    float4 p00 = patchIn.gl_in[0].gl_Position;
+    float4 p01 = patchIn.gl_in[1].gl_Position;
+    float4 p10 = patchIn.gl_in[2].gl_Position;
+    float4 p11 = patchIn.gl_in[3].gl_Position;
+    float4 p0 = ((p01 - p00) * u) + p00;
+    float4 p1 = ((p11 - p10) * u) + p10;
+    float4 position = ((p1 - p0) * v) + p0;
+    position.y += out.Height;
+    out.gl_Position = ((_145.projection * _145.view) * _145.model) * position;
+    out.TexCoord = texCoord;
+    out.FragPos = float3((_145.model * position).xyz);
+    out.FragPosLightSpace = (_84.lightViewProj * _145.model) * position;
+    return out;
+}
 
-    vec2 t00 = TextureCoord[0];
-    vec2 t01 = TextureCoord[1];
-    vec2 t10 = TextureCoord[2];
-    vec2 t11 = TextureCoord[3];
-
-    vec2 t0 = (t01 - t00) * u + t00;
-    vec2 t1 = (t11 - t10) * u + t10;
-    vec2 texCoord = (t1 - t0) * v + t0;
-
-    Height = texture(heightMap, texCoord).r * maxPeak - seaLevel;
-
-    vec4 p00 = gl_in[0].gl_Position;
-    vec4 p01 = gl_in[1].gl_Position;
-    vec4 p10 = gl_in[2].gl_Position;
-    vec4 p11 = gl_in[3].gl_Position;
-
-    vec4 p0 = (p01 - p00) * u + p00;
-    vec4 p1 = (p11 - p10) * u + p10;
-    vec4 position = (p1 - p0) * v + p0;
-
-    position.y += Height;
-
-    gl_Position = projection * view * model * position;
-
-    TexCoord = texCoord;
-    FragPos = vec3(model * position);
-    FragPosLightSpace = lightViewProj * model * position;
-})"
+)"
 ;
 
 static const char* TERRAIN_FRAG =
-R"(#version 410 core
+R"(#pragma clang diagnostic ignored "-Wmissing-prototypes"
 
-in vec3 FragPos;
-in float Height;
-in vec2 TexCoord;
-in vec4 FragPosLightSpace;  
+#include <metal_stdlib>
+#include <simd/simd.h>
 
-uniform sampler2D heightMap;
-uniform sampler2D moistureMap;
-uniform sampler2D temperatureMap;
-uniform sampler2D shadowMap;  
+using namespace metal;
 
-uniform sampler2D texture0;
-uniform sampler2D texture1;
-uniform sampler2D texture2;
-uniform sampler2D texture3;
-uniform sampler2D texture4;
-uniform sampler2D texture5;
-uniform sampler2D texture6;
-uniform sampler2D texture7;
-uniform sampler2D texture8;
-uniform sampler2D texture9;
-uniform sampler2D texture10;
-uniform sampler2D texture11;
+struct PushConstants
+{
+    uint isFromMap;
+    float4 directionalColor;
+    float directionalIntensity;
+    uint hasLight;
+    uint useShadowMap;
+    float3 lightDir;
+    packed_float3 viewDir;
+    float ambientStrength;
+    float shadowBias;
+    int biomesCount;
+    float diffuseStrength;
+    float specularStrength;
+};
 
-uniform float maxPeak;
-uniform float seaLevel;
-uniform bool isFromMap;
+struct TerrainParameters
+{
+    float maxPeak;
+    float seaLevel;
+};
 
-uniform vec4 directionalColor;
-uniform float directionalIntensity;
-
-struct Biome {
+struct Biome
+{
     int id;
-    vec4 tintColor;
+    float4 tintColor;
     int useTexture;
     int textureId;
     float minHeight;
@@ -4443,380 +8830,880 @@ struct Biome {
     float maxTemperature;
 };
 
-uniform Biome biomes[12];
-uniform int biomesCount;
-
-layout (location = 0) out vec4 FragColor;
-layout (location = 1) out vec4 BrightColor;
-
-uniform bool hasLight = false;
-uniform bool useShadowMap = false;
-uniform vec3 lightDir = normalize(vec3(0.4, 1.0, 0.3));
-uniform vec3 viewDir  = normalize(vec3(0.0, 1.0, 1.0));
-uniform float ambientStrength = 0.3;  
-const float diffuseStrength = 0.8;
-const float specularStrength = 0.2;
-uniform float shadowBias = 0.005;
-
-vec4 sampleBiomeTexture(int id, vec2 uv) {
-    if (id == 0) return texture(texture0, uv);
-    if (id == 1) return texture(texture1, uv);
-    if (id == 2) return texture(texture2, uv);
-    if (id == 3) return texture(texture3, uv);
-    if (id == 4) return texture(texture4, uv);
-    if (id == 5) return texture(texture5, uv);
-    if (id == 6) return texture(texture6, uv);
-    if (id == 7) return texture(texture7, uv);
-    if (id == 8) return texture(texture8, uv);
-    if (id == 9) return texture(texture9, uv);
-    if (id == 10) return texture(texture10, uv);
-    if (id == 11) return texture(texture11, uv);
-    return vec4(1,0,1,1);
-}
-
-vec4 triplanarBlend(int idx, vec3 normal, vec3 worldPos, float scale) {
-    vec3 blend = abs(normal);
-    blend = (blend - 0.2) * 7.0;
-    blend = clamp(blend, 0.0, 1.0);
-    blend /= (blend.x + blend.y + blend.z);
-
-    vec4 xProj = sampleBiomeTexture(idx, worldPos.yz * scale);
-    vec4 yProj = sampleBiomeTexture(idx, worldPos.xz * scale);
-    vec4 zProj = sampleBiomeTexture(idx, worldPos.xy * scale);
-
-    return xProj * blend.x + yProj * blend.y + zProj * blend.z;
-}
-
-vec3 calculateNormal(sampler2D heightMap, vec2 texCoord, float heightScale)
+struct Biome_1
 {
-    float h = texture(heightMap, texCoord).r * heightScale;
+    int id;
+    float4 tintColor;
+    int useTexture;
+    int textureId;
+    float minHeight;
+    float maxHeight;
+    float minMoisture;
+    float maxMoisture;
+    float minTemperature;
+    float maxTemperature;
+};
 
-    float dx = dFdx(h);
-    float dy = dFdy(h);
+struct BiomeBuffer
+{
+    Biome_1 biomes[1];
+};
 
-    vec3 n = normalize(vec3(-dx, 1.0, -dy));
+struct main0_out
+{
+    float4 FragColor [[color(0)]];
+    float4 BrightColor [[color(1)]];
+};
+
+struct main0_in
+{
+    float2 TexCoord [[user(locn0)]];
+    float3 FragPos [[user(locn1)]];
+    float Height [[user(locn2)]];
+    float4 FragPosLightSpace [[user(locn3)]];
+};
+
+static inline __attribute__((always_inline))
+float3 calculateNormal(texture2d<float> heightMap, sampler heightMapSmplr, thread const float2& texCoord, thread const float& heightScale)
+{
+    float h = heightMap.sample(heightMapSmplr, texCoord).x * heightScale;
+    float dx = dfdx(h);
+    float dy = dfdy(h);
+    float3 n = fast::normalize(float3(-dx, 1.0, -dy));
     return n;
 }
 
-float smoothStepRange(float value, float minV, float maxV) {
+static inline __attribute__((always_inline))
+float smoothStepRange(thread const float& value, thread const float& minV, thread const float& maxV)
+{
     return smoothstep(minV, maxV, value);
 }
 
-float calculateShadow(vec4 fragPosLightSpace, vec3 normal) {
-    vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
-    projCoords = projCoords * 0.5 + 0.5;
-    
-    if(projCoords.z > 1.0 || projCoords.x < 0.0 || projCoords.x > 1.0 || 
-       projCoords.y < 0.0 || projCoords.y > 1.0)
+static inline __attribute__((always_inline))
+float4 sampleBiomeTexture(thread const int& id, thread const float2& uv, texture2d<float> texture0, sampler texture0Smplr, texture2d<float> texture1, sampler texture1Smplr, texture2d<float> texture2, sampler texture2Smplr, texture2d<float> texture3, sampler texture3Smplr, texture2d<float> texture4, sampler texture4Smplr, texture2d<float> texture5, sampler texture5Smplr, texture2d<float> texture6, sampler texture6Smplr, texture2d<float> texture7, sampler texture7Smplr, texture2d<float> texture8, sampler texture8Smplr, texture2d<float> texture9, sampler texture9Smplr, texture2d<float> texture10, sampler texture10Smplr, texture2d<float> texture11, sampler texture11Smplr)
+{
+    if (id == 0)
+    {
+        return texture0.sample(texture0Smplr, uv);
+    }
+    if (id == 1)
+    {
+        return texture1.sample(texture1Smplr, uv);
+    }
+    if (id == 2)
+    {
+        return texture2.sample(texture2Smplr, uv);
+    }
+    if (id == 3)
+    {
+        return texture3.sample(texture3Smplr, uv);
+    }
+    if (id == 4)
+    {
+        return texture4.sample(texture4Smplr, uv);
+    }
+    if (id == 5)
+    {
+        return texture5.sample(texture5Smplr, uv);
+    }
+    if (id == 6)
+    {
+        return texture6.sample(texture6Smplr, uv);
+    }
+    if (id == 7)
+    {
+        return texture7.sample(texture7Smplr, uv);
+    }
+    if (id == 8)
+    {
+        return texture8.sample(texture8Smplr, uv);
+    }
+    if (id == 9)
+    {
+        return texture9.sample(texture9Smplr, uv);
+    }
+    if (id == 10)
+    {
+        return texture10.sample(texture10Smplr, uv);
+    }
+    if (id == 11)
+    {
+        return texture11.sample(texture11Smplr, uv);
+    }
+    return float4(1.0, 0.0, 1.0, 1.0);
+}
+
+static inline __attribute__((always_inline))
+float4 triplanarBlend(thread const int& idx, thread const float3& normal, thread const float3& worldPos, thread const float& scale, texture2d<float> texture0, sampler texture0Smplr, texture2d<float> texture1, sampler texture1Smplr, texture2d<float> texture2, sampler texture2Smplr, texture2d<float> texture3, sampler texture3Smplr, texture2d<float> texture4, sampler texture4Smplr, texture2d<float> texture5, sampler texture5Smplr, texture2d<float> texture6, sampler texture6Smplr, texture2d<float> texture7, sampler texture7Smplr, texture2d<float> texture8, sampler texture8Smplr, texture2d<float> texture9, sampler texture9Smplr, texture2d<float> texture10, sampler texture10Smplr, texture2d<float> texture11, sampler texture11Smplr)
+{
+    float3 blend = abs(normal);
+    blend = (blend - float3(0.20000000298023223876953125)) * 7.0;
+    blend = fast::clamp(blend, float3(0.0), float3(1.0));
+    blend /= float3((blend.x + blend.y) + blend.z);
+    int param = idx;
+    float2 param_1 = worldPos.yz * scale;
+    float4 xProj = sampleBiomeTexture(param, param_1, texture0, texture0Smplr, texture1, texture1Smplr, texture2, texture2Smplr, texture3, texture3Smplr, texture4, texture4Smplr, texture5, texture5Smplr, texture6, texture6Smplr, texture7, texture7Smplr, texture8, texture8Smplr, texture9, texture9Smplr, texture10, texture10Smplr, texture11, texture11Smplr);
+    int param_2 = idx;
+    float2 param_3 = worldPos.xz * scale;
+    float4 yProj = sampleBiomeTexture(param_2, param_3, texture0, texture0Smplr, texture1, texture1Smplr, texture2, texture2Smplr, texture3, texture3Smplr, texture4, texture4Smplr, texture5, texture5Smplr, texture6, texture6Smplr, texture7, texture7Smplr, texture8, texture8Smplr, texture9, texture9Smplr, texture10, texture10Smplr, texture11, texture11Smplr);
+    int param_4 = idx;
+    float2 param_5 = worldPos.xy * scale;
+    float4 zProj = sampleBiomeTexture(param_4, param_5, texture0, texture0Smplr, texture1, texture1Smplr, texture2, texture2Smplr, texture3, texture3Smplr, texture4, texture4Smplr, texture5, texture5Smplr, texture6, texture6Smplr, texture7, texture7Smplr, texture8, texture8Smplr, texture9, texture9Smplr, texture10, texture10Smplr, texture11, texture11Smplr);
+    return ((xProj * blend.x) + (yProj * blend.y)) + (zProj * blend.z);
+}
+
+static inline __attribute__((always_inline))
+float calculateShadow(thread const float4& fragPosLightSpace, thread const float3& normal, constant PushConstants& _331, texture2d<float> shadowMap, sampler shadowMapSmplr)
+{
+    float3 projCoords = fragPosLightSpace.xyz / float3(fragPosLightSpace.w);
+    projCoords = (projCoords * 0.5) + float3(0.5);
+    bool _293 = projCoords.z > 1.0;
+    bool _300;
+    if (!_293)
+    {
+        _300 = projCoords.x < 0.0;
+    }
+    else
+    {
+        _300 = _293;
+    }
+    bool _307;
+    if (!_300)
+    {
+        _307 = projCoords.x > 1.0;
+    }
+    else
+    {
+        _307 = _300;
+    }
+    bool _314;
+    if (!_307)
+    {
+        _314 = projCoords.y < 0.0;
+    }
+    else
+    {
+        _314 = _307;
+    }
+    bool _321;
+    if (!_314)
+    {
+        _321 = projCoords.y > 1.0;
+    }
+    else
+    {
+        _321 = _314;
+    }
+    if (_321)
+    {
         return 0.0;
-    
+    }
     float currentDepth = projCoords.z;
-    float bias = max(shadowBias * (1.0 - dot(normal, lightDir)), shadowBias * 0.1);
-    
+    float bias0 = fast::max(_331.shadowBias * (1.0 - dot(normal, _331.lightDir)), _331.shadowBias * 0.100000001490116119384765625);
     float shadow = 0.0;
-    vec2 texelSize = 1.0 / textureSize(shadowMap, 0);
-    for(int x = -1; x <= 1; ++x) {
-        for(int y = -1; y <= 1; ++y) {
-            float pcfDepth = texture(shadowMap, projCoords.xy + vec2(x, y) * texelSize).r;
-            shadow += currentDepth - bias > pcfDepth ? 1.0 : 0.0;
+    float2 texelSize = float2(1.0) / float2(int2(shadowMap.get_width(), shadowMap.get_height()));
+    for (int x = -1; x <= 1; x++)
+    {
+        for (int y = -1; y <= 1; y++)
+        {
+            float pcfDepth = shadowMap.sample(shadowMapSmplr, (projCoords.xy + (float2(float(x), float(y)) * texelSize))).x;
+            shadow += float((currentDepth - bias0) > pcfDepth);
         }
     }
     shadow /= 9.0;
-    
     return shadow;
 }
 
-vec3 acesToneMapping(vec3 color) {
-    const float a = 2.51;
-    const float b = 0.03;
-    const float c = 2.43;
-    const float d = 0.59;
-    const float e = 0.14;
-    return clamp((color * (a * color + b)) / (color * (c * color + d) + e), 0.0, 1.0);
+static inline __attribute__((always_inline))
+float3 acesToneMapping(thread const float3& color)
+{
+    return fast::clamp((color * ((color * 2.5099999904632568359375) + float3(0.02999999932944774627685546875))) / ((color * ((color * 2.4300000667572021484375) + float3(0.589999973773956298828125))) + float3(0.14000000059604644775390625)), float3(0.0), float3(1.0));
 }
 
-void main() {
-    if (biomesCount <= 0) {
-        FragColor = vec4(vec3((Height + seaLevel) / maxPeak), 1.0);
-        return;
+fragment main0_out main0(main0_in in [[stage_in]], constant PushConstants& _331 [[buffer(0)]], constant TerrainParameters& _444 [[buffer(1)]], device BiomeBuffer& _534 [[buffer(2)]], texture2d<float> texture0 [[texture(0)]], texture2d<float> texture1 [[texture(1)]], texture2d<float> texture2 [[texture(2)]], texture2d<float> texture3 [[texture(3)]], texture2d<float> texture4 [[texture(4)]], texture2d<float> texture5 [[texture(5)]], texture2d<float> texture6 [[texture(6)]], texture2d<float> texture7 [[texture(7)]], texture2d<float> texture8 [[texture(8)]], texture2d<float> texture9 [[texture(9)]], texture2d<float> texture10 [[texture(10)]], texture2d<float> texture11 [[texture(11)]], texture2d<float> shadowMap [[texture(12)]], texture2d<float> heightMap [[texture(13)]], texture2d<float> moistureMap [[texture(14)]], texture2d<float> temperatureMap [[texture(15)]], sampler texture0Smplr [[sampler(0)]], sampler texture1Smplr [[sampler(1)]], sampler texture2Smplr [[sampler(2)]], sampler texture3Smplr [[sampler(3)]], sampler texture4Smplr [[sampler(4)]], sampler texture5Smplr [[sampler(5)]], sampler texture6Smplr [[sampler(6)]], sampler texture7Smplr [[sampler(7)]], sampler texture8Smplr [[sampler(8)]], sampler texture9Smplr [[sampler(9)]], sampler texture10Smplr [[sampler(10)]], sampler texture11Smplr [[sampler(11)]], sampler shadowMapSmplr [[sampler(12)]], sampler heightMapSmplr [[sampler(13)]], sampler moistureMapSmplr [[sampler(14)]], sampler temperatureMapSmplr [[sampler(15)]])
+{
+    main0_out out = {};
+    if (_331.biomesCount <= 0)
+    {
+        out.FragColor = float4(float3((in.Height + _444.seaLevel) / _444.maxPeak), 1.0);
+        return out;
     }
-
-    float h = isFromMap ? texture(heightMap, TexCoord).r * 255.0 : (Height + seaLevel) / maxPeak * 255.0;
-    float m = texture(moistureMap, TexCoord).r * 255.0;
-    float t = texture(temperatureMap, TexCoord).r * 255.0;
-
-    float texelSize = 1.0 / textureSize(heightMap, 0).x;
+    float _463;
+    if (_331.isFromMap != 0u)
+    {
+        _463 = heightMap.sample(heightMapSmplr, in.TexCoord).x * 255.0;
+    }
+    else
+    {
+        _463 = ((in.Height + _444.seaLevel) / _444.maxPeak) * 255.0;
+    }
+    float h = _463;
+    float m = moistureMap.sample(moistureMapSmplr, in.TexCoord).x * 255.0;
+    float t = temperatureMap.sample(temperatureMapSmplr, in.TexCoord).x * 255.0;
+    float texelSize = 1.0 / float(int2(heightMap.get_width(), heightMap.get_height()).x);
     float heightScale = 64.0;
-    vec3 normal = calculateNormal(heightMap, TexCoord, heightScale);
-
-    // === BIOME BLENDING ===
-    vec4 baseColor = vec4(0.0);
+    float2 param = in.TexCoord;
+    float param_1 = heightScale;
+    float3 normal = calculateNormal(heightMap, heightMapSmplr, param, param_1);
+    float4 baseColor = float4(0.0);
     float totalWeight = 0.0;
-
-    for (int i = 0; i < biomesCount; i++) {
-        Biome b = biomes[i]; 
-
-        float hW = (b.minHeight < 0.0 && b.maxHeight < 0.0) ? 1.0 : smoothStepRange(h, b.minHeight, b.maxHeight);
-        float mW = (b.minMoisture < 0.0 && b.maxMoisture < 0.0) ? 1.0 : smoothStepRange(m, b.minMoisture, b.maxMoisture);
-        float tW = (b.minTemperature < 0.0 && b.maxTemperature < 0.0) ? 1.0 : smoothStepRange(t, b.minTemperature, b.maxTemperature);
-
-        float weight = (1.0 - hW) * mW * tW;
-        if (weight > 0.001) {
-            vec4 texColor = (b.useTexture == 1)
-                ? triplanarBlend(i, normal, FragPos, 0.1)
-                : b.tintColor;
-            baseColor += texColor * weight;
+    float _550;
+    float _574;
+    float _598;
+    float4 _628;
+    for (int i = 0; i < _331.biomesCount; i++)
+    {
+        Biome _539;
+        _539.id = _534.biomes[i].id;
+        _539.tintColor = _534.biomes[i].tintColor;
+        _539.useTexture = _534.biomes[i].useTexture;
+        _539.textureId = _534.biomes[i].textureId;
+        _539.minHeight = _534.biomes[i].minHeight;
+        _539.maxHeight = _534.biomes[i].maxHeight;
+        _539.minMoisture = _534.biomes[i].minMoisture;
+        _539.maxMoisture = _534.biomes[i].maxMoisture;
+        _539.minTemperature = _534.biomes[i].minTemperature;
+        _539.maxTemperature = _534.biomes[i].maxTemperature;
+        Biome b = _539;
+        bool _543 = b.minHeight < 0.0;
+        bool _549;
+        if (_543)
+        {
+            _549 = b.maxHeight < 0.0;
+        }
+        else
+        {
+            _549 = _543;
+        }
+        if (_549)
+        {
+            _550 = 1.0;
+        }
+        else
+        {
+            float param_2 = h;
+            float param_3 = b.minHeight;
+            float param_4 = b.maxHeight;
+            _550 = smoothStepRange(param_2, param_3, param_4);
+        }
+        float hW = _550;
+        bool _567 = b.minMoisture < 0.0;
+        bool _573;
+        if (_567)
+        {
+            _573 = b.maxMoisture < 0.0;
+        }
+        else
+        {
+            _573 = _567;
+        }
+        if (_573)
+        {
+            _574 = 1.0;
+        }
+        else
+        {
+            float param_5 = m;
+            float param_6 = b.minMoisture;
+            float param_7 = b.maxMoisture;
+            _574 = smoothStepRange(param_5, param_6, param_7);
+        }
+        float mW = _574;
+        bool _591 = b.minTemperature < 0.0;
+        bool _597;
+        if (_591)
+        {
+            _597 = b.maxTemperature < 0.0;
+        }
+        else
+        {
+            _597 = _591;
+        }
+        if (_597)
+        {
+            _598 = 1.0;
+        }
+        else
+        {
+            float param_8 = t;
+            float param_9 = b.minTemperature;
+            float param_10 = b.maxTemperature;
+            _598 = smoothStepRange(param_8, param_9, param_10);
+        }
+        float tW = _598;
+        float weight = ((1.0 - hW) * mW) * tW;
+        if (weight > 0.001000000047497451305389404296875)
+        {
+            if (b.useTexture == 1)
+            {
+                int param_11 = i;
+                float3 param_12 = normal;
+                float3 param_13 = in.FragPos;
+                float param_14 = 0.100000001490116119384765625;
+                _628 = triplanarBlend(param_11, param_12, param_13, param_14, texture0, texture0Smplr, texture1, texture1Smplr, texture2, texture2Smplr, texture3, texture3Smplr, texture4, texture4Smplr, texture5, texture5Smplr, texture6, texture6Smplr, texture7, texture7Smplr, texture8, texture8Smplr, texture9, texture9Smplr, texture10, texture10Smplr, texture11, texture11Smplr);
+            }
+            else
+            {
+                _628 = b.tintColor;
+            }
+            float4 texColor = _628;
+            baseColor += (texColor * weight);
             totalWeight += weight;
         }
     }
-
-    baseColor /= max(totalWeight, 0.001);
-
-    float detail = texture(heightMap, TexCoord * 64.0).r * 0.1 + 0.9;
-    baseColor.rgb *= detail;
-
-    vec3 finalColor;
-    
-    if (hasLight) {
-        vec3 L = normalize(-lightDir);
-        vec3 N = normalize(normal);
-        vec3 V = normalize(viewDir);
-        
-        vec3 ambient = ambientStrength * baseColor.rgb;
-        
-        float diff = max(dot(N, L), 0.0);
-        vec3 diffuse = diffuseStrength * diff * directionalColor.rgb * directionalIntensity * baseColor.rgb;
-        
-        vec3 H = normalize(L + V);
-        float spec = pow(max(dot(N, H), 0.0), 32.0);
-        vec3 specular = specularStrength * spec * directionalColor.rgb * directionalIntensity;
-        
+    baseColor /= float4(fast::max(totalWeight, 0.001000000047497451305389404296875));
+    float detail = (heightMap.sample(heightMapSmplr, (in.TexCoord * 64.0)).x * 0.100000001490116119384765625) + 0.89999997615814208984375;
+    float4 _670 = baseColor;
+    float3 _672 = _670.xyz * detail;
+    baseColor.x = _672.x;
+    baseColor.y = _672.y;
+    baseColor.z = _672.z;
+    float3 finalColor;
+    if (_331.hasLight != 0u)
+    {
+        float3 L = fast::normalize(-_331.lightDir);
+        float3 N = fast::normalize(normal);
+        float3 V = fast::normalize(float3(_331.viewDir));
+        float3 ambient = baseColor.xyz * _331.ambientStrength;
+        float diff = fast::max(dot(N, L), 0.0);
+        float3 diffuse = ((_331.directionalColor.xyz * (_331.diffuseStrength * diff)) * _331.directionalIntensity) * baseColor.xyz;
+        float3 H = fast::normalize(L + V);
+        float spec = powr(fast::max(dot(N, H), 0.0), 32.0);
+        float3 specular = (_331.directionalColor.xyz * (_331.specularStrength * spec)) * _331.directionalIntensity;
         float shadow = 0.0;
-        if (useShadowMap) {
-            shadow = calculateShadow(FragPosLightSpace, N);
+        if (_331.useShadowMap != 0u)
+        {
+            float4 param_15 = in.FragPosLightSpace;
+            float3 param_16 = N;
+            shadow = calculateShadow(param_15, param_16, _331, shadowMap, shadowMapSmplr);
         }
-        
-        finalColor = ambient + (1.0 - shadow) * (diffuse + specular);
-        
-    } else {
-        finalColor = ambientStrength * baseColor.rgb;
+        finalColor = ambient + ((diffuse + specular) * (1.0 - shadow));
     }
-    
-    FragColor = vec4(acesToneMapping(finalColor), 1.0);
-    BrightColor = vec4(0.0);
-})"
+    else
+    {
+        finalColor = baseColor.xyz * _331.ambientStrength;
+    }
+    float3 param_17 = finalColor;
+    out.FragColor = float4(acesToneMapping(param_17), 1.0);
+    out.BrightColor = float4(0.0);
+    return out;
+}
+
+)"
 ;
 
 static const char* TERRAIN_VERT =
-R"(#version 410 core
-layout(location = 0) in vec3 aPos;
-layout(location = 1) in vec2 aTexCoord;
+R"(#include <metal_stdlib>
+#include <simd/simd.h>
 
-uniform mat4 model;
-uniform mat4 view;
-uniform mat4 projection;
+using namespace metal;
 
-out vec2 TexCoord;
+struct UBO
+{
+    float4x4 model;
+    float4x4 view;
+    float4x4 projection;
+};
 
-void main() {
-    gl_Position = vec4(aPos, 1.0);
-    TexCoord = aTexCoord;
-})"
+struct main0_out
+{
+    float2 TexCoord [[user(locn0)]];
+    float4 gl_Position [[position]];
+};
+
+struct main0_in
+{
+    float3 aPos [[attribute(0)]];
+    float2 aTexCoord [[attribute(1)]];
+};
+
+vertex main0_out main0(main0_in in [[stage_in]], constant UBO& _19 [[buffer(0)]])
+{
+    main0_out out = {};
+    out.gl_Position = ((_19.projection * _19.view) * _19.model) * float4(in.aPos, 1.0);
+    out.TexCoord = in.aTexCoord;
+    return out;
+}
+
+)"
 ;
 
 static const char* TEXTURE_FRAG =
-R"(#version 410 core
-out vec4 FragColor;
+R"(#pragma clang diagnostic ignored "-Wmissing-prototypes"
 
-in vec2 TexCoord;
-in vec4 outColor;
+#include <metal_stdlib>
+#include <simd/simd.h>
 
-uniform sampler2D textures[16];
+using namespace metal;
 
-uniform bool useTexture;
-uniform bool onlyTexture;
-uniform int textureCount;
+struct UBO
+{
+    uint useTexture;
+    uint onlyTexture;
+    int textureCount;
+};
 
-vec4 calculateAllTextures() {
-    vec4 color = vec4(0.0);
+struct main0_out
+{
+    float4 FragColor [[color(0)]];
+};
 
-    for (int i = 0; i <= textureCount; i++) {
-        color += texture(textures[i], TexCoord);
+struct main0_in
+{
+    float2 TexCoord [[user(locn0)]];
+    float4 outColor [[user(locn1)]];
+};
+
+static inline __attribute__((always_inline))
+float4 calculateAllTextures(constant UBO& _28, texture2d<float> texture1, sampler texture1Smplr, thread float2& TexCoord, texture2d<float> texture2, sampler texture2Smplr, texture2d<float> texture3, sampler texture3Smplr, texture2d<float> texture4, sampler texture4Smplr, texture2d<float> texture5, sampler texture5Smplr, texture2d<float> texture6, sampler texture6Smplr, texture2d<float> texture7, sampler texture7Smplr, texture2d<float> texture8, sampler texture8Smplr, texture2d<float> texture9, sampler texture9Smplr, texture2d<float> texture10, sampler texture10Smplr, texture2d<float> texture11, sampler texture11Smplr, texture2d<float> texture12, sampler texture12Smplr, texture2d<float> texture13, sampler texture13Smplr, texture2d<float> texture14, sampler texture14Smplr, texture2d<float> texture15, sampler texture15Smplr, texture2d<float> texture16, sampler texture16Smplr)
+{
+    float4 color = float4(0.0);
+    for (int i = 0; i < _28.textureCount; i++)
+    {
+        if (i == 0)
+        {
+            color += texture1.sample(texture1Smplr, TexCoord);
+        }
+        else
+        {
+            if (i == 1)
+            {
+                color += texture2.sample(texture2Smplr, TexCoord);
+            }
+            else
+            {
+                if (i == 2)
+                {
+                    color += texture3.sample(texture3Smplr, TexCoord);
+                }
+                else
+                {
+                    if (i == 3)
+                    {
+                        color += texture4.sample(texture4Smplr, TexCoord);
+                    }
+                    else
+                    {
+                        if (i == 4)
+                        {
+                            color += texture5.sample(texture5Smplr, TexCoord);
+                        }
+                        else
+                        {
+                            if (i == 5)
+                            {
+                                color += texture6.sample(texture6Smplr, TexCoord);
+                            }
+                            else
+                            {
+                                if (i == 6)
+                                {
+                                    color += texture7.sample(texture7Smplr, TexCoord);
+                                }
+                                else
+                                {
+                                    if (i == 7)
+                                    {
+                                        color += texture8.sample(texture8Smplr, TexCoord);
+                                    }
+                                    else
+                                    {
+                                        if (i == 8)
+                                        {
+                                            color += texture9.sample(texture9Smplr, TexCoord);
+                                        }
+                                        else
+                                        {
+                                            if (i == 9)
+                                            {
+                                                color += texture10.sample(texture10Smplr, TexCoord);
+                                            }
+                                            else
+                                            {
+                                                if (i == 10)
+                                                {
+                                                    color += texture11.sample(texture11Smplr, TexCoord);
+                                                }
+                                                else
+                                                {
+                                                    if (i == 11)
+                                                    {
+                                                        color += texture12.sample(texture12Smplr, TexCoord);
+                                                    }
+                                                    else
+                                                    {
+                                                        if (i == 12)
+                                                        {
+                                                            color += texture13.sample(texture13Smplr, TexCoord);
+                                                        }
+                                                        else
+                                                        {
+                                                            if (i == 13)
+                                                            {
+                                                                color += texture14.sample(texture14Smplr, TexCoord);
+                                                            }
+                                                            else
+                                                            {
+                                                                if (i == 14)
+                                                                {
+                                                                    color += texture15.sample(texture15Smplr, TexCoord);
+                                                                }
+                                                                else
+                                                                {
+                                                                    if (i == 15)
+                                                                    {
+                                                                        color += texture16.sample(texture16Smplr, TexCoord);
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
-
-    color /= float(textureCount + 1); 
-
+    color /= float4(float(_28.textureCount));
     return color;
 }
 
-void main() {
-    if (onlyTexture) {
-        FragColor = calculateAllTextures(); 
-        return;
+fragment main0_out main0(main0_in in [[stage_in]], constant UBO& _28 [[buffer(0)]], texture2d<float> texture1 [[texture(0)]], texture2d<float> texture2 [[texture(1)]], texture2d<float> texture3 [[texture(2)]], texture2d<float> texture4 [[texture(3)]], texture2d<float> texture5 [[texture(4)]], texture2d<float> texture6 [[texture(5)]], texture2d<float> texture7 [[texture(6)]], texture2d<float> texture8 [[texture(7)]], texture2d<float> texture9 [[texture(8)]], texture2d<float> texture10 [[texture(9)]], texture2d<float> texture11 [[texture(10)]], texture2d<float> texture12 [[texture(11)]], texture2d<float> texture13 [[texture(12)]], texture2d<float> texture14 [[texture(13)]], texture2d<float> texture15 [[texture(14)]], texture2d<float> texture16 [[texture(15)]], sampler texture1Smplr [[sampler(0)]], sampler texture2Smplr [[sampler(1)]], sampler texture3Smplr [[sampler(2)]], sampler texture4Smplr [[sampler(3)]], sampler texture5Smplr [[sampler(4)]], sampler texture6Smplr [[sampler(5)]], sampler texture7Smplr [[sampler(6)]], sampler texture8Smplr [[sampler(7)]], sampler texture9Smplr [[sampler(8)]], sampler texture10Smplr [[sampler(9)]], sampler texture11Smplr [[sampler(10)]], sampler texture12Smplr [[sampler(11)]], sampler texture13Smplr [[sampler(12)]], sampler texture14Smplr [[sampler(13)]], sampler texture15Smplr [[sampler(14)]], sampler texture16Smplr [[sampler(15)]])
+{
+    main0_out out = {};
+    if (_28.onlyTexture != 0u)
+    {
+        out.FragColor = calculateAllTextures(_28, texture1, texture1Smplr, in.TexCoord, texture2, texture2Smplr, texture3, texture3Smplr, texture4, texture4Smplr, texture5, texture5Smplr, texture6, texture6Smplr, texture7, texture7Smplr, texture8, texture8Smplr, texture9, texture9Smplr, texture10, texture10Smplr, texture11, texture11Smplr, texture12, texture12Smplr, texture13, texture13Smplr, texture14, texture14Smplr, texture15, texture15Smplr, texture16, texture16Smplr);
+        return out;
     }
-
-    if (useTexture) {
-        FragColor = calculateAllTextures() * outColor;
-    } else {
-        FragColor = outColor;
+    if (_28.useTexture != 0u)
+    {
+        out.FragColor = calculateAllTextures(_28, texture1, texture1Smplr, in.TexCoord, texture2, texture2Smplr, texture3, texture3Smplr, texture4, texture4Smplr, texture5, texture5Smplr, texture6, texture6Smplr, texture7, texture7Smplr, texture8, texture8Smplr, texture9, texture9Smplr, texture10, texture10Smplr, texture11, texture11Smplr, texture12, texture12Smplr, texture13, texture13Smplr, texture14, texture14Smplr, texture15, texture15Smplr, texture16, texture16Smplr) * in.outColor;
     }
+    else
+    {
+        out.FragColor = in.outColor;
+    }
+    return out;
 }
+
 )"
 ;
 
 static const char* TEXTURE_VERT =
-R"(#version 410 core
-layout(location = 0) in vec3 aPos;
-layout(location = 1) in vec4 aColor;
-layout(location = 2) in vec2 aTexCoord;
+R"(#include <metal_stdlib>
+#include <simd/simd.h>
 
-uniform mat4 model;
-uniform mat4 view;
-uniform mat4 projection;
+using namespace metal;
 
-out vec4 outColor;
-out vec2 TexCoord;
+struct UBO
+{
+    float4x4 model;
+    float4x4 view;
+    float4x4 projection;
+};
 
-void main() {
-    mat4 mvp = projection * view * model;
-    gl_Position = mvp * vec4(aPos, 1.0);
-    TexCoord = aTexCoord;
-    outColor = aColor;
+struct main0_out
+{
+    float2 TexCoord [[user(locn0)]];
+    float4 outColor [[user(locn1)]];
+    float4 gl_Position [[position]];
+};
+
+struct main0_in
+{
+    float3 aPos [[attribute(0)]];
+    float4 aColor [[attribute(1)]];
+    float2 aTexCoord [[attribute(2)]];
+};
+
+vertex main0_out main0(main0_in in [[stage_in]], constant UBO& _13 [[buffer(0)]])
+{
+    main0_out out = {};
+    float4x4 mvp = (_13.projection * _13.view) * _13.model;
+    out.gl_Position = mvp * float4(in.aPos, 1.0);
+    out.TexCoord = in.aTexCoord;
+    out.outColor = in.aColor;
+    return out;
 }
+
 )"
 ;
 
 static const char* TEXT_FRAG =
-R"(#version 410 core
+R"(#include <metal_stdlib>
+#include <simd/simd.h>
 
-in vec2 texCoords;
-out vec4 color;
+using namespace metal;
 
-uniform sampler2D text;
-uniform vec3 textColor;
+struct TextColor
+{
+    float3 textColor;
+};
 
-void main() {
-    vec4 sampled = vec4(1.0, 1.0, 1.0, texture(text, texCoords).r);
-    color = vec4(textColor, 1.0) * sampled;
-})"
+struct main0_out
+{
+    float4 color [[color(0)]];
+};
+
+struct main0_in
+{
+    float2 texCoords [[user(locn0)]];
+};
+
+fragment main0_out main0(main0_in in [[stage_in]], constant TextColor& _30 [[buffer(0)]], texture2d<float> text [[texture(0)]], sampler textSmplr [[sampler(0)]])
+{
+    main0_out out = {};
+    float4 sampled = float4(1.0, 1.0, 1.0, text.sample(textSmplr, in.texCoords).x);
+    out.color = float4(_30.textColor, 1.0) * sampled;
+    return out;
+}
+
+)"
 ;
 
 static const char* TEXT_VERT =
-R"(#version 410 core
-layout(location = 0) in vec4 vertex; // <vec2 pos, vec2 texture>
-out vec2 texCoords;
+R"(#include <metal_stdlib>
+#include <simd/simd.h>
 
-uniform mat4 projection;
+using namespace metal;
 
-void main() {
-    gl_Position = projection * vec4(vertex.xy, 0.0, 1.0);
-    texCoords = vertex.zw;
-})"
+struct Uniforms
+{
+    float4x4 projection;
+};
+
+struct main0_out
+{
+    float2 texCoords [[user(locn0)]];
+    float4 gl_Position [[position]];
+};
+
+struct main0_in
+{
+    float4 vertex0 [[attribute(0)]];
+};
+
+vertex main0_out main0(main0_in in [[stage_in]], constant Uniforms& _19 [[buffer(0)]])
+{
+    main0_out out = {};
+    out.gl_Position = _19.projection * float4(in.vertex0.xy, 0.0, 1.0);
+    out.texCoords = in.vertex0.zw;
+    return out;
+}
+
+)"
 ;
 
 static const char* UPSAMPLE_FRAG =
-R"(#version 410 core
-uniform sampler2D srcTexture;
-uniform float filterRadius;
-uniform vec2 srcResolution;
-in vec2 TexCoord;
-layout(location = 0) out vec3 upsample;
+R"(#include <metal_stdlib>
+#include <simd/simd.h>
 
-void main() {
-    vec2 texelSize = 1.0 / srcResolution;
-    float x = filterRadius * texelSize.x;
-    float y = filterRadius * texelSize.y;
+using namespace metal;
 
-    vec2 texCoord = TexCoord;
-    vec3 a = texture(srcTexture, vec2(texCoord.x - x, texCoord.y + y)).rgb;
-    vec3 b = texture(srcTexture, vec2(texCoord.x, texCoord.y + y)).rgb;
-    vec3 c = texture(srcTexture, vec2(texCoord.x + x, texCoord.y + y)).rgb;
-    vec3 d = texture(srcTexture, vec2(texCoord.x - x, texCoord.y)).rgb;
-    vec3 e = texture(srcTexture, vec2(texCoord.x, texCoord.y)).rgb;
-    vec3 f = texture(srcTexture, vec2(texCoord.x + x, texCoord.y)).rgb;
-    vec3 g = texture(srcTexture, vec2(texCoord.x - x, texCoord.y - y)).rgb;
-    vec3 h = texture(srcTexture, vec2(texCoord.x, texCoord.y - y)).rgb;
-    vec3 i = texture(srcTexture, vec2(texCoord.x + x, texCoord.y - y)).rgb;
+struct Params
+{
+    float2 srcResolution;
+    float filterRadius;
+};
 
-    upsample = e * 4.0;
-    upsample += (b + d + f + h) * 2.0;
-    upsample += (a + c + g + i);
-    upsample *= 1.0 / 16.0;
+struct main0_out
+{
+    float4 upsample [[color(0)]];
+};
+
+struct main0_in
+{
+    float2 TexCoord [[user(locn0)]];
+};
+
+fragment main0_out main0(main0_in in [[stage_in]], constant Params& _13 [[buffer(0)]], texture2d<float> srcTexture [[texture(0)]], sampler srcTextureSmplr [[sampler(0)]])
+{
+    main0_out out = {};
+    float2 texelSize =
+        float2(1.0) / float2(srcTexture.get_width(), srcTexture.get_height());
+    float radius = clamp(_13.filterRadius, 1.0, 8.0);
+    float x = radius * texelSize.x;
+    float y = radius * texelSize.y;
+    float2 texCoord = in.TexCoord;
+    float2 step1 = float2(x, y);
+    float2 step2 = step1 * 2.0;
+    float3 upsampleColor = float3(0.0);
+    float totalWeight = 0.0;
+
+    float wCenter = 0.16;
+    float wCardinal1 = 0.11;
+    float wDiagonal1 = 0.075;
+    float wCardinal2 = 0.04;
+    float wDiagonal2 = 0.015;
+
+    upsampleColor += srcTexture.sample(srcTextureSmplr, texCoord).xyz * wCenter;
+    totalWeight += wCenter;
+
+    upsampleColor += srcTexture.sample(srcTextureSmplr, texCoord + float2(step1.x, 0.0)).xyz * wCardinal1;
+    upsampleColor += srcTexture.sample(srcTextureSmplr, texCoord + float2(-step1.x, 0.0)).xyz * wCardinal1;
+    upsampleColor += srcTexture.sample(srcTextureSmplr, texCoord + float2(0.0, step1.y)).xyz * wCardinal1;
+    upsampleColor += srcTexture.sample(srcTextureSmplr, texCoord + float2(0.0, -step1.y)).xyz * wCardinal1;
+    totalWeight += wCardinal1 * 4.0;
+
+    upsampleColor += srcTexture.sample(srcTextureSmplr, texCoord + float2(step1.x, step1.y)).xyz * wDiagonal1;
+    upsampleColor += srcTexture.sample(srcTextureSmplr, texCoord + float2(-step1.x, step1.y)).xyz * wDiagonal1;
+    upsampleColor += srcTexture.sample(srcTextureSmplr, texCoord + float2(step1.x, -step1.y)).xyz * wDiagonal1;
+    upsampleColor += srcTexture.sample(srcTextureSmplr, texCoord + float2(-step1.x, -step1.y)).xyz * wDiagonal1;
+    totalWeight += wDiagonal1 * 4.0;
+
+    upsampleColor += srcTexture.sample(srcTextureSmplr, texCoord + float2(step2.x, 0.0)).xyz * wCardinal2;
+    upsampleColor += srcTexture.sample(srcTextureSmplr, texCoord + float2(-step2.x, 0.0)).xyz * wCardinal2;
+    upsampleColor += srcTexture.sample(srcTextureSmplr, texCoord + float2(0.0, step2.y)).xyz * wCardinal2;
+    upsampleColor += srcTexture.sample(srcTextureSmplr, texCoord + float2(0.0, -step2.y)).xyz * wCardinal2;
+    totalWeight += wCardinal2 * 4.0;
+
+    upsampleColor += srcTexture.sample(srcTextureSmplr, texCoord + float2(step2.x, step2.y)).xyz * wDiagonal2;
+    upsampleColor += srcTexture.sample(srcTextureSmplr, texCoord + float2(-step2.x, step2.y)).xyz * wDiagonal2;
+    upsampleColor += srcTexture.sample(srcTextureSmplr, texCoord + float2(step2.x, -step2.y)).xyz * wDiagonal2;
+    upsampleColor += srcTexture.sample(srcTextureSmplr, texCoord + float2(-step2.x, -step2.y)).xyz * wDiagonal2;
+    totalWeight += wDiagonal2 * 4.0;
+
+    upsampleColor /= float3(max(totalWeight, 1e-5));
+    out.upsample = float4(upsampleColor, 1.0);
+    return out;
 }
 )"
 ;
 
 static const char* VOLUMETRIC_FRAG =
-R"(#version 410 core
-in vec2 TexCoords;
-out vec4 FragColor;
+R"(#pragma clang diagnostic ignored "-Wmissing-prototypes"
 
-uniform sampler2D sceneTexture;
-uniform vec2 sunPos;
+#include <metal_stdlib>
+#include <simd/simd.h>
 
-struct DirectionalLight {
-    vec3 color;
+using namespace metal;
+
+struct Sun
+{
+    float2 sunPos;
 };
 
-uniform DirectionalLight directionalLight;
-uniform float density;
-uniform float weight;
-uniform float decay;
-uniform float exposure;
+struct VolumetricParameters
+{
+    float density;
+    float weight;
+    float decay;
+    float exposure;
+};
 
-vec3 computeVolumetricLighting(vec2 uv) {
-    vec3 color = vec3(0.0);
+struct DirectionalLight
+{
+    float3 color;
+};
 
-    vec2 deltaTexCoord = (sunPos - uv) * density;
-    vec2 coord = uv;
+struct main0_out
+{
+    float4 FragColor [[color(0)]];
+};
+
+struct main0_in
+{
+    float2 TexCoords [[user(locn0)]];
+};
+
+static inline __attribute__((always_inline))
+float3 computeVolumetricLighting(thread const float2& uv, constant Sun& _21, constant VolumetricParameters& _31, texture2d<float> sceneTexture, sampler sceneTextureSmplr, constant DirectionalLight& directionalLight)
+{
+    float3 color = float3(0.0);
+    float2 deltaTexCoord = (_21.sunPos - uv) * _31.density;
+    float2 coord = uv;
     float illuminationDecay = 1.0;
-
-    const int NUM_SAMPLES = 100;
-
-    for (int i = 0; i < NUM_SAMPLES; i++) {
+    for (int i = 0; i < 48; i++)
+    {
         coord += deltaTexCoord;
-
-        if (coord.x < 0.0 || coord.x > 1.0 || coord.y < 0.0 || coord.y > 1.0) {
+        bool _59 = coord.x < 0.0;
+        bool _66;
+        if (!_59)
+        {
+            _66 = coord.x > 1.0;
+        }
+        else
+        {
+            _66 = _59;
+        }
+        bool _74;
+        if (!_66)
+        {
+            _74 = coord.y < 0.0;
+        }
+        else
+        {
+            _74 = _66;
+        }
+        bool _81;
+        if (!_74)
+        {
+            _81 = coord.y > 1.0;
+        }
+        else
+        {
+            _81 = _74;
+        }
+        if (_81)
+        {
             break;
         }
-
-        vec3 sampled = texture(sceneTexture, coord).rgb;
-        float brightness = dot(sampled, vec3(0.299, 0.587, 0.114));
-
-        vec3 atmosphere = directionalLight.color * 0.02;
-
-        if (brightness > 0.5) {
-            atmosphere += sampled * 0.5;
+        float3 sampled = sceneTexture.sample(sceneTextureSmplr, coord).xyz;
+        float brightness = dot(sampled, float3(0.2989999949932098388671875, 0.58700001239776611328125, 0.114000000059604644775390625));
+        float3 atmosphere = directionalLight.color * 0.0199999995529651641845703125;
+        if (brightness > 0.5)
+        {
+            atmosphere += (sampled * 0.5);
         }
-
-        atmosphere *= illuminationDecay * weight;
+        atmosphere *= (illuminationDecay * _31.weight);
         color += atmosphere;
-
-        illuminationDecay *= decay;
+        illuminationDecay *= _31.decay;
     }
-
     return color * 5.0;
 }
 
-void main() {
-    vec3 rays = computeVolumetricLighting(TexCoords);
-
-    FragColor = vec4(rays, 1.0);
+fragment main0_out main0(main0_in in [[stage_in]], constant Sun& _21 [[buffer(0)]], constant VolumetricParameters& _31 [[buffer(1)]], constant DirectionalLight& directionalLight [[buffer(2)]], texture2d<float> sceneTexture [[texture(0)]], sampler sceneTextureSmplr [[sampler(0)]])
+{
+    main0_out out = {};
+    float2 param = in.TexCoords;
+    float3 rays = computeVolumetricLighting(param, _21, _31, sceneTexture, sceneTextureSmplr, directionalLight);
+    out.FragColor = float4(rays, 1.0);
+    return out;
 }
 )"
 ;
 
 static const char* VOLUMETRIC_VERT =
-R"(#version 410 core
+R"(#include <metal_stdlib>
+#include <simd/simd.h>
 
-layout(location = 0) in vec3 aPos;
-layout(location = 2) in vec2 aTexCoords;
+using namespace metal;
 
-out vec2 TexCoords;
+struct main0_out
+{
+    float2 TexCoords [[user(locn0)]];
+    float4 gl_Position [[position]];
+};
 
-void main() {
-    gl_Position = vec4(aPos, 1.0);
-    TexCoords = aTexCoords;
+struct main0_in
+{
+    float3 aPos [[attribute(0)]];
+    float2 aTexCoords [[attribute(2)]];
+};
+
+vertex main0_out main0(main0_in in [[stage_in]])
+{
+    main0_out out = {};
+    out.gl_Position = float4(in.aPos, 1.0);
+    out.TexCoords = in.aTexCoords;
+    return out;
 }
 )"
 ;
