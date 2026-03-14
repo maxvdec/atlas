@@ -73,6 +73,7 @@ struct ProbeSpace {
  */
 class PathTracing {
   public:
+#ifdef METAL
     /** @brief Runs one path tracing pass into the active output texture. */
     void render(const std::shared_ptr<opal::CommandBuffer> &commandBuffer);
     /** @brief Rebuilds BLAS/TLAS data for the current scene geometry. */
@@ -137,10 +138,12 @@ class PathTracing {
     uint64_t cachedSkyboxTextureId = 0;
 
     friend class Window;
+#endif
 };
 
 class GlobalIllumination {
   public:
+#ifdef METAL
     /** @brief Executes DDGI ray tracing and irradiance atlas writeback. */
     void render(const std::shared_ptr<opal::CommandBuffer> &commandBuffer);
     /** @brief Recomputes probe-space bounds based on scene extents. */
@@ -276,6 +279,7 @@ class GlobalIllumination {
     uint64_t cachedLayoutSignature = 0;
     /** @brief Indicates whether cachedLayoutSignature contains valid data. */
     bool hasCachedLayoutSignature = false;
+#endif
 };
 
 } // namespace photon

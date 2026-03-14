@@ -16,6 +16,7 @@
 #include <glad/glad.h>
 #include <memory>
 #include <string>
+#include <atlas/tracer/log.h>
 #include <vector>
 #ifdef METAL
 #include "metal_state.h"
@@ -42,7 +43,7 @@ uint Shader::getGLShaderType(ShaderType type) {
     case ShaderType::TessellationEvaluation:
         return GL_TESS_EVALUATION_SHADER;
     case ShaderType::Compute:
-        return GL_COMPUTE_SHADER;
+        return 0; // OpenGL compute shaders are not created with glCreateShader
     default:
         atlas_error("Unknown shader type");
         throw std::runtime_error("Unknown shader type");
@@ -253,6 +254,8 @@ void ShaderProgram::attachShader(const std::shared_ptr<Shader> &shader,
 #ifdef OPENGL
     glAttachShader(programID, shader->shaderID);
     attachedShaders.push_back(shader);
+
+    (void)callerId;
 #elif defined(VULKAN)
     attachedShaders.push_back(shader);
     for (const auto &pair : shader->uniformBindings) {
@@ -324,9 +327,10 @@ void ShaderProgram::link() {
 
     this->computeProgram = state.computeFunction != nullptr;
     if (this->computeProgram) {
-        if (state.vertexFunction != nullptr || state.fragmentFunction != nullptr) {
-            throw std::runtime_error(
-                "Metal compute programs must not include vertex or fragment shaders");
+        if (state.vertexFunction != nullptr ||
+            state.fragmentFunction != nullptr) {
+            throw std::runtime_error("Metal compute programs must not include "
+                                     "vertex or fragment shaders");
         }
         if (computeSource == nullptr) {
             throw std::runtime_error("Metal compute shader source is missing");
@@ -337,7 +341,8 @@ void ShaderProgram::link() {
         }
         state.fragmentColorOutputs = 0;
     } else {
-        if (state.vertexFunction == nullptr || state.fragmentFunction == nullptr) {
+        if (state.vertexFunction == nullptr ||
+            state.fragmentFunction == nullptr) {
             throw std::runtime_error(
                 "Metal shader program requires vertex and fragment shaders");
         }

@@ -21,6 +21,8 @@
 #include <unordered_set>
 #include <sys/types.h>
 
+#ifdef METAL
+
 namespace {
 constexpr int kPathTracerMaterialTextureUnitStart = 12;
 constexpr int kPathTracerMaxMaterialTextures = 48;
@@ -793,3 +795,5 @@ void photon::PathTracing::render(
 
     frameIndex++;
 }
+
+#endif

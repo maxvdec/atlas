@@ -590,10 +590,8 @@ class Window {
     bool usesGlobalIllumination = false;
     /** @brief Whether the path tracing pass is currently enabled. */
     bool usePathTracing = false;
-#ifdef METAL
     std::shared_ptr<photon::GlobalIllumination> ddgiSystem;
     std::shared_ptr<photon::PathTracing> pathTracer;
-#endif
 
     /**
      * @brief Computes the world-space bounds that enclose visible scene

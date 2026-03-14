@@ -251,12 +251,14 @@ buildGPUAreaLights(const std::vector<AreaLight *> &lights, int maxCount) {
 }
 } // anonymous namespace
 
+#ifdef METAL
 void Window::enableGlobalIllumination() {
     usesGlobalIllumination = true;
     ddgiSystem = std::make_shared<photon::GlobalIllumination>();
     ddgiSystem->sampleNormalMaps = false;
     ddgiSystem->init();
 }
+#endif
 
 void Window::deferredRendering(
     RenderTarget *target, std::shared_ptr<opal::CommandBuffer> commandBuffer) {
