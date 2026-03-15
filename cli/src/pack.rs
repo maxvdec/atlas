@@ -91,7 +91,24 @@ fn run_cmake(
         .output()
         .map_err(|e| format!("Failed to execute cmake configure: {e}"))?;
     if !configure_output.status.success() {
-        return Err(String::from_utf8_lossy(&configure_output.stderr).to_string());
+        let stdout = String::from_utf8_lossy(&configure_output.stdout);
+        let stderr = String::from_utf8_lossy(&configure_output.stderr);
+        let mut message = format!(
+            "cmake configure failed with status {}",
+            configure_output.status
+        );
+
+        if !stdout.trim().is_empty() {
+            message.push_str("\n\nstdout:\n");
+            message.push_str(stdout.trim());
+        }
+
+        if !stderr.trim().is_empty() {
+            message.push_str("\n\nstderr:\n");
+            message.push_str(stderr.trim());
+        }
+
+        return Err(message);
     }
 
     let build_output = Command::new("cmake")
@@ -102,7 +119,21 @@ fn run_cmake(
         .map_err(|e| format!("Failed to execute cmake build: {e}"))?;
 
     if !build_output.status.success() {
-        return Err(String::from_utf8_lossy(&build_output.stderr).to_string());
+        let stdout = String::from_utf8_lossy(&build_output.stdout);
+        let stderr = String::from_utf8_lossy(&build_output.stderr);
+        let mut message = format!("cmake build failed with status {}", build_output.status);
+
+        if !stdout.trim().is_empty() {
+            message.push_str("\n\nstdout:\n");
+            message.push_str(stdout.trim());
+        }
+
+        if !stderr.trim().is_empty() {
+            message.push_str("\n\nstderr:\n");
+            message.push_str(stderr.trim());
+        }
+
+        return Err(message);
     }
 
     Ok(())
