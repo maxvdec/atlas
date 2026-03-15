@@ -6,7 +6,7 @@
 #include "atlas/object.h"
 #include "atlas/physics.h"
 #include "atlas/scene.h"
-#include "atlas/text.h"
+#include "graphite/text.h"
 #include "atlas/texture.h"
 #include "atlas/units.h"
 #include "atlas/window.h"
@@ -159,8 +159,6 @@ class MainScene : public Scene {
         if (!doesUpdate)
             return;
 
-        controller.rumble(2.f, 1.0f);
-
         camera.updateWithActions(window, "move", "look", "upAndDown");
         if (window.isKeyActive(Key::Escape)) {
             window.releaseMouse();
@@ -207,36 +205,20 @@ class MainScene : public Scene {
         env.lightBloom.maxSamples = 5;
         this->setEnvironment(env);
 
-        controller = window.getController(window.getControllers()[0]);
-
         auto moveAction = InputAction::createAxisInputAction(
-            "move",
-            {
-                AxisTrigger::custom(
-                    Trigger::fromKey(Key::D), Trigger::fromKey(Key::A),
-                    Trigger::fromKey(Key::W), Trigger::fromKey(Key::S)),
-                Controller::getGlobalAxisTrigger(ControllerAxis::LeftStick),
-            });
-        moveAction->clampAxis = true;
-        moveAction->axisClampMin = -1.0f;
-        moveAction->axisClampMax = 1.0f;
-        moveAction->normalize2D = true;
-        moveAction->controllerDeadzone = 0.2f;
-        moveAction->invertControllerY = true;
+            "move", {
+                        AxisTrigger::custom(
+                            Trigger::fromKey(Key::D), Trigger::fromKey(Key::A),
+                            Trigger::fromKey(Key::W), Trigger::fromKey(Key::S)),
+                    });
+
         window.addInputAction(moveAction);
-        auto lookAction = InputAction::createAxisInputAction(
-            "look", {AxisTrigger::mouse(), Controller::getGlobalAxisTrigger(
-                                               ControllerAxis::RightStick)});
-        lookAction->controllerDeadzone = 0.2f;
-        lookAction->invertControllerY = true;
+        auto lookAction =
+            InputAction::createAxisInputAction("look", {AxisTrigger::mouse()});
         window.addInputAction(lookAction);
         auto upAndDownAction = InputAction::createSingleAxisInputAction(
             "upAndDown", Trigger::fromKey(Key::Space),
             Trigger::fromKey(Key::LeftShift));
-        upAndDownAction->axisTriggers.push_back(AxisTrigger::custom(
-            Trigger::fromControllerButton(-2, (int)NintendoControllerButton::A),
-            Trigger::fromControllerButton(-2, (int)NintendoControllerButton::B),
-            {}, {}));
         window.addInputAction(upAndDownAction);
 
         Workspace::get().setRootPath(std::string(TEST_PATH) + "/resources/");

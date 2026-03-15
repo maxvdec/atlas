@@ -7,7 +7,7 @@
 // Copyright (c) 2025 Max Van den Eynde
 //
 
-#include "atlas/text.h"
+#include "graphite/text.h"
 #include "atlas/tracer/data.h"
 #include "atlas/tracer/log.h"
 #include "atlas/window.h"

@@ -244,6 +244,7 @@ file(GLOB_RECURSE ATLAS_SOURCES    CONFIGURE_DEPENDS atlas/*.cpp extern/*.c)
 file(GLOB_RECURSE TEST_SOURCES     CONFIGURE_DEPENDS test/*.cpp)
 file(GLOB_RECURSE OPAL_SOURCES     CONFIGURE_DEPENDS opal/*.cpp)
 file(GLOB_RECURSE PHOTON_SOURCES   CONFIGURE_DEPENDS photon/*.cpp)
+file(GLOB_RECURSE GRAPHITE_SOURCES CONFIGURE_DEPENDS graphite/*.cpp)
 
 # ─── bezel ───────────────────────────────────────────────────────────────────
 add_library(bezel ${BEZEL_SOURCES})
@@ -302,6 +303,11 @@ elseif(BACKEND_VULKAN)
     target_link_libraries(hydra PRIVATE Vulkan::Vulkan)
 endif()
 
+# ─── graphite ───────────────────────────────────────────────────────────────────
+add_library(graphite ${GRAPHITE_SOURCES})
+target_link_libraries(graphite PRIVATE glm::glm SDL3::SDL3 Freetype::Freetype assimp::assimp)
+add_dependencies(graphite generate_shaders)
+
 # ─── atlas ───────────────────────────────────────────────────────────────────
 add_library(atlas ${ATLAS_SOURCES})
 add_dependencies(atlas generate_shaders)
@@ -318,6 +324,7 @@ target_link_libraries(atlas
         Freetype::Freetype
         assimp::assimp
         photon
+        graphite
 )
 
 if(NOT BEZEL_NATIVE)
