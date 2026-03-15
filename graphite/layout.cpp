@@ -12,6 +12,12 @@
 
 namespace {
 
+graphite::UIStyle makeLayoutStyle(Size2d padding) {
+    graphite::UIStyle style;
+    style.normal().padding(padding);
+    return style;
+}
+
 LayoutAnchor getLayoutAnchorForChild(const UIObject *child) {
     if (const auto *column = dynamic_cast<const Column *>(child)) {
         return column->anchor;
@@ -109,6 +115,17 @@ void Column::render(float dt,
                     std::shared_ptr<opal::CommandBuffer> commandBuffer,
                     bool updatePipeline) {
     recalculatePositions();
+    const graphite::UIResolvedStyle style = graphite::resolveStyle(
+        makeLayoutStyle(padding), &graphite::Theme::current().column,
+        usesLocalStyle ? &localStyle : nullptr);
+    const Size2d layoutSize = getSize();
+    const Position2d topLeft =
+        graphite::getAnchoredTopLeft(position, layoutSize, anchor);
+    if ((style.backgroundColor.a > 0.0f) ||
+        (style.borderWidth > 0.0f && style.borderColor.a > 0.0f)) {
+        graphite::renderStyledBox(boxRenderer, id, commandBuffer, topLeft,
+                                  layoutSize, style);
+    }
     for (auto &child : children) {
         if (child == nullptr) {
             continue;
@@ -118,34 +135,37 @@ void Column::render(float dt,
 }
 
 void Column::recalculatePositions() {
+    const graphite::UIResolvedStyle style = graphite::resolveStyle(
+        makeLayoutStyle(padding), &graphite::Theme::current().column,
+        usesLocalStyle ? &localStyle : nullptr);
     Size2d layoutSize = getSize();
     Position2d topLeft =
         graphite::getAnchoredTopLeft(position, layoutSize, anchor);
 
-    float currentY = topLeft.y + padding.height;
+    float currentY = topLeft.y + style.padding.height;
 
-    float contentWidth = layoutSize.width - (padding.width * 2.0f);
+    float contentWidth = layoutSize.width - (style.padding.width * 2.0f);
 
     for (auto &child : children) {
         if (child == nullptr) {
             continue;
         }
         Size2d childSize = child->getSize();
-        float childX = topLeft.x + padding.width;
+        float childX = topLeft.x + style.padding.width;
 
         switch (alignment) {
         case ElementAlignment::Top:
-            childX = topLeft.x + padding.width;
+            childX = topLeft.x + style.padding.width;
             break;
 
         case ElementAlignment::Center:
-            childX = topLeft.x + padding.width +
+            childX = topLeft.x + style.padding.width +
                      ((contentWidth - childSize.width) / 2.0f);
             break;
 
         case ElementAlignment::Bottom:
-            childX =
-                topLeft.x + layoutSize.width - padding.width - childSize.width;
+            childX = topLeft.x + layoutSize.width - style.padding.width -
+                     childSize.width;
             break;
         }
 
@@ -186,6 +206,17 @@ void Row::setProjectionMatrix(const glm::mat4 &projection) {
 void Row::render(float dt, std::shared_ptr<opal::CommandBuffer> commandBuffer,
                  bool updatePipeline) {
     recalculatePositions();
+    const graphite::UIResolvedStyle style = graphite::resolveStyle(
+        makeLayoutStyle(padding), &graphite::Theme::current().row,
+        usesLocalStyle ? &localStyle : nullptr);
+    const Size2d layoutSize = getSize();
+    const Position2d topLeft =
+        graphite::getAnchoredTopLeft(position, layoutSize, anchor);
+    if ((style.backgroundColor.a > 0.0f) ||
+        (style.borderWidth > 0.0f && style.borderColor.a > 0.0f)) {
+        graphite::renderStyledBox(boxRenderer, id, commandBuffer, topLeft,
+                                  layoutSize, style);
+    }
     for (auto &child : children) {
         if (child == nullptr) {
             continue;
@@ -195,33 +226,36 @@ void Row::render(float dt, std::shared_ptr<opal::CommandBuffer> commandBuffer,
 }
 
 void Row::recalculatePositions() {
+    const graphite::UIResolvedStyle style = graphite::resolveStyle(
+        makeLayoutStyle(padding), &graphite::Theme::current().row,
+        usesLocalStyle ? &localStyle : nullptr);
     Size2d layoutSize = getSize();
     Position2d topLeft =
         graphite::getAnchoredTopLeft(position, layoutSize, anchor);
 
-    float currentX = topLeft.x + padding.width;
+    float currentX = topLeft.x + style.padding.width;
 
-    float contentHeight = layoutSize.height - (padding.height * 2.0f);
+    float contentHeight = layoutSize.height - (style.padding.height * 2.0f);
 
     for (auto &child : children) {
         if (child == nullptr) {
             continue;
         }
         Size2d childSize = child->getSize();
-        float childY = topLeft.y + padding.height;
+        float childY = topLeft.y + style.padding.height;
 
         switch (alignment) {
         case ElementAlignment::Top:
-            childY = topLeft.y + padding.height;
+            childY = topLeft.y + style.padding.height;
             break;
 
         case ElementAlignment::Center:
-            childY = topLeft.y + padding.height +
+            childY = topLeft.y + style.padding.height +
                      ((contentHeight - childSize.height) / 2.0f);
             break;
 
         case ElementAlignment::Bottom:
-            childY = topLeft.y + layoutSize.height - padding.height -
+            childY = topLeft.y + layoutSize.height - style.padding.height -
                      childSize.height;
             break;
         }
@@ -263,6 +297,17 @@ void Stack::setProjectionMatrix(const glm::mat4 &projection) {
 void Stack::render(float dt, std::shared_ptr<opal::CommandBuffer> commandBuffer,
                    bool updatePipeline) {
     recalculatePositions();
+    const graphite::UIResolvedStyle style = graphite::resolveStyle(
+        makeLayoutStyle(padding), &graphite::Theme::current().stack,
+        usesLocalStyle ? &localStyle : nullptr);
+    const Size2d layoutSize = getSize();
+    const Position2d topLeft =
+        graphite::getAnchoredTopLeft(position, layoutSize, anchor);
+    if ((style.backgroundColor.a > 0.0f) ||
+        (style.borderWidth > 0.0f && style.borderColor.a > 0.0f)) {
+        graphite::renderStyledBox(boxRenderer, id, commandBuffer, topLeft,
+                                  layoutSize, style);
+    }
     for (auto &child : children) {
         if (child == nullptr) {
             continue;
@@ -272,12 +317,15 @@ void Stack::render(float dt, std::shared_ptr<opal::CommandBuffer> commandBuffer,
 }
 
 void Stack::recalculatePositions() {
+    const graphite::UIResolvedStyle style = graphite::resolveStyle(
+        makeLayoutStyle(padding), &graphite::Theme::current().stack,
+        usesLocalStyle ? &localStyle : nullptr);
     Size2d layoutSize = getSize();
     Position2d topLeft =
         graphite::getAnchoredTopLeft(position, layoutSize, anchor);
 
-    float contentWidth = layoutSize.width - (padding.width * 2.0f);
-    float contentHeight = layoutSize.height - (padding.height * 2.0f);
+    float contentWidth = layoutSize.width - (style.padding.width * 2.0f);
+    float contentHeight = layoutSize.height - (style.padding.height * 2.0f);
 
     for (auto &child : children) {
         if (child == nullptr) {
@@ -285,33 +333,33 @@ void Stack::recalculatePositions() {
         }
 
         Size2d childSize = child->getSize();
-        float childX = topLeft.x + padding.width;
-        float childY = topLeft.y + padding.height;
+        float childX = topLeft.x + style.padding.width;
+        float childY = topLeft.y + style.padding.height;
 
         switch (horizontalAlignment) {
         case ElementAlignment::Top:
-            childX = topLeft.x + padding.width;
+            childX = topLeft.x + style.padding.width;
             break;
         case ElementAlignment::Center:
-            childX = topLeft.x + padding.width +
+            childX = topLeft.x + style.padding.width +
                      ((contentWidth - childSize.width) / 2.0f);
             break;
         case ElementAlignment::Bottom:
-            childX =
-                topLeft.x + layoutSize.width - padding.width - childSize.width;
+            childX = topLeft.x + layoutSize.width - style.padding.width -
+                     childSize.width;
             break;
         }
 
         switch (verticalAlignment) {
         case ElementAlignment::Top:
-            childY = topLeft.y + padding.height;
+            childY = topLeft.y + style.padding.height;
             break;
         case ElementAlignment::Center:
-            childY = topLeft.y + padding.height +
+            childY = topLeft.y + style.padding.height +
                      ((contentHeight - childSize.height) / 2.0f);
             break;
         case ElementAlignment::Bottom:
-            childY = topLeft.y + layoutSize.height - padding.height -
+            childY = topLeft.y + layoutSize.height - style.padding.height -
                      childSize.height;
             break;
         }

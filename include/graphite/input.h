@@ -36,6 +36,7 @@ class TextField : public UIObject {
     std::string placeholder;
     Font font;
     Position2d position;
+    float fontSize = 0.0f;
     Size2d padding{.width = 14.0f, .height = 10.0f};
     float maximumWidth = 320.0f;
     Color textColor = Color::white();
@@ -66,11 +67,17 @@ class TextField : public UIObject {
     const std::string &getText() const { return text; }
     bool isFocused() const { return focused; }
     std::size_t getCursorIndex() const { return cursorIndex; }
+    graphite::UIStyle &style() {
+        usesLocalStyle = true;
+        return localStyle;
+    }
 
     TextField &setText(std::string newText);
     TextField &setPlaceholder(std::string newPlaceholder);
     TextField &setPadding(Size2d newPadding);
     TextField &setMaximumWidth(float newMaximumWidth);
+    TextField &setFontSize(float newFontSize);
+    TextField &setStyle(const graphite::UIStyle &newStyle);
     TextField &setOnChange(ChangeCallback callback);
     void focus();
     void blur();
@@ -79,14 +86,12 @@ class TextField : public UIObject {
     std::size_t cursorIndex = 0;
     std::size_t scrollIndex = 0;
     bool focused = false;
-    std::shared_ptr<opal::DrawingState> boxVao = nullptr;
-    std::shared_ptr<opal::Buffer> boxVertexBuffer = nullptr;
-    std::size_t boxVertexBufferCapacity = 0;
-    glm::mat4 projection;
-    ShaderProgram boxShader;
+    graphite::BoxRendererData boxRenderer;
     Text visibleText;
     Text placeholderText;
     ChangeCallback onChange;
+    graphite::UIStyle localStyle;
+    bool usesLocalStyle = false;
 
     void ensureCursorVisible(float availableWidth);
     void syncRenderers(float availableWidth);
@@ -102,6 +107,7 @@ class Button : public UIObject {
     std::string label;
     Font font;
     Position2d position;
+    float fontSize = 0.0f;
     Size2d padding{.width = 18.0f, .height = 12.0f};
     Size2d minimumSize{.width = 0.0f, .height = 0.0f};
     Color textColor = Color::white();
@@ -130,24 +136,28 @@ class Button : public UIObject {
     const std::string &getLabel() const { return label; }
     bool isHovered() const { return hovered; }
     bool isEnabled() const { return enabled; }
+    graphite::UIStyle &style() {
+        usesLocalStyle = true;
+        return localStyle;
+    }
 
     Button &setLabel(std::string newLabel);
     Button &setPadding(Size2d newPadding);
     Button &setMinimumSize(Size2d newMinimumSize);
+    Button &setFontSize(float newFontSize);
+    Button &setStyle(const graphite::UIStyle &newStyle);
     Button &setOnClick(ClickCallback callback);
     Button &setEnabled(bool newEnabled);
 
   private:
     bool hovered = false;
-    std::shared_ptr<opal::DrawingState> boxVao = nullptr;
-    std::shared_ptr<opal::Buffer> boxVertexBuffer = nullptr;
-    std::size_t boxVertexBufferCapacity = 0;
-    glm::mat4 projection;
-    ShaderProgram boxShader;
+    graphite::BoxRendererData boxRenderer;
     Text labelText;
     ClickCallback onClick;
+    graphite::UIStyle localStyle;
+    bool usesLocalStyle = false;
 
-    void syncLabel();
+    void syncLabel(const graphite::UIResolvedStyle &style);
     void emitClick() const;
 };
 
@@ -159,6 +169,7 @@ class Checkbox : public UIObject {
     std::string label;
     Font font;
     Position2d position;
+    float fontSize = 0.0f;
     Size2d padding{.width = 0.0f, .height = 4.0f};
     float boxSize = 28.0f;
     float spacing = 12.0f;
@@ -190,11 +201,17 @@ class Checkbox : public UIObject {
     bool isChecked() const { return checked; }
     bool isHovered() const { return hovered; }
     bool isEnabled() const { return enabled; }
+    graphite::UIStyle &style() {
+        usesLocalStyle = true;
+        return localStyle;
+    }
 
     Checkbox &setLabel(std::string newLabel);
     Checkbox &setPadding(Size2d newPadding);
     Checkbox &setBoxSize(float newBoxSize);
     Checkbox &setSpacing(float newSpacing);
+    Checkbox &setFontSize(float newFontSize);
+    Checkbox &setStyle(const graphite::UIStyle &newStyle);
     Checkbox &setChecked(bool newChecked);
     Checkbox &setEnabled(bool newEnabled);
     Checkbox &setOnToggle(ToggleCallback callback);
@@ -202,15 +219,13 @@ class Checkbox : public UIObject {
 
   private:
     bool hovered = false;
-    std::shared_ptr<opal::DrawingState> boxVao = nullptr;
-    std::shared_ptr<opal::Buffer> boxVertexBuffer = nullptr;
-    std::size_t boxVertexBufferCapacity = 0;
-    glm::mat4 projection;
-    ShaderProgram boxShader;
+    graphite::BoxRendererData boxRenderer;
     Text labelText;
     ToggleCallback onToggle;
+    graphite::UIStyle localStyle;
+    bool usesLocalStyle = false;
 
-    void syncLabel();
+    void syncLabel(const graphite::UIResolvedStyle &style);
     void emitToggle() const;
 };
 

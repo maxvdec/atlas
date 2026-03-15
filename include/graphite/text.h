@@ -15,6 +15,8 @@
 #include "atlas/units.h"
 #include "atlas/window.h"
 #include "atlas/workspace.h"
+#include "graphite/style.h"
+#include <algorithm>
 #include <map>
 #include "opal/opal.h"
 #include <string>
@@ -165,6 +167,7 @@ class Text : public UIObject {
      *
      */
     Position2d position;
+    float fontSize = 0.0f;
     /**
      * @brief The color of the text.
      *
@@ -202,14 +205,23 @@ class Text : public UIObject {
                 bool updatePipeline = false) override;
 
     Size2d getSize() const override {
-        float width = 0.0f;
-        float maxBearingY = 0.0f;
-        for (const char &ch : content) {
-            Character character = font.atlas.at(ch);
-            width += (character.advance >> 6) * 2.0f;
-            maxBearingY = std::max(character.bearing.y, maxBearingY);
+        graphite::UIStyle fallbackStyle;
+        fallbackStyle.normal().foreground(color).font(font);
+        if (fontSize > 0.0f) {
+            fallbackStyle.normal().fontSize(fontSize);
         }
-        return Size2d(width, maxBearingY * 2.0f);
+        const graphite::UIResolvedStyle style = graphite::resolveStyle(
+            fallbackStyle, &graphite::Theme::current().text,
+            usesLocalStyle ? &localStyle : nullptr);
+        const Font &resolvedFont = style.font != nullptr ? *style.font : font;
+        return Size2d{
+            .width = graphite::measureTextWidth(resolvedFont, content,
+                                                style.fontSize) +
+                     (style.padding.width * 2.0f),
+            .height =
+                graphite::getLineHeight(resolvedFont, style.fontSize) +
+                (style.padding.height * 2.0f),
+        };
     }
 
     Position2d getScreenPosition() const override { return position; }
@@ -218,12 +230,31 @@ class Text : public UIObject {
         position = newPosition;
     }
 
+    graphite::UIStyle &style() {
+        usesLocalStyle = true;
+        return localStyle;
+    }
+
+    Text &setStyle(const graphite::UIStyle &newStyle) {
+        localStyle = newStyle;
+        usesLocalStyle = true;
+        return *this;
+    }
+
+    Text &setFontSize(float newFontSize) {
+        fontSize = std::max(newFontSize, 0.0f);
+        return *this;
+    }
+
   private:
     std::shared_ptr<opal::DrawingState> vao = nullptr;
     std::shared_ptr<opal::Buffer> vertexBuffer = nullptr;
     size_t vertexBufferCapacity = sizeof(float) * 6 * 4; // capacity in bytes
     glm::mat4 projection;
     ShaderProgram shader;
+    graphite::BoxRendererData backgroundRenderer;
+    graphite::UIStyle localStyle;
+    bool usesLocalStyle = false;
 };
 
 #endif // ATLAS_TEXT_H

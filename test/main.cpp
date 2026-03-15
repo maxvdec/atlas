@@ -8,8 +8,9 @@
 #include "atlas/scene.h"
 #include "graphite/image.h"
 #include "graphite/input.h"
-#include "graphite/text.h"
 #include "graphite/layout.h"
+#include "graphite/style.h"
+#include "graphite/text.h"
 #include "atlas/texture.h"
 #include "atlas/units.h"
 #include "atlas/window.h"
@@ -159,6 +160,82 @@ class MainScene : public Scene {
             std::cout << "Checkbox " << event.label << ": "
                       << (event.checked ? "true" : "false") << std::endl;
         });
+
+        graphite::Theme theme;
+        theme.text.normal().fontSize(28.0f).foreground(
+            Color(0.93f, 0.95f, 0.99f, 1.0f));
+        theme.image.normal()
+            .padding(12.0f, 12.0f)
+            .background(Color(0.05f, 0.08f, 0.12f, 0.55f))
+            .border(2.0f, Color(1.0f, 1.0f, 1.0f, 0.12f))
+            .cornerRadius(28.0f);
+        theme.textField.normal()
+            .font(fpsText.font)
+            .fontSize(24.0f)
+            .padding(20.0f, 14.0f)
+            .foreground(Color(0.96f, 0.97f, 0.99f, 1.0f))
+            .background(Color(0.06f, 0.08f, 0.12f, 0.92f))
+            .border(2.0f, Color(1.0f, 1.0f, 1.0f, 0.12f))
+            .cornerRadius(18.0f)
+            .tint(Color(1.0f, 0.55f, 0.14f, 1.0f));
+        theme.textField.focused()
+            .background(Color(0.08f, 0.1f, 0.15f, 0.96f))
+            .border(2.0f, Color(1.0f, 0.55f, 0.14f, 1.0f));
+        theme.button.normal()
+            .font(fpsText.font)
+            .fontSize(23.0f)
+            .padding(22.0f, 14.0f)
+            .foreground(Color(0.98f, 0.98f, 0.99f, 1.0f))
+            .background(Color(0.12f, 0.16f, 0.2f, 0.96f))
+            .border(2.0f, Color(1.0f, 1.0f, 1.0f, 0.12f))
+            .cornerRadius(18.0f);
+        theme.button.hovered()
+            .background(Color(0.16f, 0.21f, 0.26f, 0.98f))
+            .border(2.0f, Color(0.86f, 0.9f, 0.97f, 0.48f));
+        theme.button.pressed()
+            .background(Color(1.0f, 0.55f, 0.14f, 0.96f))
+            .foreground(Color(0.1f, 0.08f, 0.06f, 1.0f))
+            .border(2.0f, Color(1.0f, 0.78f, 0.48f, 1.0f));
+        theme.checkbox.normal()
+            .font(fpsText.font)
+            .fontSize(22.0f)
+            .padding(0.0f, 6.0f)
+            .foreground(Color(0.92f, 0.95f, 0.99f, 1.0f))
+            .background(Color(0.08f, 0.11f, 0.15f, 0.96f))
+            .border(2.0f, Color(1.0f, 1.0f, 1.0f, 0.12f))
+            .cornerRadius(10.0f)
+            .tint(Color(1.0f, 0.55f, 0.14f, 1.0f));
+        theme.checkbox.hovered()
+            .background(Color(0.12f, 0.15f, 0.2f, 0.98f))
+            .border(2.0f, Color(0.9f, 0.93f, 0.98f, 0.42f));
+        theme.checkbox.checked()
+            .border(2.0f, Color(1.0f, 0.55f, 0.14f, 1.0f))
+            .tint(Color(1.0f, 0.55f, 0.14f, 1.0f));
+        theme.row.normal()
+            .padding(18.0f, 16.0f)
+            .background(Color(0.05f, 0.07f, 0.1f, 0.38f))
+            .border(2.0f, Color(1.0f, 1.0f, 1.0f, 0.08f))
+            .cornerRadius(24.0f);
+        theme.column.normal()
+            .padding(30.0f, 30.0f)
+            .background(Color(0.02f, 0.04f, 0.07f, 0.26f))
+            .border(2.0f, Color(1.0f, 1.0f, 1.0f, 0.08f))
+            .cornerRadius(32.0f);
+        theme.stack.normal()
+            .padding(18.0f, 18.0f)
+            .background(Color(0.03f, 0.05f, 0.08f, 0.42f))
+            .border(2.0f, Color(1.0f, 1.0f, 1.0f, 0.08f))
+            .cornerRadius(24.0f);
+        graphite::Theme::set(theme);
+
+        welcomeText.style()
+            .normal()
+            .fontSize(54.0f)
+            .foreground(Color(1.0f, 0.5f, 0.0f, 1.0f));
+        fpsText.style()
+            .normal()
+            .fontSize(34.0f)
+            .foreground(Color(0.95f, 0.97f, 1.0f, 1.0f));
 
         headerRow = Row({&welcomeText, &fpsText}, 30.0f);
         controlsRow = Row({&actionButton, &demoCheckbox}, 22.0f);

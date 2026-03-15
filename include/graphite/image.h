@@ -2,9 +2,9 @@
 #define GRAPHITE_IMAGE_H
 
 #include "atlas/component.h"
-#include "atlas/core/shader.h"
 #include "atlas/texture.h"
 #include "atlas/units.h"
+#include "graphite/style.h"
 #include "opal/opal.h"
 #include <memory>
 
@@ -35,14 +35,24 @@ class Image : public UIObject {
         position = newPosition;
     }
 
+    graphite::UIStyle &style() {
+        usesLocalStyle = true;
+        return localStyle;
+    }
+
+    Image &setStyle(const graphite::UIStyle &newStyle) {
+        localStyle = newStyle;
+        usesLocalStyle = true;
+        return *this;
+    }
+
     void setTexture(Texture newTexture);
     void setSize(Size2d newSize);
 
   private:
-    std::shared_ptr<opal::DrawingState> vao = nullptr;
-    std::shared_ptr<opal::Buffer> vertexBuffer = nullptr;
-    glm::mat4 projection;
-    ShaderProgram shader;
+    graphite::BoxRendererData boxRenderer;
+    graphite::UIStyle localStyle;
+    bool usesLocalStyle = false;
 };
 
 #endif // GRAPHITE_IMAGE_H

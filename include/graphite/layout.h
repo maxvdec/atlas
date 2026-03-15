@@ -11,6 +11,7 @@
 #define GRAPHITE_LAYOUT_H
 
 #include "atlas/units.h"
+#include "graphite/style.h"
 #include <atlas/component.h>
 #include <algorithm>
 #include <vector>
@@ -68,8 +69,14 @@ class Column : public UIObject {
     void setChildren(const std::vector<UIObject *> &newChildren);
 
     Size2d getSize() const override {
+        graphite::UIStyle fallbackStyle;
+        fallbackStyle.normal().padding(padding);
+        const graphite::UIResolvedStyle style = graphite::resolveStyle(
+            fallbackStyle, &graphite::Theme::current().column,
+            usesLocalStyle ? &localStyle : nullptr);
+        const Size2d effectivePadding = style.padding;
         float width = 0.0f;
-        float totalHeight = padding.height * 2.0f;
+        float totalHeight = effectivePadding.height * 2.0f;
         bool hasChild = false;
         for (const auto *child : children) {
             if (child == nullptr) {
@@ -84,7 +91,8 @@ class Column : public UIObject {
             hasChild = true;
         }
         return Size2d{
-            .width = std::max(width + (padding.width * 2.0f), maxSize.width),
+            .width =
+                std::max(width + (effectivePadding.width * 2.0f), maxSize.width),
             .height = std::max(totalHeight, maxSize.height),
         };
     }
@@ -95,8 +103,23 @@ class Column : public UIObject {
         recalculatePositions();
     }
 
+    graphite::UIStyle &style() {
+        usesLocalStyle = true;
+        return localStyle;
+    }
+
+    Column &setStyle(const graphite::UIStyle &newStyle) {
+        localStyle = newStyle;
+        usesLocalStyle = true;
+        recalculatePositions();
+        return *this;
+    }
+
   private:
     void recalculatePositions();
+    graphite::BoxRendererData boxRenderer;
+    graphite::UIStyle localStyle;
+    bool usesLocalStyle = false;
 };
 
 class Row : public UIObject {
@@ -131,7 +154,13 @@ class Row : public UIObject {
     void setChildren(const std::vector<UIObject *> &newChildren);
 
     Size2d getSize() const override {
-        float totalWidth = padding.width * 2.0f;
+        graphite::UIStyle fallbackStyle;
+        fallbackStyle.normal().padding(padding);
+        const graphite::UIResolvedStyle style = graphite::resolveStyle(
+            fallbackStyle, &graphite::Theme::current().row,
+            usesLocalStyle ? &localStyle : nullptr);
+        const Size2d effectivePadding = style.padding;
+        float totalWidth = effectivePadding.width * 2.0f;
         float maxHeight = 0.0f;
         bool hasChild = false;
 
@@ -150,7 +179,7 @@ class Row : public UIObject {
 
         return Size2d{
             .width = std::max(totalWidth, maxSize.width),
-            .height = std::max(maxHeight + (padding.height * 2.0f),
+            .height = std::max(maxHeight + (effectivePadding.height * 2.0f),
                                maxSize.height),
         };
     }
@@ -162,8 +191,23 @@ class Row : public UIObject {
         recalculatePositions();
     }
 
+    graphite::UIStyle &style() {
+        usesLocalStyle = true;
+        return localStyle;
+    }
+
+    Row &setStyle(const graphite::UIStyle &newStyle) {
+        localStyle = newStyle;
+        usesLocalStyle = true;
+        recalculatePositions();
+        return *this;
+    }
+
   private:
     void recalculatePositions();
+    graphite::BoxRendererData boxRenderer;
+    graphite::UIStyle localStyle;
+    bool usesLocalStyle = false;
 };
 
 class Stack : public UIObject {
@@ -197,6 +241,12 @@ class Stack : public UIObject {
     void setChildren(const std::vector<UIObject *> &newChildren);
 
     Size2d getSize() const override {
+        graphite::UIStyle fallbackStyle;
+        fallbackStyle.normal().padding(padding);
+        const graphite::UIResolvedStyle style = graphite::resolveStyle(
+            fallbackStyle, &graphite::Theme::current().stack,
+            usesLocalStyle ? &localStyle : nullptr);
+        const Size2d effectivePadding = style.padding;
         float width = 0.0f;
         float height = 0.0f;
 
@@ -210,9 +260,10 @@ class Stack : public UIObject {
         }
 
         return Size2d{
-            .width = std::max(width + (padding.width * 2.0f), maxSize.width),
-            .height =
-                std::max(height + (padding.height * 2.0f), maxSize.height),
+            .width =
+                std::max(width + (effectivePadding.width * 2.0f), maxSize.width),
+            .height = std::max(height + (effectivePadding.height * 2.0f),
+                               maxSize.height),
         };
     }
 
@@ -223,8 +274,23 @@ class Stack : public UIObject {
         recalculatePositions();
     }
 
+    graphite::UIStyle &style() {
+        usesLocalStyle = true;
+        return localStyle;
+    }
+
+    Stack &setStyle(const graphite::UIStyle &newStyle) {
+        localStyle = newStyle;
+        usesLocalStyle = true;
+        recalculatePositions();
+        return *this;
+    }
+
   private:
     void recalculatePositions();
+    graphite::BoxRendererData boxRenderer;
+    graphite::UIStyle localStyle;
+    bool usesLocalStyle = false;
 };
 
 #endif // GRAPHITE_LAYOUT_H

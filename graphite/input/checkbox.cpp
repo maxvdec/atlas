@@ -1,136 +1,48 @@
 #include "graphite/input.h"
+#include "graphite/style.h"
 #include "atlas/tracer/log.h"
 #include "atlas/window.h"
 #include <algorithm>
-#include <cstddef>
-#include <vector>
 
 namespace {
 
-constexpr float textScale = 2.0f;
-constexpr float borderThickness = 2.0f;
-
-struct BoxVertex {
-    float x;
-    float y;
-    float z;
-    float r;
-    float g;
-    float b;
-    float a;
-    float u;
-    float v;
-};
-
-float measureCharacterWidth(const Font &font, char ch) {
-    auto it = font.atlas.find(ch);
-    if (it == font.atlas.end()) {
-        return 0.0f;
-    }
-    return static_cast<float>(it->second.advance >> 6) * textScale;
-}
-
-float measureTextWidth(const Font &font, const std::string &text) {
-    float width = 0.0f;
-    for (char ch : text) {
-        width += measureCharacterWidth(font, ch);
-    }
-    return width;
-}
-
-float getFontAscent(const Font &font) {
-    float ascent = 0.0f;
-    for (const auto &entry : font.atlas) {
-        ascent = std::max(ascent, entry.second.bearing.y * textScale);
-    }
-    return ascent;
-}
-
-float getFontDescent(const Font &font) {
-    float descent = 0.0f;
-    for (const auto &entry : font.atlas) {
-        descent = std::max(
-            descent,
-            (entry.second.size.height - entry.second.bearing.y) * textScale);
-    }
-    return descent;
-}
-
-float getLineHeight(const Font &font) {
-    float height = getFontAscent(font) + getFontDescent(font);
-    if (height <= 0.0f) {
-        height = static_cast<float>(font.size) * textScale;
-    }
-    return height;
-}
+constexpr float defaultBorderWidth = 2.0f;
 
 std::string sanitizeLabel(const Font &font, const std::string &input) {
-    std::string result;
-    result.reserve(input.size());
-    for (unsigned char raw : input) {
-        const char ch = static_cast<char>(raw);
-        if (ch == '\n' || ch == '\r' || ch == '\t' || raw < 32) {
-            continue;
-        }
-        if (font.atlas.contains(ch)) {
-            result.push_back(ch);
-        }
+    return graphite::sanitizeText(font, input);
+}
+
+graphite::UIStyle makeFallbackStyle(const Checkbox &checkbox) {
+    graphite::UIStyle style;
+    style.normal()
+        .padding(checkbox.padding)
+        .foreground(checkbox.textColor)
+        .background(checkbox.boxBackgroundColor)
+        .border(defaultBorderWidth, checkbox.borderColor)
+        .tint(checkbox.checkColor)
+        .font(checkbox.font);
+    if (checkbox.fontSize > 0.0f) {
+        style.normal().fontSize(checkbox.fontSize);
     }
-    return result;
-}
-
-void appendQuad(std::vector<BoxVertex> &vertices, float left, float top,
-                float right, float bottom, const Color &color) {
-    vertices.push_back(
-        {left, top, 0.0f, color.r, color.g, color.b, color.a, 0.0f, 0.0f});
-    vertices.push_back(
-        {right, top, 0.0f, color.r, color.g, color.b, color.a, 1.0f, 0.0f});
-    vertices.push_back({right, bottom, 0.0f, color.r, color.g, color.b,
-                        color.a, 1.0f, 1.0f});
-    vertices.push_back(
-        {left, top, 0.0f, color.r, color.g, color.b, color.a, 0.0f, 0.0f});
-    vertices.push_back({right, bottom, 0.0f, color.r, color.g, color.b,
-                        color.a, 1.0f, 1.0f});
-    vertices.push_back({left, bottom, 0.0f, color.r, color.g, color.b, color.a,
-                        0.0f, 1.0f});
-}
-
-std::vector<opal::VertexAttributeBinding>
-makeBoxBindings(const std::shared_ptr<opal::Buffer> &vertexBuffer) {
-    opal::VertexAttribute positionAttribute{
-        .name = "aPos",
-        .type = opal::VertexAttributeType::Float,
-        .offset = 0,
-        .location = 0,
-        .normalized = false,
-        .size = 3,
-        .stride = static_cast<uint>(sizeof(BoxVertex)),
-        .inputRate = opal::VertexBindingInputRate::Vertex,
-        .divisor = 0};
-    opal::VertexAttribute colorAttribute{
-        .name = "aColor",
-        .type = opal::VertexAttributeType::Float,
-        .offset = static_cast<uint>(offsetof(BoxVertex, r)),
-        .location = 1,
-        .normalized = false,
-        .size = 4,
-        .stride = static_cast<uint>(sizeof(BoxVertex)),
-        .inputRate = opal::VertexBindingInputRate::Vertex,
-        .divisor = 0};
-    opal::VertexAttribute texCoordAttribute{
-        .name = "aTexCoord",
-        .type = opal::VertexAttributeType::Float,
-        .offset = static_cast<uint>(offsetof(BoxVertex, u)),
-        .location = 2,
-        .normalized = false,
-        .size = 2,
-        .stride = static_cast<uint>(sizeof(BoxVertex)),
-        .inputRate = opal::VertexBindingInputRate::Vertex,
-        .divisor = 0};
-
-    return {{positionAttribute, vertexBuffer},
-            {colorAttribute, vertexBuffer},
-            {texCoordAttribute, vertexBuffer}};
+    style.hovered()
+        .background(checkbox.hoverBoxBackgroundColor)
+        .border(defaultBorderWidth, checkbox.activeBorderColor);
+    style.checked()
+        .border(defaultBorderWidth, checkbox.activeBorderColor)
+        .tint(checkbox.checkColor);
+    style.disabled()
+        .foreground(Color(checkbox.textColor.r, checkbox.textColor.g,
+                          checkbox.textColor.b, checkbox.textColor.a * 0.55f))
+        .background(Color(checkbox.boxBackgroundColor.r,
+                          checkbox.boxBackgroundColor.g,
+                          checkbox.boxBackgroundColor.b,
+                          checkbox.boxBackgroundColor.a * 0.55f))
+        .border(defaultBorderWidth,
+                Color(checkbox.borderColor.r, checkbox.borderColor.g,
+                      checkbox.borderColor.b, checkbox.borderColor.a * 0.55f))
+        .tint(Color(checkbox.checkColor.r, checkbox.checkColor.g,
+                    checkbox.checkColor.b, checkbox.checkColor.a * 0.55f));
+    return style;
 }
 
 } // namespace
@@ -141,12 +53,18 @@ Checkbox::Checkbox(Font font, std::string label, bool checked,
       position(position), checked(checked) {}
 
 Size2d Checkbox::getSize() const {
-    const float labelWidth = measureTextWidth(font, label);
+    const graphite::UIResolvedStyle style = graphite::resolveStyle(
+        makeFallbackStyle(*this), &graphite::Theme::current().checkbox,
+        usesLocalStyle ? &localStyle : nullptr);
+    const Font &resolvedFont = style.font != nullptr ? *style.font : font;
+    const float labelWidth =
+        graphite::measureTextWidth(resolvedFont, label, style.fontSize);
     const float contentWidth =
         boxSize + (label.empty() ? 0.0f : spacing + labelWidth);
-    const float contentHeight = std::max(boxSize, getLineHeight(font));
-    return {.width = contentWidth + (padding.width * 2.0f),
-            .height = contentHeight + (padding.height * 2.0f)};
+    const float contentHeight =
+        std::max(boxSize, graphite::getLineHeight(resolvedFont, style.fontSize));
+    return {.width = contentWidth + (style.padding.width * 2.0f),
+            .height = contentHeight + (style.padding.height * 2.0f)};
 }
 
 Checkbox &Checkbox::setLabel(std::string newLabel) {
@@ -167,6 +85,17 @@ Checkbox &Checkbox::setBoxSize(float newBoxSize) {
 
 Checkbox &Checkbox::setSpacing(float newSpacing) {
     spacing = std::max(newSpacing, 0.0f);
+    return *this;
+}
+
+Checkbox &Checkbox::setFontSize(float newFontSize) {
+    fontSize = std::max(newFontSize, 0.0f);
+    return *this;
+}
+
+Checkbox &Checkbox::setStyle(const graphite::UIStyle &newStyle) {
+    localStyle = newStyle;
+    usesLocalStyle = true;
     return *this;
 }
 
@@ -197,18 +126,20 @@ void Checkbox::emitToggle() const {
     }
 }
 
-void Checkbox::syncLabel() {
-    labelText.font = font;
-    labelText.color =
-        enabled ? textColor
-                : Color(textColor.r, textColor.g, textColor.b,
-                        textColor.a * 0.55f);
+void Checkbox::syncLabel(const graphite::UIResolvedStyle &style) {
+    const Font &resolvedFont = style.font != nullptr ? *style.font : font;
+    labelText.font = resolvedFont;
+    labelText.fontSize = style.fontSize;
+    labelText.color = style.foregroundColor;
     labelText.content = label;
 
     const Size2d size = getSize();
     const float contentTop =
-        position.y + ((size.height - getLineHeight(font)) * 0.5f);
-    const float contentLeft = position.x + padding.width + boxSize +
+        position.y +
+        ((size.height -
+          graphite::getLineHeight(resolvedFont, style.fontSize)) *
+         0.5f);
+    const float contentLeft = position.x + style.padding.width + boxSize +
                               (label.empty() ? 0.0f : spacing);
 
     labelText.setScreenPosition({.x = contentLeft, .y = contentTop});
@@ -218,29 +149,7 @@ void Checkbox::initialize() {
     for (auto &component : components) {
         component->init();
     }
-
-    Size2d framebufferSize = Window::mainWindow->getSize();
-    const int fbWidth = static_cast<int>(framebufferSize.width);
-    const int fbHeight = static_cast<int>(framebufferSize.height);
-
-#if defined(VULKAN) || defined(METAL)
-    projection = glm::ortho(0.0f, static_cast<float>(fbWidth),
-                            static_cast<float>(fbHeight), 0.0f);
-#else
-    projection = glm::ortho(0.0f, static_cast<float>(fbWidth), 0.0f,
-                            static_cast<float>(fbHeight));
-#endif
-
-    boxVertexBufferCapacity = sizeof(BoxVertex) * 36;
-    boxVertexBuffer = opal::Buffer::create(
-        opal::BufferUsage::VertexBuffer, boxVertexBufferCapacity, nullptr,
-        opal::MemoryUsageType::CPUToGPU, id);
-    boxVao = opal::DrawingState::create(boxVertexBuffer);
-    boxVao->setBuffers(boxVertexBuffer, nullptr);
-    boxVao->configureAttributes(makeBoxBindings(boxVertexBuffer));
-
-    boxShader = ShaderProgram::fromDefaultShaders(AtlasVertexShader::Texture,
-                                                  AtlasFragmentShader::Texture);
+    graphite::initializeBoxRenderer(boxRenderer, id);
 }
 
 void Checkbox::render(float dt,
@@ -248,8 +157,8 @@ void Checkbox::render(float dt,
                       bool updatePipeline) {
     (void)updatePipeline;
 
-    if (boxShader.shader == nullptr || boxVao == nullptr ||
-        boxVertexBuffer == nullptr) {
+    if (boxRenderer.shader.shader == nullptr || boxRenderer.vao == nullptr ||
+        boxRenderer.vertexBuffer == nullptr) {
         initialize();
     }
 
@@ -279,156 +188,40 @@ void Checkbox::render(float dt,
         }
     }
 
-    syncLabel();
+    const graphite::UIStyleStateSnapshot stateSnapshot{
+        .hovered = hovered,
+        .pressed = false,
+        .focused = false,
+        .disabled = !enabled,
+        .checked = checked,
+    };
+    const graphite::UIResolvedStyle style = graphite::resolveStyle(
+        makeFallbackStyle(*this), &graphite::Theme::current().checkbox,
+        usesLocalStyle ? &localStyle : nullptr, stateSnapshot);
 
-    static std::shared_ptr<opal::Pipeline> checkboxPipeline = nullptr;
-
-    Size2d framebufferSize = Window::mainWindow->getSize();
-    const int fbWidth = static_cast<int>(framebufferSize.width);
-    const int fbHeight = static_cast<int>(framebufferSize.height);
-
-    if (checkboxPipeline == nullptr) {
-        checkboxPipeline = opal::Pipeline::create();
-        std::vector<opal::VertexAttribute> attributes = {
-            {.name = "aPos",
-             .type = opal::VertexAttributeType::Float,
-             .offset = 0,
-             .location = 0,
-             .normalized = false,
-             .size = 3,
-             .stride = static_cast<uint>(sizeof(BoxVertex)),
-             .inputRate = opal::VertexBindingInputRate::Vertex,
-             .divisor = 0},
-            {.name = "aColor",
-             .type = opal::VertexAttributeType::Float,
-             .offset = static_cast<uint>(offsetof(BoxVertex, r)),
-             .location = 1,
-             .normalized = false,
-             .size = 4,
-             .stride = static_cast<uint>(sizeof(BoxVertex)),
-             .inputRate = opal::VertexBindingInputRate::Vertex,
-             .divisor = 0},
-            {.name = "aTexCoord",
-             .type = opal::VertexAttributeType::Float,
-             .offset = static_cast<uint>(offsetof(BoxVertex, u)),
-             .location = 2,
-             .normalized = false,
-             .size = 2,
-             .stride = static_cast<uint>(sizeof(BoxVertex)),
-             .inputRate = opal::VertexBindingInputRate::Vertex,
-             .divisor = 0}};
-        checkboxPipeline->setVertexAttributes(
-            attributes,
-            {.stride = static_cast<uint>(sizeof(BoxVertex)),
-             .inputRate = opal::VertexBindingInputRate::Vertex});
-        checkboxPipeline->setShaderProgram(boxShader.shader);
-#ifdef VULKAN
-        checkboxPipeline->setViewport(0, fbHeight, fbWidth, -fbHeight);
-#else
-        checkboxPipeline->setViewport(0, 0, fbWidth, fbHeight);
-#endif
-        checkboxPipeline->setCullMode(opal::CullMode::None);
-        checkboxPipeline->enableDepthTest(false);
-        checkboxPipeline->enableDepthWrite(false);
-        checkboxPipeline->setPrimitiveStyle(opal::PrimitiveStyle::Triangles);
-        checkboxPipeline->enableBlending(true);
-        checkboxPipeline->setBlendFunc(opal::BlendFunc::SrcAlpha,
-                                       opal::BlendFunc::OneMinusSrcAlpha);
-        checkboxPipeline->build();
-    } else {
-#ifdef VULKAN
-        checkboxPipeline->setViewport(0, fbHeight, fbWidth, -fbHeight);
-#else
-        checkboxPipeline->setViewport(0, 0, fbWidth, fbHeight);
-#endif
-        checkboxPipeline->setShaderProgram(boxShader.shader);
-    }
-
-#if defined(VULKAN) || defined(METAL)
-    projection = glm::ortho(0.0f, static_cast<float>(fbWidth),
-                            static_cast<float>(fbHeight), 0.0f);
-    const float boxLeft = position.x + padding.width;
+    const float boxLeft = position.x + style.padding.width;
     const float boxTop = position.y + ((size.height - boxSize) * 0.5f);
-    const float boxRight = boxLeft + boxSize;
-    const float boxBottom = boxTop + boxSize;
-#else
-    projection = glm::ortho(0.0f, static_cast<float>(fbWidth), 0.0f,
-                            static_cast<float>(fbHeight));
-    const float boxLeft = position.x + padding.width;
-    const float boxTop =
-        static_cast<float>(fbHeight) - (position.y + ((size.height - boxSize) * 0.5f));
-    const float boxRight = boxLeft + boxSize;
-    const float boxBottom = boxTop - boxSize;
-#endif
-
-    Color fillColor = hovered ? hoverBoxBackgroundColor : boxBackgroundColor;
-    Color outlineColor = (hovered || checked) ? activeBorderColor : borderColor;
-    Color activeColor = checkColor;
-
-    if (!enabled) {
-        fillColor = Color(fillColor.r, fillColor.g, fillColor.b,
-                          fillColor.a * 0.55f);
-        outlineColor = Color(outlineColor.r, outlineColor.g, outlineColor.b,
-                             outlineColor.a * 0.55f);
-        activeColor = Color(activeColor.r, activeColor.g, activeColor.b,
-                            activeColor.a * 0.55f);
-    }
-
-    std::vector<BoxVertex> vertices;
-    vertices.reserve(36);
-
-    appendQuad(vertices, boxLeft, boxTop, boxRight, boxBottom, fillColor);
-    appendQuad(vertices, boxLeft, boxTop, boxRight, boxTop + borderThickness,
-               outlineColor);
-    appendQuad(vertices, boxLeft, boxBottom - borderThickness, boxRight,
-               boxBottom, outlineColor);
-    appendQuad(vertices, boxLeft, boxTop, boxLeft + borderThickness, boxBottom,
-               outlineColor);
-    appendQuad(vertices, boxRight - borderThickness, boxTop, boxRight,
-               boxBottom, outlineColor);
+    graphite::renderStyledBox(boxRenderer, id, commandBuffer,
+                              {.x = boxLeft, .y = boxTop},
+                              {.width = boxSize, .height = boxSize}, style);
 
     if (checked) {
+        graphite::UIResolvedStyle activeStyle;
+        activeStyle.backgroundColor = style.tintColor;
+        activeStyle.tintColor = style.tintColor;
+        activeStyle.cornerRadius =
+            std::max(0.0f, style.cornerRadius - std::max(boxSize * 0.18f, 4.0f));
         const float inset = std::max(5.0f, boxSize * 0.22f);
-        appendQuad(vertices, boxLeft + inset, boxTop + inset, boxRight - inset,
-                   boxBottom - inset, activeColor);
+        graphite::renderStyledBox(
+            boxRenderer, id, commandBuffer,
+            {.x = boxLeft + inset, .y = boxTop + inset},
+            {.width = std::max(0.0f, boxSize - (inset * 2.0f)),
+             .height = std::max(0.0f, boxSize - (inset * 2.0f))},
+            activeStyle);
     }
 
-    const std::size_t requiredBytes = vertices.size() * sizeof(BoxVertex);
-    if (requiredBytes > boxVertexBufferCapacity) {
-        boxVertexBufferCapacity = requiredBytes;
-        boxVertexBuffer = opal::Buffer::create(
-            opal::BufferUsage::VertexBuffer, boxVertexBufferCapacity, nullptr,
-            opal::MemoryUsageType::CPUToGPU, id);
-        boxVao->setBuffers(boxVertexBuffer, nullptr);
-        boxVao->configureAttributes(makeBoxBindings(boxVertexBuffer));
-    }
-
-    boxVertexBuffer->bind();
-    boxVertexBuffer->updateData(0, requiredBytes, vertices.data());
-    boxVertexBuffer->unbind();
-
-    checkboxPipeline->enableBlending(true);
-    checkboxPipeline->setBlendFunc(opal::BlendFunc::SrcAlpha,
-                                   opal::BlendFunc::OneMinusSrcAlpha);
-    checkboxPipeline->enableDepthTest(false);
-    checkboxPipeline->enableDepthWrite(false);
-    commandBuffer->bindPipeline(checkboxPipeline);
-    checkboxPipeline->setUniformMat4f("model", glm::mat4(1.0f));
-    checkboxPipeline->setUniformMat4f("view", glm::mat4(1.0f));
-    checkboxPipeline->setUniformMat4f("projection", projection);
-    checkboxPipeline->setUniform1i("useTexture", 0);
-    checkboxPipeline->setUniform1i("onlyTexture", 0);
-    checkboxPipeline->setUniform1i("textureCount", 0);
-    commandBuffer->bindDrawingState(boxVao);
-    commandBuffer->draw(static_cast<uint>(vertices.size()), 1, 0, 0, id);
-    commandBuffer->unbindDrawingState();
-
+    syncLabel(style);
     if (!label.empty()) {
         labelText.render(dt, commandBuffer, updatePipeline);
     }
-
-    checkboxPipeline->enableBlending(false);
-    checkboxPipeline->enableDepthTest(true);
-    checkboxPipeline->enableDepthWrite(true);
-    checkboxPipeline->bind();
 }
