@@ -7,7 +7,7 @@
 // Copyright (c) 2025 Max Van den Eynde
 //
 
-#include "atlas/text.h"
+#include "graphite/text.h"
 #include "atlas/tracer/data.h"
 #include "atlas/tracer/log.h"
 #include "atlas/window.h"
@@ -17,6 +17,19 @@
 #include <iostream>
 #include FT_FREETYPE_H
 #include <vector>
+
+namespace {
+
+graphite::UIStyle makeFallbackStyle(const Text &text) {
+    graphite::UIStyle style;
+    style.normal().foreground(text.color).font(text.font);
+    if (text.fontSize > 0.0f) {
+        style.normal().fontSize(text.fontSize);
+    }
+    return style;
+}
+
+} // namespace
 
 Font Font::fromResource(const std::string &fontName, const Resource &resource,
                         int fontSize) {
@@ -145,8 +158,9 @@ void Text::initialize() {
         component->init();
     }
     Window *window = Window::mainWindow;
-    int fbWidth, fbHeight;
-    atlasGetWindowSizeInPixels(window->windowRef, &fbWidth, &fbHeight);
+    Size2d framebufferSize = window->getSize();
+    int fbWidth = static_cast<int>(framebufferSize.width);
+    int fbHeight = static_cast<int>(framebufferSize.height);
 
 #if defined(VULKAN) || defined(METAL)
     projection = glm::ortho(0.0f, static_cast<float>(fbWidth),
@@ -195,11 +209,20 @@ void Text::render(float dt, std::shared_ptr<opal::CommandBuffer> commandBuffer,
         return;
     }
 
+    const graphite::UIResolvedStyle style = graphite::resolveStyle(
+        makeFallbackStyle(*this), &graphite::Theme::current().text,
+        usesLocalStyle ? &localStyle : nullptr);
+    const Font &resolvedFont = style.font != nullptr ? *style.font : font;
+    if ((style.backgroundColor.a > 0.0f) ||
+        (style.borderWidth > 0.0f && style.borderColor.a > 0.0f)) {
+        graphite::renderStyledBox(backgroundRenderer, id, commandBuffer, position,
+                                  getSize(), style);
+    }
+
     static std::shared_ptr<opal::Pipeline> textPipeline = nullptr;
-    int fbWidth = 0;
-    int fbHeight = 0;
-    atlasGetWindowSizeInPixels(Window::mainWindow->windowRef, &fbWidth,
-                               &fbHeight);
+    Size2d framebufferSize = Window::mainWindow->getSize();
+    int fbWidth = static_cast<int>(framebufferSize.width);
+    int fbHeight = static_cast<int>(framebufferSize.height);
 
     if (textPipeline == nullptr) {
         textPipeline = opal::Pipeline::create();
@@ -249,8 +272,9 @@ void Text::render(float dt, std::shared_ptr<opal::CommandBuffer> commandBuffer,
 
     commandBuffer->bindPipeline(textPipeline);
 
-    atlasGetWindowSizeInPixels(Window::mainWindow->windowRef, &fbWidth,
-                               &fbHeight);
+    framebufferSize = Window::mainWindow->getSize();
+    fbWidth = static_cast<int>(framebufferSize.width);
+    fbHeight = static_cast<int>(framebufferSize.height);
 #if defined(VULKAN) || defined(METAL)
     projection = glm::ortho(0.0f, static_cast<float>(fbWidth),
                             static_cast<float>(fbHeight), 0.0f);
@@ -259,25 +283,31 @@ void Text::render(float dt, std::shared_ptr<opal::CommandBuffer> commandBuffer,
                             static_cast<float>(fbHeight));
 #endif
 
-    textPipeline->setUniform3f("textColor", color.r, color.g, color.b);
+    textPipeline->setUniform3f("textColor", style.foregroundColor.r,
+                               style.foregroundColor.g,
+                               style.foregroundColor.b);
     textPipeline->setUniformMat4f("projection", projection);
 
-    if (font.texture) {
-        textPipeline->bindTexture2D("text", font.texture->textureID, 0, id);
+    if (resolvedFont.texture) {
+        textPipeline->bindTexture2D("text", resolvedFont.texture->textureID, 0,
+                                    id);
     }
 
     commandBuffer->bindDrawingState(vao);
 
-    float scale = 2.0f;
+    float scale = graphite::resolveTextScale(resolvedFont, style.fontSize);
 
-    float maxBearingY = 0;
+    float maxBearingY = 0.0f;
     for (const char &ch : content) {
-        Character character = font.atlas[ch];
-        maxBearingY = std::max(character.bearing.y, maxBearingY);
+        const auto it = resolvedFont.atlas.find(ch);
+        if (it == resolvedFont.atlas.end()) {
+            continue;
+        }
+        maxBearingY = std::max(it->second.bearing.y, maxBearingY);
     }
 
-    float x = position.x;
-    float y = position.y + (maxBearingY * scale);
+    float x = position.x + style.padding.width;
+    float y = position.y + style.padding.height + (maxBearingY * scale);
 
     std::string::const_iterator c;
     const size_t glyphCount = content.size();
@@ -293,7 +323,11 @@ void Text::render(float dt, std::shared_ptr<opal::CommandBuffer> commandBuffer,
 
     size_t glyphIndex = 0;
     for (c = content.begin(); c != content.end(); c++, ++glyphIndex) {
-        Character ch = font.atlas[*c];
+        const auto it = resolvedFont.atlas.find(*c);
+        if (it == resolvedFont.atlas.end()) {
+            continue;
+        }
+        Character ch = it->second;
 
         float xpos = x + (ch.bearing.x * scale);
         float ypos = y - (ch.bearing.y * scale);
@@ -336,7 +370,7 @@ void Text::render(float dt, std::shared_ptr<opal::CommandBuffer> commandBuffer,
         debugPacket.vertexBufferSizeMb =
             static_cast<float>(requiredBytes) / (1024.0f * 1024.0f);
         debugPacket.indexBufferSizeMb = 0.0f;
-        debugPacket.textureCount = (font.texture ? 1 : 0);
+        debugPacket.textureCount = (resolvedFont.texture ? 1 : 0);
         debugPacket.materialCount = 0;
         debugPacket.objectType = DebugObjectType::Other;
         debugPacket.objectId = this->id;

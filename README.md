@@ -15,14 +15,17 @@ an environment system and a debugging system with more to come.
 
 ## Features
 
-- Cross-platform support (Windows, macOS, Linux)
-- Fast graphics rendering with OpenGL and Vulkan (via Opal)
+- Cross-platform support for Windows, macOS, Linux although the main focus is on macOS.
+- Fast graphics rendering with OpenGL, Vulkan and Metal (via Opal)
 - Simple and intuitive API
 - Physics engine (Bezel)
 - Audio engine (Finewave)
 - Terrain system (Aurora)
 - Environment system (Hydra)
 - Debugging system (Tracer)
+- Global illumination and path tracing (Photon)
+- UI library (Graphite)
+- Powerful CLI tool for project management and build automation
 - Asset management
 - Intuitive C++ scripting mode
 
@@ -36,6 +39,7 @@ an environment system and a debugging system with more to come.
 - The rendering backend is Opal, an in-house rendering abstraction layer that allows for easy switching between different graphics APIs.
 - The debugging system is Tracer. Tracer is a module in the engine that provides various debugging tools and utilities.
 - The illumination engine is Photon. Photon is a module in the engine that handles global illumination and path tracing.
+- The UI library is Graphite. Graphite is a module in the engine that provides a set of tools and components for creating user interfaces.
 
 ## Getting the Engine
 

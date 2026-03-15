@@ -647,7 +647,26 @@ std::tuple<int, int> Window::getCursorPosition() {
     float xpos = 0.0f;
     float ypos = 0.0f;
     SDL_GetMouseState(&xpos, &ypos);
-    return {static_cast<int>(xpos), static_cast<int>(ypos)};
+
+    int windowWidth = 0;
+    int windowHeight = 0;
+    SDL_GetWindowSize(this->windowRef, &windowWidth, &windowHeight);
+
+    int pixelWidth = 0;
+    int pixelHeight = 0;
+    atlasGetWindowSizeInPixels(this->windowRef, &pixelWidth, &pixelHeight);
+
+    const float scaleX =
+        windowWidth > 0
+            ? static_cast<float>(pixelWidth) / static_cast<float>(windowWidth)
+            : 1.0f;
+    const float scaleY =
+        windowHeight > 0
+            ? static_cast<float>(pixelHeight) / static_cast<float>(windowHeight)
+            : 1.0f;
+
+    return {static_cast<int>(std::lround(xpos * scaleX)),
+            static_cast<int>(std::lround(ypos * scaleY))};
 }
 
 void Window::run() {
@@ -727,6 +746,22 @@ void Window::run() {
                     this->ssaoMapsDirty = true;
                 }
                 break;
+            case SDL_EVENT_KEY_DOWN:
+                if (event.key.windowID == windowID) {
+                    const int scancode = static_cast<int>(event.key.scancode);
+                    if (scancode >= 0 &&
+                        scancode <
+                            static_cast<int>(this->keysPressedThisFrame.size())) {
+                        this->keysPressedThisFrame[scancode] = true;
+                    }
+                }
+                break;
+            case SDL_EVENT_TEXT_INPUT:
+                if (event.text.windowID == windowID &&
+                    event.text.text != nullptr) {
+                    this->textInputBuffer += event.text.text;
+                }
+                break;
             case SDL_EVENT_MOUSE_MOTION:
                 if (event.motion.windowID == windowID) {
                     Position2d movement = {
@@ -738,6 +773,15 @@ void Window::run() {
                     }
                     this->lastMouseX = event.motion.x;
                     this->lastMouseY = event.motion.y;
+                }
+                break;
+            case SDL_EVENT_MOUSE_BUTTON_DOWN:
+                if (event.button.windowID == windowID) {
+                    const std::size_t button =
+                        static_cast<std::size_t>(event.button.button);
+                    if (button < this->mouseButtonsPressedThisFrame.size()) {
+                        this->mouseButtonsPressedThisFrame[button] = true;
+                    }
                 }
                 break;
             case SDL_EVENT_MOUSE_WHEEL:
@@ -768,6 +812,9 @@ void Window::run() {
     while (!shouldClose) {
         currentFrame++;
         this->relativeMousePos = {.x = 0.0f, .y = 0.0f};
+        this->keysPressedThisFrame.fill(false);
+        this->mouseButtonsPressedThisFrame.fill(false);
+        this->textInputBuffer.clear();
         pollEvents();
 
         if (this->hasPendingSceneChange) {
@@ -1642,7 +1689,10 @@ bool Window::isKeyActive(Key key) {
 }
 
 bool Window::isKeyPressed(Key key) {
-    return isKeyActive(key);
+    const int scancode = static_cast<int>(key);
+    return scancode >= 0 &&
+           scancode < static_cast<int>(this->keysPressedThisFrame.size()) &&
+           this->keysPressedThisFrame[scancode];
 }
 
 bool Window::isMouseButtonActive(MouseButton button) {
@@ -1651,7 +1701,26 @@ bool Window::isMouseButtonActive(MouseButton button) {
 }
 
 bool Window::isMouseButtonPressed(MouseButton button) {
-    return isMouseButtonActive(button);
+    const int index = static_cast<int>(button);
+    return index >= 0 &&
+           index < static_cast<int>(this->mouseButtonsPressedThisFrame.size()) &&
+           this->mouseButtonsPressedThisFrame[static_cast<std::size_t>(index)];
+}
+
+void Window::startTextInput() {
+    if (SDL_StartTextInput(this->windowRef)) {
+        this->textInputActive = true;
+    } else {
+        this->textInputActive = SDL_TextInputActive(this->windowRef);
+    }
+}
+
+void Window::stopTextInput() {
+    if (SDL_StopTextInput(this->windowRef)) {
+        this->textInputActive = false;
+    } else {
+        this->textInputActive = SDL_TextInputActive(this->windowRef);
+    }
 }
 
 void Window::releaseMouse() {

@@ -15,9 +15,13 @@
 #include "atlas/units.h"
 #include "atlas/window.h"
 #include "atlas/workspace.h"
+#include "graphite/style.h"
+#include <algorithm>
 #include <map>
 #include "opal/opal.h"
 #include <string>
+#include <utility>
+#include <utility>
 #include <vector>
 
 /**
@@ -108,15 +112,15 @@ struct Font {
      * @param fontSize The size of the font.
      * @return (Font) The created font instance.
      */
-    static Font fromResource(const std::string& fontName, const Resource& resource,
-                             int fontSize);
+    static Font fromResource(const std::string &fontName,
+                             const Resource &resource, int fontSize);
     /**
      * @brief Gets the font associated with the given name.
      *
      * @param fontName The name of the font to retrieve.
      * @return (Font&) The requested font.
      */
-    static Font& getFont(const std::string& fontName);
+    static Font &getFont(const std::string &fontName);
 
     /**
      * @brief Changes the size of the font. \warning This will regenerate the
@@ -126,7 +130,7 @@ struct Font {
      */
     void changeSize(int newSize);
 
-private:
+  private:
     static std::vector<Font> fonts;
 };
 
@@ -147,7 +151,7 @@ private:
  * ```
  */
 class Text : public UIObject {
-public:
+  public:
     /**
      * @brief The content of the text to render.
      *
@@ -163,6 +167,7 @@ public:
      *
      */
     Position2d position;
+    float fontSize = 0.0f;
     /**
      * @brief The color of the text.
      *
@@ -172,8 +177,7 @@ public:
      * @brief Function that constructs a new Text object.
      *
      */
-    Text() {
-    };
+    Text() {};
     /**
      * @brief Function that constructs a new Text object with the given
      * parameters.
@@ -183,10 +187,10 @@ public:
      * @param position The position of the text.
      * @param color The color of the text.
      */
-    Text(const std::string& text, const Font& font,
-         Position2d position = {0, 0}, const Color& color = Color::white())
-        : content(text), font(font), position(position), color(color) {
-    }
+    Text(std::string text, Font font, const Color &color = Color::white(),
+         Position2d position = {.x = 0, .y = 0})
+        : content(std::move(text)), font(std::move(font)), position(position),
+          color(color) {}
 
     /**
      * @brief Prepares vertex buffers, shader state, and fonts for runtime use.
@@ -200,12 +204,57 @@ public:
     void render(float dt, std::shared_ptr<opal::CommandBuffer> commandBuffer,
                 bool updatePipeline = false) override;
 
-private:
+    Size2d getSize() const override {
+        graphite::UIStyle fallbackStyle;
+        fallbackStyle.normal().foreground(color).font(font);
+        if (fontSize > 0.0f) {
+            fallbackStyle.normal().fontSize(fontSize);
+        }
+        const graphite::UIResolvedStyle style = graphite::resolveStyle(
+            fallbackStyle, &graphite::Theme::current().text,
+            usesLocalStyle ? &localStyle : nullptr);
+        const Font &resolvedFont = style.font != nullptr ? *style.font : font;
+        return Size2d{
+            .width = graphite::measureTextWidth(resolvedFont, content,
+                                                style.fontSize) +
+                     (style.padding.width * 2.0f),
+            .height =
+                graphite::getLineHeight(resolvedFont, style.fontSize) +
+                (style.padding.height * 2.0f),
+        };
+    }
+
+    Position2d getScreenPosition() const override { return position; }
+
+    void setScreenPosition(const Position2d &newPosition) override {
+        position = newPosition;
+    }
+
+    graphite::UIStyle &style() {
+        usesLocalStyle = true;
+        return localStyle;
+    }
+
+    Text &setStyle(const graphite::UIStyle &newStyle) {
+        localStyle = newStyle;
+        usesLocalStyle = true;
+        return *this;
+    }
+
+    Text &setFontSize(float newFontSize) {
+        fontSize = std::max(newFontSize, 0.0f);
+        return *this;
+    }
+
+  private:
     std::shared_ptr<opal::DrawingState> vao = nullptr;
     std::shared_ptr<opal::Buffer> vertexBuffer = nullptr;
     size_t vertexBufferCapacity = sizeof(float) * 6 * 4; // capacity in bytes
     glm::mat4 projection;
     ShaderProgram shader;
+    graphite::BoxRendererData backgroundRenderer;
+    graphite::UIStyle localStyle;
+    bool usesLocalStyle = false;
 };
 
 #endif // ATLAS_TEXT_H

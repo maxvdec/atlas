@@ -6,7 +6,11 @@
 #include "atlas/object.h"
 #include "atlas/physics.h"
 #include "atlas/scene.h"
-#include "atlas/text.h"
+#include "graphite/image.h"
+#include "graphite/input.h"
+#include "graphite/layout.h"
+#include "graphite/style.h"
+#include "graphite/text.h"
 #include "atlas/texture.h"
 #include "atlas/units.h"
 #include "atlas/window.h"
@@ -21,115 +25,11 @@
 #include <memory>
 #include <vector>
 
-class SphereCube : public CompoundObject {
-    CoreObject sphere;
-    CoreObject cube;
-
-  public:
-    void init() override {
-        cube = createDebugBox({0.5f, 0.5f, 0.5f});
-        cube.setPosition({-1.0f, cube.getPosition().y, 0.0f});
-        cube.initialize();
-        this->addObject(&cube);
-
-        for (int i = 0; i < 6; i++) {
-            Instance &instance = cube.createInstance();
-            instance.move({0.0f, 0.6f * i, 0.0f});
-        }
-
-        sphere = createDebugSphere(0.25f);
-        sphere.setPosition({1.0f, sphere.getPosition().y, 0.0f});
-        sphere.initialize();
-        this->addObject(&sphere);
-    }
-};
-
 class FPSTextUpdater : public TraitComponent<Text> {
   public:
     void updateComponent(Text *object) override {
         int fps = static_cast<int>(getWindow()->getFramesPerSecond());
         object->content = "FPS: " + std::to_string(fps);
-    }
-};
-
-class HorizontalMover : public Component {
-  private:
-    float phase = 0.0f;
-
-  public:
-    void update(float deltaTime) override {
-        float amplitude = 0.01f;
-        float frequency = 4.0f;
-        phase += deltaTime * frequency * 2.0f * M_PI;
-        float position = amplitude * sin(phase);
-        object->move({position, 0.0f, 0.0f});
-    }
-};
-
-class BackpackAttach : public Component {
-  public:
-    void init() override {
-        auto player = this->object->getComponent<AudioPlayer>();
-        player->setSource(Workspace::get().createResource(
-            "exampleMP3.mp3", "ExampleAudio", ResourceType::Audio));
-        player->useSpatialization();
-        player->source->setLooping(true);
-        player->play();
-    }
-};
-
-class WaterPot : public CompoundObject {
-    CoreObject pot;
-    Fluid water;
-
-  public:
-    void init() override {
-        pot = createBox({1.0f, 0.25f, 0.25f}, Color(0.6f, 0.4f, 0.2f));
-
-        Instance &potRight = pot.createInstance();
-        potRight.move({0.0f, 0.0f, 1.0f});
-        Instance &potDown = pot.createInstance();
-        potDown.rotate({0.0f, 90.0f, 0.0f});
-        potDown.move({-0.5f, 0.0f, 0.5f});
-        Instance &potUp = pot.createInstance();
-        potUp.rotate({0.0f, -90.0f, 0.0f});
-        potUp.move({0.5f, 0.0f, 0.5f});
-        pot.initialize();
-        this->addObject(&pot);
-
-        Texture waterDUDV =
-            Texture::fromResource(Workspace::get().createResource(
-                "water_dudv.png", "WaterDUDV", ResourceType::Image));
-
-        Texture waterNormal =
-            Texture::fromResource(Workspace::get().createResource(
-                "water_normal.png", "WaterNormal", ResourceType::Image));
-
-        water = Fluid();
-        water.create({0.9, 0.9}, Color::blue());
-        water.setPosition({0.0f, 0.10f, 0.5f});
-        water.movementTexture = waterDUDV;
-        water.normalTexture = waterNormal;
-        water.initialize();
-        this->addObject(&water);
-    }
-};
-
-class BallBehavior : public Component {
-  public:
-    void init() override {
-        if (object && object->rigidbody) {
-            object->rigidbody->applyImpulse({0.0f, 0.0f, 20.0f});
-        }
-    }
-    void update(float) override {
-        if (Window::mainWindow->isKeyPressed(Key::N)) {
-            auto hinge = object->getComponent<HingeJoint>();
-            if (hinge) {
-                std::cout << "Breaking hinge joint\n";
-                hinge->breakJoint();
-            }
-        }
     }
 };
 
@@ -140,16 +40,18 @@ class MainScene : public Scene {
     DirectionalLight light;
     Camera camera;
     CoreObject lightObject;
-    SphereCube sphereCube;
     Text fpsText;
-    Model backpack;
     RenderTarget frameBuffer;
-    Terrain terrain;
     AreaLight areaLight;
-    ParticleEmitter emitter;
-    WaterPot waterPot;
-    Model sponza;
     Controller controller;
+    Text welcomeText;
+    Image previewImage;
+    TextField inputField;
+    Button actionButton;
+    Checkbox demoCheckbox;
+    Row headerRow;
+    Row controlsRow;
+    Column uiColumn;
 
     bool doesUpdate = true;
     bool fall = false;
@@ -159,44 +61,18 @@ class MainScene : public Scene {
         if (!doesUpdate)
             return;
 
-        controller.rumble(2.f, 1.0f);
-
-        camera.updateWithActions(window, "move", "look", "upAndDown");
-        if (window.isKeyActive(Key::Escape)) {
-            window.releaseMouse();
-            doesUpdate = false;
-        } else if (window.isKeyPressed(Key::Q)) {
-            fall = !fall;
+        if (!inputField.isFocused()) {
+            camera.updateWithActions(window, "move", "look", "upAndDown");
+            if (window.isKeyActive(Key::Escape)) {
+                window.releaseMouse();
+                doesUpdate = false;
+            } else if (window.isKeyPressed(Key::Q)) {
+                fall = !fall;
+            }
+            if (fall) {
+                camera.position.y -= 10.f * window.getDeltaTime();
+            }
         }
-        if (fall) {
-            camera.position.y -= 10.f * window.getDeltaTime();
-        }
-    }
-
-    // void onMouseMove(Window &window, Movement2d movement) override {
-    //     if (!doesUpdate) {
-    //         return;
-    //     }
-    //     camera.updateLook(window, movement);
-    // }
-
-    Cubemap createCubemap() {
-        Resource right = Workspace::get().createResource(
-            "skybox/px.png", "RightSkybox", ResourceType::Image);
-        Resource left = Workspace::get().createResource(
-            "skybox/nx.png", "LeftSkybox", ResourceType::Image);
-        Resource top = Workspace::get().createResource(
-            "skybox/py.png", "TopSkybox", ResourceType::Image);
-        Resource bottom = Workspace::get().createResource(
-            "skybox/ny.png", "BottomSkybox", ResourceType::Image);
-        Resource front = Workspace::get().createResource(
-            "skybox/pz.png", "FrontSkybox", ResourceType::Image);
-        Resource back = Workspace::get().createResource(
-            "skybox/nz.png", "BackSkybox", ResourceType::Image);
-        ResourceGroup group = Workspace::get().createResourceGroup(
-            "Skybox", {right, left, top, bottom, front, back});
-
-        return Cubemap::fromResourceGroup(group);
     }
 
     void initialize(Window &window) override {
@@ -207,36 +83,20 @@ class MainScene : public Scene {
         env.lightBloom.maxSamples = 5;
         this->setEnvironment(env);
 
-        controller = window.getController(window.getControllers()[0]);
-
         auto moveAction = InputAction::createAxisInputAction(
-            "move",
-            {
-                AxisTrigger::custom(
-                    Trigger::fromKey(Key::D), Trigger::fromKey(Key::A),
-                    Trigger::fromKey(Key::W), Trigger::fromKey(Key::S)),
-                Controller::getGlobalAxisTrigger(ControllerAxis::LeftStick),
-            });
-        moveAction->clampAxis = true;
-        moveAction->axisClampMin = -1.0f;
-        moveAction->axisClampMax = 1.0f;
-        moveAction->normalize2D = true;
-        moveAction->controllerDeadzone = 0.2f;
-        moveAction->invertControllerY = true;
+            "move", {
+                        AxisTrigger::custom(
+                            Trigger::fromKey(Key::D), Trigger::fromKey(Key::A),
+                            Trigger::fromKey(Key::W), Trigger::fromKey(Key::S)),
+                    });
+
         window.addInputAction(moveAction);
-        auto lookAction = InputAction::createAxisInputAction(
-            "look", {AxisTrigger::mouse(), Controller::getGlobalAxisTrigger(
-                                               ControllerAxis::RightStick)});
-        lookAction->controllerDeadzone = 0.2f;
-        lookAction->invertControllerY = true;
+        auto lookAction =
+            InputAction::createAxisInputAction("look", {AxisTrigger::mouse()});
         window.addInputAction(lookAction);
         auto upAndDownAction = InputAction::createSingleAxisInputAction(
             "upAndDown", Trigger::fromKey(Key::Space),
             Trigger::fromKey(Key::LeftShift));
-        upAndDownAction->axisTriggers.push_back(AxisTrigger::custom(
-            Trigger::fromControllerButton(-2, (int)NintendoControllerButton::A),
-            Trigger::fromControllerButton(-2, (int)NintendoControllerButton::B),
-            {}, {}));
         window.addInputAction(upAndDownAction);
 
         Workspace::get().setRootPath(std::string(TEST_PATH) + "/resources/");
@@ -266,10 +126,124 @@ class MainScene : public Scene {
             "arial.ttf", "Arial", ResourceType::Font);
 
         fpsText = Text("FPS: 0", Font::fromResource("Arial", fontResource, 24),
-                       {25.0, 25.0}, Color::white());
+                       Color::white());
 
         fpsText.addTraitComponent<Text>(FPSTextUpdater());
-        window.addUIObject(&fpsText);
+
+        welcomeText = Text("Welcome to Atlas!",
+                           Font::fromResource("Arial", fontResource, 36),
+                           Color(1.0f, 0.5f, 0.0f, 1.0f));
+
+        previewImage = Image(
+            Texture::fromResource(Workspace::get().createResource(
+                "ground.jpg", "UIPreviewTexture", ResourceType::Image)),
+            {.width = 320.0f, .height = 180.0f});
+
+        inputField =
+            TextField(fpsText.font, 420.0f, {.x = 0.0f, .y = 0.0f}, "",
+                      "Type here...");
+        inputField
+            .setPadding({.width = 18.0f, .height = 12.0f})
+            .setOnChange([](const TextFieldChangeEvent &event) {
+                std::cout << event.text << std::endl;
+            });
+
+        actionButton = Button(fpsText.font, "Click me");
+        actionButton
+            .setMinimumSize({.width = 150.0f, .height = 52.0f})
+            .setOnClick([](const ButtonClickEvent &event) {
+                std::cout << "Button clicked: " << event.label << std::endl;
+            });
+
+        demoCheckbox = Checkbox(fpsText.font, "Enable atlas mode");
+        demoCheckbox.setOnToggle([](const CheckboxToggleEvent &event) {
+            std::cout << "Checkbox " << event.label << ": "
+                      << (event.checked ? "true" : "false") << std::endl;
+        });
+
+        graphite::Theme theme;
+        theme.text.normal().fontSize(28.0f).foreground(
+            Color(0.93f, 0.95f, 0.99f, 1.0f));
+        theme.image.normal()
+            .padding(12.0f, 12.0f)
+            .background(Color(0.05f, 0.08f, 0.12f, 0.55f))
+            .border(2.0f, Color(1.0f, 1.0f, 1.0f, 0.12f))
+            .cornerRadius(28.0f);
+        theme.textField.normal()
+            .font(fpsText.font)
+            .fontSize(24.0f)
+            .padding(20.0f, 14.0f)
+            .foreground(Color(0.96f, 0.97f, 0.99f, 1.0f))
+            .background(Color(0.06f, 0.08f, 0.12f, 0.92f))
+            .border(2.0f, Color(1.0f, 1.0f, 1.0f, 0.12f))
+            .cornerRadius(18.0f)
+            .tint(Color(1.0f, 0.55f, 0.14f, 1.0f));
+        theme.textField.focused()
+            .background(Color(0.08f, 0.1f, 0.15f, 0.96f))
+            .border(2.0f, Color(1.0f, 0.55f, 0.14f, 1.0f));
+        theme.button.normal()
+            .font(fpsText.font)
+            .fontSize(23.0f)
+            .padding(22.0f, 14.0f)
+            .foreground(Color(0.98f, 0.98f, 0.99f, 1.0f))
+            .background(Color(0.12f, 0.16f, 0.2f, 0.96f))
+            .border(2.0f, Color(1.0f, 1.0f, 1.0f, 0.12f))
+            .cornerRadius(18.0f);
+        theme.button.hovered()
+            .background(Color(0.16f, 0.21f, 0.26f, 0.98f))
+            .border(2.0f, Color(0.86f, 0.9f, 0.97f, 0.48f));
+        theme.button.pressed()
+            .background(Color(1.0f, 0.55f, 0.14f, 0.96f))
+            .foreground(Color(0.1f, 0.08f, 0.06f, 1.0f))
+            .border(2.0f, Color(1.0f, 0.78f, 0.48f, 1.0f));
+        theme.checkbox.normal()
+            .font(fpsText.font)
+            .fontSize(22.0f)
+            .padding(0.0f, 6.0f)
+            .foreground(Color(0.92f, 0.95f, 0.99f, 1.0f))
+            .background(Color(0.08f, 0.11f, 0.15f, 0.96f))
+            .border(2.0f, Color(1.0f, 1.0f, 1.0f, 0.12f))
+            .cornerRadius(10.0f)
+            .tint(Color(1.0f, 0.55f, 0.14f, 1.0f));
+        theme.checkbox.hovered()
+            .background(Color(0.12f, 0.15f, 0.2f, 0.98f))
+            .border(2.0f, Color(0.9f, 0.93f, 0.98f, 0.42f));
+        theme.checkbox.checked()
+            .border(2.0f, Color(1.0f, 0.55f, 0.14f, 1.0f))
+            .tint(Color(1.0f, 0.55f, 0.14f, 1.0f));
+        theme.row.normal()
+            .padding(18.0f, 16.0f)
+            .background(Color(0.05f, 0.07f, 0.1f, 0.38f))
+            .border(2.0f, Color(1.0f, 1.0f, 1.0f, 0.08f))
+            .cornerRadius(24.0f);
+        theme.column.normal()
+            .padding(30.0f, 30.0f)
+            .background(Color(0.02f, 0.04f, 0.07f, 0.26f))
+            .border(2.0f, Color(1.0f, 1.0f, 1.0f, 0.08f))
+            .cornerRadius(32.0f);
+        theme.stack.normal()
+            .padding(18.0f, 18.0f)
+            .background(Color(0.03f, 0.05f, 0.08f, 0.42f))
+            .border(2.0f, Color(1.0f, 1.0f, 1.0f, 0.08f))
+            .cornerRadius(24.0f);
+        graphite::Theme::set(theme);
+
+        welcomeText.style()
+            .normal()
+            .fontSize(54.0f)
+            .foreground(Color(1.0f, 0.5f, 0.0f, 1.0f));
+        fpsText.style()
+            .normal()
+            .fontSize(34.0f)
+            .foreground(Color(0.95f, 0.97f, 1.0f, 1.0f));
+
+        headerRow = Row({&welcomeText, &fpsText}, 30.0f);
+        controlsRow = Row({&actionButton, &demoCheckbox}, 22.0f);
+        uiColumn = Column(
+            {&headerRow, &previewImage, &inputField, &controlsRow}, 20.0f,
+                          {.width = 20.0f, .height = 20.0f},
+                          {.x = 20.0f, .y = 20.0f});
+        window.addUIObject(&uiColumn);
 
         ball = createDebugSphere(0.5f, 32, 32);
         ball.material.metallic = 1.0f;
@@ -284,7 +258,7 @@ class MainScene : public Scene {
         light = DirectionalLight({0.35f, -1.0f, 0.2f}, Color::white());
         this->setAmbientIntensity(0.2f);
 
-        frameBuffer = RenderTarget(window, RenderTargetType::Scene);
+        frameBuffer = RenderTarget(window, RenderTargetType::Multisampled);
         window.addRenderTarget(&frameBuffer);
         frameBuffer.display(window);
 
@@ -302,8 +276,8 @@ int main() {
     Window window({.title = "My Window",
                    .width = 1600,
                    .height = 1200,
-                   .renderScale = 0.5f,
-                   .mouseCaptured = true,
+                   .renderScale = 1.f,
+                   .mouseCaptured = false,
                    .multisampling = false,
                    .ssaoScale = 0.4f});
     MainScene scene;
