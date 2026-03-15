@@ -126,7 +126,8 @@ fn download_repository_archive(
     let mut last_error: Option<Box<dyn std::error::Error>> = None;
 
     for ref_kind in ref_kinds {
-        let url = format!("https://github.com/{owner}/{repo}/archive/refs/{ref_kind}/{git_ref}.zip");
+        let url =
+            format!("https://github.com/{owner}/{repo}/archive/refs/{ref_kind}/{git_ref}.zip");
         match client.get(&url).send() {
             Ok(response) => match response.error_for_status() {
                 Ok(ok_response) => return Ok(ok_response.bytes()?.to_vec()),
@@ -136,9 +137,8 @@ fn download_repository_archive(
         }
     }
 
-    Err(last_error.unwrap_or_else(|| {
-        format!("Failed to download source archive for ref '{git_ref}'").into()
-    }))
+    Err(last_error
+        .unwrap_or_else(|| format!("Failed to download source archive for ref '{git_ref}'").into()))
 }
 
 fn extract_archive_subpaths(
@@ -172,7 +172,10 @@ fn extract_archive_subpaths(
                 continue;
             };
 
-            if excluded_prefixes.iter().any(|excluded| stripped.starts_with(excluded)) {
+            if excluded_prefixes
+                .iter()
+                .any(|excluded| stripped.starts_with(excluded))
+            {
                 break;
             }
 
@@ -199,7 +202,11 @@ fn download_headers(
     prefer_tag: bool,
 ) -> Result<usize, Box<dyn std::error::Error>> {
     let archive = download_repository_archive(owner, repo, git_ref, prefer_tag)?;
-    extract_archive_subpaths(&archive, outdir, &[("include", &[]), ("extern", &["freetype"])])
+    extract_archive_subpaths(
+        &archive,
+        outdir,
+        &[("include", &[]), ("extern", &["freetype"])],
+    )
 }
 
 fn find_macos_assets(release: &Release) -> Result<AtlasBinarySet, Box<dyn std::error::Error>> {
@@ -248,10 +255,7 @@ fn available_backends(assets: &AtlasBinarySet) -> Vec<String> {
 
 fn download_asset(asset: &ReleaseAsset, out_path: &Path) -> Result<(), Box<dyn std::error::Error>> {
     let client = github_client()?;
-    let response = client
-        .get(&asset.download_url)
-        .send()?
-        .error_for_status()?;
+    let response = client.get(&asset.download_url).send()?.error_for_status()?;
     let mut dest = fs::File::create(out_path)?;
     let bytes = response.bytes()?;
     dest.write_all(&bytes)?;
@@ -575,10 +579,7 @@ pub fn create(cmd: Commands) {
         let outdir = project_root.join("lib/include");
         if let Err(e) = download_headers("maxvdec", "atlas", &pull_branch, &outdir, prefer_tag) {
             spinner.finish_and_clear();
-            eprintln!(
-                "{} {e}",
-                "Failed to download include files:".red().bold()
-            );
+            eprintln!("{} {e}", "Failed to download include files:".red().bold());
             return;
         }
 
