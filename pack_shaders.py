@@ -11,7 +11,7 @@ input_dir = sys.argv[1]
 output_file = sys.argv[2]
 mode_arg = sys.argv[3].lower() if len(sys.argv) >= 4 else None
 
-MAX_CHUNK = 60000  
+MAX_CHUNK = 8192
 GLSL_EXTENSIONS = {'.vert', '.frag', '.comp', '.geom', '.tesc', '.tese', '.glsl'}
 SHADER_EXTENSIONS = GLSL_EXTENSIONS | {'.metal'}
 
@@ -131,17 +131,24 @@ def shader_priority(relative_path, backend):
 
 
 def write_chunks(out, var_name, contents):
-    """Write large strings in chunks using raw string literals"""
-    out.write(f'static const char* {var_name} =\n')
+    """Write shader source as chunk arrays to avoid oversized string literals"""
+    out.write(f'static const char* const {var_name}_PARTS[] = {{\n')
 
+    part_count = 0
     if contents == "":
-        out.write('R"()"\n')
+        out.write('R"()",\n')
+        part_count = 1
     else:
         for i in range(0, len(contents), MAX_CHUNK):
             chunk = contents[i:i + MAX_CHUNK]
-            out.write(f'R"({chunk})"\n')
+            out.write(f'R"({chunk})",\n')
+            part_count += 1
 
-    out.write(';\n\n')
+    out.write('};\n')
+    out.write(
+        f'static const AtlasPackedShaderSource {var_name} = '
+        f'{{{var_name}_PARTS, {part_count}}};\n\n'
+    )
 
 
 with open(output_file, "w") as out:
@@ -154,6 +161,17 @@ with open(output_file, "w") as out:
         out.write("// Metal shaders packed as source\n")
     out.write("#ifndef ATLAS_GENERATED_SHADERS_H\n")
     out.write("#define ATLAS_GENERATED_SHADERS_H\n\n")
+    out.write("#include <cstddef>\n\n")
+    out.write("namespace opal {\n")
+    out.write("const char *packedShaderSource(const char *const *parts, std::size_t count);\n")
+    out.write("}\n\n")
+    out.write("struct AtlasPackedShaderSource {\n")
+    out.write("    const char *const *parts;\n")
+    out.write("    std::size_t count;\n\n")
+    out.write("    operator const char *() const {\n")
+    out.write("        return opal::packedShaderSource(parts, count);\n")
+    out.write("    }\n")
+    out.write("};\n\n")
 
     shader_files = []
     for root, _, files in os.walk(input_dir):

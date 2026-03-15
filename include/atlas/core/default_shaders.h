@@ -1,19 +1,24 @@
-/**
- * @file default_shaders.h
- * @brief Generated bundle containing Atlas' built-in Metal shader sources.
- *
- * This header is an implementation detail used by the default shader API.
- * The packed shader strings are consumed internally when Atlas creates one of
- * its built-in shader programs.
- */
-
 // This file contains packed shader source code.
 // Metal shaders packed as source
 #ifndef ATLAS_GENERATED_SHADERS_H
 #define ATLAS_GENERATED_SHADERS_H
 
-/// @cond INTERNAL
-static const char* COLOR_FRAG =
+#include <cstddef>
+
+namespace opal {
+const char *packedShaderSource(const char *const *parts, std::size_t count);
+}
+
+struct AtlasPackedShaderSource {
+    const char *const *parts;
+    std::size_t count;
+
+    operator const char *() const {
+        return opal::packedShaderSource(parts, count);
+    }
+};
+
+static const char* const COLOR_FRAG_PARTS[] = {
 R"(#include <metal_stdlib>
 #include <simd/simd.h>
 
@@ -42,10 +47,11 @@ fragment main0_out main0(main0_in in [[stage_in]])
     return out;
 }
 
-)"
-;
+)",
+};
+static const AtlasPackedShaderSource COLOR_FRAG = {COLOR_FRAG_PARTS, 1};
 
-static const char* COLOR_VERT =
+static const char* const COLOR_VERT_PARTS[] = {
 R"(#include <metal_stdlib>
 #include <simd/simd.h>
 
@@ -97,10 +103,11 @@ vertex main0_out main0(main0_in in [[stage_in]], constant UBO& _12 [[buffer(0)]]
     out.vertexColor = in.aColor;
     return out;
 }
-)"
-;
+)",
+};
+static const AtlasPackedShaderSource COLOR_VERT = {COLOR_VERT_PARTS, 1};
 
-static const char* DDGI =
+static const char* const DDGI_PARTS[] = {
 R"(#include <metal_stdlib>
 using namespace metal;
 
@@ -409,7 +416,8 @@ static inline float4 sampleMaterialTexture(
         return materialTexture14.sample(materialTexSampler, uv);
     case 15:
         return materialTexture15.sample(materialTexSampler, uv);
-    case 16:
+    case)",
+R"( 16:
         return materialTexture16.sample(materialTexSampler, uv);
     case 17:
         return materialTexture17.sample(materialTexSampler, uv);
@@ -566,7 +574,8 @@ static inline float3 resolveNormal(
     float3 B = safeNormalize(bitangent - N * dot(N, bitangent), cross(N, T));
     if (dot(cross(T, B), cross(T, B)) <= 1e-10f) {
         float3 up = (fabs(N.y) < 0.999f) ? float3(0.0f, 1.0f, 0.0f)
-                                         : float3(1.0f, 0.0f, 0.0f);
+                                    )",
+R"(     : float3(1.0f, 0.0f, 0.0f);
         T = safeNormalize(cross(up, N), float3(1.0f, 0.0f, 0.0f));
         B = safeNormalize(cross(N, T), float3(0.0f, 0.0f, 1.0f));
     }
@@ -769,7 +778,8 @@ kernel void main0(device float4 *probeRadianceOut [[buffer(0)]],
                   constant SceneCounts &sc [[buffer(3)]],
                   constant ProbeSpace &ps [[buffer(4)]],
                   constant RaytracingSettings &rt [[buffer(5)]],
-                  device const DirectionalLight *directionalLights [[buffer(6)]],
+                  device const DirectionalLight *d)",
+R"(irectionalLights [[buffer(6)]],
                   device const PointLight *pointLights [[buffer(7)]],
                   device const SpotLight *spotLights [[buffer(8)]],
                   device const AreaLight *areaLights [[buffer(9)]],
@@ -906,10 +916,11 @@ kernel void main0(device float4 *probeRadianceOut [[buffer(0)]],
     uint outIndex = probeIndex * raysPerProbe + rayIndex;
     probeRadianceOut[outIndex] = float4(radiance, h.hit != 0u ? h.t : -1.0f);
 }
-)"
-;
+)",
+};
+static const AtlasPackedShaderSource DDGI = {DDGI_PARTS, 4};
 
-static const char* DDGI_WRITE =
+static const char* const DDGI_WRITE_PARTS[] = {
 R"(#include <metal_stdlib>
 using namespace metal;
 
@@ -1095,10 +1106,11 @@ kernel void main0(texture2d<float, access::write> outTexture [[texture(0)]],
 
     outTexture.write(float4(max(blended, float3(0.0f)), blendedValidity), gid);
 }
-)"
-;
+)",
+};
+static const AtlasPackedShaderSource DDGI_WRITE = {DDGI_WRITE_PARTS, 1};
 
-static const char* DEBUG_FRAG =
+static const char* const DEBUG_FRAG_PARTS[] = {
 R"(#include <metal_stdlib>
 #include <simd/simd.h>
 
@@ -1116,10 +1128,11 @@ fragment main0_out main0()
     return out;
 }
 
-)"
-;
+)",
+};
+static const AtlasPackedShaderSource DEBUG_FRAG = {DEBUG_FRAG_PARTS, 1};
 
-static const char* DEBUG_VERT =
+static const char* const DEBUG_VERT_PARTS[] = {
 R"(#include <metal_stdlib>
 #include <simd/simd.h>
 
@@ -1142,10 +1155,11 @@ vertex main0_out main0(main0_in in [[stage_in]])
     return out;
 }
 
-)"
-;
+)",
+};
+static const AtlasPackedShaderSource DEBUG_VERT = {DEBUG_VERT_PARTS, 1};
 
-static const char* DEFERRED_FRAG =
+static const char* const DEFERRED_FRAG_PARTS[] = {
 R"(#pragma clang diagnostic ignored "-Wmissing-prototypes"
 
 #include <metal_stdlib>
@@ -1336,7 +1350,8 @@ float4 enableTextures(thread const int& type, constant UBO& _46, texture2d<float
                     if (i == 2)
                     {
                         color += texture3.sample(texture3Smplr, texCoord);
-                    }
+              )",
+R"(      }
                     else
                     {
                         if (i == 3)
@@ -1528,7 +1543,8 @@ fragment main0_out main0(main0_in in [[stage_in]], constant UBO& _46 [[buffer(0)
         metallicValue *= metallicTex.x;
     }
     float roughnessValue = material.roughness;
-    int param_6 = 10;
+    int param_6 = )",
+R"(10;
     float4 roughnessTex = enableTextures(param_6, _46, texture1, texture1Smplr, texCoord, texture2, texture2Smplr, texture3, texture3Smplr, texture4, texture4Smplr, texture5, texture5Smplr, texture6, texture6Smplr, texture7, texture7Smplr, texture8, texture8Smplr, texture9, texture9Smplr, texture10, texture10Smplr);
     if (any(roughnessTex != float4(-1.0)))
     {
@@ -1571,10 +1587,11 @@ fragment main0_out main0(main0_in in [[stage_in]], constant UBO& _46 [[buffer(0)
     out.gMaterial = float4(metallicValue, roughnessValue, aoValue, 1.0);
     return out;
 }
-)"
-;
+)",
+};
+static const AtlasPackedShaderSource DEFERRED_FRAG = {DEFERRED_FRAG_PARTS, 3};
 
-static const char* DEFERRED_VERT =
+static const char* const DEFERRED_VERT_PARTS[] = {
 R"(#pragma clang diagnostic ignored "-Wmissing-prototypes"
 
 #include <metal_stdlib>
@@ -1702,10 +1719,11 @@ vertex main0_out main0(main0_in in [[stage_in]], constant UBO& _12 [[buffer(0)]]
     out.TBN_2 = TBN[2];
     return out;
 }
-)"
-;
+)",
+};
+static const AtlasPackedShaderSource DEFERRED_VERT = {DEFERRED_VERT_PARTS, 1};
 
-static const char* DEPTH_VERT =
+static const char* const DEPTH_VERT_PARTS[] = {
 R"(#include <metal_stdlib>
 #include <simd/simd.h>
 
@@ -1760,10 +1778,11 @@ vertex main0_out main0(main0_in in [[stage_in]], constant UBO& _12 [[buffer(0)]]
     }
     return out;
 }
-)"
-;
+)",
+};
+static const AtlasPackedShaderSource DEPTH_VERT = {DEPTH_VERT_PARTS, 1};
 
-static const char* DOWNSAMPLE_FRAG =
+static const char* const DOWNSAMPLE_FRAG_PARTS[] = {
 R"(#include <metal_stdlib>
 #include <simd/simd.h>
 
@@ -1812,10 +1831,11 @@ fragment main0_out main0(main0_in in [[stage_in]], constant Params& _13 [[buffer
     out.downsample = float4(downsampleColor, 1.0);
     return out;
 }
-)"
-;
+)",
+};
+static const AtlasPackedShaderSource DOWNSAMPLE_FRAG = {DOWNSAMPLE_FRAG_PARTS, 1};
 
-static const char* EMPTY_FRAG =
+static const char* const EMPTY_FRAG_PARTS[] = {
 R"(#include <metal_stdlib>
 #include <simd/simd.h>
 
@@ -1825,10 +1845,11 @@ fragment void main0()
 {
 }
 
-)"
-;
+)",
+};
+static const AtlasPackedShaderSource EMPTY_FRAG = {EMPTY_FRAG_PARTS, 1};
 
-static const char* FLUID_FRAG =
+static const char* const FLUID_FRAG_PARTS[] = {
 R"(#include <metal_stdlib>
 #include <simd/simd.h>
 
@@ -2036,7 +2057,8 @@ fragment main0_out main0(main0_in in [[stage_in]], constant Uniforms& _19 [[buff
     float specular = powr(specAngle, 128.0);
     specular *= ((fresnel * 0.5) + 0.5);
     float waveVariation = (sin((in.TexCoord.x * 50.0) + (_19.time * 2.0)) * 0.5) + 0.5;
-    waveVariation *= ((cos((in.TexCoord.y * 50.0) - (_19.time * 1.5)) * 0.5) + 0.5);
+    waveVariation *= ((cos((in.TexCoord.y * 5)",
+R"(0.0) - (_19.time * 1.5)) * 0.5) + 0.5);
     specular *= (0.699999988079071044921875 + (waveVariation * 0.300000011920928955078125));
     float3 lighting = _19.lightColor * (diffuse + (specular * 2.0));
     combined += lighting;
@@ -2055,10 +2077,11 @@ fragment main0_out main0(main0_in in [[stage_in]], constant Uniforms& _19 [[buff
     return out;
 }
 
-)"
-;
+)",
+};
+static const AtlasPackedShaderSource FLUID_FRAG = {FLUID_FRAG_PARTS, 2};
 
-static const char* FLUID_VERT =
+static const char* const FLUID_VERT_PARTS[] = {
 R"(#include <metal_stdlib>
 #include <simd/simd.h>
 
@@ -2102,10 +2125,11 @@ vertex main0_out main0(main0_in in [[stage_in]], constant UBO& _19 [[buffer(0)]]
     return out;
 }
 
-)"
-;
+)",
+};
+static const AtlasPackedShaderSource FLUID_VERT = {FLUID_VERT_PARTS, 1};
 
-static const char* FULLSCREEN_FRAG =
+static const char* const FULLSCREEN_FRAG_PARTS[] = {
 R"(#pragma clang diagnostic ignored "-Wmissing-prototypes"
 #pragma clang diagnostic ignored "-Wmissing-braces"
 
@@ -2375,7 +2399,8 @@ float4 blur(texture2d<float> image, sampler imageSmplr, thread const float& radi
     int _257 = -int(radius);
     for (int x = _257; x <= int(radius); x++)
     {
-        float weight = exp(float(-(x * x)) / twoSigmaSq);
+        float weight = exp(f)",
+R"(loat(-(x * x)) / twoSigmaSq);
         float2 offset = float2(float(x), 0.0) * texelSize;
         result += (image.sample(imageSmplr, (TexCoord + offset)).xyz * weight);
         total += weight;
@@ -2524,7 +2549,8 @@ float4 applyColorEffects(thread float4& color, constant PushConstants& _372, dev
                             n = dot(seed, float3(39.34600067138671875, 11.1350002288818359375, 83.154998779296875));
                             _noise.z = fract(sin(n) * 19283.45703125);
                             float3 grain = ((_noise - float3(0.5)) * 2.0) * amount;
-                            float luminance = dot(color.xyz, float3(0.2989999949932098388671875, 0.58700001239776611328125, 0.114000000059604644775390625));
+                            float luminance = dot(color.xyz)",
+R"(, float3(0.2989999949932098388671875, 0.58700001239776611328125, 0.114000000059604644775390625));
                             float visibility = 1.0 - (abs(luminance - 0.5) * 0.5);
                             float4 _1210 = color;
                             float3 _1212 = _1210.xyz + (grain * visibility);
@@ -2713,7 +2739,8 @@ float4 cloudRendering(thread const float4& inColor, thread float2& TexCoord, con
         return inColor;
     }
     float dstLimit = fast::min(sceneDistance - distToContainer, distInContainer);
-    dstLimit = fast::max(dstLimit, 0.0);
+    dstLimit = fast::)",
+R"(max(dstLimit, 0.0);
     if (dstLimit <= 9.9999997473787516355514526367188e-05)
     {
         return inColor;
@@ -2885,7 +2912,8 @@ float4 composeLighting(thread const float2& uv, thread const float4& baseColor, 
 }
 
 static inline __attribute__((always_inline))
-float4 applyMotionBlur(thread const float2& texCoord, thread const float& size, thread const float& separation, thread const float4& color, constant PushConstants& _372, device EffectBuffer& _381, device EffectFloat1Buffer& _394, device EffectFloat2Buffer& _403, device EffectFloat3Buffer& _411, device EffectFloat4Buffer& _419, device EffectFloat5Buffer& _426, texture2d<float> Texture, sampler TextureSmplr, texture2d<float> BrightTexture, sampler BrightTextureSmplr, constant Uniforms& _849, texture2d<float> VolumetricLightTexture, sampler VolumetricLightTextureSmplr, texture2d<float> SSRTexture, sampler SSRTextureSmplr, texture2d<float> PositionTexture, sampler PositionTextureSmplr, texture2d<float> DepthTexture, sampler DepthTextureSmplr)
+float4 applyMotionBlur(thr)",
+R"(ead const float2& texCoord, thread const float& size, thread const float& separation, thread const float4& color, constant PushConstants& _372, device EffectBuffer& _381, device EffectFloat1Buffer& _394, device EffectFloat2Buffer& _403, device EffectFloat3Buffer& _411, device EffectFloat4Buffer& _419, device EffectFloat5Buffer& _426, texture2d<float> Texture, sampler TextureSmplr, texture2d<float> BrightTexture, sampler BrightTextureSmplr, constant Uniforms& _849, texture2d<float> VolumetricLightTexture, sampler VolumetricLightTextureSmplr, texture2d<float> SSRTexture, sampler SSRTextureSmplr, texture2d<float> PositionTexture, sampler PositionTextureSmplr, texture2d<float> DepthTexture, sampler DepthTextureSmplr)
 {
     float4 fallbackColor = composeLighting(texCoord, color, _372, _381, _394, _403, _411, _419, _426, BrightTexture, BrightTextureSmplr, VolumetricLightTexture, VolumetricLightTextureSmplr, SSRTexture, SSRTextureSmplr);
     if ((size <= 0.0) || (separation <= 0.0))
@@ -3068,7 +3096,8 @@ float3 acesToneMapping(thread const float3& color)
     return fast::clamp((color * ((color * a) + float3(b))) / ((color * ((color * c) + float3(d))) + float3(e)), float3(0.0), float3(1.0));
 }
 
-fragment main0_out main0(main0_in in [[stage_in]], constant PushConstants& _372 [[buffer(0)]], device EffectBuffer& _381 [[buffer(1)]], device EffectFloat1Buffer& _394 [[buffer(2)]], device EffectFloat2Buffer& _403 [[buffer(3)]], device EffectFloat3Buffer& _411 [[buffer(4)]], device EffectFloat4Buffer& _419 [[buffer(5)]], device EffectFloat5Buffer& _426 [[buffer(6)]], constant Uniforms& _849 [[buffer(7)]], device EffectFloat6Buffer& _1049 [[buffer(8)]], constant Clouds& _1929 [[buffer(9)]], constant Environment& environment [[buffer(10)]], texture2d<float> Texture [[texture(0)]], texture2d<float> BrightTexture [[texture(1)]], texture2d<float> VolumetricLightTexture [[texture(2)]], texture2d<float> SSRTexture [[texture(3)]], texture2d<float> PositionTexture [[texture(4)]], texture2d<float> LUTTexture [[texture(5)]], texture3d<float> cloudsTexture [[texture(6)]], texture2d<float> DepthTexture [[texture(7)]], sampler TextureSmplr [[sampler(0)]], sampler BrightTextureSmplr [[sampler(1)]], sampler VolumetricLightTextureSmplr [[sampler(2)]], sampler SSRTextureSmplr [[sampler(3)]], sampler PositionTextureSmplr [[sampler(4)]], sampler LUTTextureSmplr [[sampler(5)]], sampler cloudsTextureSmplr [[sampler(6)]], sampler DepthTextureSmplr [[sampler(7)]], float4 gl_FragCoord [[position]])
+fragment main0_out main0(main0_in in [[stage_in]], constant PushConstants& _372 [[buffer(0)]], device EffectBuffer& _381 [[buffer(1)]], device EffectFloat1Buffer& _394 [[buffer(2)]], device EffectFloat2Buffer& _403 [[buffer(3)]], device EffectFloat3Buffer& _411 [[buffer(4)]], device EffectFloat4Buffer& _419 [[buffer(5)]], device EffectFloat5Buffer& _426 [[buffer(6)]], constant Uniforms& _849 [[buffer(7)]], device EffectFloat6Bu)",
+R"(ffer& _1049 [[buffer(8)]], constant Clouds& _1929 [[buffer(9)]], constant Environment& environment [[buffer(10)]], texture2d<float> Texture [[texture(0)]], texture2d<float> BrightTexture [[texture(1)]], texture2d<float> VolumetricLightTexture [[texture(2)]], texture2d<float> SSRTexture [[texture(3)]], texture2d<float> PositionTexture [[texture(4)]], texture2d<float> LUTTexture [[texture(5)]], texture3d<float> cloudsTexture [[texture(6)]], texture2d<float> DepthTexture [[texture(7)]], sampler TextureSmplr [[sampler(0)]], sampler BrightTextureSmplr [[sampler(1)]], sampler VolumetricLightTextureSmplr [[sampler(2)]], sampler SSRTextureSmplr [[sampler(3)]], sampler PositionTextureSmplr [[sampler(4)]], sampler LUTTextureSmplr [[sampler(5)]], sampler cloudsTextureSmplr [[sampler(6)]], sampler DepthTextureSmplr [[sampler(7)]], float4 gl_FragCoord [[position]])
 {
     main0_out out = {};
     float2 param = in.TexCoord;
@@ -3170,10 +3199,11 @@ fragment main0_out main0(main0_in in [[stage_in]], constant PushConstants& _372 
     out.FragColor = float4(finalColor, 1.0);
     return out;
 }
-)"
-;
+)",
+};
+static const AtlasPackedShaderSource FULLSCREEN_FRAG = {FULLSCREEN_FRAG_PARTS, 6};
 
-static const char* FULLSCREEN_VERT =
+static const char* const FULLSCREEN_VERT_PARTS[] = {
 R"(#include <metal_stdlib>
 #include <simd/simd.h>
 
@@ -3199,10 +3229,11 @@ vertex main0_out main0(main0_in in [[stage_in]])
     return out;
 }
 
-)"
-;
+)",
+};
+static const AtlasPackedShaderSource FULLSCREEN_VERT = {FULLSCREEN_VERT_PARTS, 1};
 
-static const char* GAUSSIAN_FRAG =
+static const char* const GAUSSIAN_FRAG_PARTS[] = {
 R"(#include <metal_stdlib>
 #include <simd/simd.h>
 
@@ -3250,10 +3281,11 @@ fragment main0_out main0(main0_in in [[stage_in]], constant Params& _29 [[buffer
     return out;
 }
 
-)"
-;
+)",
+};
+static const AtlasPackedShaderSource GAUSSIAN_FRAG = {GAUSSIAN_FRAG_PARTS, 1};
 
-static const char* LIGHT_FRAG =
+static const char* const LIGHT_FRAG_PARTS[] = {
 R"(#pragma clang diagnostic ignored "-Wmissing-prototypes"
 #pragma clang diagnostic ignored "-Wmissing-braces"
 
@@ -3543,7 +3575,8 @@ constant spvUnsafeArray<float2, 12> _660 = spvUnsafeArray<float2, 12>(
      float2(-0.839999973773956298828125, -0.07400000095367431640625),
      float2(-0.69599997997283935546875, 0.4569999873638153076171875),
      float2(-0.20299999415874481201171875, 0.620999991893768310546875),
-     float2(0.96200001239776611328125, -0.194999992847442626953125),
+     float2(0.96200001239776)",
+R"(611328125, -0.194999992847442626953125),
      float2(0.472999989986419677734375, -0.4799999892711639404296875),
      float2(0.518999993801116943359375, 0.767000019550323486328125),
      float2(0.185000002384185791015625, -0.89300000667572021484375),
@@ -3725,7 +3758,8 @@ static inline __attribute__((always_inline)) float4 sampleTextureAt(
         } else {
             if (textureIndex == 2) {
                 return texture3.sample(texture3Smplr, uv);
-            } else {
+         )",
+R"(   } else {
                 if (textureIndex == 3) {
                     return texture4.sample(texture4Smplr, uv);
                 } else {
@@ -3959,7 +3993,8 @@ static inline __attribute__((always_inline)) float3 calcDirectionalLight(
     float3 L = fast::normalize(-light.direction);
     float3 radiance = light.diffuse * fast::max(light.intensity, 0.0);
     float3 param = L;
-    float3 param_1 = radiance;
+    float3 param_1 = radiance;)",
+R"(
     float3 param_2 = N;
     float3 param_3 = V;
     float3 param_4 = F0;
@@ -4174,7 +4209,8 @@ sampleProbeDirectionalRadiance(texture2d<float> ddgiTexture,
     return sampleDDGITextureBilinear(ddgiTexture, uv);
 }
 
-static inline float3 sampleDDGIIrradiance(texture2d<float> ddgiTexture,
+static inli)",
+R"(ne float3 sampleDDGIIrradiance(texture2d<float> ddgiTexture,
                                           constant ProbeSpace &ps, float3 posWS,
                                           float3 normalWS) {
     uint3 counts = uint3((uint)ps.probeCount.x, (uint)ps.probeCount.y,
@@ -4350,7 +4386,8 @@ fragment main0_out main0(
     sampler gNormalSmplr [[sampler(12)]],
     sampler gAlbedoSpecSmplr [[sampler(13)]],
     sampler gMaterialSmplr [[sampler(14)]], sampler ssaoSmplr [[sampler(15)]]) {
-    main0_out out{};
+    main0_out ou)",
+R"(t{};
     float4 gPositionSample = gPosition.sample(gPositionSmplr, in.TexCoord);
     float3 FragPos = gPositionSample.xyz;
     if (!all(isfinite(FragPos))) {
@@ -4518,7 +4555,8 @@ fragment main0_out main0(
     }
     directionalShadow =
         fast::clamp(directionalShadow * 0.85000002384185791015625, 0.0, 1.0);
-    spotShadow = fast::clamp(spotShadow * 0.85000002384185791015625, 0.0, 1.0);
+    spotShadow = fast::clamp(spotShadow * 0.8500000238418579)",
+R"(1015625, 0.0, 1.0);
     areaShadow = fast::clamp(areaShadow * 0.449999988079071044921875, 0.0, 1.0);
     pointShadow =
         fast::clamp(pointShadow * 0.85000002384185791015625, 0.0, 1.0);
@@ -4695,7 +4733,8 @@ fragment main0_out main0(
                          0.85000002384185791015625;
     float sideFactor = clamp(1.0f - abs(N.y), 0.0f, 1.0f);
     float ddgiSurfaceFactor =
-        0.550000011920928955078125 + sideFactor * 0.449999988079071044921875;
+        0.550000011920928955078125 + sideFactor * 0.44999998807907104492)",
+R"(1875;
     ddgiDiffuse *= ddgiSurfaceFactor;
     float ddgiDiffuseLuma = dot(ddgiDiffuse, float3(0.2126f, 0.7152f, 0.0722f));
     float sceneRefLuma =
@@ -4753,8 +4792,7 @@ fragment main0_out main0(
         finalColor =
             max(ddgiDiffuse * 3.0f + ddgiSpecular * 2.0f, float3(0.0f));
     } else if (ddgiDebugMode >= 29.5f) {
-        finalColor = ddgiIrradiance * ddgiGain )"
-R"(* 4.0f;
+        finalColor = ddgiIrradiance * ddgiGain * 4.0f;
     } else if (ddgiDebugMode >= 19.5f) {
         finalColor = ddgiDiffuse * 3.0f;
     } else if (!(_526.useIBL != 0u)) {
@@ -4786,10 +4824,11 @@ R"(* 4.0f;
     out.FragColor.z = _1897.z;
     return out;
 }
-)"
-;
+)",
+};
+static const AtlasPackedShaderSource LIGHT_FRAG = {LIGHT_FRAG_PARTS, 8};
 
-static const char* LIGHT_VERT =
+static const char* const LIGHT_VERT_PARTS[] = {
 R"(#include <metal_stdlib>
 #include <simd/simd.h>
 
@@ -4814,10 +4853,11 @@ vertex main0_out main0(main0_in in [[stage_in]])
     out.gl_Position = float4(in.aPos, 1.0);
     return out;
 }
-)"
-;
+)",
+};
+static const AtlasPackedShaderSource LIGHT_VERT = {LIGHT_VERT_PARTS, 1};
 
-static const char* MAIN_FRAG =
+static const char* const MAIN_FRAG_PARTS[] = {
 R"(#pragma clang diagnostic ignored "-Wmissing-prototypes"
 #pragma clang diagnostic ignored "-Wmissing-braces"
 
@@ -5061,7 +5101,8 @@ struct AmbientLight
     float3 _pad0;
 };
 
-constant spvUnsafeArray<float3, 54> _1657 = spvUnsafeArray<float3, 54>({ float3(0.5381000041961669921875, 0.18559999763965606689453125, -0.4318999946117401123046875), float3(0.13789999485015869140625, 0.248600006103515625, 0.4429999887943267822265625), float3(0.3370999991893768310546875, 0.567900002002716064453125, -0.0057000000961124897003173828125), float3(-0.699899971485137939453125, -0.0450999997556209564208984375, -0.0019000000320374965667724609375), float3(0.068899996578693389892578125, -0.159799993038177490234375, -0.854700028896331787109375), float3(0.056000001728534698486328125, 0.0068999999202787876129150390625, -0.184300005435943603515625), float3(-0.014600000344216823577880859375, 0.14020000398159027099609375, 0.076200000941753387451171875), float3(0.00999999977648258209228515625, -0.19239999353885650634765625, -0.03440000116825103759765625), float3(-0.35769999027252197265625, -0.53009998798370361328125, -0.4357999861240386962890625), float3(-0.3169000148773193359375, 0.10629999637603759765625, 0.015799999237060546875), float3(0.010300000198185443878173828125, -0.5868999958038330078125, 0.0046000001020729541778564453125), float3(-0.08969999849796295166015625, -0.4939999878406524658203125, 0.328700006008148193359375), float3(0.7118999958038330078125, -0.015399999916553497314453125, -0.091799996793270111083984375), float3(-0.053300000727176666259765625, 0.0595999993383884429931640625, -0.541100025177001953125), float3(0.03519999980926513671875, -0.063100002706050872802734375, 0.546000003814697265625), float3(-0.4776000082492828369140625, 0.2847000062465667724609375, -0.0271000005304813385009765625), float3(-0.11200000345706939697265625, 0.1234000027179718017578125, -0.744599997997283935546875), float3(-0.212999999523162841796875, -0.07819999754428863525390625, -0.13789999485015869140625), float3(0.2944000065326690673828125, -0.3111999928951263427734375, -0.2644999921321868896484375), float3(-0.4564000070095062255859375, 0.4174999892711639404296875, -0.184300005435943603515625), float3(0.1234000027179718017578125, -0.567799985408782958984375, 0.788999974727630615234375), float3(-0.6789000034332275390625, 0.23450000584125518798828125, -0.4566999971866607666015625), float3(0.34560000896453857421875, -0.788999974727630615234375, 0.1234000027179718017578125), float3(-0.23450000584125518798828125, 0.567799985408782958984375, -0.6789000034332275390625), float3(0.788999974727630615234375, 0.1234000027179718017578125, 0.567799985408782958984375), float3(-0.567799985408782958984375, -0.6789000034332275390625, 0.23450000584125518798828125), float3(0.4566999971866607666015625, 0.788999974727630615234375, -0.23450000584125518798828125), float3(-0.788999974727630615234375, 0.34560000896453857421875, -0.567799985408782958984375), float3(0.6789000034332275390625, -0.23450000584125518798828125, 0.788999974727630615234375), float3(-0.1234000027179718017578125, 0.6789000034332275390625, -0.4566999971866607666015625), float3(0.23450000584125518798828125, -0.567799985408782958984375, 0.6789000034332275390625), float3(-0.34560000896453857421875, 0.788999974727630615234375, -0.1234000027179718017578125), float3(0.567799985408782958984375, 0.23450000584125518798828125, -0.788999974727630615234375), float3(-0.6789000034332275390625, -0.567799985408782958984375, 0.34560000896453857421875), float3(0.788999974727630615234375, -0.34560000896453857421875, 0.4566999971866607666015625), float3(-0.23450000584125518798828125, 0.1234000027179718017578125, -0.6789000034332275390625), float3(0.4566999971866607666015625, 0.788999974727630615234375, -0.567799985408782958984375), float3(-0.567799985408782958984375, 0.23450000584125518798828125, 0.6789000034332275390625), float3(0.34560000896453857421875, -0.788999974727630615234375, -0.1234000027179718017578125), float3(-0.788999974727630615234375, 0.567799985408782958984375, -0.23450000584125518798828125), float3(0.6789000034332275390625, -0.1234000027179718017578125, 0.34560000896453857421875), float3(-0.4566999971866607666015625, 0.788999974727630615234375, 0.23450000584125518798828125), float3(0.567799985408782958984375, -0.6789000034332275390625, 0.788999974727630615234375), float3(-0.34560000896453857421875, 0.567799985408782958984375, -0.6789000034332275390625), float3(0.23450000584125518798828125, -0.788999974727630615234375, 0.567799985408782958984375), float3(-0.6789000034332275390625, 0.23450000584125518798828125, -0.1234000027179718017578125), float3(0.788999974727630615234375, -0.34560000896453857421875, -0.567799985408782958984375), float3(-0.567799985408782958984375, 0.6789000034332275390625, 0.23450000584125518798828125), float3(0.4566999971866607666015625, -0.788999974727630615234375, 0.34560000896453857421875), float3(-0.23450000584125518798828125, 0.1234000027179718017578125, -0.788999974727630615234375), float3(0.34560000896453857421875, -0.567799985408782958984375, 0.6789000034332275390625), float3(-0.788999974727630615234375, 0.4566999971866607666015625, -0.34560000896453857421875), float3(0.6789000034332275390625, -0.1234000027179718017578125, -0.567799985408782958984375), float3(-0.4566999971866607666015625, 0.23450000584125518798828125, 0.788999974727630615234375) });
+constant spvUnsafeArray<float3, 54> _1657 = spvUnsafeArray<float3, 54>({ float3(0.5381000041961669921875, 0.18559999763965606689453125, -0.4318999946117401123046875), float3(0.13789999485015869140625, 0.248600006103515625, 0.4429999887943267822265625), float3(0.3370999991893768310546875, 0.567900002002716064453125, -0.0057000000961124897003173828125), float3(-0.699899971485137939453125, -0.0450999997556209564208984375, -0.0019000000320374965667724609375), float3(0.068899996578693389892578125, -0.159799993038177490234375, -0.854700028896331787109375), float3(0.056000001728534698486328125, 0.0068999999202787876129150390625, -0.184300005435943603515625), float3(-0.014600000344216823577880859375, 0.14020000398159027099609375, 0.076200000941753387451171875), float3(0.00999999977648258209228515625, -0.19239999353885650634765625, -0.03440000116825103759765625), float3(-0.35769999027252197265625, -0.53009998798370361328125, -0.4357999861240386962890625), float3(-0.3169000148773193359375, 0.10629999637603759765625, 0.015799999237060546875), float3(0.010300000198185443878173828125, -0.5868999958038330078125, 0.0046000001020729541778564453125), float3(-0.08969999849796295166015625, -0.4939999878406524658203125, 0.328700006008148193359375), float3(0.7118999958038330078125, -0.015399999916553497314453125, -0.091799996793270111083984375), float3(-0.053300000727176666259765625, 0.0595999993383884429931640625, -0.541100025177001953125), float3(0.03519999980926513671875, -0.063100002706050872802734375, 0.546000003814697265625), float3(-0.4776000082492828369140625, 0.2847000062465667724609375, -0.0271000005304813385009765625), float3(-0.11200000345706939697265625, 0.1234000027179718017578125, -0.744599997997283935546875), float3(-0.212999999523162841796875, -0.07819999754428863525390625, -0.13789999485015869140625), float3(0.2944000065326690673828125, -0.3111999928951263427734375, -0.2644999921321868896484375), float3(-0.4564000070095062255859375, 0.4174999892711639404296875, -0.184300005435943603515625), float3(0.1234000027179718017578125, -0.567799985408782958984375, 0)",
+R"(.788999974727630615234375), float3(-0.6789000034332275390625, 0.23450000584125518798828125, -0.4566999971866607666015625), float3(0.34560000896453857421875, -0.788999974727630615234375, 0.1234000027179718017578125), float3(-0.23450000584125518798828125, 0.567799985408782958984375, -0.6789000034332275390625), float3(0.788999974727630615234375, 0.1234000027179718017578125, 0.567799985408782958984375), float3(-0.567799985408782958984375, -0.6789000034332275390625, 0.23450000584125518798828125), float3(0.4566999971866607666015625, 0.788999974727630615234375, -0.23450000584125518798828125), float3(-0.788999974727630615234375, 0.34560000896453857421875, -0.567799985408782958984375), float3(0.6789000034332275390625, -0.23450000584125518798828125, 0.788999974727630615234375), float3(-0.1234000027179718017578125, 0.6789000034332275390625, -0.4566999971866607666015625), float3(0.23450000584125518798828125, -0.567799985408782958984375, 0.6789000034332275390625), float3(-0.34560000896453857421875, 0.788999974727630615234375, -0.1234000027179718017578125), float3(0.567799985408782958984375, 0.23450000584125518798828125, -0.788999974727630615234375), float3(-0.6789000034332275390625, -0.567799985408782958984375, 0.34560000896453857421875), float3(0.788999974727630615234375, -0.34560000896453857421875, 0.4566999971866607666015625), float3(-0.23450000584125518798828125, 0.1234000027179718017578125, -0.6789000034332275390625), float3(0.4566999971866607666015625, 0.788999974727630615234375, -0.567799985408782958984375), float3(-0.567799985408782958984375, 0.23450000584125518798828125, 0.6789000034332275390625), float3(0.34560000896453857421875, -0.788999974727630615234375, -0.1234000027179718017578125), float3(-0.788999974727630615234375, 0.567799985408782958984375, -0.23450000584125518798828125), float3(0.6789000034332275390625, -0.1234000027179718017578125, 0.34560000896453857421875), float3(-0.4566999971866607666015625, 0.788999974727630615234375, 0.23450000584125518798828125), float3(0.567799985408782958984375, -0.6789000034332275390625, 0.788999974727630615234375), float3(-0.34560000896453857421875, 0.567799985408782958984375, -0.6789000034332275390625), float3(0.23450000584125518798828125, -0.788999974727630615234375, 0.567799985408782958984375), float3(-0.6789000034332275390625, 0.23450000584125518798828125, -0.1234000027179718017578125), float3(0.788999974727630615234375, -0.34560000896453857421875, -0.567799985408782958984375), float3(-0.567799985408782958984375, 0.6789000034332275390625, 0.23450000584125518798828125), float3(0.4566999971866607666015625, -0.788999974727630615234375, 0.34560000896453857421875), float3(-0.23450000584125518798828125, 0.1234000027179718017578125, -0.788999974727630615234375), float3(0.34560000896453857421875, -0.567799985408782958984375, 0.6789000034332275390625), float3(-0.788999974727630615234375, 0.4566999971866607666015625, -0.34560000896453857421875), float3(0.6789000034332275390625, -0.1234000027179718017578125, -0.567799985408782958984375), float3(-0.4566999971866607666015625, 0.23450000584125518798828125, 0.788999974727630615234375) });
 
 struct main0_out
 {
@@ -5180,7 +5221,8 @@ float2 parallaxMapping(thread const float2& texCoords, thread const float3& view
     float currentDepthMapValue = sampleTextureAt(param, param_1, texture1, texture1Smplr, texture2, texture2Smplr, texture3, texture3Smplr, texture4, texture4Smplr, texture5, texture5Smplr, texture6, texture6Smplr, texture7, texture7Smplr, texture8, texture8Smplr, texture9, texture9Smplr, texture10, texture10Smplr).x;
     while (currentLayerDepth < currentDepthMapValue)
     {
-        currentTexCoords = fast::clamp(currentTexCoords - deltaTexCoords, float2(0.0), float2(1.0));
+        currentTexCoords = fast::clamp(currentTexCoords - deltaTexCoords, flo)",
+R"(at2(0.0), float2(1.0));
         int param_2 = textureIndex;
         float2 param_3 = currentTexCoords;
         currentDepthMapValue = sampleTextureAt(param_2, param_3, texture1, texture1Smplr, texture2, texture2Smplr, texture3, texture3Smplr, texture4, texture4Smplr, texture5, texture5Smplr, texture6, texture6Smplr, texture7, texture7Smplr, texture8, texture8Smplr, texture9, texture9Smplr, texture10, texture10Smplr).x;
@@ -5360,7 +5402,8 @@ float2 getTextureDimensions(thread const int& textureIndex, texture2d<float> tex
 }
 
 static inline __attribute__((always_inline))
-float calculateShadow(thread const ShadowParameters& shadowParam, thread const float4& fragPosLightSpace, constant Uniforms& _163, texture2d<float> texture1, sampler texture1Smplr, texture2d<float> texture2, sampler texture2Smplr, texture2d<float> texture3, sampler texture3Smplr, texture2d<float> texture4, sampler texture4Smplr, texture2d<float> texture5, sampler texture5Smplr, texture2d<float> texture6, sampler texture6Smplr, texture2d<float> texture7, sampler texture7Smplr, texture2d<float> texture8, sampler texture8Smplr, texture2d<float> texture9, sampler texture9Smplr, texture2d<float> texture10, sampler texture10Smplr, device DirectionalLightsUBO& _1083, thread float3& Normal, thread float3& FragPos)
+float calculateShadow(thread const ShadowParameters& shadowParam,)",
+R"( thread const float4& fragPosLightSpace, constant Uniforms& _163, texture2d<float> texture1, sampler texture1Smplr, texture2d<float> texture2, sampler texture2Smplr, texture2d<float> texture3, sampler texture3Smplr, texture2d<float> texture4, sampler texture4Smplr, texture2d<float> texture5, sampler texture5Smplr, texture2d<float> texture6, sampler texture6Smplr, texture2d<float> texture7, sampler texture7Smplr, texture2d<float> texture8, sampler texture8Smplr, texture2d<float> texture9, sampler texture9Smplr, texture2d<float> texture10, sampler texture10Smplr, device DirectionalLightsUBO& _1083, thread float3& Normal, thread float3& FragPos)
 {
     float3 projCoords = fragPosLightSpace.xyz / float3(fragPosLightSpace.w);
     projCoords = (projCoords * 0.5) + float3(0.5);
@@ -5569,7 +5612,8 @@ float3 calculatePBR(thread const float3& N, thread const float3& V, thread const
     float denominator = ((4.0 * fast::max(dot(N, V), 0.0)) * fast::max(dot(N, L), 0.0)) + 9.9999997473787516355514526367188e-05;
     float3 specular = numerator / float3(denominator);
     float NdotL = fast::max(dot(N, L), 0.0);
-    float3 Lo = ((((kD * albedo) / float3(3.1415927410125732421875)) + specular) * radiance) * NdotL;
+    flo)",
+R"(at3 Lo = ((((kD * albedo) / float3(3.1415927410125732421875)) + specular) * radiance) * NdotL;
     return Lo;
 }
 
@@ -5702,7 +5746,8 @@ float3 sampleHDRTexture(thread const int& textureIndex, thread const float3& dir
 }
 
 static inline __attribute__((always_inline))
-float3 sampleEnvironmentRadiance(thread const float3& direction, constant Uniforms& _163, texture2d<float> texture1, sampler texture1Smplr, texture2d<float> texture2, sampler texture2Smplr, texture2d<float> texture3, sampler texture3Smplr, texture2d<float> texture4, sampler texture4Smplr, texture2d<float> texture5, sampler texture5Smplr, texture2d<float> texture6, sampler texture6Smplr, texture2d<float> texture7, sampler texture7Smplr, texture2d<float> texture8, sampler texture8Smplr, texture2d<float> texture9, sampler texture9Smplr, texture2d<float> texture10, sampler texture10Smplr)
+float3 sampleEnvironmentRadiance(thread const float3& direction, constant Uniforms& _163, texture2d<float> texture1, sampler texture1Smplr, texture2d<float> texture2, sampler texture2Smplr, texture2d<float> texture3, sampler texture3Smplr, texture2d<float> texture4, sampler texture4Smplr, texture2d<float> texture5, sampler texture5Smplr, texture2d<float> texture6, sampler texture6Smplr, texture2d<float> texture7, sampler texture7Smplr, texture2d<float> texture8, sampler texture8Smplr, texture2d<float> texture9, sampler texture9Smplr, texture2d<float> texture10, sampler texture10S)",
+R"(mplr)
 {
     float3 envColor = float3(0.0);
     int count = 0;
@@ -5873,7 +5918,8 @@ fragment main0_out main0(main0_in in [[stage_in]], constant Uniforms& _163 [[buf
     {
         ao *= aoTex.x;
     }
-    float3 F0 = float3(0.039999999105930328369140625);
+    float3 F0 = float3(0.0399999)",
+R"(99105930328369140625);
     F0 = mix(F0, albedo, float3(metallic));
     float directionalShadow = 0.0;
     float spotShadow = 0.0;
@@ -6018,7 +6064,8 @@ fragment main0_out main0(main0_in in [[stage_in]], constant Uniforms& _163 [[buf
             float cosTheta = cos(radians(_2058.areaLights[i_2].angle));
             if ((facing >= cosTheta) && (facing > 0.0))
             {
-                float range = fast::max(_2058.areaLights[i_2].range, 0.001000000047497451305389404296875);
+        )",
+R"(        float range = fast::max(_2058.areaLights[i_2].range, 0.001000000047497451305389404296875);
                 float attenuation = 1.0 / ((1.0 + (dist / range)) + ((dist * dist) / (range * range)));
                 float fade = 1.0 - smoothstep(range * 0.89999997615814208984375, range, dist);
                 float3 radiance = (((float3(_2058.areaLights[i_2].diffuse) * fast::max(_2058.areaLights[i_2].intensity, 0.0)) * attenuation) * facing) * fade;
@@ -6063,8 +6110,7 @@ fragment main0_out main0(main0_in in [[stage_in]], constant Uniforms& _163 [[buf
     if (_1073.useIBL != 0u)
     {
         float3 param_51 = N;
-        float3 irradiance = sampleEnvironmentRadiance(param_51, _163, texture1, texture1Smplr, texture2, texture2Smplr, texture3, texture3Smplr, texture4, texture4Smplr, texture5, texture5Smplr, texture6, texture6Smplr, texture7, texture7Smplr, texture8, te)"
-R"(xture8Smplr, texture9, texture9Smplr, texture10, texture10Smplr);
+        float3 irradiance = sampleEnvironmentRadiance(param_51, _163, texture1, texture1Smplr, texture2, texture2Smplr, texture3, texture3Smplr, texture4, texture4Smplr, texture5, texture5Smplr, texture6, texture6Smplr, texture7, texture7Smplr, texture8, texture8Smplr, texture9, texture9Smplr, texture10, texture10Smplr);
         float3 diffuseIBL = irradiance * albedo;
         float3 reflection = reflect(-V, N);
         float3 param_52 = reflection;
@@ -6097,10 +6143,11 @@ R"(xture8Smplr, texture9, texture9Smplr, texture10, texture10Smplr);
     out.FragColor.z = _2399.z;
     return out;
 }
-)"
-;
+)",
+};
+static const AtlasPackedShaderSource MAIN_FRAG = {MAIN_FRAG_PARTS, 8};
 
-static const char* MAIN_VERT =
+static const char* const MAIN_VERT_PARTS[] = {
 R"(#pragma clang diagnostic ignored "-Wmissing-prototypes"
 
 #include <metal_stdlib>
@@ -6210,10 +6257,11 @@ vertex main0_out main0(main0_in in [[stage_in]], constant UBO& uniforms [[buffer
     out.TBN_2 = TBN[2];
     return out;
 }
-)"
-;
+)",
+};
+static const AtlasPackedShaderSource MAIN_VERT = {MAIN_VERT_PARTS, 1};
 
-static const char* PARTICLE_FRAG =
+static const char* const PARTICLE_FRAG_PARTS[] = {
 R"(#include <metal_stdlib>
 #include <simd/simd.h>
 
@@ -6261,10 +6309,11 @@ fragment main0_out main0(main0_in in [[stage_in]], constant Params& _9 [[buffer(
     return out;
 }
 
-)"
-;
+)",
+};
+static const AtlasPackedShaderSource PARTICLE_FRAG = {PARTICLE_FRAG_PARTS, 1};
 
-static const char* PARTICLE_VERT =
+static const char* const PARTICLE_VERT_PARTS[] = {
 R"(#include <metal_stdlib>
 #include <simd/simd.h>
 
@@ -6315,10 +6364,11 @@ vertex main0_out main0(main0_in in [[stage_in]], constant UniformBufferObject& _
     return out;
 }
 
-)"
-;
+)",
+};
+static const AtlasPackedShaderSource PARTICLE_VERT = {PARTICLE_VERT_PARTS, 1};
 
-static const char* PATH =
+static const char* const PATH_PARTS[] = {
 R"(#include <metal_stdlib>
 #include <metal_raytracing>
 using namespace metal;
@@ -6559,7 +6609,8 @@ constexpr sampler materialTexSampler(coord::normalized, address::repeat,
         materialTexture16, materialTexture17, materialTexture18,               \
         materialTexture19, materialTexture20, materialTexture21,               \
         materialTexture22, materialTexture23, materialTexture24,               \
-        materialTexture25, materialTexture26, materialTexture27,               \
+        materialTexture25, materi)",
+R"(alTexture26, materialTexture27,               \
         materialTexture28, materialTexture29, materialTexture30,               \
         materialTexture31, materialTexture32, materialTexture33,               \
         materialTexture34, materialTexture35, materialTexture36,               \
@@ -6712,7 +6763,8 @@ float4 sampleMaterialTexture(int textureIndex, float2 uv,
     case 44:
         return materialTexture44.sample(materialTexSampler, uv);
     case 45:
-        return materialTexture45.sample(materialTexSampler, uv);
+        return m)",
+R"(aterialTexture45.sample(materialTexSampler, uv);
     case 46:
         return materialTexture46.sample(materialTexSampler, uv);
     case 47:
@@ -6905,7 +6957,8 @@ bool isOccludedAreaLight(AreaLight light, float3 P, float3 N,
     float dist2 = max(dot(toLight, toLight), 1e-4);
     float dist = sqrt(dist2);
     float3 L = toLight / dist;
-    return isOccluded(isect, sceneAS, P, N, L, dist - 0.001);
+    return i)",
+R"(sOccluded(isect, sceneAS, P, N, L, dist - 0.001);
 }
 
 // ---------------------------------------------------------------------------
@@ -7081,7 +7134,8 @@ float3 evalDirectLightingPBR(intersector<triangle_data, instancing> isect,
         float lightRange = max(spotLights[i].range, 1e-4);
         float minDist = max(lightRange * 0.08, 0.15);
         float distSq = dist * dist + minDist * minDist;
-        float rangeFade = 1.0 - smoothstep(lightRange * 0.75, lightRange, dist);
+        float rangeFade = 1.0 - smoothstep(lightRang)",
+R"(e * 0.75, lightRange, dist);
         float atten = rangeFade / max(distSq, 1e-4);
         float intensity = max(spotLights[i].intensity, 0.0) * atten * spot;
         float3 c = evalPBR(albedo, metallic, roughness, N, V, L,
@@ -7263,7 +7317,8 @@ float3 sampleRadiance(uint2 gid, uint sampleIndex, uint w,
                          (1.0 - metallic) * dielectricSpec;
         float transmitProb =
             transmittance * (1.0 - metallic) * (1.0 - dielectricSpec);
-        float diffuseProb = (1.0 - metallic) * (1.0 - transmittance);
+        float diffuseProb = (1.0 - metallic) * (1.0 - transmittance)",
+R"();
         float probSum = max(specProb + transmitProb + diffuseProb, 1e-4);
         specProb /= probSum;
         transmitProb /= probSum;
@@ -7450,7 +7505,8 @@ float3 sampleRadiance(uint2 gid, uint sampleIndex, uint w,
             float3 bLocalT =
                 normalizeOr(float3(vertices[bj0].tangent) * bb0 +
                                 float3(vertices[bj1].tangent) * bb1 +
-                                float3(vertices[bj2].tangent) * bb2,
+                      )",
+R"(          float3(vertices[bj2].tangent) * bb2,
                             float3(1.0, 0.0, 0.0));
             float3 bLocalB =
                 normalizeOr(float3(vertices[bj0].bitangent) * bb0 +
@@ -7578,10 +7634,11 @@ kernel void main0(texture2d<float, access::write> outTex [[texture(0)]],
     accum = clampLuminance(accum, 24.0);
     outTex.write(float4(accum, 1.0), gid);
 }
-)"
-;
+)",
+};
+static const AtlasPackedShaderSource PATH = {PATH_PARTS, 7};
 
-static const char* POINT_DEPTH_FRAG =
+static const char* const POINT_DEPTH_FRAG_PARTS[] = {
 R"(#include <metal_stdlib>
 #include <simd/simd.h>
 
@@ -7612,10 +7669,11 @@ fragment main0_out main0(main0_in in [[stage_in]], constant Uniforms& _17 [[buff
     return out;
 }
 
-)"
-;
+)",
+};
+static const AtlasPackedShaderSource POINT_DEPTH_FRAG = {POINT_DEPTH_FRAG_PARTS, 1};
 
-static const char* POINT_DEPTH_GEOM =
+static const char* const POINT_DEPTH_GEOM_PARTS[] = {
 R"(#include <metal_stdlib>
 #include <simd/simd.h>
 
@@ -7650,10 +7708,11 @@ unknown main0_out main0(constant ShadowMatrices& _55 [[buffer(0)]])
     return out;
 }
 
-)"
-;
+)",
+};
+static const AtlasPackedShaderSource POINT_DEPTH_GEOM = {POINT_DEPTH_GEOM_PARTS, 1};
 
-static const char* POINT_DEPTH_NOGEOM_FRAG =
+static const char* const POINT_DEPTH_NOGEOM_FRAG_PARTS[] = {
 R"(#include <metal_stdlib>
 #include <simd/simd.h>
 
@@ -7684,10 +7743,11 @@ fragment main0_out main0(main0_in in [[stage_in]], constant Uniforms& _17 [[buff
     return out;
 }
 
-)"
-;
+)",
+};
+static const AtlasPackedShaderSource POINT_DEPTH_NOGEOM_FRAG = {POINT_DEPTH_NOGEOM_FRAG_PARTS, 1};
 
-static const char* POINT_DEPTH_NOGEOM_VERT =
+static const char* const POINT_DEPTH_NOGEOM_VERT_PARTS[] = {
 R"(#include <metal_stdlib>
 #include <simd/simd.h>
 
@@ -7742,10 +7802,11 @@ vertex main0_out main0(main0_in in [[stage_in]], constant UBO& _12 [[buffer(0)]]
     out.gl_Position = _62.shadowMatrix * worldPos;
     return out;
 }
-)"
-;
+)",
+};
+static const AtlasPackedShaderSource POINT_DEPTH_NOGEOM_VERT = {POINT_DEPTH_NOGEOM_VERT_PARTS, 1};
 
-static const char* POINT_DEPTH_VERT =
+static const char* const POINT_DEPTH_VERT_PARTS[] = {
 R"(#include <metal_stdlib>
 #include <simd/simd.h>
 
@@ -7790,10 +7851,11 @@ vertex main0_out main0(main0_in in [[stage_in]], constant UBO& _12 [[buffer(0)]]
     }
     return out;
 }
-)"
-;
+)",
+};
+static const AtlasPackedShaderSource POINT_DEPTH_VERT = {POINT_DEPTH_VERT_PARTS, 1};
 
-static const char* SKYBOX_FRAG =
+static const char* const SKYBOX_FRAG_PARTS[] = {
 R"(#pragma clang diagnostic ignored "-Wmissing-prototypes"
 
 #include <metal_stdlib>
@@ -7994,7 +8056,8 @@ fragment main0_out main0(main0_in in [[stage_in]], constant Params& _452 [[buffe
             float sunGlow = smoothstep(sunGlowSize, sunSize, sunDot) * (1.0 - sunDisk);
             float sunHalo = smoothstep(sunHaloSize, sunSize, sunDot) * (1.0 - smoothstep(sunSize, sunGlowSize, sunDot));
             float horizonBoost = smoothstep(0.100000001490116119384765625, -0.0500000007450580596923828125, _452.sunDirection.y) * 2.0;
-            sunHalo *= (0.300000011920928955078125 + horizonBoost);
+            sunHalo *= (0.300000011920928955078125 )",
+R"(+ horizonBoost);
             color += ((_452.sunColor.xyz * (((sunDisk * 5.0) + (sunGlow * 0.5)) + sunHalo)) * sunHorizonFade);
         }
         float moonHorizonFade = smoothstep(-0.1500000059604644775390625, 0.0500000007450580596923828125, _452.moonDirection.y);
@@ -8078,10 +8141,11 @@ fragment main0_out main0(main0_in in [[stage_in]], constant Params& _452 [[buffe
     return out;
 }
 
-)"
-;
+)",
+};
+static const AtlasPackedShaderSource SKYBOX_FRAG = {SKYBOX_FRAG_PARTS, 2};
 
-static const char* SKYBOX_VERT =
+static const char* const SKYBOX_VERT_PARTS[] = {
 R"(#include <metal_stdlib>
 #include <simd/simd.h>
 
@@ -8115,10 +8179,11 @@ vertex main0_out main0(main0_in in [[stage_in]], constant UniformBufferObject& _
     return out;
 }
 
-)"
-;
+)",
+};
+static const AtlasPackedShaderSource SKYBOX_VERT = {SKYBOX_VERT_PARTS, 1};
 
-static const char* SSAO_BLUR_FRAG =
+static const char* const SSAO_BLUR_FRAG_PARTS[] = {
 R"(#include <metal_stdlib>
 #include <simd/simd.h>
 
@@ -8151,10 +8216,11 @@ fragment main0_out main0(main0_in in [[stage_in]], texture2d<float> inSSAO [[tex
     return out;
 }
 
-)"
-;
+)",
+};
+static const AtlasPackedShaderSource SSAO_BLUR_FRAG = {SSAO_BLUR_FRAG_PARTS, 1};
 
-static const char* SSAO_FRAG =
+static const char* const SSAO_FRAG_PARTS[] = {
 R"(#include <metal_stdlib>
 #include <simd/simd.h>
 
@@ -8307,10 +8373,11 @@ fragment main0_out main0(main0_in in [[stage_in]],
     out.FragColor = occlusion;
     return out;
 }
-)"
-;
+)",
+};
+static const AtlasPackedShaderSource SSAO_FRAG = {SSAO_FRAG_PARTS, 1};
 
-static const char* SSR_BLUR_FRAG =
+static const char* const SSR_BLUR_FRAG_PARTS[] = {
 R"(#include <metal_stdlib>
 #include <simd/simd.h>
 
@@ -8320,10 +8387,11 @@ fragment void main0()
 {
 }
 
-)"
-;
+)",
+};
+static const AtlasPackedShaderSource SSR_BLUR_FRAG = {SSR_BLUR_FRAG_PARTS, 1};
 
-static const char* SSR_FRAG =
+static const char* const SSR_FRAG_PARTS[] = {
 R"(#pragma clang diagnostic ignored "-Wmissing-prototypes"
 
 #include <metal_stdlib>
@@ -8555,7 +8623,8 @@ float4 SSR(thread const float3& worldPos, thread const float3& normal, thread co
                 float midCurrentDepth = -midPoint.z;
                 if (midCurrentDepth < midSampleDepth)
                 {
-                    binarySearchStart = midPoint;
+                    binarySearchStart)",
+R"( = midPoint;
                 }
                 else
                 {
@@ -8659,10 +8728,11 @@ fragment main0_out main0(main0_in in [[stage_in]], constant Uniforms& _42 [[buff
     out.FragColor = reflection;
     return out;
 }
-)"
-;
+)",
+};
+static const AtlasPackedShaderSource SSR_FRAG = {SSR_FRAG_PARTS, 2};
 
-static const char* TERRAIN_CONTROL_TESC =
+static const char* const TERRAIN_CONTROL_TESC_PARTS[] = {
 R"(#include <metal_stdlib>
 #include <simd/simd.h>
 
@@ -8720,10 +8790,11 @@ kernel void main0(main0_in in [[stage_in]], constant UBO& _56 [[buffer(0)]], uin
     }
 }
 
-)"
-;
+)",
+};
+static const AtlasPackedShaderSource TERRAIN_CONTROL_TESC = {TERRAIN_CONTROL_TESC_PARTS, 1};
 
-static const char* TERRAIN_EVAL_TESE =
+static const char* const TERRAIN_EVAL_TESE_PARTS[] = {
 R"(#include <metal_stdlib>
 #include <simd/simd.h>
 
@@ -8793,10 +8864,11 @@ struct main0_patchIn
     return out;
 }
 
-)"
-;
+)",
+};
+static const AtlasPackedShaderSource TERRAIN_EVAL_TESE = {TERRAIN_EVAL_TESE_PARTS, 1};
 
-static const char* TERRAIN_FRAG =
+static const char* const TERRAIN_FRAG_PARTS[] = {
 R"(#pragma clang diagnostic ignored "-Wmissing-prototypes"
 
 #include <metal_stdlib>
@@ -9030,7 +9102,8 @@ float3 acesToneMapping(thread const float3& color)
     return fast::clamp((color * ((color * 2.5099999904632568359375) + float3(0.02999999932944774627685546875))) / ((color * ((color * 2.4300000667572021484375) + float3(0.589999973773956298828125))) + float3(0.14000000059604644775390625)), float3(0.0), float3(1.0));
 }
 
-fragment main0_out main0(main0_in in [[stage_in]], constant PushConstants& _331 [[buffer(0)]], constant TerrainParameters& _444 [[buffer(1)]], device BiomeBuffer& _534 [[buffer(2)]], texture2d<float> texture0 [[texture(0)]], texture2d<float> texture1 [[texture(1)]], texture2d<float> texture2 [[texture(2)]], texture2d<float> texture3 [[texture(3)]], texture2d<float> texture4 [[texture(4)]], texture2d<float> texture5 [[texture(5)]], texture2d<float> texture6 [[texture(6)]], texture2d<float> texture7 [[texture(7)]], texture2d<float> texture8 [[texture(8)]], texture2d<float> texture9 [[texture(9)]], texture2d<float> texture10 [[texture(10)]], texture2d<float> texture11 [[texture(11)]], texture2d<float> shadowMap [[texture(12)]], texture2d<float> heightMap [[texture(13)]], texture2d<float> moistureMap [[texture(14)]], texture2d<float> temperatureMap [[texture(15)]], sampler texture0Smplr [[sampler(0)]], sampler texture1Smplr [[sampler(1)]], sampler texture2Smplr [[sampler(2)]], sampler texture3Smplr [[sampler(3)]], sampler texture4Smplr [[sampler(4)]], sampler texture5Smplr [[sampler(5)]], sampler texture6Smplr [[sampler(6)]], sampler texture7Smplr [[sampler(7)]], sampler texture8Smplr [[sampler(8)]], sampler texture9Smplr [[sampler(9)]], sampler texture10Smplr [[sampler(10)]], sampler texture11Smplr [[sampler(11)]], sampler shadowMapSmplr [[sampler(12)]], sampler heightMapSmplr [[sampler(13)]], sampler moistureMapSmplr [[sampler(14)]], sampler temperatureMapSmplr [[sampler(15)]])
+fragment main0_out main0(main0_in in [[stage_in]], constant PushConstants& _331 [[buffer(0)]], constant TerrainParameters& _444 [[buffer(1)]], device BiomeBuffer& _534 [[buffer(2)]], texture2d<float> texture0 [[texture(0)]], texture2d<float> texture1 [[texture(1)]], texture2d<float> texture2 [[texture(2)]], texture2d<float> texture3 [[tex)",
+R"(ture(3)]], texture2d<float> texture4 [[texture(4)]], texture2d<float> texture5 [[texture(5)]], texture2d<float> texture6 [[texture(6)]], texture2d<float> texture7 [[texture(7)]], texture2d<float> texture8 [[texture(8)]], texture2d<float> texture9 [[texture(9)]], texture2d<float> texture10 [[texture(10)]], texture2d<float> texture11 [[texture(11)]], texture2d<float> shadowMap [[texture(12)]], texture2d<float> heightMap [[texture(13)]], texture2d<float> moistureMap [[texture(14)]], texture2d<float> temperatureMap [[texture(15)]], sampler texture0Smplr [[sampler(0)]], sampler texture1Smplr [[sampler(1)]], sampler texture2Smplr [[sampler(2)]], sampler texture3Smplr [[sampler(3)]], sampler texture4Smplr [[sampler(4)]], sampler texture5Smplr [[sampler(5)]], sampler texture6Smplr [[sampler(6)]], sampler texture7Smplr [[sampler(7)]], sampler texture8Smplr [[sampler(8)]], sampler texture9Smplr [[sampler(9)]], sampler texture10Smplr [[sampler(10)]], sampler texture11Smplr [[sampler(11)]], sampler shadowMapSmplr [[sampler(12)]], sampler heightMapSmplr [[sampler(13)]], sampler moistureMapSmplr [[sampler(14)]], sampler temperatureMapSmplr [[sampler(15)]])
 {
     main0_out out = {};
     if (_331.biomesCount <= 0)
@@ -9199,10 +9272,11 @@ fragment main0_out main0(main0_in in [[stage_in]], constant PushConstants& _331 
     return out;
 }
 
-)"
-;
+)",
+};
+static const AtlasPackedShaderSource TERRAIN_FRAG = {TERRAIN_FRAG_PARTS, 2};
 
-static const char* TERRAIN_VERT =
+static const char* const TERRAIN_VERT_PARTS[] = {
 R"(#include <metal_stdlib>
 #include <simd/simd.h>
 
@@ -9235,10 +9309,11 @@ vertex main0_out main0(main0_in in [[stage_in]], constant UBO& _19 [[buffer(0)]]
     return out;
 }
 
-)"
-;
+)",
+};
+static const AtlasPackedShaderSource TERRAIN_VERT = {TERRAIN_VERT_PARTS, 1};
 
-static const char* TEXTURE_FRAG =
+static const char* const TEXTURE_FRAG_PARTS[] = {
 R"(#pragma clang diagnostic ignored "-Wmissing-prototypes"
 
 #include <metal_stdlib>
@@ -9386,7 +9461,8 @@ float4 calculateAllTextures(constant UBO& _28, texture2d<float> texture1, sample
 
 fragment main0_out main0(main0_in in [[stage_in]], constant UBO& _28 [[buffer(0)]], texture2d<float> texture1 [[texture(0)]], texture2d<float> texture2 [[texture(1)]], texture2d<float> texture3 [[texture(2)]], texture2d<float> texture4 [[texture(3)]], texture2d<float> texture5 [[texture(4)]], texture2d<float> texture6 [[texture(5)]], texture2d<float> texture7 [[texture(6)]], texture2d<float> texture8 [[texture(7)]], texture2d<float> texture9 [[texture(8)]], texture2d<float> texture10 [[texture(9)]], texture2d<float> texture11 [[texture(10)]], texture2d<float> texture12 [[texture(11)]], texture2d<float> texture13 [[texture(12)]], texture2d<float> texture14 [[texture(13)]], texture2d<float> texture15 [[texture(14)]], texture2d<float> texture16 [[texture(15)]], sampler texture1Smplr [[sampler(0)]], sampler texture2Smplr [[sampler(1)]], sampler texture3Smplr [[sampler(2)]], sampler texture4Smplr [[sampler(3)]], sampler texture5Smplr [[sampler(4)]], sampler texture6Smplr [[sampler(5)]], sampler texture7Smplr [[sampler(6)]], sampler texture8Smplr [[sampler(7)]], sampler texture9Smplr [[sampler(8)]], sampler texture10Smplr [[sampler(9)]], sampler texture11Smplr [[sampler(10)]], sampler texture12Smplr [[sampler(11)]], sampler texture13Smplr [[sampler(12)]], sampler texture14Smplr [[sampler(13)]], sampler texture15Smplr [[sampler(14)]], sampler texture16Smplr [[sampler(15)]])
 {
-    main0_out out = {};
+ )",
+R"(   main0_out out = {};
     if (_28.onlyTexture != 0u)
     {
         out.FragColor = calculateAllTextures(_28, texture1, texture1Smplr, in.TexCoord, texture2, texture2Smplr, texture3, texture3Smplr, texture4, texture4Smplr, texture5, texture5Smplr, texture6, texture6Smplr, texture7, texture7Smplr, texture8, texture8Smplr, texture9, texture9Smplr, texture10, texture10Smplr, texture11, texture11Smplr, texture12, texture12Smplr, texture13, texture13Smplr, texture14, texture14Smplr, texture15, texture15Smplr, texture16, texture16Smplr);
@@ -9403,10 +9479,11 @@ fragment main0_out main0(main0_in in [[stage_in]], constant UBO& _28 [[buffer(0)
     return out;
 }
 
-)"
-;
+)",
+};
+static const AtlasPackedShaderSource TEXTURE_FRAG = {TEXTURE_FRAG_PARTS, 2};
 
-static const char* TEXTURE_VERT =
+static const char* const TEXTURE_VERT_PARTS[] = {
 R"(#include <metal_stdlib>
 #include <simd/simd.h>
 
@@ -9443,10 +9520,11 @@ vertex main0_out main0(main0_in in [[stage_in]], constant UBO& _13 [[buffer(0)]]
     return out;
 }
 
-)"
-;
+)",
+};
+static const AtlasPackedShaderSource TEXTURE_VERT = {TEXTURE_VERT_PARTS, 1};
 
-static const char* TEXT_FRAG =
+static const char* const TEXT_FRAG_PARTS[] = {
 R"(#include <metal_stdlib>
 #include <simd/simd.h>
 
@@ -9475,10 +9553,11 @@ fragment main0_out main0(main0_in in [[stage_in]], constant TextColor& _30 [[buf
     return out;
 }
 
-)"
-;
+)",
+};
+static const AtlasPackedShaderSource TEXT_FRAG = {TEXT_FRAG_PARTS, 1};
 
-static const char* TEXT_VERT =
+static const char* const TEXT_VERT_PARTS[] = {
 R"(#include <metal_stdlib>
 #include <simd/simd.h>
 
@@ -9508,10 +9587,11 @@ vertex main0_out main0(main0_in in [[stage_in]], constant Uniforms& _19 [[buffer
     return out;
 }
 
-)"
-;
+)",
+};
+static const AtlasPackedShaderSource TEXT_VERT = {TEXT_VERT_PARTS, 1};
 
-static const char* UPSAMPLE_FRAG =
+static const char* const UPSAMPLE_FRAG_PARTS[] = {
 R"(#include <metal_stdlib>
 #include <simd/simd.h>
 
@@ -9584,10 +9664,11 @@ fragment main0_out main0(main0_in in [[stage_in]], constant Params& _13 [[buffer
     out.upsample = float4(upsampleColor, 1.0);
     return out;
 }
-)"
-;
+)",
+};
+static const AtlasPackedShaderSource UPSAMPLE_FRAG = {UPSAMPLE_FRAG_PARTS, 1};
 
-static const char* VOLUMETRIC_FRAG =
+static const char* const VOLUMETRIC_FRAG_PARTS[] = {
 R"(#pragma clang diagnostic ignored "-Wmissing-prototypes"
 
 #include <metal_stdlib>
@@ -9687,10 +9768,11 @@ fragment main0_out main0(main0_in in [[stage_in]], constant Sun& _21 [[buffer(0)
     out.FragColor = float4(rays, 1.0);
     return out;
 }
-)"
-;
+)",
+};
+static const AtlasPackedShaderSource VOLUMETRIC_FRAG = {VOLUMETRIC_FRAG_PARTS, 1};
 
-static const char* VOLUMETRIC_VERT =
+static const char* const VOLUMETRIC_VERT_PARTS[] = {
 R"(#include <metal_stdlib>
 #include <simd/simd.h>
 
@@ -9715,9 +9797,8 @@ vertex main0_out main0(main0_in in [[stage_in]])
     out.TexCoords = in.aTexCoords;
     return out;
 }
-)"
-;
-
-/// @endcond
+)",
+};
+static const AtlasPackedShaderSource VOLUMETRIC_VERT = {VOLUMETRIC_VERT_PARTS, 1};
 
 #endif // ATLAS_GENERATED_SHADERS_H

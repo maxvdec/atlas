@@ -12,6 +12,7 @@
 #include <cctype>
 #include <cstdlib>
 #include <cstdint>
+#include <cstddef>
 #include <cstring>
 #include <glad/glad.h>
 #include <memory>
@@ -28,6 +29,58 @@
 #endif
 
 namespace opal {
+
+const char *packedShaderSource(const char *const *parts, std::size_t count) {
+    if (parts == nullptr || count == 0) {
+        return "";
+    }
+
+    using OwnedShaderSource = std::unique_ptr<char, decltype(&std::free)>;
+    struct CacheEntry {
+        const char *const *parts;
+        std::size_t count;
+        OwnedShaderSource joined;
+    };
+
+    static std::vector<CacheEntry> cache;
+
+    for (const auto &entry : cache) {
+        if (entry.parts == parts && entry.count == count) {
+            return entry.joined.get();
+        }
+    }
+
+    std::size_t totalLength = 0;
+    for (std::size_t i = 0; i < count; ++i) {
+        if (parts[i] != nullptr) {
+            totalLength += std::strlen(parts[i]);
+        }
+    }
+
+    char *joined =
+        static_cast<char *>(std::malloc((totalLength + 1) * sizeof(char)));
+    if (joined == nullptr) {
+        throw std::bad_alloc();
+    }
+
+    std::size_t offset = 0;
+    for (std::size_t i = 0; i < count; ++i) {
+        if (parts[i] == nullptr) {
+            continue;
+        }
+        std::size_t partLength = std::strlen(parts[i]);
+        std::memcpy(joined + offset, parts[i], partLength);
+        offset += partLength;
+    }
+    joined[offset] = '\0';
+
+    cache.push_back(CacheEntry{
+        parts,
+        count,
+        OwnedShaderSource(joined, &std::free),
+    });
+    return cache.back().joined.get();
+}
 
 #ifdef OPENGL
 uint Shader::getGLShaderType(ShaderType type) {
