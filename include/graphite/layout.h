@@ -12,6 +12,7 @@
 
 #include "atlas/units.h"
 #include <atlas/component.h>
+#include <algorithm>
 #include <vector>
 
 enum class ElementAlignment {
@@ -19,6 +20,23 @@ enum class ElementAlignment {
     Center,
     Bottom,
 };
+
+enum class LayoutAnchor {
+    TopLeft,
+    TopCenter,
+    TopRight,
+    CenterLeft,
+    Center,
+    CenterRight,
+    BottomLeft,
+    BottomCenter,
+    BottomRight,
+};
+
+namespace graphite {
+Position2d getAnchoredTopLeft(Position2d position, Size2d size,
+                              LayoutAnchor anchor);
+} // namespace graphite
 
 class Column : public UIObject {
   public:
@@ -40,6 +58,8 @@ class Column : public UIObject {
     Size2d padding{.width = 0.0f, .height = 0.0f};
     std::vector<UIObject *> children;
     Position2d position;
+    ElementAlignment alignment = ElementAlignment::Top;
+    LayoutAnchor anchor = LayoutAnchor::TopLeft;
 
     void setViewMatrix(const glm::mat4 &view) override;
     void setProjectionMatrix(const glm::mat4 &projection) override;
@@ -49,14 +69,24 @@ class Column : public UIObject {
 
     Size2d getSize() const override {
         float width = 0.0f;
-        float totalHeight =
-            (padding.height * 2) + (spacing * (children.size() - 1));
-        for (const auto &child : children) {
+        float totalHeight = padding.height * 2.0f;
+        bool hasChild = false;
+        for (const auto *child : children) {
+            if (child == nullptr) {
+                continue;
+            }
             Size2d childSize = child->getSize();
             width = std::max(width, childSize.width);
             totalHeight += childSize.height;
+            if (hasChild) {
+                totalHeight += spacing;
+            }
+            hasChild = true;
         }
-        return Size2d(width + (padding.width * 2), totalHeight);
+        return Size2d{
+            .width = std::max(width + (padding.width * 2.0f), maxSize.width),
+            .height = std::max(totalHeight, maxSize.height),
+        };
     }
 
     Position2d getScreenPosition() const override { return position; }
@@ -91,6 +121,8 @@ class Row : public UIObject {
     Size2d padding{.width = 0.0f, .height = 0.0f};
     std::vector<UIObject *> children;
     Position2d position;
+    ElementAlignment alignment = ElementAlignment::Center;
+    LayoutAnchor anchor = LayoutAnchor::TopLeft;
 
     void setViewMatrix(const glm::mat4 &view) override;
     void setProjectionMatrix(const glm::mat4 &projection) override;
@@ -101,20 +133,25 @@ class Row : public UIObject {
     Size2d getSize() const override {
         float totalWidth = padding.width * 2.0f;
         float maxHeight = 0.0f;
+        bool hasChild = false;
 
-        if (!children.empty()) {
-            totalWidth += spacing * (children.size() - 1);
-        }
-
-        for (const auto &child : children) {
+        for (const auto *child : children) {
+            if (child == nullptr) {
+                continue;
+            }
             Size2d childSize = child->getSize();
+            if (hasChild) {
+                totalWidth += spacing;
+            }
             totalWidth += childSize.width;
             maxHeight = std::max(maxHeight, childSize.height);
+            hasChild = true;
         }
 
         return Size2d{
-            .width = totalWidth,
-            .height = maxHeight + (padding.height * 2.0f),
+            .width = std::max(totalWidth, maxSize.width),
+            .height = std::max(maxHeight + (padding.height * 2.0f),
+                               maxSize.height),
         };
     }
 

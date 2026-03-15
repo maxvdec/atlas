@@ -158,7 +158,7 @@ int main() {
     Window window({.title = "My Window",
                    .width = 1600,
                    .height = 1200,
-                   .renderScale = 0.5f,
+                   .renderScale = 1.f,
                    .mouseCaptured = true,
                    .multisampling = false,
                    .ssaoScale = 0.4f});
