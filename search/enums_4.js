@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['frontface_0',['FrontFace',['../namespaceopal.html#a5896ae64717f16fffbc1f783a79aa1fc',1,'opal']]]
+  ['elementalignment_0',['ElementAlignment',['../layout_8h.html#afd416f663ad83e0a91defe56d7dfd0a2',1,'layout.h']]]
 ];

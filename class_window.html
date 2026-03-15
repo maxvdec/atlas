@@ -53,7 +53,7 @@ MathJax.Hub.Config({
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 7</span>
+   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 8</span>
    </div>
    <div id="projectbrief">Build everything, and beyond</div>
   </td>
@@ -150,6 +150,9 @@ Public Member Functions</h2></td></tr>
 <tr class="memdesc:aafbcf94a1e73295dfae7c9cdba2e5dc3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets the window to fullscreen on a specific monitor.  <br /></td></tr>
 <tr class="memitem:abee4609843289470a1ccbc46a86f32e9" id="r_abee4609843289470a1ccbc46a86f32e9"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#abee4609843289470a1ccbc46a86f32e9">setWindowed</a> (const <a class="el" href="struct_window_configuration.html">WindowConfiguration</a> &amp;config)</td></tr>
 <tr class="memdesc:abee4609843289470a1ccbc46a86f32e9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets the window to windowed mode with new configuration.  <br /></td></tr>
+<tr class="memitem:ababa72ceb8138cc1aaee195893b866b5" id="r_ababa72ceb8138cc1aaee195893b866b5"><td class="memItemLeft">std::vector&lt; <a class="el" href="struct_controller_i_d.html">ControllerID</a> &gt;&#160;</td><td class="memItemRight"><a class="el" href="#ababa72ceb8138cc1aaee195893b866b5">getControllers</a> () const</td></tr>
+<tr class="memitem:a7937c3f4af8b448c06721d621968d5b0" id="r_a7937c3f4af8b448c06721d621968d5b0"><td class="memItemLeft"><a class="el" href="window_8h.html#a56d544f55b2cf1ac5ed734217401de84">Controller</a>&#160;</td><td class="memItemRight"><a class="el" href="#a7937c3f4af8b448c06721d621968d5b0">getController</a> (const <a class="el" href="struct_controller_i_d.html">ControllerID</a> &amp;controllerID) const</td></tr>
+<tr class="memitem:ac251042c30be49c19d4629e413b860d4" id="r_ac251042c30be49c19d4629e413b860d4"><td class="memItemLeft"><a class="el" href="struct_joystick.html">Joystick</a>&#160;</td><td class="memItemRight"><a class="el" href="#ac251042c30be49c19d4629e413b860d4">getJoystick</a> (const <a class="el" href="struct_controller_i_d.html">ControllerID</a> &amp;joystickID) const</td></tr>
 <tr class="memitem:a884249b8d0ff2d1f1c1c0b3c2a2ca7ee" id="r_a884249b8d0ff2d1f1c1c0b3c2a2ca7ee"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a884249b8d0ff2d1f1c1c0b3c2a2ca7ee">addObject</a> (<a class="el" href="class_renderable.html">Renderable</a> *object)</td></tr>
 <tr class="memdesc:a884249b8d0ff2d1f1c1c0b3c2a2ca7ee"><td class="mdescLeft">&#160;</td><td class="mdescRight">Adds a renderable object to the window.  <br /></td></tr>
 <tr class="memitem:a1ffe2fa90a1b62c2131ca177137b62fa" id="r_a1ffe2fa90a1b62c2131ca177137b62fa"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a1ffe2fa90a1b62c2131ca177137b62fa">removeObject</a> (<a class="el" href="class_renderable.html">Renderable</a> *object)</td></tr>
@@ -168,10 +171,19 @@ Public Member Functions</h2></td></tr>
 <tr class="memdesc:ac693d92bb6f52273932549cd121a5755"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets the scene for the window.  <br /></td></tr>
 <tr class="memitem:a3eceaf8292cf3e29e928c31218e5b0c8" id="r_a3eceaf8292cf3e29e928c31218e5b0c8"><td class="memItemLeft">float&#160;</td><td class="memItemRight"><a class="el" href="#a3eceaf8292cf3e29e928c31218e5b0c8">getTime</a> ()</td></tr>
 <tr class="memdesc:a3eceaf8292cf3e29e928c31218e5b0c8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Gets the current time since window creation.  <br /></td></tr>
-<tr class="memitem:a934998dda7f1a9c513c47684753075fe" id="r_a934998dda7f1a9c513c47684753075fe"><td class="memItemLeft">bool&#160;</td><td class="memItemRight"><a class="el" href="#a934998dda7f1a9c513c47684753075fe">isKeyPressed</a> (<a class="el" href="input_8h.html#a9479d299e1852e6140dcca1f405868ab">Key</a> key)</td></tr>
-<tr class="memdesc:a934998dda7f1a9c513c47684753075fe"><td class="mdescLeft">&#160;</td><td class="mdescRight">Checks if a key is currently pressed.  <br /></td></tr>
-<tr class="memitem:a5d64d3322428400dd343895ccfeaeb0a" id="r_a5d64d3322428400dd343895ccfeaeb0a"><td class="memItemLeft">bool&#160;</td><td class="memItemRight"><a class="el" href="#a5d64d3322428400dd343895ccfeaeb0a">isKeyClicked</a> (<a class="el" href="input_8h.html#a9479d299e1852e6140dcca1f405868ab">Key</a> key)</td></tr>
-<tr class="memdesc:a5d64d3322428400dd343895ccfeaeb0a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Checks if a key was clicked (pressed and released) this frame.  <br /></td></tr>
+<tr class="memitem:a7f38dda1e0318725f9e4e6e56dce63b5" id="r_a7f38dda1e0318725f9e4e6e56dce63b5"><td class="memItemLeft">bool&#160;</td><td class="memItemRight"><a class="el" href="#a7f38dda1e0318725f9e4e6e56dce63b5">isKeyActive</a> (<a class="el" href="atlas_2input_8h.html#a9479d299e1852e6140dcca1f405868ab">Key</a> key)</td></tr>
+<tr class="memdesc:a7f38dda1e0318725f9e4e6e56dce63b5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Checks if a key is currently pressed.  <br /></td></tr>
+<tr class="memitem:a934998dda7f1a9c513c47684753075fe" id="r_a934998dda7f1a9c513c47684753075fe"><td class="memItemLeft">bool&#160;</td><td class="memItemRight"><a class="el" href="#a934998dda7f1a9c513c47684753075fe">isKeyPressed</a> (<a class="el" href="atlas_2input_8h.html#a9479d299e1852e6140dcca1f405868ab">Key</a> key)</td></tr>
+<tr class="memdesc:a934998dda7f1a9c513c47684753075fe"><td class="mdescLeft">&#160;</td><td class="mdescRight">Checks if a key was clicked (pressed and released) this frame.  <br /></td></tr>
+<tr class="memitem:a99496b334a8b30dca580c14b35f2b01a" id="r_a99496b334a8b30dca580c14b35f2b01a"><td class="memItemLeft">bool&#160;</td><td class="memItemRight"><a class="el" href="#a99496b334a8b30dca580c14b35f2b01a">isMouseButtonActive</a> (<a class="el" href="atlas_2input_8h.html#a826ef52e881054fee6a2055e382950b4">MouseButton</a> button)</td></tr>
+<tr class="memitem:a08ec73b3ba8b25001be9e569531816f1" id="r_a08ec73b3ba8b25001be9e569531816f1"><td class="memItemLeft">bool&#160;</td><td class="memItemRight"><a class="el" href="#a08ec73b3ba8b25001be9e569531816f1">isMouseButtonPressed</a> (<a class="el" href="atlas_2input_8h.html#a826ef52e881054fee6a2055e382950b4">MouseButton</a> button)</td></tr>
+<tr class="memitem:a41db0761c691e678c26049150364ef19" id="r_a41db0761c691e678c26049150364ef19"><td class="memItemLeft">const std::string &amp;&#160;</td><td class="memItemRight"><a class="el" href="#a41db0761c691e678c26049150364ef19">getTextInput</a> () const</td></tr>
+<tr class="memitem:a98021bb1e9a7c10fe51e23468499e8ad" id="r_a98021bb1e9a7c10fe51e23468499e8ad"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a98021bb1e9a7c10fe51e23468499e8ad">startTextInput</a> ()</td></tr>
+<tr class="memitem:a38bb50d0b88fcf5954c74712005d25c3" id="r_a38bb50d0b88fcf5954c74712005d25c3"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a38bb50d0b88fcf5954c74712005d25c3">stopTextInput</a> ()</td></tr>
+<tr class="memitem:a2a264adc3174b15820d7333c243ab57f" id="r_a2a264adc3174b15820d7333c243ab57f"><td class="memItemLeft">bool&#160;</td><td class="memItemRight"><a class="el" href="#a2a264adc3174b15820d7333c243ab57f">isTextInputActive</a> () const</td></tr>
+<tr class="memitem:aee17e1866c8d94f143b86d65a0a306f9" id="r_aee17e1866c8d94f143b86d65a0a306f9"><td class="memItemLeft">bool&#160;</td><td class="memItemRight"><a class="el" href="#aee17e1866c8d94f143b86d65a0a306f9">isControllerButtonPressed</a> (int controllerID, int buttonIndex)</td></tr>
+<tr class="memitem:ac17a01633825dd3d81b8d016eab12d85" id="r_ac17a01633825dd3d81b8d016eab12d85"><td class="memItemLeft">float&#160;</td><td class="memItemRight"><a class="el" href="#ac17a01633825dd3d81b8d016eab12d85">getControllerAxisValue</a> (int controllerID, int axisIndex)</td></tr>
+<tr class="memitem:afea6208c575f32ca13371c68c47d677c" id="r_afea6208c575f32ca13371c68c47d677c"><td class="memItemLeft">std::pair&lt; float, float &gt;&#160;</td><td class="memItemRight"><a class="el" href="#afea6208c575f32ca13371c68c47d677c">getControllerAxisPairValue</a> (int controllerID, int axisIndexX, int axisIndexY)</td></tr>
 <tr class="memitem:a82a904e9db9c0aa3e6e235da92a79ab4" id="r_a82a904e9db9c0aa3e6e235da92a79ab4"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a82a904e9db9c0aa3e6e235da92a79ab4">releaseMouse</a> ()</td></tr>
 <tr class="memdesc:a82a904e9db9c0aa3e6e235da92a79ab4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Releases mouse capture, allowing the cursor to move freely.  <br /></td></tr>
 <tr class="memitem:af9987c317f1af799d198ddb0ecd9e72b" id="r_af9987c317f1af799d198ddb0ecd9e72b"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#af9987c317f1af799d198ddb0ecd9e72b">captureMouse</a> ()</td></tr>
@@ -215,6 +227,12 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:abee3700204e50e18c67777f549121480" id="r_abee3700204e50e18c67777f549121480"><td class="memItemLeft">bool&#160;</td><td class="memItemRight"><a class="el" href="#abee3700204e50e18c67777f549121480">isSSREnabled</a> () const</td></tr>
 <tr class="memitem:aa847ce692de563d6a8481d7ff5c8d78f" id="r_aa847ce692de563d6a8481d7ff5c8d78f"><td class="memItemLeft"><a class="el" href="struct_bounding_box.html">BoundingBox</a>&#160;</td><td class="memItemRight"><a class="el" href="#aa847ce692de563d6a8481d7ff5c8d78f">getSceneBoundingBox</a> ()</td></tr>
 <tr class="memdesc:aa847ce692de563d6a8481d7ff5c8d78f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Computes the world-space bounds that enclose visible scene geometry.  <br /></td></tr>
+<tr class="memitem:abcd5c23df862cc71dc750c691a9677d5" id="r_abcd5c23df862cc71dc750c691a9677d5"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#abcd5c23df862cc71dc750c691a9677d5">addInputAction</a> (const std::shared_ptr&lt; <a class="el" href="class_input_action.html">InputAction</a> &gt; &amp;action)</td></tr>
+<tr class="memitem:a57a4d28e6f3a4d3aa0db929ab2b4ada7" id="r_a57a4d28e6f3a4d3aa0db929ab2b4ada7"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a57a4d28e6f3a4d3aa0db929ab2b4ada7">resetInputActions</a> ()</td></tr>
+<tr class="memitem:acf27a294d6e8f7af40efd3de2d669556" id="r_acf27a294d6e8f7af40efd3de2d669556"><td class="memItemLeft">std::shared_ptr&lt; <a class="el" href="class_input_action.html">InputAction</a> &gt;&#160;</td><td class="memItemRight"><a class="el" href="#acf27a294d6e8f7af40efd3de2d669556">getInputAction</a> (const std::string &amp;name) const</td></tr>
+<tr class="memitem:a8ebec1ead7b97c36604ecfef95b7a85c" id="r_a8ebec1ead7b97c36604ecfef95b7a85c"><td class="memItemLeft">bool&#160;</td><td class="memItemRight"><a class="el" href="#a8ebec1ead7b97c36604ecfef95b7a85c">isActionTriggered</a> (const std::string &amp;actionName)</td></tr>
+<tr class="memitem:ae65fce399bb25c03aa13749aa62dcbfe" id="r_ae65fce399bb25c03aa13749aa62dcbfe"><td class="memItemLeft">bool&#160;</td><td class="memItemRight"><a class="el" href="#ae65fce399bb25c03aa13749aa62dcbfe">isActionCurrentlyActive</a> (const std::string &amp;actionName)</td></tr>
+<tr class="memitem:a42a1c074bd5f6037c6e7209aa559b719" id="r_a42a1c074bd5f6037c6e7209aa559b719"><td class="memItemLeft"><a class="el" href="struct_axis_packet.html">AxisPacket</a>&#160;</td><td class="memItemRight"><a class="el" href="#a42a1c074bd5f6037c6e7209aa559b719">getAxisActionValue</a> (const std::string &amp;actionName)</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-pub-static-methods" class="groupheader"><a id="pub-static-methods" name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
@@ -281,6 +299,8 @@ Public Attributes</h2></td></tr>
 <tr class="memdesc:a5cf5dd859da05a2ba8903f28f5cfabde"><td class="mdescLeft">&#160;</td><td class="mdescRight">Whether DDGI lighting is enabled on supported platforms.  <br /></td></tr>
 <tr class="memitem:a971d29b383ffdb467710cbc034344b50" id="r_a971d29b383ffdb467710cbc034344b50"><td class="memItemLeft">bool&#160;</td><td class="memItemRight"><a class="el" href="#a971d29b383ffdb467710cbc034344b50">usePathTracing</a> = false</td></tr>
 <tr class="memdesc:a971d29b383ffdb467710cbc034344b50"><td class="mdescLeft">&#160;</td><td class="mdescRight">Whether the path tracing pass is currently enabled.  <br /></td></tr>
+<tr class="memitem:a71487d5bd56d7e3230618be402e726f8" id="r_a71487d5bd56d7e3230618be402e726f8"><td class="memItemLeft">std::shared_ptr&lt; <a class="el" href="classphoton_1_1_global_illumination.html">photon::GlobalIllumination</a> &gt;&#160;</td><td class="memItemRight"><a class="el" href="#a71487d5bd56d7e3230618be402e726f8">ddgiSystem</a></td></tr>
+<tr class="memitem:a939c36bfe9d9c1cf1c870171f4d7f2ca" id="r_a939c36bfe9d9c1cf1c870171f4d7f2ca"><td class="memItemLeft">std::shared_ptr&lt; <a class="el" href="classphoton_1_1_path_tracing.html">photon::PathTracing</a> &gt;&#160;</td><td class="memItemRight"><a class="el" href="#a939c36bfe9d9c1cf1c870171f4d7f2ca">pathTracer</a></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-pub-static-attribs" class="groupheader"><a id="pub-static-attribs" name="pub-static-attribs"></a>
 Static Public Attributes</h2></td></tr>
@@ -318,16 +338,16 @@ Example</h2>
 <div class="line">scene.addObject(&amp;obj);</div>
 <div class="line"><span class="comment">// Run the main window loop</span></div>
 <div class="line">window.run();</div>
-<div class="ttc" id="aclass_camera_html"><div class="ttname"><a href="class_camera.html">Camera</a></div><div class="ttdoc">Class representing a camera in 3D space, capable of generating view and projection matrices....</div><div class="ttdef"><b>Definition</b> <a href="camera_8h_source.html#l00040">camera.h:40</a></div></div>
+<div class="ttc" id="aclass_camera_html"><div class="ttname"><a href="class_camera.html">Camera</a></div><div class="ttdoc">Class representing a camera in 3D space, capable of generating view and projection matrices....</div><div class="ttdef"><b>Definition</b> <a href="camera_8h_source.html#l00041">camera.h:41</a></div></div>
 <div class="ttc" id="aclass_scene_html"><div class="ttname"><a href="class_scene.html">Scene</a></div><div class="ttdoc">Abstract class that represents a 3D scene. It contains all lights and objects that are going to be re...</div><div class="ttdef"><b>Definition</b> <a href="scene_8h_source.html#l00143">scene.h:143</a></div></div>
 <div class="ttc" id="aclass_window_html_a68f992d1a0889f976d886d36a424aeda"><div class="ttname"><a href="#a68f992d1a0889f976d886d36a424aeda">Window::Window</a></div><div class="ttdeci">Window(const WindowConfiguration &amp;config)</div><div class="ttdoc">Constructs a window with the specified configuration.</div></div>
-<div class="ttc" id="aclass_window_html_ac9dbe2a378024e3a3c417b4cb50adbb3"><div class="ttname"><a href="#ac9dbe2a378024e3a3c417b4cb50adbb3">Window::CoreObject</a></div><div class="ttdeci">friend class CoreObject</div><div class="ttdef"><b>Definition</b> <a href="window_8h_source.html#l00745">window.h:745</a></div></div>
-<div class="ttc" id="astruct_window_configuration_html"><div class="ttname"><a href="struct_window_configuration.html">WindowConfiguration</a></div><div class="ttdoc">Structure representing the configuration options for creating a window.</div><div class="ttdef"><b>Definition</b> <a href="window_8h_source.html#l00046">window.h:46</a></div></div>
-<div class="ttc" id="astruct_window_configuration_html_a4df560282200968d1957c90a801959be"><div class="ttname"><a href="struct_window_configuration.html#a4df560282200968d1957c90a801959be">WindowConfiguration::width</a></div><div class="ttdeci">int width</div><div class="ttdoc">The width of the window in pixels.</div><div class="ttdef"><b>Definition</b> <a href="window_8h_source.html#l00056">window.h:56</a></div></div>
-<div class="ttc" id="astruct_window_configuration_html_aa56b982e392a5e2c45854bdc86af277f"><div class="ttname"><a href="struct_window_configuration.html#aa56b982e392a5e2c45854bdc86af277f">WindowConfiguration::height</a></div><div class="ttdeci">int height</div><div class="ttdoc">The height of the window in pixels.</div><div class="ttdef"><b>Definition</b> <a href="window_8h_source.html#l00061">window.h:61</a></div></div>
-<div class="ttc" id="astruct_window_configuration_html_abf7b5dd301a90c647a15b2e5168c7d66"><div class="ttname"><a href="struct_window_configuration.html#abf7b5dd301a90c647a15b2e5168c7d66">WindowConfiguration::title</a></div><div class="ttdeci">std::string title</div><div class="ttdoc">The title of the window.</div><div class="ttdef"><b>Definition</b> <a href="window_8h_source.html#l00051">window.h:51</a></div></div>
+<div class="ttc" id="aclass_window_html_ac9dbe2a378024e3a3c417b4cb50adbb3"><div class="ttname"><a href="#ac9dbe2a378024e3a3c417b4cb50adbb3">Window::CoreObject</a></div><div class="ttdeci">friend class CoreObject</div><div class="ttdef"><b>Definition</b> <a href="window_8h_source.html#l00894">window.h:894</a></div></div>
+<div class="ttc" id="astruct_window_configuration_html"><div class="ttname"><a href="struct_window_configuration.html">WindowConfiguration</a></div><div class="ttdoc">Structure representing the configuration options for creating a window.</div><div class="ttdef"><b>Definition</b> <a href="window_8h_source.html#l00048">window.h:48</a></div></div>
+<div class="ttc" id="astruct_window_configuration_html_a4df560282200968d1957c90a801959be"><div class="ttname"><a href="struct_window_configuration.html#a4df560282200968d1957c90a801959be">WindowConfiguration::width</a></div><div class="ttdeci">int width</div><div class="ttdoc">The width of the window in pixels.</div><div class="ttdef"><b>Definition</b> <a href="window_8h_source.html#l00058">window.h:58</a></div></div>
+<div class="ttc" id="astruct_window_configuration_html_aa56b982e392a5e2c45854bdc86af277f"><div class="ttname"><a href="struct_window_configuration.html#aa56b982e392a5e2c45854bdc86af277f">WindowConfiguration::height</a></div><div class="ttdeci">int height</div><div class="ttdoc">The height of the window in pixels.</div><div class="ttdef"><b>Definition</b> <a href="window_8h_source.html#l00063">window.h:63</a></div></div>
+<div class="ttc" id="astruct_window_configuration_html_abf7b5dd301a90c647a15b2e5168c7d66"><div class="ttname"><a href="struct_window_configuration.html#abf7b5dd301a90c647a15b2e5168c7d66">WindowConfiguration::title</a></div><div class="ttdeci">std::string title</div><div class="ttdoc">The title of the window.</div><div class="ttdef"><b>Definition</b> <a href="window_8h_source.html#l00053">window.h:53</a></div></div>
 </div><!-- fragment --> 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00241">241</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00350">350</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
 </div><a name="doc-constructors" id="doc-constructors"></a><h2 id="header-doc-constructors" class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="a68f992d1a0889f976d886d36a424aeda" name="a68f992d1a0889f976d886d36a424aeda"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a68f992d1a0889f976d886d36a424aeda">&#9670;&#160;</a></span>Window()</h2>
@@ -399,8 +419,38 @@ Example</h2>
 
 <p>Activates debug mode for the window. </p>
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00458">458</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  458</span>{ this-&gt;debug = <span class="keyword">true</span>; }</div>
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00583">583</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  583</span>{ this-&gt;debug = <span class="keyword">true</span>; }</div>
+</div><!-- fragment -->
+</div>
+</div>
+<a id="abcd5c23df862cc71dc750c691a9677d5" name="abcd5c23df862cc71dc750c691a9677d5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#abcd5c23df862cc71dc750c691a9677d5">&#9670;&#160;</a></span>addInputAction()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void Window::addInputAction </td>
+          <td>(</td>
+          <td class="paramtype">const std::shared_ptr&lt; <a class="el" href="class_input_action.html">InputAction</a> &gt; &amp;</td>          <td class="paramname"><span class="paramname"><em>action</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel inline">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00727">727</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  727</span>                                                                  {</div>
+<div class="line"><span class="lineno">  728</span>        inputActions.push_back(action);</div>
+<div class="line"><span class="lineno">  729</span>    }</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -524,7 +574,7 @@ Example</h2>
   </dd>
 </dl>
 
-<p class="reference">References <a class="el" href="window_8h_source.html#l00746">RenderTarget</a>.</p>
+<p class="reference">References <a class="el" href="window_8h_source.html#l00895">RenderTarget</a>.</p>
 
 </div>
 </div>
@@ -610,8 +660,8 @@ Example</h2>
 
 <p>Deactivates debug mode for the window. </p>
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00463">463</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  463</span>{ this-&gt;debug = <span class="keyword">false</span>; }</div>
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00588">588</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  588</span>{ this-&gt;debug = <span class="keyword">false</span>; }</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -638,8 +688,8 @@ Example</h2>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00540">540</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  540</span>{ this-&gt;useSSR = enabled; }</div>
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00665">665</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  665</span>{ this-&gt;useSSR = enabled; }</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -671,6 +721,23 @@ Example</h2>
 
 </div>
 </div>
+<a id="a42a1c074bd5f6037c6e7209aa559b719" name="a42a1c074bd5f6037c6e7209aa559b719"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a42a1c074bd5f6037c6e7209aa559b719">&#9670;&#160;</a></span>getAxisActionValue()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="struct_axis_packet.html">AxisPacket</a> Window::getAxisActionValue </td>
+          <td>(</td>
+          <td class="paramtype">const std::string &amp;</td>          <td class="paramname"><span class="paramname"><em>actionName</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <a id="a44bd50953bdd8e5c40a690aaa9842fea" name="a44bd50953bdd8e5c40a690aaa9842fea"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a44bd50953bdd8e5c40a690aaa9842fea">&#9670;&#160;</a></span>getCamera()</h2>
 
@@ -697,9 +764,90 @@ Example</h2>
 <p>Gets the current camera. </p>
 <dl class="section return"><dt>Returns</dt><dd>(Camera*) Pointer to the current camera. </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00434">434</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  434</span>{ <span class="keywordflow">return</span> camera; }</div>
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00560">560</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  560</span>{ <span class="keywordflow">return</span> camera; }</div>
 </div><!-- fragment -->
+</div>
+</div>
+<a id="a7937c3f4af8b448c06721d621968d5b0" name="a7937c3f4af8b448c06721d621968d5b0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7937c3f4af8b448c06721d621968d5b0">&#9670;&#160;</a></span>getController()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="window_8h.html#a56d544f55b2cf1ac5ed734217401de84">Controller</a> Window::getController </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="struct_controller_i_d.html">ControllerID</a> &amp;</td>          <td class="paramname"><span class="paramname"><em>controllerID</em></span></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="afea6208c575f32ca13371c68c47d677c" name="afea6208c575f32ca13371c68c47d677c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#afea6208c575f32ca13371c68c47d677c">&#9670;&#160;</a></span>getControllerAxisPairValue()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::pair&lt; float, float &gt; Window::getControllerAxisPairValue </td>
+          <td>(</td>
+          <td class="paramtype">int</td>          <td class="paramname"><span class="paramname"><em>controllerID</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int</td>          <td class="paramname"><span class="paramname"><em>axisIndexX</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int</td>          <td class="paramname"><span class="paramname"><em>axisIndexY</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="ac17a01633825dd3d81b8d016eab12d85" name="ac17a01633825dd3d81b8d016eab12d85"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac17a01633825dd3d81b8d016eab12d85">&#9670;&#160;</a></span>getControllerAxisValue()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">float Window::getControllerAxisValue </td>
+          <td>(</td>
+          <td class="paramtype">int</td>          <td class="paramname"><span class="paramname"><em>controllerID</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int</td>          <td class="paramname"><span class="paramname"><em>axisIndex</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="ababa72ceb8138cc1aaee195893b866b5" name="ababa72ceb8138cc1aaee195893b866b5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ababa72ceb8138cc1aaee195893b866b5">&#9670;&#160;</a></span>getControllers()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::vector&lt; <a class="el" href="struct_controller_i_d.html">ControllerID</a> &gt; Window::getControllers </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
 </div>
 </div>
 <a id="a212e7c7c5c70e88e51617bb20063563a" name="a212e7c7c5c70e88e51617bb20063563a"></a>
@@ -728,8 +876,8 @@ Example</h2>
 <p>Gets the current scene being rendered. </p>
 <dl class="section return"><dt>Returns</dt><dd>(Scene*) Pointer to the current scene. </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00428">428</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  428</span>{ <span class="keywordflow">return</span> currentScene; }</div>
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00554">554</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  554</span>{ <span class="keywordflow">return</span> currentScene; }</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -779,8 +927,8 @@ Example</h2>
 <p>Gets the delta time between frames. </p>
 <dl class="section return"><dt>Returns</dt><dd>(float) Delta time in seconds. </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00470">470</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  470</span>{ <span class="keywordflow">return</span> this-&gt;deltaTime; }</div>
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00595">595</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  595</span>{ <span class="keywordflow">return</span> this-&gt;deltaTime; }</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -809,11 +957,11 @@ Example</h2>
 
 <p>Returns the opal device instance for rendering. </p>
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00531">531</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  531</span>{ <span class="keywordflow">return</span> this-&gt;<a class="code hl_variable" href="#a9ee934fe903cd23d8dcd9735f8201b93">device</a>; }</div>
-<div class="ttc" id="aclass_window_html_a9ee934fe903cd23d8dcd9735f8201b93"><div class="ttname"><a href="#a9ee934fe903cd23d8dcd9735f8201b93">Window::device</a></div><div class="ttdeci">std::shared_ptr&lt; opal::Device &gt; device</div><div class="ttdoc">Shared rendering device used by the window.</div><div class="ttdef"><b>Definition</b> <a href="window_8h_source.html#l00581">window.h:581</a></div></div>
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00656">656</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  656</span>{ <span class="keywordflow">return</span> this-&gt;<a class="code hl_variable" href="#a9ee934fe903cd23d8dcd9735f8201b93">device</a>; }</div>
+<div class="ttc" id="aclass_window_html_a9ee934fe903cd23d8dcd9735f8201b93"><div class="ttname"><a href="#a9ee934fe903cd23d8dcd9735f8201b93">Window::device</a></div><div class="ttdeci">std::shared_ptr&lt; opal::Device &gt; device</div><div class="ttdoc">Shared rendering device used by the window.</div><div class="ttdef"><b>Definition</b> <a href="window_8h_source.html#l00706">window.h:706</a></div></div>
 </div><!-- fragment -->
-<p class="reference">References <a class="el" href="window_8h_source.html#l00581">device</a>.</p>
+<p class="reference">References <a class="el" href="window_8h_source.html#l00706">device</a>.</p>
 
 </div>
 </div>
@@ -843,8 +991,8 @@ Example</h2>
 <p>Gets the current frames per second. </p>
 <dl class="section return"><dt>Returns</dt><dd>(float) Frames per second value. </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00476">476</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  476</span>{ <span class="keywordflow">return</span> this-&gt;framesPerSecond; }</div>
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00601">601</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  601</span>{ <span class="keywordflow">return</span> this-&gt;framesPerSecond; }</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -874,10 +1022,62 @@ Example</h2>
 <p>Returns the lazily created deferred geometry buffer. </p>
 <dl class="section return"><dt>Returns</dt><dd>(RenderTarget*) Pointer to the G-buffer contents. </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00538">538</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  538</span>{ <span class="keywordflow">return</span> gBuffer.get(); }</div>
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00663">663</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  663</span>{ <span class="keywordflow">return</span> gBuffer.get(); }</div>
 </div><!-- fragment -->
-<p class="reference">References <a class="el" href="window_8h_source.html#l00746">RenderTarget</a>.</p>
+<p class="reference">References <a class="el" href="window_8h_source.html#l00895">RenderTarget</a>.</p>
+
+</div>
+</div>
+<a id="acf27a294d6e8f7af40efd3de2d669556" name="acf27a294d6e8f7af40efd3de2d669556"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#acf27a294d6e8f7af40efd3de2d669556">&#9670;&#160;</a></span>getInputAction()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::shared_ptr&lt; <a class="el" href="class_input_action.html">InputAction</a> &gt; Window::getInputAction </td>
+          <td>(</td>
+          <td class="paramtype">const std::string &amp;</td>          <td class="paramname"><span class="paramname"><em>name</em></span></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel inline">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00731">731</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  731</span>                                                                           {</div>
+<div class="line"><span class="lineno">  732</span>        <span class="keywordflow">for</span> (<span class="keyword">const</span> <span class="keyword">auto</span> &amp;action : inputActions) {</div>
+<div class="line"><span class="lineno">  733</span>            <span class="keywordflow">if</span> (action-&gt;name == name) {</div>
+<div class="line"><span class="lineno">  734</span>                <span class="keywordflow">return</span> action;</div>
+<div class="line"><span class="lineno">  735</span>            }</div>
+<div class="line"><span class="lineno">  736</span>        }</div>
+<div class="line"><span class="lineno">  737</span>        <span class="keywordflow">return</span> <span class="keyword">nullptr</span>;</div>
+<div class="line"><span class="lineno">  738</span>    }</div>
+</div><!-- fragment -->
+</div>
+</div>
+<a id="ac251042c30be49c19d4629e413b860d4" name="ac251042c30be49c19d4629e413b860d4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac251042c30be49c19d4629e413b860d4">&#9670;&#160;</a></span>getJoystick()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="struct_joystick.html">Joystick</a> Window::getJoystick </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="struct_controller_i_d.html">ControllerID</a> &amp;</td>          <td class="paramname"><span class="paramname"><em>joystickID</em></span></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
 
 </div>
 </div>
@@ -904,8 +1104,8 @@ Example</h2>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00521">521</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  521</span>{ <span class="keywordflow">return</span> this-&gt;metalUpscalingRatio; }</div>
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00646">646</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  646</span>{ <span class="keywordflow">return</span> this-&gt;metalUpscalingRatio; }</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -934,8 +1134,8 @@ Example</h2>
 
 <p>Returns the active internal render scale. </p>
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00514">514</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  514</span>{ <span class="keywordflow">return</span> this-&gt;renderScale; }</div>
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00639">639</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  639</span>{ <span class="keywordflow">return</span> this-&gt;renderScale; }</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -955,8 +1155,6 @@ Example</h2>
 </div><div class="memdoc">
 
 <p>Computes the world-space bounds that enclose visible scene geometry. </p>
-
-<p class="reference">References <a class="el" href="window_8h_source.html#l00752">Fluid</a>, and <a class="el" href="window_8h_source.html#l00746">RenderTarget</a>.</p>
 
 </div>
 </div>
@@ -986,14 +1184,16 @@ Example</h2>
 <p>Gets the framebuffer size of the window. </p>
 <dl class="section return"><dt>Returns</dt><dd>(<a class="el" href="struct_size2d.html" title="Structure representing 2D dimensions with width and height. Provides arithmetic operations and conver...">Size2d</a>) The width and height of the framebuffer. </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00447">447</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  447</span>                     {</div>
-<div class="line"><span class="lineno">  448</span>        <span class="keywordtype">int</span> fbw, fbh;</div>
-<div class="line"><span class="lineno">  449</span>        glfwGetFramebufferSize(<span class="keyword">static_cast&lt;</span>GLFWwindow *<span class="keyword">&gt;</span>(windowRef), &amp;fbw,</div>
-<div class="line"><span class="lineno">  450</span>                               &amp;fbh);</div>
-<div class="line"><span class="lineno">  451</span>        <span class="keywordflow">return</span> {<span class="keyword">static_cast&lt;</span><span class="keywordtype">float</span><span class="keyword">&gt;</span>(fbw), <span class="keyword">static_cast&lt;</span><span class="keywordtype">float</span><span class="keyword">&gt;</span>(fbh)};</div>
-<div class="line"><span class="lineno">  452</span>    }</div>
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00573">573</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  573</span>                     {</div>
+<div class="line"><span class="lineno">  574</span>        <span class="keywordtype">int</span> fbw, fbh;</div>
+<div class="line"><span class="lineno">  575</span>        <a class="code hl_function" href="windowing_8h.html#a36e976e65513d8035f9511cad63f59b0">atlasGetWindowSizeInPixels</a>(windowRef, &amp;fbw, &amp;fbh);</div>
+<div class="line"><span class="lineno">  576</span>        <span class="keywordflow">return</span> {<span class="keyword">static_cast&lt;</span><span class="keywordtype">float</span><span class="keyword">&gt;</span>(fbw), <span class="keyword">static_cast&lt;</span><span class="keywordtype">float</span><span class="keyword">&gt;</span>(fbh)};</div>
+<div class="line"><span class="lineno">  577</span>    }</div>
+<div class="ttc" id="awindowing_8h_html_a36e976e65513d8035f9511cad63f59b0"><div class="ttname"><a href="windowing_8h.html#a36e976e65513d8035f9511cad63f59b0">atlasGetWindowSizeInPixels</a></div><div class="ttdeci">void atlasGetWindowSizeInPixels(SDL_Window *window, int *width, int *height)</div><div class="ttdoc">Returns the drawable size of an SDL window in physical pixels.</div><div class="ttdef"><b>Definition</b> <a href="windowing_8h_source.html#l00018">windowing.h:18</a></div></div>
 </div><!-- fragment -->
+<p class="reference">References <a class="el" href="windowing_8h_source.html#l00018">atlasGetWindowSizeInPixels()</a>.</p>
+
 </div>
 </div>
 <a id="aac9117a294cadfd7035c5d4bf0dc73f6" name="aac9117a294cadfd7035c5d4bf0dc73f6"></a>
@@ -1021,8 +1221,36 @@ Example</h2>
 
 <p>Returns the SSAO-specific render scale. </p>
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00526">526</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  526</span>{ <span class="keywordflow">return</span> this-&gt;ssaoRenderScale; }</div>
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00651">651</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  651</span>{ <span class="keywordflow">return</span> this-&gt;ssaoRenderScale; }</div>
+</div><!-- fragment -->
+</div>
+</div>
+<a id="a41db0761c691e678c26049150364ef19" name="a41db0761c691e678c26049150364ef19"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a41db0761c691e678c26049150364ef19">&#9670;&#160;</a></span>getTextInput()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const std::string &amp; Window::getTextInput </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel inline">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00513">513</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  513</span>{ <span class="keywordflow">return</span> textInputBuffer; }</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -1046,42 +1274,71 @@ Example</h2>
 
 </div>
 </div>
-<a id="a5d64d3322428400dd343895ccfeaeb0a" name="a5d64d3322428400dd343895ccfeaeb0a"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a5d64d3322428400dd343895ccfeaeb0a">&#9670;&#160;</a></span>isKeyClicked()</h2>
+<a id="ae65fce399bb25c03aa13749aa62dcbfe" name="ae65fce399bb25c03aa13749aa62dcbfe"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae65fce399bb25c03aa13749aa62dcbfe">&#9670;&#160;</a></span>isActionCurrentlyActive()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">bool Window::isKeyClicked </td>
+          <td class="memname">bool Window::isActionCurrentlyActive </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="input_8h.html#a9479d299e1852e6140dcca1f405868ab">Key</a></td>          <td class="paramname"><span class="paramname"><em>key</em></span></td><td>)</td>
+          <td class="paramtype">const std::string &amp;</td>          <td class="paramname"><span class="paramname"><em>actionName</em></span></td><td>)</td>
           <td></td>
         </tr>
       </table>
 </div><div class="memdoc">
 
-<p>Checks if a key was clicked (pressed and released) this frame. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">key</td><td>The key to check. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>(bool) True if the key was clicked, false otherwise. </dd></dl>
-
 </div>
 </div>
-<a id="a934998dda7f1a9c513c47684753075fe" name="a934998dda7f1a9c513c47684753075fe"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a934998dda7f1a9c513c47684753075fe">&#9670;&#160;</a></span>isKeyPressed()</h2>
+<a id="a8ebec1ead7b97c36604ecfef95b7a85c" name="a8ebec1ead7b97c36604ecfef95b7a85c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8ebec1ead7b97c36604ecfef95b7a85c">&#9670;&#160;</a></span>isActionTriggered()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">bool Window::isKeyPressed </td>
+          <td class="memname">bool Window::isActionTriggered </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="input_8h.html#a9479d299e1852e6140dcca1f405868ab">Key</a></td>          <td class="paramname"><span class="paramname"><em>key</em></span></td><td>)</td>
+          <td class="paramtype">const std::string &amp;</td>          <td class="paramname"><span class="paramname"><em>actionName</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="aee17e1866c8d94f143b86d65a0a306f9" name="aee17e1866c8d94f143b86d65a0a306f9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aee17e1866c8d94f143b86d65a0a306f9">&#9670;&#160;</a></span>isControllerButtonPressed()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool Window::isControllerButtonPressed </td>
+          <td>(</td>
+          <td class="paramtype">int</td>          <td class="paramname"><span class="paramname"><em>controllerID</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int</td>          <td class="paramname"><span class="paramname"><em>buttonIndex</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a7f38dda1e0318725f9e4e6e56dce63b5" name="a7f38dda1e0318725f9e4e6e56dce63b5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7f38dda1e0318725f9e4e6e56dce63b5">&#9670;&#160;</a></span>isKeyActive()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool Window::isKeyActive </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="atlas_2input_8h.html#a9479d299e1852e6140dcca1f405868ab">Key</a></td>          <td class="paramname"><span class="paramname"><em>key</em></span></td><td>)</td>
           <td></td>
         </tr>
       </table>
@@ -1095,6 +1352,32 @@ Example</h2>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>(bool) True if the key is pressed, false otherwise. </dd></dl>
+
+</div>
+</div>
+<a id="a934998dda7f1a9c513c47684753075fe" name="a934998dda7f1a9c513c47684753075fe"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a934998dda7f1a9c513c47684753075fe">&#9670;&#160;</a></span>isKeyPressed()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool Window::isKeyPressed </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="atlas_2input_8h.html#a9479d299e1852e6140dcca1f405868ab">Key</a></td>          <td class="paramname"><span class="paramname"><em>key</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Checks if a key was clicked (pressed and released) this frame. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">key</td><td>The key to check. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>(bool) True if the key was clicked, false otherwise. </dd></dl>
 
 </div>
 </div>
@@ -1121,9 +1404,43 @@ Example</h2>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00520">520</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  520</span>{ <span class="keywordflow">return</span> this-&gt;metalUpscalingEnabled; }</div>
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00645">645</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  645</span>{ <span class="keywordflow">return</span> this-&gt;metalUpscalingEnabled; }</div>
 </div><!-- fragment -->
+</div>
+</div>
+<a id="a99496b334a8b30dca580c14b35f2b01a" name="a99496b334a8b30dca580c14b35f2b01a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a99496b334a8b30dca580c14b35f2b01a">&#9670;&#160;</a></span>isMouseButtonActive()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool Window::isMouseButtonActive </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="atlas_2input_8h.html#a826ef52e881054fee6a2055e382950b4">MouseButton</a></td>          <td class="paramname"><span class="paramname"><em>button</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a08ec73b3ba8b25001be9e569531816f1" name="a08ec73b3ba8b25001be9e569531816f1"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a08ec73b3ba8b25001be9e569531816f1">&#9670;&#160;</a></span>isMouseButtonPressed()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool Window::isMouseButtonPressed </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="atlas_2input_8h.html#a826ef52e881054fee6a2055e382950b4">MouseButton</a></td>          <td class="paramname"><span class="paramname"><em>button</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
 </div>
 </div>
 <a id="abee3700204e50e18c67777f549121480" name="abee3700204e50e18c67777f549121480"></a>
@@ -1149,8 +1466,36 @@ Example</h2>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00541">541</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  541</span>{ <span class="keywordflow">return</span> this-&gt;useSSR; }</div>
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00666">666</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  666</span>{ <span class="keywordflow">return</span> this-&gt;useSSR; }</div>
+</div><!-- fragment -->
+</div>
+</div>
+<a id="a2a264adc3174b15820d7333c243ab57f" name="a2a264adc3174b15820d7333c243ab57f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2a264adc3174b15820d7333c243ab57f">&#9670;&#160;</a></span>isTextInputActive()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool Window::isTextInputActive </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel inline">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00516">516</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  516</span>{ <span class="keywordflow">return</span> textInputActive; }</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -1190,6 +1535,34 @@ Example</h2>
 
 <p>Removes a previously registered renderable from the window. </p>
 
+</div>
+</div>
+<a id="a57a4d28e6f3a4d3aa0db929ab2b4ada7" name="a57a4d28e6f3a4d3aa0db929ab2b4ada7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a57a4d28e6f3a4d3aa0db929ab2b4ada7">&#9670;&#160;</a></span>resetInputActions()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void Window::resetInputActions </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel inline">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00730">730</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  730</span>{ inputActions.clear(); }</div>
+</div><!-- fragment -->
 </div>
 </div>
 <a id="ae137ec42ddc87d666d49661484410091" name="ae137ec42ddc87d666d49661484410091"></a>
@@ -1262,8 +1635,8 @@ Example</h2>
 
 <p>Sets the clear color used before each render pass. </p>
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00279">279</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  279</span>{ this-&gt;clearColor = color; }</div>
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00388">388</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  388</span>{ this-&gt;clearColor = color; }</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -1395,6 +1768,40 @@ Example</h2>
 
 </div>
 </div>
+<a id="a98021bb1e9a7c10fe51e23468499e8ad" name="a98021bb1e9a7c10fe51e23468499e8ad"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a98021bb1e9a7c10fe51e23468499e8ad">&#9670;&#160;</a></span>startTextInput()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void Window::startTextInput </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a38bb50d0b88fcf5954c74712005d25c3" name="a38bb50d0b88fcf5954c74712005d25c3"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a38bb50d0b88fcf5954c74712005d25c3">&#9670;&#160;</a></span>stopTextInput()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void Window::stopTextInput </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <a id="adafb4dc8a3af7af838df8d2feba7086f" name="adafb4dc8a3af7af838df8d2feba7086f"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#adafb4dc8a3af7af838df8d2feba7086f">&#9670;&#160;</a></span>useDeferredRendering()</h2>
 
@@ -1456,8 +1863,8 @@ Example</h2>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00485">485</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  485</span>{ this-&gt;waitForTracer = enable; }</div>
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00610">610</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  610</span>{ this-&gt;waitForTracer = enable; }</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -1482,9 +1889,9 @@ Example</h2>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00745">745</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00894">894</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
 
-<p class="reference">References <a class="el" href="window_8h_source.html#l00745">CoreObject</a>.</p>
+<p class="reference">References <a class="el" href="window_8h_source.html#l00894">CoreObject</a>.</p>
 
 </div>
 </div>
@@ -1508,9 +1915,9 @@ Example</h2>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00747">747</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00896">896</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
 
-<p class="reference">References <a class="el" href="window_8h_source.html#l00747">DirectionalLight</a>.</p>
+<p class="reference">References <a class="el" href="window_8h_source.html#l00896">DirectionalLight</a>.</p>
 
 </div>
 </div>
@@ -1534,9 +1941,9 @@ Example</h2>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00752">752</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00901">901</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
 
-<p class="reference">References <a class="el" href="window_8h_source.html#l00752">Fluid</a>.</p>
+<p class="reference">References <a class="el" href="window_8h_source.html#l00901">Fluid</a>.</p>
 
 </div>
 </div>
@@ -1560,7 +1967,7 @@ Example</h2>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00750">750</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00899">899</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
 
 </div>
 </div>
@@ -1584,7 +1991,7 @@ Example</h2>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00751">751</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00900">900</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
 
 </div>
 </div>
@@ -1608,9 +2015,9 @@ Example</h2>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00746">746</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00895">895</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
 
-<p class="reference">References <a class="el" href="window_8h_source.html#l00746">RenderTarget</a>.</p>
+<p class="reference">References <a class="el" href="window_8h_source.html#l00895">RenderTarget</a>.</p>
 
 </div>
 </div>
@@ -1634,9 +2041,9 @@ Example</h2>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00749">749</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00898">898</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
 
-<p class="reference">References <a class="el" href="window_8h_source.html#l00749">Terrain</a>.</p>
+<p class="reference">References <a class="el" href="window_8h_source.html#l00898">Terrain</a>.</p>
 
 </div>
 </div>
@@ -1660,9 +2067,9 @@ Example</h2>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00748">748</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00897">897</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
 
-<p class="reference">References <a class="el" href="window_8h_source.html#l00748">Text</a>.</p>
+<p class="reference">References <a class="el" href="window_8h_source.html#l00897">Text</a>.</p>
 
 </div>
 </div>
@@ -1681,7 +2088,7 @@ Example</h2>
 
 <p>The audio engine instance for managing spatial audio. Shared across the window. </p>
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00496">496</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00621">621</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
 
 </div>
 </div>
@@ -1699,7 +2106,7 @@ Example</h2>
 
 <p>Active culling mode for generated pipelines. </p>
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00557">557</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00682">682</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
 
 </div>
 </div>
@@ -1717,7 +2124,7 @@ Example</h2>
 
 <p><a class="el" href="object_8h.html#ad53d6229d7ec28555a9c9c2fd9abf773" title="Represents an index in a buffer.">Index</a> of the frame currently being rendered. </p>
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00262">262</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00371">371</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
 
 </div>
 </div>
@@ -1735,7 +2142,23 @@ Example</h2>
 
 <p>Points to the render target currently bound for drawing. </p>
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00546">546</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00671">671</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+
+</div>
+</div>
+<a id="a71487d5bd56d7e3230618be402e726f8" name="a71487d5bd56d7e3230618be402e726f8"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a71487d5bd56d7e3230618be402e726f8">&#9670;&#160;</a></span>ddgiSystem</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::shared_ptr&lt;<a class="el" href="classphoton_1_1_global_illumination.html">photon::GlobalIllumination</a>&gt; Window::ddgiSystem</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00718">718</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
 
 </div>
 </div>
@@ -1753,7 +2176,7 @@ Example</h2>
 
 <p>Front-face winding used by deferred passes. </p>
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00555">555</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00680">680</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
 
 </div>
 </div>
@@ -1771,7 +2194,7 @@ Example</h2>
 
 <p>Depth comparison function for generated pipelines. </p>
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00559">559</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00684">684</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
 
 </div>
 </div>
@@ -1789,7 +2212,7 @@ Example</h2>
 
 <p>Shared rendering device used by the window. </p>
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00581">581</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00706">706</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
 
 </div>
 </div>
@@ -1807,7 +2230,7 @@ Example</h2>
 
 <p>Destination blend factor for forward pipelines. </p>
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00549">549</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00674">674</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
 
 </div>
 </div>
@@ -1825,7 +2248,7 @@ Example</h2>
 
 <p>True only during the very first rendered frame. </p>
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00587">587</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00712">712</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
 
 </div>
 </div>
@@ -1843,7 +2266,7 @@ Example</h2>
 
 <p>Front-face winding used by forward rendering. </p>
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00553">553</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00678">678</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
 
 </div>
 </div>
@@ -1861,7 +2284,7 @@ Example</h2>
 
 <p>The gravity constant applied to physics bodies. Default is 9.81 m/s². </p>
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00483">483</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00608">608</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
 
 </div>
 </div>
@@ -1879,7 +2302,7 @@ Example</h2>
 
 <p>The height of the window in pixels. </p>
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00257">257</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00366">366</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
 
 </div>
 </div>
@@ -1905,7 +2328,23 @@ Example</h2>
 
 <p>Static pointer to the main window instance. Used for global access to the primary window. </p>
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00421">421</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00547">547</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+
+</div>
+</div>
+<a id="a939c36bfe9d9c1cf1c870171f4d7f2ca" name="a939c36bfe9d9c1cf1c870171f4d7f2ca"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a939c36bfe9d9c1cf1c870171f4d7f2ca">&#9670;&#160;</a></span>pathTracer</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::shared_ptr&lt;<a class="el" href="classphoton_1_1_path_tracing.html">photon::PathTracing</a>&gt; Window::pathTracer</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00719">719</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
 
 </div>
 </div>
@@ -1923,7 +2362,7 @@ Example</h2>
 
 <p>Physics world bound to this window's simulation step. </p>
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00584">584</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00709">709</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
 
 </div>
 </div>
@@ -1941,7 +2380,7 @@ Example</h2>
 
 <p>Primitive topology used for draw calls. </p>
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00563">563</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00688">688</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
 
 </div>
 </div>
@@ -1959,7 +2398,7 @@ Example</h2>
 
 <p>Polygon rasterization mode (fill/line/point). </p>
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00561">561</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00686">686</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
 
 </div>
 </div>
@@ -1977,7 +2416,7 @@ Example</h2>
 
 <p>Source blend factor for forward pipelines. </p>
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00551">551</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00676">676</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
 
 </div>
 </div>
@@ -1995,7 +2434,7 @@ Example</h2>
 
 <p>The title of the window displayed in the title bar. </p>
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00247">247</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00356">356</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
 
 </div>
 </div>
@@ -2013,7 +2452,7 @@ Example</h2>
 
 <p>Enables color blending when true. </p>
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00567">567</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00692">692</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
 
 </div>
 </div>
@@ -2031,7 +2470,7 @@ Example</h2>
 
 <p>Enables depth testing when true. </p>
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00565">565</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00690">690</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
 
 </div>
 </div>
@@ -2049,7 +2488,7 @@ Example</h2>
 
 <p>Enables multisampling in generated pipelines when available. </p>
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00571">571</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00696">696</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
 
 </div>
 </div>
@@ -2067,7 +2506,7 @@ Example</h2>
 
 <p>Whether the path tracing pass is currently enabled. </p>
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00592">592</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00717">717</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
 
 </div>
 </div>
@@ -2085,7 +2524,7 @@ Example</h2>
 
 <p>Whether the window is using deferred rendering. </p>
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00509">509</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00634">634</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
 
 </div>
 </div>
@@ -2103,7 +2542,7 @@ Example</h2>
 
 <p>Whether DDGI lighting is enabled on supported platforms. </p>
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00590">590</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00715">715</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
 
 </div>
 </div>
@@ -2121,7 +2560,7 @@ Example</h2>
 
 <p>Cached viewport height. </p>
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00579">579</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00704">704</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
 
 </div>
 </div>
@@ -2139,7 +2578,7 @@ Example</h2>
 
 <p>Cached viewport width. </p>
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00577">577</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00702">702</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
 
 </div>
 </div>
@@ -2157,7 +2596,7 @@ Example</h2>
 
 <p>Cached viewport X origin. </p>
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00573">573</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00698">698</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
 
 </div>
 </div>
@@ -2175,7 +2614,7 @@ Example</h2>
 
 <p>Cached viewport Y origin. </p>
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00575">575</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00700">700</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
 
 </div>
 </div>
@@ -2193,7 +2632,7 @@ Example</h2>
 
 <p>The width of the window in pixels. </p>
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00252">252</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00361">361</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
 
 </div>
 </div>
@@ -2211,7 +2650,7 @@ Example</h2>
 
 <p>Enables depth buffer writes when true. </p>
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00569">569</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00694">694</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
 
 </div>
 </div>

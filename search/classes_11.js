@@ -15,6 +15,7 @@ var searchData=
   ['spotlight_12',['Spotlight',['../struct_spotlight.html',1,'']]],
   ['spring_13',['Spring',['../structbezel_1_1_spring.html',1,'bezel::Spring'],['../struct_spring.html',1,'Spring']]],
   ['springjoint_14',['SpringJoint',['../classbezel_1_1_spring_joint.html',1,'bezel::SpringJoint'],['../class_spring_joint.html',1,'SpringJoint']]],
-  ['sweephit_15',['SweepHit',['../structbezel_1_1_sweep_hit.html',1,'bezel::SweepHit'],['../struct_sweep_hit.html',1,'SweepHit']]],
-  ['sweepresult_16',['SweepResult',['../structbezel_1_1_sweep_result.html',1,'bezel::SweepResult'],['../struct_sweep_result.html',1,'SweepResult']]]
+  ['stack_15',['Stack',['../class_stack.html',1,'']]],
+  ['sweephit_16',['SweepHit',['../structbezel_1_1_sweep_hit.html',1,'bezel::SweepHit'],['../struct_sweep_hit.html',1,'SweepHit']]],
+  ['sweepresult_17',['SweepResult',['../structbezel_1_1_sweep_result.html',1,'bezel::SweepResult'],['../struct_sweep_result.html',1,'SweepResult']]]
 ];

@@ -53,7 +53,7 @@ MathJax.Hub.Config({
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 7</span>
+   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 8</span>
    </div>
    <div id="projectbrief">Build everything, and beyond</div>
   </td>
@@ -117,8 +117,9 @@ $(function(){initNavTree('class_u_i_object.html','','class_u_i_object-members');
 
 <div class="header">
   <div class="summary">
+<a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="class_u_i_object-members.html">List of all members</a>  </div>
-  <div class="headertitle"><div class="title">UIObject Class Reference</div></div>
+  <div class="headertitle"><div class="title">UIObject Class Reference<span class="mlabels"><span class="mlabel abstract">abstract</span></span></div></div>
 </div><!--header-->
 <div class="contents">
 
@@ -132,15 +133,25 @@ Inheritance diagram for UIObject:</div>
  <div class="center">
   <img src="class_u_i_object.png" usemap="#UIObject_map" alt=""/>
   <map id="UIObject_map" name="UIObject_map">
-<area href="class_game_object.html" title="Base class for all Game Objects. It extends from Renderable and it provides common functionality for ..." alt="GameObject" shape="rect" coords="45,56,126,80"/>
-<area href="class_renderable.html" title="An abstract base class representing any object that can be rendered in a Window. Contains virtual met..." alt="Renderable" shape="rect" coords="45,0,126,24"/>
-<area href="class_text.html" title="Represents a text object in the game world. It allows rendering of text with a specific font,..." alt="Text" shape="rect" coords="0,168,81,192"/>
-<area href="class_u_i_view.html" title="A conjunction of UI elements that share the same view and projection matrices. Acts as a container fo..." alt="UIView" shape="rect" coords="91,168,172,192"/>
+<area href="class_game_object.html" title="Base class for all Game Objects. It extends from Renderable and it provides common functionality for ..." alt="GameObject" shape="rect" coords="0,56,81,80"/>
+<area href="class_renderable.html" title="An abstract base class representing any object that can be rendered in a Window. Contains virtual met..." alt="Renderable" shape="rect" coords="0,0,81,24"/>
+<area href="class_button.html" title="Clickable push button for Graphite interfaces." alt="Button" shape="rect" coords="91,168,172,192"/>
+<area href="class_checkbox.html" title="Toggleable checkbox with an optional text label." alt="Checkbox" shape="rect" coords="91,224,172,248"/>
+<area href="class_column.html" title="Vertical layout that stacks children from top to bottom." alt="Column" shape="rect" coords="91,280,172,304"/>
+<area href="class_image.html" title="UI element that renders a textured rectangle on screen." alt="Image" shape="rect" coords="91,336,172,360"/>
+<area href="class_row.html" title="Horizontal layout that arranges children from left to right." alt="Row" shape="rect" coords="91,392,172,416"/>
+<area href="class_stack.html" title="Overlay layout that positions children within the same container." alt="Stack" shape="rect" coords="91,448,172,472"/>
+<area href="class_text.html" title="Represents a text object in the game world. It allows rendering of text with a specific font,..." alt="Text" shape="rect" coords="91,504,172,528"/>
+<area href="class_text_field.html" title="Single-line editable text input for Graphite interfaces." alt="TextField" shape="rect" coords="91,560,172,584"/>
+<area href="class_u_i_view.html" title="A conjunction of UI elements that share the same view and projection matrices. Acts as a container fo..." alt="UIView" shape="rect" coords="91,616,172,640"/>
   </map>
 </div></div>
 <table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 id="header-inherited" class="groupheader"><a id="inherited" name="inherited"></a>
-Additional Inherited Members</h2></td></tr>
+<tr class="heading"><td colspan="2"><h2 id="header-pub-methods" class="groupheader"><a id="pub-methods" name="pub-methods"></a>
+Public Member Functions</h2></td></tr>
+<tr class="memitem:ab57b2b497331d4cac61033d05942c9ab" id="r_ab57b2b497331d4cac61033d05942c9ab"><td class="memItemLeft">virtual <a class="el" href="struct_size2d.html">Size2d</a>&#160;</td><td class="memItemRight"><a class="el" href="#ab57b2b497331d4cac61033d05942c9ab">getSize</a> () const</td></tr>
+<tr class="memitem:ac034bee8ddd12638f960c693df908350" id="r_ac034bee8ddd12638f960c693df908350"><td class="memItemLeft">virtual <a class="el" href="struct_position2d.html">Position2d</a>&#160;</td><td class="memItemRight"><a class="el" href="#ac034bee8ddd12638f960c693df908350">getScreenPosition</a> () const</td></tr>
+<tr class="memitem:adff79901c4c5512f428fe41a353379cc" id="r_adff79901c4c5512f428fe41a353379cc"><td class="memItemLeft">virtual void&#160;</td><td class="memItemRight"><a class="el" href="#adff79901c4c5512f428fe41a353379cc">setScreenPosition</a> (const <a class="el" href="struct_position2d.html">Position2d</a> &amp;newPosition)=0</td></tr>
 <tr class="inherit_header pub_methods_class_game_object"><td colspan="2" onclick="javascript:dynsection.toggleInherit('pub_methods_class_game_object')"><span class="dynarrow"><span class="arrowhead closed"></span></span>Public Member Functions inherited from <a class="el" href="class_game_object.html">GameObject</a></td></tr>
 <tr class="memitem:a0348e3ee2e83d56eafca7a3547f432c4 inherit pub_methods_class_game_object" id="r_a0348e3ee2e83d56eafca7a3547f432c4"><td class="memItemLeft">&#160;</td><td class="memItemRight"><a class="el" href="class_game_object.html#a0348e3ee2e83d56eafca7a3547f432c4">GameObject</a> ()</td></tr>
 <tr class="memdesc:a0348e3ee2e83d56eafca7a3547f432c4 inherit pub_methods_class_game_object"><td class="mdescLeft">&#160;</td><td class="mdescRight">Construct a new <a class="el" href="class_game_object.html" title="Base class for all Game Objects. It extends from Renderable and it provides common functionality for ...">GameObject</a> and assign it a unique ID.  <br /></td></tr>
@@ -223,6 +234,9 @@ Additional Inherited Members</h2></td></tr>
 <tr class="memitem:a54a97abc4b6fe3280505da3b587cba98 inherit pub_methods_class_renderable" id="r_a54a97abc4b6fe3280505da3b587cba98"><td class="memItemLeft">virtual bool&#160;</td><td class="memItemRight"><a class="el" href="class_renderable.html#a54a97abc4b6fe3280505da3b587cba98">canCastShadows</a> () const</td></tr>
 <tr class="memdesc:a54a97abc4b6fe3280505da3b587cba98 inherit pub_methods_class_renderable"><td class="mdescLeft">&#160;</td><td class="mdescRight">Function to determine if the object can cast shadows. Can be overridden by derived classes.  <br /></td></tr>
 <tr class="memitem:a2103eed2f7f54bca8ba1001907b367a9 inherit pub_methods_class_renderable" id="r_a2103eed2f7f54bca8ba1001907b367a9"><td class="memItemLeft">virtual&#160;</td><td class="memItemRight"><a class="el" href="class_renderable.html#a2103eed2f7f54bca8ba1001907b367a9">~Renderable</a> ()=default</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 id="header-inherited" class="groupheader"><a id="inherited" name="inherited"></a>
+Additional Inherited Members</h2></td></tr>
 <tr class="inherit_header pub_attribs_class_game_object"><td colspan="2" onclick="javascript:dynsection.toggleInherit('pub_attribs_class_game_object')"><span class="dynarrow"><span class="arrowhead closed"></span></span>Public Attributes inherited from <a class="el" href="class_game_object.html">GameObject</a></td></tr>
 <tr class="memitem:a6e80f980f1d08eba8e84ed564d541ece inherit pub_attribs_class_game_object" id="r_a6e80f980f1d08eba8e84ed564d541ece"><td class="memItemLeft"><a class="el" href="class_rigidbody.html">Rigidbody</a> *&#160;</td><td class="memItemRight"><a class="el" href="class_game_object.html#a6e80f980f1d08eba8e84ed564d541ece">rigidbody</a> = nullptr</td></tr>
 <tr class="memdesc:a6e80f980f1d08eba8e84ed564d541ece inherit pub_attribs_class_game_object"><td class="mdescLeft">&#160;</td><td class="mdescRight">Cached rigidbody component pointer when attached.  <br /></td></tr>
@@ -241,7 +255,97 @@ Additional Inherited Members</h2></td></tr>
 <div class="textblock"><p>A <a class="el" href="class_u_i_object.html" title="A UIObject is a GameObject that is used for creating user interface elements.">UIObject</a> is a <a class="el" href="class_game_object.html" title="Base class for all Game Objects. It extends from Renderable and it provides common functionality for ...">GameObject</a> that is used for creating user interface elements. </p>
 
 <p class="definition">Definition at line <a class="el" href="component_8h_source.html#l00673">673</a> of file <a class="el" href="component_8h_source.html">component.h</a>.</p>
-</div><hr/>The documentation for this class was generated from the following file:<ul>
+</div><a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Member Function Documentation</h2>
+<a id="ac034bee8ddd12638f960c693df908350" name="ac034bee8ddd12638f960c693df908350"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac034bee8ddd12638f960c693df908350">&#9670;&#160;</a></span>getScreenPosition()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual <a class="el" href="struct_position2d.html">Position2d</a> UIObject::getScreenPosition </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel inline">inline</span><span class="mlabel virtual">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Reimplemented in <a class="el" href="class_button.html#a9fb91ccf7919a0994cc7b2ee5affba01">Button</a>, <a class="el" href="class_checkbox.html#a059f71ccc57fecbe6c62ff0fd198f5f3">Checkbox</a>, <a class="el" href="class_column.html#ac67f89ae123c6dce30dc8b6ce288742c">Column</a>, <a class="el" href="class_image.html#a62b1c775ce6cb20cfc5aedcae1bbe753">Image</a>, <a class="el" href="class_row.html#a6f7b0c3e82809e113df74e9b5ccaf797">Row</a>, <a class="el" href="class_stack.html#a35771685dec4618d709b0c7e573f487c">Stack</a>, <a class="el" href="class_text.html#a26fc0e5b652f3941ec77009c7e12b2d5">Text</a>, and <a class="el" href="class_text_field.html#a6a84a62875d22a9df32de59c81378d3b">TextField</a>.</p>
+
+<p class="definition">Definition at line <a class="el" href="component_8h_source.html#l00678">678</a> of file <a class="el" href="component_8h_source.html">component.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  678</span>                                                 {</div>
+<div class="line"><span class="lineno">  679</span>        <span class="keywordflow">return</span> Position2d(0.0f, 0.0f);</div>
+<div class="line"><span class="lineno">  680</span>    }</div>
+</div><!-- fragment -->
+</div>
+</div>
+<a id="ab57b2b497331d4cac61033d05942c9ab" name="ab57b2b497331d4cac61033d05942c9ab"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab57b2b497331d4cac61033d05942c9ab">&#9670;&#160;</a></span>getSize()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual <a class="el" href="struct_size2d.html">Size2d</a> UIObject::getSize </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel inline">inline</span><span class="mlabel virtual">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Reimplemented in <a class="el" href="class_button.html#a0164bdedc3bd0d70858b0ef0ea3f2874">Button</a>, <a class="el" href="class_checkbox.html#a0c2215a4d4e19333bc931f3104a00c2f">Checkbox</a>, <a class="el" href="class_column.html#a8fd9606005c5eb96ae78e9b8dfba1e84">Column</a>, <a class="el" href="class_image.html#acaf9b8064d139d43286e5b755b15a7a8">Image</a>, <a class="el" href="class_row.html#a8ffe6e90e8998f13fcde61d3ee12cefa">Row</a>, <a class="el" href="class_stack.html#adafd7063b754a575feee75199b2776ef">Stack</a>, <a class="el" href="class_text.html#a8e44085849c9c12d2209584c4412ef6b">Text</a>, and <a class="el" href="class_text_field.html#acbf88054f6cb7fb22e8f04793f398d95">TextField</a>.</p>
+
+<p class="definition">Definition at line <a class="el" href="component_8h_source.html#l00677">677</a> of file <a class="el" href="component_8h_source.html">component.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  677</span>{ <span class="keywordflow">return</span> Size2d(0.0f, 0.0f); }</div>
+</div><!-- fragment -->
+</div>
+</div>
+<a id="adff79901c4c5512f428fe41a353379cc" name="adff79901c4c5512f428fe41a353379cc"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#adff79901c4c5512f428fe41a353379cc">&#9670;&#160;</a></span>setScreenPosition()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual void UIObject::setScreenPosition </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="struct_position2d.html">Position2d</a> &amp;</td>          <td class="paramname"><span class="paramname"><em>newPosition</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel pure-virtual">pure virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Implemented in <a class="el" href="class_button.html#aeb8e02e7c6c72f8a989dfe7d765718b1">Button</a>, <a class="el" href="class_checkbox.html#a90b626054719cfe7d2c4587148151c99">Checkbox</a>, <a class="el" href="class_column.html#a1d5820efb450bf662c11432ea1fe8942">Column</a>, <a class="el" href="class_image.html#a53d5c31a3e2606e202939953426b11d4">Image</a>, <a class="el" href="class_row.html#a2213456a4939e117f0525e4bc612ac76">Row</a>, <a class="el" href="class_stack.html#ab3c8d56416360012309e3b1dfb944ad3">Stack</a>, <a class="el" href="class_text.html#ab265cbd4ca75afb763bc5bbf25a89f28">Text</a>, and <a class="el" href="class_text_field.html#a46bcb165cb7b7f34ae43098115675723">TextField</a>.</p>
+
+</div>
+</div>
+<hr/>The documentation for this class was generated from the following file:<ul>
 <li>include/atlas/<a class="el" href="component_8h_source.html">component.h</a></li>
 </ul>
 </div><!-- contents -->

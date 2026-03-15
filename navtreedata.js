@@ -68,6 +68,7 @@ var NAVTREE =
         [ "All", "functions.html", "functions_dup" ],
         [ "Functions", "functions_func.html", "functions_func" ],
         [ "Variables", "functions_vars.html", "functions_vars" ],
+        [ "Typedefs", "functions_type.html", null ],
         [ "Enumerations", "functions_enum.html", null ],
         [ "Related Symbols", "functions_rela.html", null ]
       ] ]
@@ -89,20 +90,22 @@ var NAVTREE =
 var NAVTREEINDEX =
 [
 "annotated.html",
-"class_color_correction.html",
-"class_interactive.html#a84da05fce439cb9bc689bae6774dd4e4",
-"class_rigidbody.html#ad695af599d53b34c3cf6cd5e8f772da8",
-"class_window.html#aeb70ae58aa3e207069fa9f093b23f997",
-"classopal_1_1_buffer.html#a9fc0b44aec7c5153eb95b1238ac9ea26",
-"classopal_1_1_resolve_action.html",
-"data_8h.html#ab534a4243e0e6f75ad1f8f49683f9b58a44b9fced3049ce58beb51494589782e0",
-"input_8h.html#a9479d299e1852e6140dcca1f405868aba8cf04a9734132302f96da8e113e80ce5",
-"namespaceopal.html#add006f246cb414178a8c265b79edb008a5835bab1ade0060909e31a06af2e2cde",
-"struct_color.html#ad59827d26560a708b1a5e73488faf050",
-"struct_light.html#a1071eaa556f4bb2a9345fdfba7e6f220",
-"struct_spotlight.html",
-"structbezel_1_1_rigidbody.html#ac645523c230763f640e91e04028642d5",
-"structphoton_1_1_global_illumination_1_1_d_d_g_i_material.html"
+"class_audio_player.html#adefa6c3aec690ebebb69faa204527ef8",
+"class_column.html#afab8899f4e3157e27494e78fd315359c",
+"class_image.html#a972af1bf5bc35c846712607a0e49825d",
+"class_rigidbody.html#a580fc0c1e2faf17dd7ec9d00bd4b5c91",
+"class_text_field.html#ab89e925946f7fcd54109c6801dd07c5b",
+"classbezel_1_1_mesh_collider.html#a352369fa6e812b805b816e445468fd7a",
+"classopal_1_1_context.html#a19236b951c548721b6ec2bb1a1f30571",
+"classopal_1_1_shader.html#ae532babe1073c7ccc0c69015e882e16c",
+"globals_defs.html",
+"namespaceopal.html#ae052ba81a85ceeaf480a6703e5518319a78181d4f5d4b30baefed6c0da0de894f",
+"struct_color.html#a33e482be18d6ea31d2b403bee13683b7",
+"struct_gamepad.html#ae415590e7fb57f18580efc8649109865",
+"struct_rotation3d.html#a7c7b23ba5ca3d30e0ac681e9c49d454a",
+"structbezel_1_1_rigidbody.html#a0bb3b0a35921c699a2fe5dff15d3d649",
+"structgraphite_1_1_u_i_resolved_style.html#ab0e694c2c525aafaf819ac9b468422ec",
+"window_8h.html#a0fa7818ea73e62e1cacf9825fc5bb352"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronization';

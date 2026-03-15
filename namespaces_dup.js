@@ -8,6 +8,7 @@ var namespaces_dup =
     ] ],
     [ "bezel", "namespacebezel.html", "namespacebezel" ],
     [ "bezel_jolt", "namespacebezel__jolt.html", "namespacebezel__jolt" ],
+    [ "graphite", "namespacegraphite.html", "namespacegraphite" ],
     [ "JPH", "namespace_j_p_h.html", null ],
     [ "opal", "namespaceopal.html", "namespaceopal" ],
     [ "photon", "namespacephoton.html", "namespacephoton" ]

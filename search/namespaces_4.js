@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['photon_0',['photon',['../namespacephoton.html',1,'']]]
+  ['opal_0',['opal',['../namespaceopal.html',1,'']]]
 ];

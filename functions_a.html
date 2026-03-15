@@ -53,7 +53,7 @@ MathJax.Hub.Config({
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 7</span>
+   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 8</span>
    </div>
    <div id="projectbrief">Build everything, and beyond</div>
   </td>
@@ -125,6 +125,7 @@ $(function(){initNavTree('functions_a.html','',''); });
 <li>acquireCommandBuffer()&#160;:&#160;<a class="el" href="classopal_1_1_device.html#aa4fb89e1170c6972fee7737c1ac70638">opal::Device</a></li>
 <li>activateDebug()&#160;:&#160;<a class="el" href="class_window.html#a02a63c16774e4a16477ac2692cb8a79f">Window</a></li>
 <li>active&#160;:&#160;<a class="el" href="struct_particle.html#a73a4154dfbae2e2787ef72c1bee83413">Particle</a></li>
+<li>activeBorderColor&#160;:&#160;<a class="el" href="class_checkbox.html#a52a1d89a5bbf5a7857a7fe493320c498">Checkbox</a></li>
 <li>addAngularVelocity&#160;:&#160;<a class="el" href="structbezel_1_1_rigidbody.html#a5c8cfa6fbb5a3cc8449d3a3cbb9f18ba">bezel::Rigidbody</a>, <a class="el" href="class_rigidbody.html#a5c39ff52c066a82762bb7c0897738dbd">Rigidbody</a></li>
 <li>addAreaLight()&#160;:&#160;<a class="el" href="class_scene.html#a8444afc5763ff91124559e26ba2192ac">Scene</a></li>
 <li>addAttachment()&#160;:&#160;<a class="el" href="classopal_1_1_framebuffer.html#a4994addc8cd8e3af2dfd4e348ce0a665">opal::Framebuffer</a></li>
@@ -132,7 +133,7 @@ $(function(){initNavTree('functions_a.html','',''); });
 <li>addBody()&#160;:&#160;<a class="el" href="classbezel_1_1_physics_world.html#ae140a077b3c65a9cccea564d4531a4e0">bezel::PhysicsWorld</a></li>
 <li>addBoxCollider()&#160;:&#160;<a class="el" href="class_rigidbody.html#afd7ae9351877ed7f500c278c680b3a05">Rigidbody</a></li>
 <li>addCapsuleCollider()&#160;:&#160;<a class="el" href="class_rigidbody.html#abaa2f1d8adf3f7b84cc72524c7b89c63">Rigidbody</a></li>
-<li>addChild()&#160;:&#160;<a class="el" href="class_u_i_view.html#a80804511b156c4bf7b6c093a5a1759c9">UIView</a></li>
+<li>addChild()&#160;:&#160;<a class="el" href="class_column.html#a0ad1c97b8d0e3c50498145122144fdcd">Column</a>, <a class="el" href="class_row.html#a8ae509e9b60e5e296d9e58e9d078a44b">Row</a>, <a class="el" href="class_stack.html#a725a6bd35feddca12d19a6d6b630ff0d">Stack</a>, <a class="el" href="class_u_i_view.html#a80804511b156c4bf7b6c093a5a1759c9">UIView</a></li>
 <li>addClouds()&#160;:&#160;<a class="el" href="class_atmosphere.html#a676d29c101d17ef1f5f9dbb0312dab72">Atmosphere</a></li>
 <li>addComponent()&#160;:&#160;<a class="el" href="class_core_object.html#aebed51d3e8f3182a2de3ffe3374d4e20">CoreObject</a>, <a class="el" href="class_game_object.html#a8cb421d4a6cb619271d15560d692a593">GameObject</a></li>
 <li>addDebugObject()&#160;:&#160;<a class="el" href="struct_area_light.html#ac0e6600ed7b2c6cc17cf9e081059131c">AreaLight</a>, <a class="el" href="struct_light.html#a7e11b67a959370fd2493be3ab024a3e6">Light</a>, <a class="el" href="struct_spotlight.html#a082f097e1211a2c8cea65ed23ff88850">Spotlight</a></li>
@@ -140,6 +141,7 @@ $(function(){initNavTree('functions_a.html','',''); });
 <li>addDirectionalLight()&#160;:&#160;<a class="el" href="class_scene.html#a20d41770f3040ef7fa818e3df3c63f7b">Scene</a></li>
 <li>addEffect()&#160;:&#160;<a class="el" href="class_render_target.html#a61e3a0d5d2f531d7e576eba488cfb92a">RenderTarget</a></li>
 <li>addGenerator()&#160;:&#160;<a class="el" href="class_compound_generator.html#ad1a0cfd3759f6e565c674a9707a42cc1">CompoundGenerator</a></li>
+<li>addInputAction()&#160;:&#160;<a class="el" href="class_window.html#abcd5c23df862cc71dc750c691a9677d5">Window</a></li>
 <li>addLateForwardObject()&#160;:&#160;<a class="el" href="class_window.html#a37417ba9edf68fa2728e2296d18d9322">Window</a></li>
 <li>addLight()&#160;:&#160;<a class="el" href="class_scene.html#a13b298b0c24c92929bf9850012980623">Scene</a></li>
 <li>addLinearVelocity&#160;:&#160;<a class="el" href="structbezel_1_1_rigidbody.html#a6f9befea16199cc1364cd5bdd3f28163">bezel::Rigidbody</a>, <a class="el" href="class_rigidbody.html#ad88e3b939e2fa4476ddb70a53e7cd08a">Rigidbody</a></li>
@@ -154,18 +156,17 @@ $(function(){initNavTree('functions_a.html','',''); });
 <li>addTraitComponent()&#160;:&#160;<a class="el" href="class_game_object.html#a3e396a15730c274d13202073f8b78794">GameObject</a></li>
 <li>addUIObject()&#160;:&#160;<a class="el" href="class_window.html#af8ae14b934c6a7f5e661e0f47e6e91be">Window</a></li>
 <li>advance&#160;:&#160;<a class="el" href="struct_character.html#a782c09f2ac5412664ef5127882891568">Character</a></li>
-<li>albedo&#160;:&#160;<a class="el" href="struct_material.html#aa61df35ac281fa40c0745235494d4b19">Material</a>, <a class="el" href="structphoton_1_1_global_illumination_1_1_d_d_g_i_material.html#a93bb8a3059476bc48c8517a4abf64ff8">photon::GlobalIllumination::DDGIMaterial</a></li>
-<li>albedoTextureIndex&#160;:&#160;<a class="el" href="structphoton_1_1_global_illumination_1_1_d_d_g_i_material.html#a6d2ed0cf3fc03902e7ffa7735e93a978">photon::GlobalIllumination::DDGIMaterial</a></li>
+<li>albedo&#160;:&#160;<a class="el" href="struct_material.html#aa61df35ac281fa40c0745235494d4b19">Material</a></li>
+<li>alignment&#160;:&#160;<a class="el" href="class_column.html#a0ac7c503e8c428983c3677bae07faba9">Column</a>, <a class="el" href="class_row.html#a13326210a1dc0b754b5a9211ea63c4b4">Row</a></li>
 <li>allocationCount&#160;:&#160;<a class="el" href="struct_frame_memory_packet.html#a6b1e6e81cb2dc82de9f4710a97ceea13">FrameMemoryPacket</a></li>
-<li>alwaysOnTop&#160;:&#160;<a class="el" href="struct_window_configuration.html#a097dc5b5aee3944a617487530393dd11">WindowConfiguration</a></li>
+<li>alwaysOnTop&#160;:&#160;<a class="el" href="classopal_1_1_context.html#a3579dfe194f3e2a046767e0123bb9b82">opal::Context</a>, <a class="el" href="struct_window_configuration.html#a097dc5b5aee3944a617487530393dd11">WindowConfiguration</a></li>
 <li>amount&#160;:&#160;<a class="el" href="struct_film_grain_parameters.html#a33e117b4ffffa2117fea8d0913a3dea5">FilmGrainParameters</a></li>
-<li>anchor&#160;:&#160;<a class="el" href="classbezel_1_1_joint.html#ac8efe91eb5d50feb84b5fd585a8e9c45">bezel::Joint</a>, <a class="el" href="class_joint.html#afdb764d4f0458f25e2e642f45b75208d">Joint</a></li>
+<li>anchor&#160;:&#160;<a class="el" href="classbezel_1_1_joint.html#ac8efe91eb5d50feb84b5fd585a8e9c45">bezel::Joint</a>, <a class="el" href="class_column.html#a2b149188275473664cbb175299562600">Column</a>, <a class="el" href="class_joint.html#afdb764d4f0458f25e2e642f45b75208d">Joint</a>, <a class="el" href="class_row.html#a5f8cb20f7afe6882a2f9d3529946515c">Row</a>, <a class="el" href="class_stack.html#a72ae3f7a86ec2749d101fcb7105a4a9b">Stack</a></li>
 <li>anchorB&#160;:&#160;<a class="el" href="classbezel_1_1_spring_joint.html#a8f6dacc3e8931e362e6b58cc148f76d9">bezel::SpringJoint</a>, <a class="el" href="class_spring_joint.html#a3bfac8a3fdbc082d5221e331b8083ddc">SpringJoint</a></li>
 <li>angle&#160;:&#160;<a class="el" href="struct_area_light.html#a55e92eab392d1c273a3172b24ba8fe07">AreaLight</a>, <a class="el" href="struct_g_p_u_area_light.html#a984e16fb1e43e540279e1893ad83f71f">GPUAreaLight</a></li>
 <li>angularDamping&#160;:&#160;<a class="el" href="structbezel_1_1_rigidbody.html#a8d7c2421db2ae146485e33b829fade57">bezel::Rigidbody</a>, <a class="el" href="structbezel_1_1_vehicle_engine.html#a58488a6dc6bbf993586ced81158e07cf">bezel::VehicleEngine</a>, <a class="el" href="structbezel_1_1_vehicle_wheel_settings.html#afa1b118bd21c6035066f6fa49b37a4fd">bezel::VehicleWheelSettings</a></li>
 <li>angularVelocity&#160;:&#160;<a class="el" href="structbezel_1_1_rigidbody.html#a909c11a4f8cdb11817cc7dfac49ea77b">bezel::Rigidbody</a>, <a class="el" href="class_body.html#a6f9bd0b59a4f9d8099079d3ff07b37b0">Body</a></li>
-<li>ao&#160;:&#160;<a class="el" href="struct_material.html#a0946dbf03359dc3cd8d32910045dc5d4">Material</a>, <a class="el" href="structphoton_1_1_global_illumination_1_1_d_d_g_i_material.html#a5e0108596d13dc5c5aa4f79991dd6d29">photon::GlobalIllumination::DDGIMaterial</a></li>
-<li>aoTextureIndex&#160;:&#160;<a class="el" href="structphoton_1_1_global_illumination_1_1_d_d_g_i_material.html#a2a951a5d29c8757e2517e3c29fae9b61">photon::GlobalIllumination::DDGIMaterial</a></li>
+<li>ao&#160;:&#160;<a class="el" href="struct_material.html#a0946dbf03359dc3cd8d32910045dc5d4">Material</a></li>
 <li>applicationName&#160;:&#160;<a class="el" href="structopal_1_1_context_configuration.html#a9b2d9602363bdaaf372d95a2b594f6e3">opal::ContextConfiguration</a></li>
 <li>applicationVersion&#160;:&#160;<a class="el" href="structopal_1_1_context_configuration.html#a549d62090da033f04186b19cf2790a7b">opal::ContextConfiguration</a></li>
 <li>applyAngularImpulse()&#160;:&#160;<a class="el" href="class_body.html#ac27b43482cad87c971a2a164bf5f8ef4">Body</a></li>
@@ -206,6 +207,17 @@ $(function(){initNavTree('functions_a.html','',''); });
 <li>averageColor&#160;:&#160;<a class="el" href="struct_cubemap.html#a50b2c6343093573ff1a058918f63f514">Cubemap</a></li>
 <li>axis1&#160;:&#160;<a class="el" href="classbezel_1_1_hinge_joint.html#a967993d07f93e398dd2390995f4844d3">bezel::HingeJoint</a>, <a class="el" href="class_hinge_joint.html#a19829e8b2faf9838d0b2a0dc7fd88d63">HingeJoint</a></li>
 <li>axis2&#160;:&#160;<a class="el" href="classbezel_1_1_hinge_joint.html#a040227325855b264460eaf6914373c1b">bezel::HingeJoint</a>, <a class="el" href="class_hinge_joint.html#a5000b5088f60781649d7d726ce4f3fc5">HingeJoint</a></li>
+<li>axisClampMax&#160;:&#160;<a class="el" href="class_input_action.html#a070055ab0a2d77ae846f536d11e1ca2a">InputAction</a></li>
+<li>axisClampMin&#160;:&#160;<a class="el" href="class_input_action.html#a4eb29bbe1ce4303ff3988bf449096759">InputAction</a></li>
+<li>axisDeltaX&#160;:&#160;<a class="el" href="class_input_action.html#a0869ff661820b08059294c5645098d86">InputAction</a></li>
+<li>axisDeltaY&#160;:&#160;<a class="el" href="class_input_action.html#a22f53b8bbe55408aef94e983b5703165">InputAction</a></li>
+<li>axisIndex&#160;:&#160;<a class="el" href="struct_axis_trigger.html#a24a601d72251d2b42c590c45163ab1f4">AxisTrigger</a></li>
+<li>axisIndexY&#160;:&#160;<a class="el" href="struct_axis_trigger.html#a89a98bff48896075eb34102a11b252a8">AxisTrigger</a></li>
+<li>axisScaleX&#160;:&#160;<a class="el" href="class_input_action.html#accd798b02e7599b31fe59d77240f144f">InputAction</a></li>
+<li>axisScaleY&#160;:&#160;<a class="el" href="class_input_action.html#a623b651707baa583a78089d452f0b8ab">InputAction</a></li>
+<li>axisTriggers&#160;:&#160;<a class="el" href="class_input_action.html#a7f207a1575c29a96eff2cc58a375de67">InputAction</a></li>
+<li>axisX&#160;:&#160;<a class="el" href="class_input_action.html#a92396d5289f59bafd18594248392a242">InputAction</a></li>
+<li>axisY&#160;:&#160;<a class="el" href="class_input_action.html#ab71d9648ac72048f74ac2e4892845024">InputAction</a></li>
 </ul>
 </div><!-- contents -->
 </div><!-- doc-content -->

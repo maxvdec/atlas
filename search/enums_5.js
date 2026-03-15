@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['joltloglevel_0',['JoltLogLevel',['../namespacebezel__jolt.html#ad8ce12750f5027b41715a250ff5276fb',1,'bezel_jolt']]]
+  ['frontface_0',['FrontFace',['../namespaceopal.html#a5896ae64717f16fffbc1f783a79aa1fc',1,'opal']]]
 ];

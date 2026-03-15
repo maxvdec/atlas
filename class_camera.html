@@ -53,7 +53,7 @@ MathJax.Hub.Config({
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 7</span>
+   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 8</span>
    </div>
    <div id="projectbrief">Build everything, and beyond</div>
   </td>
@@ -143,6 +143,7 @@ Public Member Functions</h2></td></tr>
 <tr class="memdesc:a01f94c3543f56ede7af49dc778f19331"><td class="mdescLeft">&#160;</td><td class="mdescRight">Construct a new <a class="el" href="class_camera.html" title="Class representing a camera in 3D space, capable of generating view and projection matrices....">Camera</a> object.  <br /></td></tr>
 <tr class="memitem:ad6f9e385de1a864521f3870873aa08a8" id="r_ad6f9e385de1a864521f3870873aa08a8"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#ad6f9e385de1a864521f3870873aa08a8">update</a> (<a class="el" href="class_window.html">Window</a> &amp;window)</td></tr>
 <tr class="memdesc:ad6f9e385de1a864521f3870873aa08a8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Updates the camera's position and orientation based on user input.  <br /></td></tr>
+<tr class="memitem:a5d112465d65b49a7004015fabdd0f300" id="r_a5d112465d65b49a7004015fabdd0f300"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a5d112465d65b49a7004015fabdd0f300">updateWithActions</a> (<a class="el" href="class_window.html">Window</a> &amp;window, const std::string &amp;moveAxis, const std::string &amp;lookAction, const std::string &amp;upAndDownAction)</td></tr>
 <tr class="memitem:af505546c6d360a4af80c2bd14eeb1847" id="r_af505546c6d360a4af80c2bd14eeb1847"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#af505546c6d360a4af80c2bd14eeb1847">updateLook</a> (<a class="el" href="class_window.html">Window</a> &amp;window, <a class="el" href="units_8h.html#a48cb5ec1b3f30ba3c80b52d84531e07c">Movement2d</a> movement)</td></tr>
 <tr class="memdesc:af505546c6d360a4af80c2bd14eeb1847"><td class="mdescLeft">&#160;</td><td class="mdescRight">Updates the camera's look direction based on mouse movement.  <br /></td></tr>
 <tr class="memitem:a05bf5f761a2366625b30c6b59c99ad80" id="r_a05bf5f761a2366625b30c6b59c99ad80"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a05bf5f761a2366625b30c6b59c99ad80">updateZoom</a> (<a class="el" href="class_window.html">Window</a> &amp;window, <a class="el" href="units_8h.html#a48cb5ec1b3f30ba3c80b52d84531e07c">Movement2d</a> offset)</td></tr>
@@ -174,6 +175,7 @@ Public Attributes</h2></td></tr>
 <tr class="memdesc:a03987cf3bbf312be16bb881939382d83"><td class="mdescLeft">&#160;</td><td class="mdescRight">The speed at which the camera moves through the scene.  <br /></td></tr>
 <tr class="memitem:a374b33e654bf21d19230a82672bd3aac" id="r_a374b33e654bf21d19230a82672bd3aac"><td class="memItemLeft">float&#160;</td><td class="memItemRight"><a class="el" href="#a374b33e654bf21d19230a82672bd3aac">mouseSensitivity</a> = 0.1f</td></tr>
 <tr class="memdesc:a374b33e654bf21d19230a82672bd3aac"><td class="mdescLeft">&#160;</td><td class="mdescRight">The factor by which the camera's mouse input is scaled.  <br /></td></tr>
+<tr class="memitem:aaa536c7571a040b2bcfb05f736a1a87c" id="r_aaa536c7571a040b2bcfb05f736a1a87c"><td class="memItemLeft">float&#160;</td><td class="memItemRight"><a class="el" href="#aaa536c7571a040b2bcfb05f736a1a87c">controllerLookSensitivity</a> = 180.f</td></tr>
 <tr class="memitem:a38944fa801da05f22169475b83799e8e" id="r_a38944fa801da05f22169475b83799e8e"><td class="memItemLeft">float&#160;</td><td class="memItemRight"><a class="el" href="#a38944fa801da05f22169475b83799e8e">lookSmoothness</a> = 0.15f</td></tr>
 <tr class="memdesc:a38944fa801da05f22169475b83799e8e"><td class="mdescLeft">&#160;</td><td class="mdescRight">The factor to determine how smoothly the camera looks at the target.  <br /></td></tr>
 <tr class="memitem:ae745080197fb197cbab0ae5bf257938c" id="r_ae745080197fb197cbab0ae5bf257938c"><td class="memItemLeft">bool&#160;</td><td class="memItemRight"><a class="el" href="#ae745080197fb197cbab0ae5bf257938c">useOrthographic</a> = false</td></tr>
@@ -199,14 +201,14 @@ Example of camera control</h2>
 <div class="line">camera.<a class="code hl_function" href="#af505546c6d360a4af80c2bd14eeb1847">updateLook</a>(window, mouseMovement);</div>
 <div class="line"><span class="comment">// On each scroll event, update the zoom level (optional)</span></div>
 <div class="line">camera.<a class="code hl_function" href="#a05bf5f761a2366625b30c6b59c99ad80">updateZoom</a>(window, scrollOffset);</div>
-<div class="ttc" id="aclass_camera_html_a01f94c3543f56ede7af49dc778f19331"><div class="ttname"><a href="#a01f94c3543f56ede7af49dc778f19331">Camera::Camera</a></div><div class="ttdeci">Camera()</div><div class="ttdoc">Construct a new Camera object.</div><div class="ttdef"><b>Definition</b> <a href="camera_8h_source.html#l00142">camera.h:142</a></div></div>
+<div class="ttc" id="aclass_camera_html_a01f94c3543f56ede7af49dc778f19331"><div class="ttname"><a href="#a01f94c3543f56ede7af49dc778f19331">Camera::Camera</a></div><div class="ttdeci">Camera()</div><div class="ttdoc">Construct a new Camera object.</div><div class="ttdef"><b>Definition</b> <a href="camera_8h_source.html#l00144">camera.h:144</a></div></div>
 <div class="ttc" id="aclass_camera_html_a05bf5f761a2366625b30c6b59c99ad80"><div class="ttname"><a href="#a05bf5f761a2366625b30c6b59c99ad80">Camera::updateZoom</a></div><div class="ttdeci">void updateZoom(Window &amp;window, Movement2d offset)</div><div class="ttdoc">Updates the camera&#39;s zoom level based on scroll input.</div></div>
 <div class="ttc" id="aclass_camera_html_a0cdce87ef38c320f3344f7bf00df7572"><div class="ttname"><a href="#a0cdce87ef38c320f3344f7bf00df7572">Camera::lookAt</a></div><div class="ttdeci">void lookAt(const Point3d &amp;newTarget)</div><div class="ttdoc">Sets the point where the camera is looking at in 3D space.</div></div>
 <div class="ttc" id="aclass_camera_html_ad6f9e385de1a864521f3870873aa08a8"><div class="ttname"><a href="#ad6f9e385de1a864521f3870873aa08a8">Camera::update</a></div><div class="ttdeci">void update(Window &amp;window)</div><div class="ttdoc">Updates the camera&#39;s position and orientation based on user input.</div></div>
 <div class="ttc" id="aclass_camera_html_aefe37c9af548b9551704ba8d03e7a16d"><div class="ttname"><a href="#aefe37c9af548b9551704ba8d03e7a16d">Camera::setPosition</a></div><div class="ttdeci">void setPosition(const Position3d &amp;newPosition)</div><div class="ttdoc">Sets the position of the camera in 3D space.</div></div>
 <div class="ttc" id="aclass_camera_html_af505546c6d360a4af80c2bd14eeb1847"><div class="ttname"><a href="#af505546c6d360a4af80c2bd14eeb1847">Camera::updateLook</a></div><div class="ttdeci">void updateLook(Window &amp;window, Movement2d movement)</div><div class="ttdoc">Updates the camera&#39;s look direction based on mouse movement.</div></div>
 </div><!-- fragment --> 
-<p class="definition">Definition at line <a class="el" href="camera_8h_source.html#l00040">40</a> of file <a class="el" href="camera_8h_source.html">camera.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="camera_8h_source.html#l00041">41</a> of file <a class="el" href="camera_8h_source.html">camera.h</a>.</p>
 </div><a name="doc-constructors" id="doc-constructors"></a><h2 id="header-doc-constructors" class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="a01f94c3543f56ede7af49dc778f19331" name="a01f94c3543f56ede7af49dc778f19331"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a01f94c3543f56ede7af49dc778f19331">&#9670;&#160;</a></span>Camera()</h2>
@@ -233,12 +235,12 @@ Example of camera control</h2>
 
 <p>Construct a new <a class="el" href="class_camera.html" title="Class representing a camera in 3D space, capable of generating view and projection matrices....">Camera</a> object. </p>
 
-<p class="definition">Definition at line <a class="el" href="camera_8h_source.html#l00142">142</a> of file <a class="el" href="camera_8h_source.html">camera.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  142</span>: <a class="code hl_variable" href="#aa039dfa8c2a624a999b69b0fece3f6fb">position</a>({0.0f, 0.0f, 3.0f}), <a class="code hl_variable" href="#a23f060ec1fb9352aa8f9e97dbcc29ca0">target</a>({0.0f, 0.0f, 0.0f}) {}</div>
-<div class="ttc" id="aclass_camera_html_a23f060ec1fb9352aa8f9e97dbcc29ca0"><div class="ttname"><a href="#a23f060ec1fb9352aa8f9e97dbcc29ca0">Camera::target</a></div><div class="ttdeci">Point3d target</div><div class="ttdoc">The point where the camera is looking at in 3D space.</div><div class="ttdef"><b>Definition</b> <a href="camera_8h_source.html#l00051">camera.h:51</a></div></div>
-<div class="ttc" id="aclass_camera_html_aa039dfa8c2a624a999b69b0fece3f6fb"><div class="ttname"><a href="#aa039dfa8c2a624a999b69b0fece3f6fb">Camera::position</a></div><div class="ttdeci">Position3d position</div><div class="ttdoc">The position of the camera in 3D space.</div><div class="ttdef"><b>Definition</b> <a href="camera_8h_source.html#l00046">camera.h:46</a></div></div>
+<p class="definition">Definition at line <a class="el" href="camera_8h_source.html#l00144">144</a> of file <a class="el" href="camera_8h_source.html">camera.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  144</span>: <a class="code hl_variable" href="#aa039dfa8c2a624a999b69b0fece3f6fb">position</a>({0.0f, 0.0f, 3.0f}), <a class="code hl_variable" href="#a23f060ec1fb9352aa8f9e97dbcc29ca0">target</a>({0.0f, 0.0f, 0.0f}) {}</div>
+<div class="ttc" id="aclass_camera_html_a23f060ec1fb9352aa8f9e97dbcc29ca0"><div class="ttname"><a href="#a23f060ec1fb9352aa8f9e97dbcc29ca0">Camera::target</a></div><div class="ttdeci">Point3d target</div><div class="ttdoc">The point where the camera is looking at in 3D space.</div><div class="ttdef"><b>Definition</b> <a href="camera_8h_source.html#l00052">camera.h:52</a></div></div>
+<div class="ttc" id="aclass_camera_html_aa039dfa8c2a624a999b69b0fece3f6fb"><div class="ttname"><a href="#aa039dfa8c2a624a999b69b0fece3f6fb">Camera::position</a></div><div class="ttdeci">Position3d position</div><div class="ttdoc">The position of the camera in 3D space.</div><div class="ttdef"><b>Definition</b> <a href="camera_8h_source.html#l00047">camera.h:47</a></div></div>
 </div><!-- fragment -->
-<p class="reference">References <a class="el" href="camera_8h_source.html#l00046">position</a>.</p>
+<p class="reference">References <a class="el" href="camera_8h_source.html#l00047">position</a>.</p>
 
 </div>
 </div>
@@ -289,14 +291,14 @@ Example of camera control</h2>
 <p>Get the front vector of the camera, representing the direction it is facing. </p>
 <dl class="section return"><dt>Returns</dt><dd>(<a class="el" href="units_8h.html#aa79dcdba8644f852dbd5163b96868793" title="Type alias for 3D normal vectors.">Normal3d</a>) The front vector of the camera. </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="camera_8h_source.html#l00187">187</a> of file <a class="el" href="camera_8h_source.html">camera.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  187</span>                                    {</div>
-<div class="line"><span class="lineno">  188</span>        <a class="code hl_typedef" href="units_8h.html#aa79dcdba8644f852dbd5163b96868793">Normal3d</a> front;</div>
-<div class="line"><span class="lineno">  189</span>        front.<a class="code hl_variable" href="struct_position3d.html#a600cc5acded2f96d674441c4f9a38e4b">x</a> = cos(glm::radians(yaw)) * cos(glm::radians(pitch));</div>
-<div class="line"><span class="lineno">  190</span>        front.<a class="code hl_variable" href="struct_position3d.html#a12a216506ce9925f256e9251c224f99d">y</a> = sin(glm::radians(pitch));</div>
-<div class="line"><span class="lineno">  191</span>        front.<a class="code hl_variable" href="struct_position3d.html#a5a4885c30b2a2e501c773d8fa9cc506b">z</a> = sin(glm::radians(yaw)) * cos(glm::radians(pitch));</div>
-<div class="line"><span class="lineno">  192</span>        <span class="keywordflow">return</span> <a class="code hl_function" href="struct_position3d.html#a824e59149fabc3261e92a2aa0d358d28">Normal3d::fromGlm</a>(glm::normalize(front.<a class="code hl_function" href="struct_position3d.html#a9c6d05eb7dd87f5072bc3a1f6ebc29ba">toGlm</a>()));</div>
-<div class="line"><span class="lineno">  193</span>    }</div>
+<p class="definition">Definition at line <a class="el" href="camera_8h_source.html#l00193">193</a> of file <a class="el" href="camera_8h_source.html">camera.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  193</span>                                    {</div>
+<div class="line"><span class="lineno">  194</span>        <a class="code hl_typedef" href="units_8h.html#aa79dcdba8644f852dbd5163b96868793">Normal3d</a> front;</div>
+<div class="line"><span class="lineno">  195</span>        front.<a class="code hl_variable" href="struct_position3d.html#a600cc5acded2f96d674441c4f9a38e4b">x</a> = cos(glm::radians(yaw)) * cos(glm::radians(pitch));</div>
+<div class="line"><span class="lineno">  196</span>        front.<a class="code hl_variable" href="struct_position3d.html#a12a216506ce9925f256e9251c224f99d">y</a> = sin(glm::radians(pitch));</div>
+<div class="line"><span class="lineno">  197</span>        front.<a class="code hl_variable" href="struct_position3d.html#a5a4885c30b2a2e501c773d8fa9cc506b">z</a> = sin(glm::radians(yaw)) * cos(glm::radians(pitch));</div>
+<div class="line"><span class="lineno">  198</span>        <span class="keywordflow">return</span> <a class="code hl_function" href="struct_position3d.html#a824e59149fabc3261e92a2aa0d358d28">Normal3d::fromGlm</a>(glm::normalize(front.<a class="code hl_function" href="struct_position3d.html#a9c6d05eb7dd87f5072bc3a1f6ebc29ba">toGlm</a>()));</div>
+<div class="line"><span class="lineno">  199</span>    }</div>
 <div class="ttc" id="astruct_position3d_html_a12a216506ce9925f256e9251c224f99d"><div class="ttname"><a href="struct_position3d.html#a12a216506ce9925f256e9251c224f99d">Position3d::y</a></div><div class="ttdeci">float y</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00035">units.h:35</a></div></div>
 <div class="ttc" id="astruct_position3d_html_a5a4885c30b2a2e501c773d8fa9cc506b"><div class="ttname"><a href="struct_position3d.html#a5a4885c30b2a2e501c773d8fa9cc506b">Position3d::z</a></div><div class="ttdeci">float z</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00036">units.h:36</a></div></div>
 <div class="ttc" id="astruct_position3d_html_a600cc5acded2f96d674441c4f9a38e4b"><div class="ttname"><a href="struct_position3d.html#a600cc5acded2f96d674441c4f9a38e4b">Position3d::x</a></div><div class="ttdeci">float x</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00034">units.h:34</a></div></div>
@@ -334,12 +336,12 @@ Example of camera control</h2>
 <p>Get the velocity of the camera based on its front vector and movement speed. </p>
 <dl class="section return"><dt>Returns</dt><dd>(<a class="el" href="units_8h.html#afa7de6f8211b70367d0d4a845db0369a" title="Type alias for 3D magnitude vectors.">Magnitude3d</a>) The velocity of the camera. </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="camera_8h_source.html#l00201">201</a> of file <a class="el" href="camera_8h_source.html">camera.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  201</span>{ <span class="keywordflow">return</span> <a class="code hl_function" href="#afbf79ea00fe5e9086a72b29119e08311">getFrontVector</a>() * <a class="code hl_variable" href="#a03987cf3bbf312be16bb881939382d83">movementSpeed</a>; }</div>
-<div class="ttc" id="aclass_camera_html_a03987cf3bbf312be16bb881939382d83"><div class="ttname"><a href="#a03987cf3bbf312be16bb881939382d83">Camera::movementSpeed</a></div><div class="ttdeci">float movementSpeed</div><div class="ttdoc">The speed at which the camera moves through the scene.</div><div class="ttdef"><b>Definition</b> <a href="camera_8h_source.html#l00080">camera.h:80</a></div></div>
-<div class="ttc" id="aclass_camera_html_afbf79ea00fe5e9086a72b29119e08311"><div class="ttname"><a href="#afbf79ea00fe5e9086a72b29119e08311">Camera::getFrontVector</a></div><div class="ttdeci">Normal3d getFrontVector() const</div><div class="ttdoc">Get the front vector of the camera, representing the direction it is facing.</div><div class="ttdef"><b>Definition</b> <a href="camera_8h_source.html#l00187">camera.h:187</a></div></div>
+<p class="definition">Definition at line <a class="el" href="camera_8h_source.html#l00207">207</a> of file <a class="el" href="camera_8h_source.html">camera.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  207</span>{ <span class="keywordflow">return</span> <a class="code hl_function" href="#afbf79ea00fe5e9086a72b29119e08311">getFrontVector</a>() * <a class="code hl_variable" href="#a03987cf3bbf312be16bb881939382d83">movementSpeed</a>; }</div>
+<div class="ttc" id="aclass_camera_html_a03987cf3bbf312be16bb881939382d83"><div class="ttname"><a href="#a03987cf3bbf312be16bb881939382d83">Camera::movementSpeed</a></div><div class="ttdeci">float movementSpeed</div><div class="ttdoc">The speed at which the camera moves through the scene.</div><div class="ttdef"><b>Definition</b> <a href="camera_8h_source.html#l00081">camera.h:81</a></div></div>
+<div class="ttc" id="aclass_camera_html_afbf79ea00fe5e9086a72b29119e08311"><div class="ttname"><a href="#afbf79ea00fe5e9086a72b29119e08311">Camera::getFrontVector</a></div><div class="ttdeci">Normal3d getFrontVector() const</div><div class="ttdoc">Get the front vector of the camera, representing the direction it is facing.</div><div class="ttdef"><b>Definition</b> <a href="camera_8h_source.html#l00193">camera.h:193</a></div></div>
 </div><!-- fragment -->
-<p class="reference">References <a class="el" href="camera_8h_source.html#l00187">getFrontVector()</a>, and <a class="el" href="camera_8h_source.html#l00080">movementSpeed</a>.</p>
+<p class="reference">References <a class="el" href="camera_8h_source.html#l00193">getFrontVector()</a>, and <a class="el" href="camera_8h_source.html#l00081">movementSpeed</a>.</p>
 
 </div>
 </div>
@@ -528,6 +530,37 @@ Example of camera control</h2>
 
 </div>
 </div>
+<a id="a5d112465d65b49a7004015fabdd0f300" name="a5d112465d65b49a7004015fabdd0f300"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5d112465d65b49a7004015fabdd0f300">&#9670;&#160;</a></span>updateWithActions()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void Camera::updateWithActions </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="class_window.html">Window</a> &amp;</td>          <td class="paramname"><span class="paramname"><em>window</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::string &amp;</td>          <td class="paramname"><span class="paramname"><em>moveAxis</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::string &amp;</td>          <td class="paramname"><span class="paramname"><em>lookAction</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::string &amp;</td>          <td class="paramname"><span class="paramname"><em>upAndDownAction</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <a id="a05bf5f761a2366625b30c6b59c99ad80" name="a05bf5f761a2366625b30c6b59c99ad80"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a05bf5f761a2366625b30c6b59c99ad80">&#9670;&#160;</a></span>updateZoom()</h2>
 
@@ -559,6 +592,22 @@ Example of camera control</h2>
 </div>
 </div>
 <a name="doc-variable-members" id="doc-variable-members"></a><h2 id="header-doc-variable-members" class="groupheader">Member Data Documentation</h2>
+<a id="aaa536c7571a040b2bcfb05f736a1a87c" name="aaa536c7571a040b2bcfb05f736a1a87c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aaa536c7571a040b2bcfb05f736a1a87c">&#9670;&#160;</a></span>controllerLookSensitivity</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">float Camera::controllerLookSensitivity = 180.f</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="camera_8h_source.html#l00087">87</a> of file <a class="el" href="camera_8h_source.html">camera.h</a>.</p>
+
+</div>
+</div>
 <a id="ab7bbf72d618a91bd74a4c3122441713d" name="ab7bbf72d618a91bd74a4c3122441713d"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ab7bbf72d618a91bd74a4c3122441713d">&#9670;&#160;</a></span>farClip</h2>
 
@@ -573,7 +622,7 @@ Example of camera control</h2>
 
 <p>The far clipping plane distance. Everything farther than this value will be clipped. </p>
 
-<p class="definition">Definition at line <a class="el" href="camera_8h_source.html#l00069">69</a> of file <a class="el" href="camera_8h_source.html">camera.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="camera_8h_source.html#l00070">70</a> of file <a class="el" href="camera_8h_source.html">camera.h</a>.</p>
 
 </div>
 </div>
@@ -591,7 +640,7 @@ Example of camera control</h2>
 
 <p>The depth value at which objects are in perfect focus for depth of field effects. </p>
 
-<p class="definition">Definition at line <a class="el" href="camera_8h_source.html#l00104">104</a> of file <a class="el" href="camera_8h_source.html">camera.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="camera_8h_source.html#l00106">106</a> of file <a class="el" href="camera_8h_source.html">camera.h</a>.</p>
 
 </div>
 </div>
@@ -609,7 +658,7 @@ Example of camera control</h2>
 
 <p>The range around focusDepth where objects gradually transition from sharp to blurred. </p>
 
-<p class="definition">Definition at line <a class="el" href="camera_8h_source.html#l00110">110</a> of file <a class="el" href="camera_8h_source.html">camera.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="camera_8h_source.html#l00112">112</a> of file <a class="el" href="camera_8h_source.html">camera.h</a>.</p>
 
 </div>
 </div>
@@ -627,7 +676,7 @@ Example of camera control</h2>
 
 <p>The field of view of the camera. </p>
 
-<p class="definition">Definition at line <a class="el" href="camera_8h_source.html#l00057">57</a> of file <a class="el" href="camera_8h_source.html">camera.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="camera_8h_source.html#l00058">58</a> of file <a class="el" href="camera_8h_source.html">camera.h</a>.</p>
 
 </div>
 </div>
@@ -645,7 +694,7 @@ Example of camera control</h2>
 
 <p>The factor to determine how smoothly the camera looks at the target. </p>
 
-<p class="definition">Definition at line <a class="el" href="camera_8h_source.html#l00091">91</a> of file <a class="el" href="camera_8h_source.html">camera.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="camera_8h_source.html#l00093">93</a> of file <a class="el" href="camera_8h_source.html">camera.h</a>.</p>
 
 </div>
 </div>
@@ -663,7 +712,7 @@ Example of camera control</h2>
 
 <p>The factor by which the camera's mouse input is scaled. </p>
 
-<p class="definition">Definition at line <a class="el" href="camera_8h_source.html#l00085">85</a> of file <a class="el" href="camera_8h_source.html">camera.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="camera_8h_source.html#l00086">86</a> of file <a class="el" href="camera_8h_source.html">camera.h</a>.</p>
 
 </div>
 </div>
@@ -681,7 +730,7 @@ Example of camera control</h2>
 
 <p>The speed at which the camera moves through the scene. </p>
 
-<p class="definition">Definition at line <a class="el" href="camera_8h_source.html#l00080">80</a> of file <a class="el" href="camera_8h_source.html">camera.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="camera_8h_source.html#l00081">81</a> of file <a class="el" href="camera_8h_source.html">camera.h</a>.</p>
 
 </div>
 </div>
@@ -699,7 +748,7 @@ Example of camera control</h2>
 
 <p>The near clipping plane distance. Everything closer than this value will be clipped. </p>
 
-<p class="definition">Definition at line <a class="el" href="camera_8h_source.html#l00063">63</a> of file <a class="el" href="camera_8h_source.html">camera.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="camera_8h_source.html#l00064">64</a> of file <a class="el" href="camera_8h_source.html">camera.h</a>.</p>
 
 </div>
 </div>
@@ -717,7 +766,7 @@ Example of camera control</h2>
 
 <p>The size of the orthographic projection. </p>
 
-<p class="definition">Definition at line <a class="el" href="camera_8h_source.html#l00074">74</a> of file <a class="el" href="camera_8h_source.html">camera.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="camera_8h_source.html#l00075">75</a> of file <a class="el" href="camera_8h_source.html">camera.h</a>.</p>
 
 </div>
 </div>
@@ -735,7 +784,7 @@ Example of camera control</h2>
 
 <p>The position of the camera in 3D space. </p>
 
-<p class="definition">Definition at line <a class="el" href="camera_8h_source.html#l00046">46</a> of file <a class="el" href="camera_8h_source.html">camera.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="camera_8h_source.html#l00047">47</a> of file <a class="el" href="camera_8h_source.html">camera.h</a>.</p>
 
 </div>
 </div>
@@ -753,7 +802,7 @@ Example of camera control</h2>
 
 <p>The point where the camera is looking at in 3D space. </p>
 
-<p class="definition">Definition at line <a class="el" href="camera_8h_source.html#l00051">51</a> of file <a class="el" href="camera_8h_source.html">camera.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="camera_8h_source.html#l00052">52</a> of file <a class="el" href="camera_8h_source.html">camera.h</a>.</p>
 
 </div>
 </div>
@@ -771,7 +820,7 @@ Example of camera control</h2>
 
 <p>Whether the camera is using orthographic projection. </p>
 
-<p class="definition">Definition at line <a class="el" href="camera_8h_source.html#l00097">97</a> of file <a class="el" href="camera_8h_source.html">camera.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="camera_8h_source.html#l00099">99</a> of file <a class="el" href="camera_8h_source.html">camera.h</a>.</p>
 
 </div>
 </div>

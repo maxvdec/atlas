@@ -14,5 +14,6 @@ var searchData=
   ['reverb_11',['Reverb',['../class_reverb.html',1,'']]],
   ['rigidbody_12',['Rigidbody',['../structbezel_1_1_rigidbody.html',1,'bezel::Rigidbody'],['../class_rigidbody.html',1,'Rigidbody']]],
   ['rimlight_13',['RimLight',['../struct_rim_light.html',1,'']]],
-  ['rotation3d_14',['Rotation3d',['../struct_rotation3d.html',1,'']]]
+  ['rotation3d_14',['Rotation3d',['../struct_rotation3d.html',1,'']]],
+  ['row_15',['Row',['../class_row.html',1,'']]]
 ];

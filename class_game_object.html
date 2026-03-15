@@ -53,7 +53,7 @@ MathJax.Hub.Config({
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 7</span>
+   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 8</span>
    </div>
    <div id="projectbrief">Build everything, and beyond</div>
   </td>
@@ -143,8 +143,15 @@ Inheritance diagram for GameObject:</div>
 <area href="class_particle_emitter.html" title="Class representing a particle emitter in the game. It emits and manages particles." alt="ParticleEmitter" shape="rect" coords="476,112,585,136"/>
 <area href="class_terrain.html" title="Tessellated terrain surface that can be generated procedurally or from heightmaps." alt="Terrain" shape="rect" coords="595,112,704,136"/>
 <area href="class_u_i_object.html" title="A UIObject is a GameObject that is used for creating user interface elements." alt="UIObject" shape="rect" coords="714,112,823,136"/>
-<area href="class_text.html" title="Represents a text object in the game world. It allows rendering of text with a specific font,..." alt="Text" shape="rect" coords="654,168,763,192"/>
-<area href="class_u_i_view.html" title="A conjunction of UI elements that share the same view and projection matrices. Acts as a container fo..." alt="UIView" shape="rect" coords="773,168,882,192"/>
+<area href="class_button.html" title="Clickable push button for Graphite interfaces." alt="Button" shape="rect" coords="833,168,942,192"/>
+<area href="class_checkbox.html" title="Toggleable checkbox with an optional text label." alt="Checkbox" shape="rect" coords="833,224,942,248"/>
+<area href="class_column.html" title="Vertical layout that stacks children from top to bottom." alt="Column" shape="rect" coords="833,280,942,304"/>
+<area href="class_image.html" title="UI element that renders a textured rectangle on screen." alt="Image" shape="rect" coords="833,336,942,360"/>
+<area href="class_row.html" title="Horizontal layout that arranges children from left to right." alt="Row" shape="rect" coords="833,392,942,416"/>
+<area href="class_stack.html" title="Overlay layout that positions children within the same container." alt="Stack" shape="rect" coords="833,448,942,472"/>
+<area href="class_text.html" title="Represents a text object in the game world. It allows rendering of text with a specific font,..." alt="Text" shape="rect" coords="833,504,942,528"/>
+<area href="class_text_field.html" title="Single-line editable text input for Graphite interfaces." alt="TextField" shape="rect" coords="833,560,942,584"/>
+<area href="class_u_i_view.html" title="A conjunction of UI elements that share the same view and projection matrices. Acts as a container fo..." alt="UIView" shape="rect" coords="833,616,942,640"/>
   </map>
 </div></div>
 <table class="memberdecls">
@@ -451,17 +458,17 @@ template&lt;typename T&gt; </div>
 
 <p class="definition">Definition at line <a class="el" href="component_8h_source.html#l00365">365</a> of file <a class="el" href="component_8h_source.html">component.h</a>.</p>
 <div class="fragment"><div class="line"><span class="lineno">  365</span>                                    {</div>
-<div class="line"><span class="lineno">  366</span>        <span class="keyword">using </span><a class="code hl_enumvalue" href="input_8h.html#a9479d299e1852e6140dcca1f405868aba4c614360da93c0a041b22e537de151eb">U</a> = std::remove_cvref_t&lt;T&gt;;</div>
+<div class="line"><span class="lineno">  366</span>        <span class="keyword">using </span><a class="code hl_enumvalue" href="atlas_2input_8h.html#a9479d299e1852e6140dcca1f405868aba4c614360da93c0a041b22e537de151eb">U</a> = std::remove_cvref_t&lt;T&gt;;</div>
 <div class="line"><span class="lineno">  367</span>        std::shared_ptr&lt;U&gt; component =</div>
 <div class="line"><span class="lineno">  368</span>            std::make_shared&lt;U&gt;(std::forward&lt;T&gt;(existing));</div>
 <div class="line"><span class="lineno">  369</span>        component-&gt;object = <span class="keyword">this</span>;</div>
 <div class="line"><span class="lineno">  370</span>        component-&gt;atAttach();</div>
 <div class="line"><span class="lineno">  371</span>        <a class="code hl_variable" href="#a545e4ed29df0e16304d46c73404c0ce6">components</a>.push_back(component);</div>
 <div class="line"><span class="lineno">  372</span>    }</div>
+<div class="ttc" id="aatlas_2input_8h_html_a9479d299e1852e6140dcca1f405868aba4c614360da93c0a041b22e537de151eb"><div class="ttname"><a href="atlas_2input_8h.html#a9479d299e1852e6140dcca1f405868aba4c614360da93c0a041b22e537de151eb">Key::U</a></div><div class="ttdeci">@ U</div><div class="ttdef"><b>Definition</b> <a href="atlas_2input_8h_source.html#l00062">input.h:62</a></div></div>
 <div class="ttc" id="aclass_game_object_html_a545e4ed29df0e16304d46c73404c0ce6"><div class="ttname"><a href="#a545e4ed29df0e16304d46c73404c0ce6">GameObject::components</a></div><div class="ttdeci">std::vector&lt; std::shared_ptr&lt; Component &gt; &gt; components</div><div class="ttdef"><b>Definition</b> <a href="component_8h_source.html#l00442">component.h:442</a></div></div>
-<div class="ttc" id="ainput_8h_html_a9479d299e1852e6140dcca1f405868aba4c614360da93c0a041b22e537de151eb"><div class="ttname"><a href="input_8h.html#a9479d299e1852e6140dcca1f405868aba4c614360da93c0a041b22e537de151eb">Key::U</a></div><div class="ttdeci">@ U</div><div class="ttdef"><b>Definition</b> <a href="input_8h_source.html#l00060">input.h:60</a></div></div>
 </div><!-- fragment -->
-<p class="reference">References <a class="el" href="component_8h_source.html#l00442">components</a>, and <a class="el" href="input_8h_source.html#l00060">U</a>.</p>
+<p class="reference">References <a class="el" href="component_8h_source.html#l00442">components</a>, and <a class="el" href="atlas_2input_8h_source.html#l00062">U</a>.</p>
 
 </div>
 </div>
@@ -540,19 +547,19 @@ template&lt;typename U, typename T&gt; </div>
 
 <p class="definition">Definition at line <a class="el" href="component_8h_source.html#l00392">392</a> of file <a class="el" href="component_8h_source.html">component.h</a>.</p>
 <div class="fragment"><div class="line"><span class="lineno">  392</span>                                         {</div>
-<div class="line"><span class="lineno">  393</span>        <span class="keywordflow">if</span> (<span class="keyword">static_cast&lt;</span><a class="code hl_enumvalue" href="input_8h.html#a9479d299e1852e6140dcca1f405868aba4c614360da93c0a041b22e537de151eb">U</a> *<span class="keyword">&gt;</span>(<span class="keyword">this</span>) == <span class="keyword">nullptr</span>) {</div>
+<div class="line"><span class="lineno">  393</span>        <span class="keywordflow">if</span> (<span class="keyword">static_cast&lt;</span><a class="code hl_enumvalue" href="atlas_2input_8h.html#a9479d299e1852e6140dcca1f405868aba4c614360da93c0a041b22e537de151eb">U</a> *<span class="keyword">&gt;</span>(<span class="keyword">this</span>) == <span class="keyword">nullptr</span>) {</div>
 <div class="line"><span class="lineno">  394</span>            <span class="keywordflow">throw</span> std::runtime_error(</div>
 <div class="line"><span class="lineno">  395</span>                <span class="stringliteral">&quot;Cannot add TraitComponent to object that is not of the &quot;</span></div>
 <div class="line"><span class="lineno">  396</span>                <span class="stringliteral">&quot;correct type.&quot;</span>);</div>
 <div class="line"><span class="lineno">  397</span>        }</div>
-<div class="line"><span class="lineno">  398</span>        existing.setTypedObject(<span class="keyword">static_cast&lt;</span><a class="code hl_enumvalue" href="input_8h.html#a9479d299e1852e6140dcca1f405868aba4c614360da93c0a041b22e537de151eb">U</a> *<span class="keyword">&gt;</span>(<span class="keyword">this</span>));</div>
+<div class="line"><span class="lineno">  398</span>        existing.setTypedObject(<span class="keyword">static_cast&lt;</span><a class="code hl_enumvalue" href="atlas_2input_8h.html#a9479d299e1852e6140dcca1f405868aba4c614360da93c0a041b22e537de151eb">U</a> *<span class="keyword">&gt;</span>(<span class="keyword">this</span>));</div>
 <div class="line"><span class="lineno">  399</span>        std::shared_ptr&lt;T&gt; component =</div>
 <div class="line"><span class="lineno">  400</span>            std::make_shared&lt;T&gt;(std::forward&lt;T&gt;(existing));</div>
 <div class="line"><span class="lineno">  401</span>        component-&gt;object = <span class="keyword">this</span>;</div>
 <div class="line"><span class="lineno">  402</span>        <a class="code hl_variable" href="#a545e4ed29df0e16304d46c73404c0ce6">components</a>.push_back(component);</div>
 <div class="line"><span class="lineno">  403</span>    }</div>
 </div><!-- fragment -->
-<p class="reference">References <a class="el" href="component_8h_source.html#l00442">components</a>, and <a class="el" href="input_8h_source.html#l00060">U</a>.</p>
+<p class="reference">References <a class="el" href="component_8h_source.html#l00442">components</a>, and <a class="el" href="atlas_2input_8h_source.html#l00062">U</a>.</p>
 
 </div>
 </div>

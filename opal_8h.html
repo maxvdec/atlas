@@ -53,7 +53,7 @@ MathJax.Hub.Config({
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 7</span>
+   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 8</span>
    </div>
    <div id="projectbrief">Build everything, and beyond</div>
   </td>
@@ -127,10 +127,10 @@ $(function(){initNavTree('opal_8h.html','',''); });
 <p>Opal rendering abstraction layer (OpenGL/Vulkan/Metal).  
 <a href="#details">More...</a></p>
 <div class="textblock"><code>#include &quot;Metal/Metal.hpp&quot;</code><br />
+<code>#include &quot;<a class="el" href="windowing_8h_source.html">atlas/core/windowing.h</a>&quot;</code><br />
 <code>#include &lt;cstddef&gt;</code><br />
 <code>#include &lt;memory&gt;</code><br />
 <code>#include &lt;glad/glad.h&gt;</code><br />
-<code>#include &lt;GLFW/glfw3.h&gt;</code><br />
 <code>#include &lt;string&gt;</code><br />
 <code>#include &lt;sys/types.h&gt;</code><br />
 <code>#include &lt;vector&gt;</code><br />
@@ -141,9 +141,9 @@ $(function(){initNavTree('opal_8h.html','',''); });
 <tr class="heading"><td colspan="2"><h2 id="header-nested-classes" class="groupheader"><a id="nested-classes" name="nested-classes"></a>
 Classes</h2></td></tr>
 <tr class="memitem:opal_3A_3AContextConfiguration" id="r_opal_3A_3AContextConfiguration"><td class="memItemLeft">struct &#160;</td><td class="memItemRight"><a class="el" href="structopal_1_1_context_configuration.html">opal::ContextConfiguration</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Parameters used when creating an Opal <span class="tt"><a class="el" href="classopal_1_1_context.html" title="Rendering context wrapper (GLFW + backend initialization).">Context</a></span>.  <a href="structopal_1_1_context_configuration.html#details">More...</a><br /></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Parameters used when creating an Opal <span class="tt"><a class="el" href="classopal_1_1_context.html" title="Rendering context wrapper (SDL + backend initialization).">Context</a></span>.  <a href="structopal_1_1_context_configuration.html#details">More...</a><br /></td></tr>
 <tr class="memitem:opal_3A_3AContext" id="r_opal_3A_3AContext"><td class="memItemLeft">class &#160;</td><td class="memItemRight"><a class="el" href="classopal_1_1_context.html">opal::Context</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Rendering context wrapper (GLFW + backend initialization).  <a href="classopal_1_1_context.html#details">More...</a><br /></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Rendering context wrapper (SDL + backend initialization).  <a href="classopal_1_1_context.html#details">More...</a><br /></td></tr>
 <tr class="memitem:opal_3A_3ADeviceInfo" id="r_opal_3A_3ADeviceInfo"><td class="memItemLeft">struct &#160;</td><td class="memItemRight"><a class="el" href="structopal_1_1_device_info.html">opal::DeviceInfo</a></td></tr>
 <tr class="memitem:opal_3A_3ADevice" id="r_opal_3A_3ADevice"><td class="memItemLeft">class &#160;</td><td class="memItemRight"><a class="el" href="classopal_1_1_device.html">opal::Device</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Represents the rendering device abstraction for OpenGL/Vulkan. Manages command buffer acquisition, framebuffer access, and device queries.  <a href="classopal_1_1_device.html#details">More...</a><br /></td></tr>

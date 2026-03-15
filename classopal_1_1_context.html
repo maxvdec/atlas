@@ -53,7 +53,7 @@ MathJax.Hub.Config({
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 7</span>
+   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 8</span>
    </div>
    <div id="projectbrief">Build everything, and beyond</div>
   </td>
@@ -125,7 +125,7 @@ $(function(){initNavTree('classopal_1_1_context.html','','classopal_1_1_context-
 </div><!--header-->
 <div class="contents">
 
-<p>Rendering context wrapper (GLFW + backend initialization).  
+<p>Rendering context wrapper (SDL + backend initialization).  
  <a href="#details">More...</a></p>
 
 <p><code>#include &lt;<a class="el" href="opal_8h_source.html">opal.h</a>&gt;</code></p>
@@ -133,13 +133,15 @@ $(function(){initNavTree('classopal_1_1_context.html','','classopal_1_1_context-
 <tr class="heading"><td colspan="2"><h2 id="header-pub-methods" class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
 <tr class="memitem:a19236b951c548721b6ec2bb1a1f30571" id="r_a19236b951c548721b6ec2bb1a1f30571"><td class="memItemLeft">&#160;</td><td class="memItemRight"><a class="el" href="#a19236b951c548721b6ec2bb1a1f30571">~Context</a> ()</td></tr>
-<tr class="memitem:ab09b632a49bf9a9f9c5768c83201c732" id="r_ab09b632a49bf9a9f9c5768c83201c732"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#ab09b632a49bf9a9f9c5768c83201c732">setFlag</a> (int flag, bool enabled)</td></tr>
-<tr class="memdesc:ab09b632a49bf9a9f9c5768c83201c732"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets a GLFW window/context flag to a boolean value.  <br /></td></tr>
-<tr class="memitem:a2150c2224cce8367d9adc72ffcc93482" id="r_a2150c2224cce8367d9adc72ffcc93482"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a2150c2224cce8367d9adc72ffcc93482">setFlag</a> (int flag, int value)</td></tr>
-<tr class="memdesc:a2150c2224cce8367d9adc72ffcc93482"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets a GLFW window/context flag to an integer value.  <br /></td></tr>
-<tr class="memitem:a93a559229e8861b58277dfbef2c1d2c9" id="r_a93a559229e8861b58277dfbef2c1d2c9"><td class="memItemLeft">GLFWwindow *&#160;</td><td class="memItemRight"><a class="el" href="#a93a559229e8861b58277dfbef2c1d2c9">makeWindow</a> (int width, int height, const char *title, GLFWmonitor *monitor=nullptr, GLFWwindow *share=nullptr)</td></tr>
-<tr class="memitem:a491d00cd9b2f9d2b25adbb640fd0e55f" id="r_a491d00cd9b2f9d2b25adbb640fd0e55f"><td class="memItemLeft">GLFWwindow *&#160;</td><td class="memItemRight"><a class="el" href="#a491d00cd9b2f9d2b25adbb640fd0e55f">getWindow</a> () const</td></tr>
-<tr class="memdesc:a491d00cd9b2f9d2b25adbb640fd0e55f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the owned window pointer, if created.  <br /></td></tr>
+<tr class="memitem:ab5d4df61fdfd0e9c58429919fbbc763d" id="r_ab5d4df61fdfd0e9c58429919fbbc763d"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#ab5d4df61fdfd0e9c58429919fbbc763d">setDecorated</a> (bool enabled)</td></tr>
+<tr class="memitem:a26ca0fcf5362a30d345ba34b578c6090" id="r_a26ca0fcf5362a30d345ba34b578c6090"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a26ca0fcf5362a30d345ba34b578c6090">setResizable</a> (bool enabled)</td></tr>
+<tr class="memitem:afc97a4a9542bfb5b5d998a2542cf9262" id="r_afc97a4a9542bfb5b5d998a2542cf9262"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#afc97a4a9542bfb5b5d998a2542cf9262">setTransparent</a> (bool enabled)</td></tr>
+<tr class="memitem:aa5d9eec2c084235292a7f4224f2da3de" id="r_aa5d9eec2c084235292a7f4224f2da3de"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#aa5d9eec2c084235292a7f4224f2da3de">setAlwaysOnTop</a> (bool enabled)</td></tr>
+<tr class="memitem:a446cdd2591eb1b70c25307216c5c72c8" id="r_a446cdd2591eb1b70c25307216c5c72c8"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a446cdd2591eb1b70c25307216c5c72c8">setSamples</a> (int value)</td></tr>
+<tr class="memitem:aac0a8e035d716993aa51f4547df5437d" id="r_aac0a8e035d716993aa51f4547df5437d"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#aac0a8e035d716993aa51f4547df5437d">setHighPixelDensity</a> (bool enabled)</td></tr>
+<tr class="memitem:aa1f0d2413c288d2a432a478a5d04c6ac" id="r_aa1f0d2413c288d2a432a478a5d04c6ac"><td class="memItemLeft">SDL_Window *&#160;</td><td class="memItemRight"><a class="el" href="#aa1f0d2413c288d2a432a478a5d04c6ac">makeWindow</a> (int width, int height, const char *title, SDL_DisplayID displayID=0)</td></tr>
+<tr class="memitem:adf48857c7ba7d3d4519463365745a98b" id="r_adf48857c7ba7d3d4519463365745a98b"><td class="memItemLeft">SDL_Window *&#160;</td><td class="memItemRight"><a class="el" href="#adf48857c7ba7d3d4519463365745a98b">getWindow</a> () const</td></tr>
+<tr class="memdesc:adf48857c7ba7d3d4519463365745a98b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the owned window pointer, if created.  <br /></td></tr>
 <tr class="memitem:a409fda9ca3569ffbb94bec8ca9324b27" id="r_a409fda9ca3569ffbb94bec8ca9324b27"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a409fda9ca3569ffbb94bec8ca9324b27">makeCurrent</a> ()</td></tr>
 <tr class="memdesc:a409fda9ca3569ffbb94bec8ca9324b27"><td class="mdescLeft">&#160;</td><td class="mdescRight">Makes the context current for the calling thread.  <br /></td></tr>
 </table><table class="memberdecls">
@@ -150,14 +152,20 @@ Static Public Member Functions</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-pub-attribs" class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
-<tr class="memitem:a2e61a4bb3ea27ebc9bcf2ef2cff82507" id="r_a2e61a4bb3ea27ebc9bcf2ef2cff82507"><td class="memItemLeft">GLFWwindow *&#160;</td><td class="memItemRight"><a class="el" href="#a2e61a4bb3ea27ebc9bcf2ef2cff82507">window</a> = nullptr</td></tr>
+<tr class="memitem:acbe71d9f8ee8cb6676a6a0e79e822ecb" id="r_acbe71d9f8ee8cb6676a6a0e79e822ecb"><td class="memItemLeft">SDL_Window *&#160;</td><td class="memItemRight"><a class="el" href="#acbe71d9f8ee8cb6676a6a0e79e822ecb">window</a> = nullptr</td></tr>
+<tr class="memitem:a49f25e38735205463861d517c9242409" id="r_a49f25e38735205463861d517c9242409"><td class="memItemLeft">SDL_GLContext&#160;</td><td class="memItemRight"><a class="el" href="#a49f25e38735205463861d517c9242409">glContext</a> = nullptr</td></tr>
 <tr class="memitem:a0003ff0ba24f87bf247f6a281346446d" id="r_a0003ff0ba24f87bf247f6a281346446d"><td class="memItemLeft"><a class="el" href="structopal_1_1_context_configuration.html">ContextConfiguration</a>&#160;</td><td class="memItemRight"><a class="el" href="#a0003ff0ba24f87bf247f6a281346446d">config</a></td></tr>
+<tr class="memitem:aa627c46db9ec80233b0fad28a9cf2be4" id="r_aa627c46db9ec80233b0fad28a9cf2be4"><td class="memItemLeft">bool&#160;</td><td class="memItemRight"><a class="el" href="#aa627c46db9ec80233b0fad28a9cf2be4">decorated</a> = true</td></tr>
+<tr class="memitem:a6d15166ea18d48d017d1ba1630f8c406" id="r_a6d15166ea18d48d017d1ba1630f8c406"><td class="memItemLeft">bool&#160;</td><td class="memItemRight"><a class="el" href="#a6d15166ea18d48d017d1ba1630f8c406">resizable</a> = true</td></tr>
+<tr class="memitem:a55af9c337a188d2fb701ec300fac3752" id="r_a55af9c337a188d2fb701ec300fac3752"><td class="memItemLeft">bool&#160;</td><td class="memItemRight"><a class="el" href="#a55af9c337a188d2fb701ec300fac3752">transparent</a> = false</td></tr>
+<tr class="memitem:a3579dfe194f3e2a046767e0123bb9b82" id="r_a3579dfe194f3e2a046767e0123bb9b82"><td class="memItemLeft">bool&#160;</td><td class="memItemRight"><a class="el" href="#a3579dfe194f3e2a046767e0123bb9b82">alwaysOnTop</a> = false</td></tr>
+<tr class="memitem:a93b693c1fc9de2d62583f49d2cc476d4" id="r_a93b693c1fc9de2d62583f49d2cc476d4"><td class="memItemLeft">bool&#160;</td><td class="memItemRight"><a class="el" href="#a93b693c1fc9de2d62583f49d2cc476d4">highPixelDensity</a> = true</td></tr>
+<tr class="memitem:a0a7c2b866cad1eedd37bcb0db86cff84" id="r_a0a7c2b866cad1eedd37bcb0db86cff84"><td class="memItemLeft">int&#160;</td><td class="memItemRight"><a class="el" href="#a0a7c2b866cad1eedd37bcb0db86cff84">samples</a> = 0</td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>Rendering context wrapper (GLFW + backend initialization). </p>
-<p>For OpenGL, the context owns the <span class="tt">GLFWwindow*</span>. </p>
+<div class="textblock"><p>Rendering context wrapper (SDL + backend initialization). </p>
 
-<p class="definition">Definition at line <a class="el" href="opal_8h_source.html#l00061">61</a> of file <a class="el" href="opal_8h_source.html">opal.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="opal_8h_source.html#l00059">59</a> of file <a class="el" href="opal_8h_source.html">opal.h</a>.</p>
 </div><a name="doc-constructors" id="doc-constructors"></a><h2 id="header-doc-constructors" class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="a19236b951c548721b6ec2bb1a1f30571" name="a19236b951c548721b6ec2bb1a1f30571"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a19236b951c548721b6ec2bb1a1f30571">&#9670;&#160;</a></span>~Context()</h2>
@@ -206,14 +214,14 @@ Public Attributes</h2></td></tr>
 
 </div>
 </div>
-<a id="a491d00cd9b2f9d2b25adbb640fd0e55f" name="a491d00cd9b2f9d2b25adbb640fd0e55f"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a491d00cd9b2f9d2b25adbb640fd0e55f">&#9670;&#160;</a></span>getWindow()</h2>
+<a id="adf48857c7ba7d3d4519463365745a98b" name="adf48857c7ba7d3d4519463365745a98b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#adf48857c7ba7d3d4519463365745a98b">&#9670;&#160;</a></span>getWindow()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">GLFWwindow * opal::Context::getWindow </td>
+          <td class="memname">SDL_Window * opal::Context::getWindow </td>
           <td>(</td>
           <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
           <td> const</td>
@@ -244,14 +252,14 @@ Public Attributes</h2></td></tr>
 
 </div>
 </div>
-<a id="a93a559229e8861b58277dfbef2c1d2c9" name="a93a559229e8861b58277dfbef2c1d2c9"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a93a559229e8861b58277dfbef2c1d2c9">&#9670;&#160;</a></span>makeWindow()</h2>
+<a id="aa1f0d2413c288d2a432a478a5d04c6ac" name="aa1f0d2413c288d2a432a478a5d04c6ac"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa1f0d2413c288d2a432a478a5d04c6ac">&#9670;&#160;</a></span>makeWindow()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">GLFWwindow * opal::Context::makeWindow </td>
+          <td class="memname">SDL_Window * opal::Context::makeWindow </td>
           <td>(</td>
           <td class="paramtype">int</td>          <td class="paramname"><span class="paramname"><em>width</em></span>, </td>
         </tr>
@@ -268,65 +276,132 @@ Public Attributes</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">GLFWmonitor *</td>          <td class="paramname"><span class="paramname"><em>monitor</em></span><span class="paramdefsep"> = </span><span class="paramdefval">nullptr</span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">GLFWwindow *</td>          <td class="paramname"><span class="paramname"><em>share</em></span><span class="paramdefsep"> = </span><span class="paramdefval">nullptr</span>&#160;)</td>
+          <td class="paramtype">SDL_DisplayID</td>          <td class="paramname"><span class="paramname"><em>displayID</em></span><span class="paramdefsep"> = </span><span class="paramdefval">0</span>&#160;)</td>
         </tr>
       </table>
 </div><div class="memdoc">
 
 </div>
 </div>
-<a id="ab09b632a49bf9a9f9c5768c83201c732" name="ab09b632a49bf9a9f9c5768c83201c732"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ab09b632a49bf9a9f9c5768c83201c732">&#9670;&#160;</a></span>setFlag() <span class="overload">[1/2]</span></h2>
+<a id="aa5d9eec2c084235292a7f4224f2da3de" name="aa5d9eec2c084235292a7f4224f2da3de"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa5d9eec2c084235292a7f4224f2da3de">&#9670;&#160;</a></span>setAlwaysOnTop()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">void opal::Context::setFlag </td>
+          <td class="memname">void opal::Context::setAlwaysOnTop </td>
           <td>(</td>
-          <td class="paramtype">int</td>          <td class="paramname"><span class="paramname"><em>flag</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
+          <td class="paramtype">bool</td>          <td class="paramname"><span class="paramname"><em>enabled</em></span></td><td>)</td>
           <td></td>
-          <td class="paramtype">bool</td>          <td class="paramname"><span class="paramname"><em>enabled</em></span>&#160;)</td>
         </tr>
       </table>
 </div><div class="memdoc">
 
-<p>Sets a GLFW window/context flag to a boolean value. </p>
-
 </div>
 </div>
-<a id="a2150c2224cce8367d9adc72ffcc93482" name="a2150c2224cce8367d9adc72ffcc93482"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a2150c2224cce8367d9adc72ffcc93482">&#9670;&#160;</a></span>setFlag() <span class="overload">[2/2]</span></h2>
+<a id="ab5d4df61fdfd0e9c58429919fbbc763d" name="ab5d4df61fdfd0e9c58429919fbbc763d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab5d4df61fdfd0e9c58429919fbbc763d">&#9670;&#160;</a></span>setDecorated()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">void opal::Context::setFlag </td>
+          <td class="memname">void opal::Context::setDecorated </td>
           <td>(</td>
-          <td class="paramtype">int</td>          <td class="paramname"><span class="paramname"><em>flag</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
+          <td class="paramtype">bool</td>          <td class="paramname"><span class="paramname"><em>enabled</em></span></td><td>)</td>
           <td></td>
-          <td class="paramtype">int</td>          <td class="paramname"><span class="paramname"><em>value</em></span>&#160;)</td>
         </tr>
       </table>
 </div><div class="memdoc">
 
-<p>Sets a GLFW window/context flag to an integer value. </p>
+</div>
+</div>
+<a id="aac0a8e035d716993aa51f4547df5437d" name="aac0a8e035d716993aa51f4547df5437d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aac0a8e035d716993aa51f4547df5437d">&#9670;&#160;</a></span>setHighPixelDensity()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void opal::Context::setHighPixelDensity </td>
+          <td>(</td>
+          <td class="paramtype">bool</td>          <td class="paramname"><span class="paramname"><em>enabled</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a26ca0fcf5362a30d345ba34b578c6090" name="a26ca0fcf5362a30d345ba34b578c6090"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a26ca0fcf5362a30d345ba34b578c6090">&#9670;&#160;</a></span>setResizable()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void opal::Context::setResizable </td>
+          <td>(</td>
+          <td class="paramtype">bool</td>          <td class="paramname"><span class="paramname"><em>enabled</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a446cdd2591eb1b70c25307216c5c72c8" name="a446cdd2591eb1b70c25307216c5c72c8"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a446cdd2591eb1b70c25307216c5c72c8">&#9670;&#160;</a></span>setSamples()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void opal::Context::setSamples </td>
+          <td>(</td>
+          <td class="paramtype">int</td>          <td class="paramname"><span class="paramname"><em>value</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="afc97a4a9542bfb5b5d998a2542cf9262" name="afc97a4a9542bfb5b5d998a2542cf9262"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#afc97a4a9542bfb5b5d998a2542cf9262">&#9670;&#160;</a></span>setTransparent()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void opal::Context::setTransparent </td>
+          <td>(</td>
+          <td class="paramtype">bool</td>          <td class="paramname"><span class="paramname"><em>enabled</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
 
 </div>
 </div>
 <a name="doc-variable-members" id="doc-variable-members"></a><h2 id="header-doc-variable-members" class="groupheader">Member Data Documentation</h2>
+<a id="a3579dfe194f3e2a046767e0123bb9b82" name="a3579dfe194f3e2a046767e0123bb9b82"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3579dfe194f3e2a046767e0123bb9b82">&#9670;&#160;</a></span>alwaysOnTop</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool opal::Context::alwaysOnTop = false</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="opal_8h_source.html#l00086">86</a> of file <a class="el" href="opal_8h_source.html">opal.h</a>.</p>
+
+</div>
+</div>
 <a id="a0003ff0ba24f87bf247f6a281346446d" name="a0003ff0ba24f87bf247f6a281346446d"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a0003ff0ba24f87bf247f6a281346446d">&#9670;&#160;</a></span>config</h2>
 
@@ -343,19 +418,115 @@ Public Attributes</h2></td></tr>
 
 </div>
 </div>
-<a id="a2e61a4bb3ea27ebc9bcf2ef2cff82507" name="a2e61a4bb3ea27ebc9bcf2ef2cff82507"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a2e61a4bb3ea27ebc9bcf2ef2cff82507">&#9670;&#160;</a></span>window</h2>
+<a id="aa627c46db9ec80233b0fad28a9cf2be4" name="aa627c46db9ec80233b0fad28a9cf2be4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa627c46db9ec80233b0fad28a9cf2be4">&#9670;&#160;</a></span>decorated</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">GLFWwindow* opal::Context::window = nullptr</td>
+          <td class="memname">bool opal::Context::decorated = true</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="opal_8h_source.html#l00083">83</a> of file <a class="el" href="opal_8h_source.html">opal.h</a>.</p>
+
+</div>
+</div>
+<a id="a49f25e38735205463861d517c9242409" name="a49f25e38735205463861d517c9242409"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a49f25e38735205463861d517c9242409">&#9670;&#160;</a></span>glContext</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">SDL_GLContext opal::Context::glContext = nullptr</td>
         </tr>
       </table>
 </div><div class="memdoc">
 
 <p class="definition">Definition at line <a class="el" href="opal_8h_source.html#l00081">81</a> of file <a class="el" href="opal_8h_source.html">opal.h</a>.</p>
+
+</div>
+</div>
+<a id="a93b693c1fc9de2d62583f49d2cc476d4" name="a93b693c1fc9de2d62583f49d2cc476d4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a93b693c1fc9de2d62583f49d2cc476d4">&#9670;&#160;</a></span>highPixelDensity</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool opal::Context::highPixelDensity = true</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="opal_8h_source.html#l00087">87</a> of file <a class="el" href="opal_8h_source.html">opal.h</a>.</p>
+
+</div>
+</div>
+<a id="a6d15166ea18d48d017d1ba1630f8c406" name="a6d15166ea18d48d017d1ba1630f8c406"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6d15166ea18d48d017d1ba1630f8c406">&#9670;&#160;</a></span>resizable</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool opal::Context::resizable = true</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="opal_8h_source.html#l00084">84</a> of file <a class="el" href="opal_8h_source.html">opal.h</a>.</p>
+
+</div>
+</div>
+<a id="a0a7c2b866cad1eedd37bcb0db86cff84" name="a0a7c2b866cad1eedd37bcb0db86cff84"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0a7c2b866cad1eedd37bcb0db86cff84">&#9670;&#160;</a></span>samples</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int opal::Context::samples = 0</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="opal_8h_source.html#l00088">88</a> of file <a class="el" href="opal_8h_source.html">opal.h</a>.</p>
+
+</div>
+</div>
+<a id="a55af9c337a188d2fb701ec300fac3752" name="a55af9c337a188d2fb701ec300fac3752"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a55af9c337a188d2fb701ec300fac3752">&#9670;&#160;</a></span>transparent</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool opal::Context::transparent = false</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="opal_8h_source.html#l00085">85</a> of file <a class="el" href="opal_8h_source.html">opal.h</a>.</p>
+
+</div>
+</div>
+<a id="acbe71d9f8ee8cb6676a6a0e79e822ecb" name="acbe71d9f8ee8cb6676a6a0e79e822ecb"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#acbe71d9f8ee8cb6676a6a0e79e822ecb">&#9670;&#160;</a></span>window</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">SDL_Window* opal::Context::window = nullptr</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="opal_8h_source.html#l00080">80</a> of file <a class="el" href="opal_8h_source.html">opal.h</a>.</p>
 
 </div>
 </div>

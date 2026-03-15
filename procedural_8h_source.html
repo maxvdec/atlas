@@ -46,7 +46,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 7</span>
+   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 8</span>
    </div>
    <div id="projectbrief">Build everything, and beyond</div>
   </td>
@@ -485,7 +485,7 @@ $(function(){initNavTree('procedural_8h_source.html','',''); });
 <div class="line"><a id="l00334" name="l00334"></a><span class="lineno">  334</span>    <span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</div>
 <div class="line"><a id="l00335" name="l00335"></a><span class="lineno">  335</span>        <span class="keyword">requires</span> std::is_base_of&lt;TerrainGenerator, T&gt;::value</div>
 <div class="foldopen" id="foldopen00336" data-start="{" data-end="}">
-<div class="line"><a id="l00336" name="l00336"></a><span class="lineno"><a class="line" href="class_compound_generator.html#ad1a0cfd3759f6e565c674a9707a42cc1">  336</a></span>    <span class="keywordtype">void</span> <a class="code hl_function" href="class_compound_generator.html#ad1a0cfd3759f6e565c674a9707a42cc1">addGenerator</a>(<a class="code hl_enumvalue" href="input_8h.html#a9479d299e1852e6140dcca1f405868abab9ece18c950afbfa6b0fdbfa4ff731d3">T</a> gen) {</div>
+<div class="line"><a id="l00336" name="l00336"></a><span class="lineno"><a class="line" href="class_compound_generator.html#ad1a0cfd3759f6e565c674a9707a42cc1">  336</a></span>    <span class="keywordtype">void</span> <a class="code hl_function" href="class_compound_generator.html#ad1a0cfd3759f6e565c674a9707a42cc1">addGenerator</a>(<a class="code hl_enumvalue" href="atlas_2input_8h.html#a9479d299e1852e6140dcca1f405868abab9ece18c950afbfa6b0fdbfa4ff731d3">T</a> gen) {</div>
 <div class="line"><a id="l00337" name="l00337"></a><span class="lineno">  337</span>        generators.push_back(std::make_shared&lt;T&gt;(std::move(gen)));</div>
 <div class="line"><a id="l00338" name="l00338"></a><span class="lineno">  338</span>    }</div>
 </div>
@@ -506,6 +506,7 @@ $(function(){initNavTree('procedural_8h_source.html','',''); });
 </div>
 <div class="line"><a id="l00351" name="l00351"></a><span class="lineno">  351</span> </div>
 <div class="line"><a id="l00352" name="l00352"></a><span class="lineno">  352</span><span class="preprocessor">#endif </span><span class="comment">// AURORA_PROCEDURAL_H</span></div>
+<div class="ttc" id="aatlas_2input_8h_html_a9479d299e1852e6140dcca1f405868abab9ece18c950afbfa6b0fdbfa4ff731d3"><div class="ttname"><a href="atlas_2input_8h.html#a9479d299e1852e6140dcca1f405868abab9ece18c950afbfa6b0fdbfa4ff731d3">Key::T</a></div><div class="ttdeci">@ T</div><div class="ttdef"><b>Definition</b> <a href="atlas_2input_8h_source.html#l00061">input.h:61</a></div></div>
 <div class="ttc" id="aclass_compound_generator_html"><div class="ttname"><a href="class_compound_generator.html">CompoundGenerator</a></div><div class="ttdoc">Aggregates multiple terrain generators and sums their contributions.</div><div class="ttdef"><b>Definition</b> <a href="#l00323">procedural.h:323</a></div></div>
 <div class="ttc" id="aclass_compound_generator_html_aae88c2164a2111a0c4702fd213300010"><div class="ttname"><a href="class_compound_generator.html#aae88c2164a2111a0c4702fd213300010">CompoundGenerator::generateHeight</a></div><div class="ttdeci">float generateHeight(float x, float y) override</div><div class="ttdoc">Sums the height contributions of all registered generators.</div><div class="ttdef"><b>Definition</b> <a href="#l00343">procedural.h:343</a></div></div>
 <div class="ttc" id="aclass_compound_generator_html_ad1a0cfd3759f6e565c674a9707a42cc1"><div class="ttname"><a href="class_compound_generator.html#ad1a0cfd3759f6e565c674a9707a42cc1">CompoundGenerator::addGenerator</a></div><div class="ttdeci">void addGenerator(T gen)</div><div class="ttdoc">Adds another generator to the compound stack.</div><div class="ttdef"><b>Definition</b> <a href="#l00336">procedural.h:336</a></div></div>
@@ -537,7 +538,6 @@ $(function(){initNavTree('procedural_8h_source.html','',''); });
 <div class="ttc" id="aclass_worley_noise_html"><div class="ttname"><a href="class_worley_noise.html">WorleyNoise</a></div><div class="ttdoc">Worley (cellular) noise generator used for island and crater shapes.</div><div class="ttdef"><b>Definition</b> <a href="#l00080">procedural.h:80</a></div></div>
 <div class="ttc" id="aclass_worley_noise_html_a1ff1fe05562ffd4dcbd13a07d2c79ad4"><div class="ttname"><a href="class_worley_noise.html#a1ff1fe05562ffd4dcbd13a07d2c79ad4">WorleyNoise::WorleyNoise</a></div><div class="ttdeci">WorleyNoise(int numPoints, unsigned int seed=0)</div><div class="ttdoc">Creates a Worley noise generator with a desired feature count.</div></div>
 <div class="ttc" id="aclass_worley_noise_html_a43d855be0f8322ae815d89f8f478870e"><div class="ttname"><a href="class_worley_noise.html#a43d855be0f8322ae815d89f8f478870e">WorleyNoise::noise</a></div><div class="ttdeci">float noise(float x, float y) const</div><div class="ttdoc">Samples the distance to the closest feature point.</div></div>
-<div class="ttc" id="ainput_8h_html_a9479d299e1852e6140dcca1f405868abab9ece18c950afbfa6b0fdbfa4ff731d3"><div class="ttname"><a href="input_8h.html#a9479d299e1852e6140dcca1f405868abab9ece18c950afbfa6b0fdbfa4ff731d3">Key::T</a></div><div class="ttdeci">@ T</div><div class="ttdef"><b>Definition</b> <a href="input_8h_source.html#l00059">input.h:59</a></div></div>
 <div class="ttc" id="astruct_perlin_noise_html"><div class="ttname"><a href="struct_perlin_noise.html">PerlinNoise</a></div><div class="ttdoc">Classic gradient-noise implementation used for soft terrain shapes.</div><div class="ttdef"><b>Definition</b> <a href="#l00029">procedural.h:29</a></div></div>
 <div class="ttc" id="astruct_perlin_noise_html_a207f0d959b04d85d051b41956ae4245f"><div class="ttname"><a href="struct_perlin_noise.html#a207f0d959b04d85d051b41956ae4245f">PerlinNoise::noise</a></div><div class="ttdeci">float noise(float x, float y) const</div><div class="ttdoc">Produces a coherent noise value for the provided coordinates.</div></div>
 <div class="ttc" id="astruct_perlin_noise_html_af5eca66a372d3ff89584383685b729ce"><div class="ttname"><a href="struct_perlin_noise.html#af5eca66a372d3ff89584383685b729ce">PerlinNoise::PerlinNoise</a></div><div class="ttdeci">PerlinNoise(unsigned int seed=0)</div><div class="ttdoc">Builds a noise generator with an optional deterministic seed.</div></div>

@@ -53,7 +53,7 @@ MathJax.Hub.Config({
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 7</span>
+   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 8</span>
    </div>
    <div id="projectbrief">Build everything, and beyond</div>
   </td>
@@ -141,9 +141,14 @@ $(function(){initNavTree('functions_g.html','',''); });
 <li>getAtmosphereSkybox()&#160;:&#160;<a class="el" href="class_scene.html#a4cdec8781efa7f882062b8baa6dc60e6">Scene</a></li>
 <li>getAutomaticAmbientColor()&#160;:&#160;<a class="el" href="class_scene.html#a35ea9f3457ba80832a8823d088621246">Scene</a></li>
 <li>getAutomaticAmbientIntensity()&#160;:&#160;<a class="el" href="class_scene.html#a38145c09216f3e29dbf88e5cea5996ae">Scene</a></li>
+<li>getAxisActionValue()&#160;:&#160;<a class="el" href="class_window.html#a42a1c074bd5f6037c6e7209aa559b719">Window</a></li>
+<li>getAxisCount()&#160;:&#160;<a class="el" href="struct_joystick.html#acb498d99b95607d9602491ee030cb393">Joystick</a></li>
+<li>getAxisTrigger()&#160;:&#160;<a class="el" href="struct_gamepad.html#ab8f81253f1b61e88511dda842a8723b8">Gamepad</a></li>
 <li>getBloomTexture()&#160;:&#160;<a class="el" href="class_bloom_render_target.html#afbcfb35d2e65c88e071bedd9714bab2b">BloomRenderTarget</a></li>
 <li>getBounds()&#160;:&#160;<a class="el" href="class_box.html#ac8d43f371aec863cc5fa9ca03b4f402f">Box</a>, <a class="el" href="class_convex.html#a51d20173011c28a8f32bc3bf9270b614">Convex</a>, <a class="el" href="class_shape.html#ac942bbdbba2011bb79af65117be2d151">Shape</a>, <a class="el" href="class_sphere.html#a2d5264916f68bc2ab5437366e275320f">Sphere</a></li>
 <li>GetBroadPhaseLayer()&#160;:&#160;<a class="el" href="classbezel__jolt_1_1_broad_phase_layer_impl.html#aa599dde682b27c48ca2eb11e522d1431">bezel_jolt::BroadPhaseLayerImpl</a></li>
+<li>getButtonCount()&#160;:&#160;<a class="el" href="struct_joystick.html#a395321b541d1a6aa3f9d3b0b9b9df82d">Joystick</a></li>
+<li>getButtonTrigger()&#160;:&#160;<a class="el" href="struct_gamepad.html#a9c77a00da6293855ba19674a0dc0159c">Gamepad</a>, <a class="el" href="struct_joystick.html#a7e248a57966f40cb0ba5760778384047">Joystick</a></li>
 <li>getCamera()&#160;:&#160;<a class="el" href="class_window.html#a44bd50953bdd8e5c40a690aaa9842fea">Window</a></li>
 <li>getCenterOfMass()&#160;:&#160;<a class="el" href="class_shape.html#a70fbd011007b13c474b031aaf38d0a4d">Shape</a></li>
 <li>getCenterOfMassModelSpace()&#160;:&#160;<a class="el" href="class_body.html#a31a0f0224b83aa86f7359ea26adb3e10">Body</a></li>
@@ -154,8 +159,13 @@ $(function(){initNavTree('functions_g.html','',''); });
 <li>getComputeThreadgroupSizeY()&#160;:&#160;<a class="el" href="classopal_1_1_pipeline.html#a7f64ff3d670d288a99041501ad6dd2ca">opal::Pipeline</a></li>
 <li>getComputeThreadgroupSizeZ()&#160;:&#160;<a class="el" href="classopal_1_1_pipeline.html#adac3d8dc2c4047d1a5695c99a3b8ec4a">opal::Pipeline</a></li>
 <li>getContentScale()&#160;:&#160;<a class="el" href="class_monitor.html#a1862cfe8261602e2446a78bca29c7d42">Monitor</a></li>
+<li>getController()&#160;:&#160;<a class="el" href="class_window.html#a7937c3f4af8b448c06721d621968d5b0">Window</a></li>
+<li>getControllerAxisPairValue()&#160;:&#160;<a class="el" href="class_window.html#afea6208c575f32ca13371c68c47d677c">Window</a></li>
+<li>getControllerAxisValue()&#160;:&#160;<a class="el" href="class_window.html#ac17a01633825dd3d81b8d016eab12d85">Window</a></li>
+<li>getControllers()&#160;:&#160;<a class="el" href="class_window.html#ababa72ceb8138cc1aaee195893b866b5">Window</a></li>
 <li>getCurrentScene()&#160;:&#160;<a class="el" href="class_window.html#a212e7c7c5c70e88e51617bb20063563a">Window</a></li>
 <li>getCurrentVideoMode()&#160;:&#160;<a class="el" href="class_monitor.html#aaee65191af1b08ffcd05d5f30b825c07">Monitor</a></li>
+<li>getCursorIndex()&#160;:&#160;<a class="el" href="class_text_field.html#a4d5916472942b58e9ab117cade584dd0">TextField</a></li>
 <li>getCursorPosition()&#160;:&#160;<a class="el" href="class_window.html#a2384f0562839b4d6b4ec3ad8e9bcf8cb">Window</a></li>
 <li>getDefaultFramebuffer()&#160;:&#160;<a class="el" href="classopal_1_1_device.html#aaae40163536bbabe7b6ca6964934b2d9">opal::Device</a></li>
 <li>getDeltaTime()&#160;:&#160;<a class="el" href="class_window.html#abbe5169816fddf920c8b2d2fc7d5bdeb">Window</a></li>
@@ -165,19 +175,25 @@ $(function(){initNavTree('functions_g.html','',''); });
 <li>getDeviceInfo()&#160;:&#160;<a class="el" href="classopal_1_1_device.html#ad661e872883b83c26c6299af269022e6">opal::Device</a></li>
 <li>getDirectionalLights()&#160;:&#160;<a class="el" href="class_scene.html#a194faa879e48e9895abc7cbc5318db7a">Scene</a></li>
 <li>getDrawBufferCount()&#160;:&#160;<a class="el" href="classopal_1_1_framebuffer.html#a9858bb38347780f126754a4b11708d4c">opal::Framebuffer</a></li>
+<li>getDualAxisTrigger()&#160;:&#160;<a class="el" href="struct_joystick.html#a0135589fa73b18970c3d3dc393b9ed25">Joystick</a></li>
 <li>getElements()&#160;:&#160;<a class="el" href="class_bloom_render_target.html#a32b8ed67d708af289702dafc475c5a2a">BloomRenderTarget</a></li>
 <li>getFont()&#160;:&#160;<a class="el" href="struct_font.html#a0d26a65a8113d5ef34e2a21c65e487e6">Font</a></li>
 <li>getFramebuffer()&#160;:&#160;<a class="el" href="class_render_target.html#a181ef0249db650ceefd17ef334143875">RenderTarget</a></li>
 <li>getFramesPerSecond()&#160;:&#160;<a class="el" href="class_window.html#afe9743b73137fdf4e269c69a823c08e4">Window</a></li>
 <li>getFrontVector()&#160;:&#160;<a class="el" href="class_camera.html#afbf79ea00fe5e9086a72b29119e08311">Camera</a></li>
 <li>getGBuffer()&#160;:&#160;<a class="el" href="class_window.html#aa14de47eea029b5670de01c53c956e6c">Window</a></li>
+<li>getGlobalAxisTrigger()&#160;:&#160;<a class="el" href="struct_gamepad.html#ae415590e7fb57f18580efc8649109865">Gamepad</a></li>
+<li>getGlobalButtonTrigger()&#160;:&#160;<a class="el" href="struct_gamepad.html#a1855b2ba1aa8522371ff2892576c5217">Gamepad</a></li>
 <li>getHeight()&#160;:&#160;<a class="el" href="class_render_target.html#ac41c1ab892231cde6e74b9106b3ed870">RenderTarget</a></li>
 <li>getId()&#160;:&#160;<a class="el" href="class_audio_data.html#aceb85e5c71dbf33f438af85351edcb36">AudioData</a>, <a class="el" href="class_game_object.html#a6ec5febd0b246ca17ad06a0463db6445">GameObject</a>, <a class="el" href="class_renderable.html#ac40a73fd7fb34a4f5757df3cac945a95">Renderable</a></li>
 <li>getInertiaTensor()&#160;:&#160;<a class="el" href="class_box.html#a19ea93c7956409eba55971305332602e">Box</a>, <a class="el" href="class_convex.html#abf6f55fece4fb68cdb0ece8540b0276f">Convex</a>, <a class="el" href="class_shape.html#ab73e920f2730afb22e3a9b2d597a89d2">Shape</a>, <a class="el" href="class_sphere.html#af4e184f9d33922696fd79a042b789cc6">Sphere</a></li>
+<li>getInputAction()&#160;:&#160;<a class="el" href="class_window.html#acf27a294d6e8f7af40efd3de2d669556">Window</a></li>
 <li>getInstance()&#160;:&#160;<a class="el" href="class_logger.html#a56defd0fd628ce6263d25d02296e48ce">Logger</a>, <a class="el" href="class_resource_tracker.html#ac665541c3cb7164b83a3f1a3189d3565">ResourceTracker</a>, <a class="el" href="class_tracer_services.html#a6272832805b68aadca1c62beded7c9c6">TracerServices</a></li>
 <li>getInverseInertiaTensorBodySpace()&#160;:&#160;<a class="el" href="class_body.html#a0f9983d1203d71a13990578b6f117799">Body</a></li>
 <li>getInverseInertiaTensorWorldSpace()&#160;:&#160;<a class="el" href="class_body.html#a6b570ff19e64d03b8d8ef7df455b25f6">Body</a></li>
 <li>getJoltShape()&#160;:&#160;<a class="el" href="classbezel_1_1_box_collider.html#abf50a00c93e13a0e27c48c1963214aba">bezel::BoxCollider</a>, <a class="el" href="classbezel_1_1_capsule_collider.html#a773c88ebef92664df679e4e7bc9ac75d">bezel::CapsuleCollider</a>, <a class="el" href="classbezel_1_1_collider.html#aff38ba8e41f47a8c3020069958a8fe29">bezel::Collider</a>, <a class="el" href="classbezel_1_1_mesh_collider.html#a96032ab7cc0fa3e963f0146628e4d2c3">bezel::MeshCollider</a>, <a class="el" href="classbezel_1_1_sphere_collider.html#a7b17e43c820d842a0de0af9806bd0ed9">bezel::SphereCollider</a></li>
+<li>getJoystick()&#160;:&#160;<a class="el" href="class_window.html#ac251042c30be49c19d4629e413b860d4">Window</a></li>
+<li>getLabel()&#160;:&#160;<a class="el" href="class_button.html#a26f11ac4b08598032392c3c56c51a057">Button</a>, <a class="el" href="class_checkbox.html#a8161bf03d767a0817dc90416da545f77">Checkbox</a></li>
 <li>getLateRenderable()&#160;:&#160;<a class="el" href="class_compound_object.html#aa1ca7d68f744ab4fb6ae9337ec86f719">CompoundObject</a></li>
 <li>getLayoutDescriptors()&#160;:&#160;<a class="el" href="struct_core_vertex.html#ab02504bba94d5fb8d33a34b880ba78cb">CoreVertex</a></li>
 <li>getLightColor()&#160;:&#160;<a class="el" href="class_atmosphere.html#aa8ee0090628c93b2821a429a8bbb863e">Atmosphere</a></li>
@@ -211,27 +227,28 @@ $(function(){initNavTree('functions_g.html','',''); });
 <li>getRotation()&#160;:&#160;<a class="el" href="class_core_object.html#a65044739cecbc990fff1d91012ed29f0">CoreObject</a>, <a class="el" href="class_game_object.html#a6fdf9066668a13404fdca02f969b6e11">GameObject</a>, <a class="el" href="class_model.html#a58776e17a471807c28b3489de18f1fb1">Model</a></li>
 <li>getScale()&#160;:&#160;<a class="el" href="class_compound_object.html#ad506aaf4b387e22b7278581c26978838">CompoundObject</a>, <a class="el" href="class_core_object.html#a8c8169d24e303581bc1ce6d0ac8cb92d">CoreObject</a>, <a class="el" href="struct_fluid.html#a28e59e0bb5e3c479f5cb9ede6b15677c">Fluid</a>, <a class="el" href="class_model.html#adf32150fe67ba67c26a43eeb3bbb5869">Model</a>, <a class="el" href="class_renderable.html#a98ddcdedf7f0c6d440be821c80d6ed12">Renderable</a></li>
 <li>getSceneBoundingBox()&#160;:&#160;<a class="el" href="class_window.html#aa847ce692de563d6a8481d7ff5c8d78f">Window</a></li>
+<li>getScreenPosition()&#160;:&#160;<a class="el" href="class_button.html#a9fb91ccf7919a0994cc7b2ee5affba01">Button</a>, <a class="el" href="class_checkbox.html#a059f71ccc57fecbe6c62ff0fd198f5f3">Checkbox</a>, <a class="el" href="class_column.html#ac67f89ae123c6dce30dc8b6ce288742c">Column</a>, <a class="el" href="class_image.html#a62b1c775ce6cb20cfc5aedcae1bbe753">Image</a>, <a class="el" href="class_row.html#a6f7b0c3e82809e113df74e9b5ccaf797">Row</a>, <a class="el" href="class_stack.html#a35771685dec4618d709b0c7e573f487c">Stack</a>, <a class="el" href="class_text.html#a26fc0e5b652f3941ec77009c7e12b2d5">Text</a>, <a class="el" href="class_text_field.html#a6a84a62875d22a9df32de59c81378d3b">TextField</a>, <a class="el" href="class_u_i_object.html#ac034bee8ddd12638f960c693df908350">UIObject</a></li>
 <li>getShaderLog()&#160;:&#160;<a class="el" href="classopal_1_1_shader.html#a39dde952fc7adfff8638ed675eae13f2">opal::Shader</a></li>
 <li>getShaderProgram()&#160;:&#160;<a class="el" href="class_renderable.html#a0c0180d14588c6ed436cc7d153c9b22c">Renderable</a></li>
 <li>getShaderStatus()&#160;:&#160;<a class="el" href="classopal_1_1_shader.html#ab50f4a0dea95a733b9f884469fff621a">opal::Shader</a></li>
-<li>getSize()&#160;:&#160;<a class="el" href="class_window.html#a45631c1890acbdff3bc1321236b131ef">Window</a></li>
+<li>getSingleAxisTrigger()&#160;:&#160;<a class="el" href="struct_joystick.html#a3292214af3da36e310ff80eb50139b3b">Joystick</a></li>
+<li>getSize()&#160;:&#160;<a class="el" href="class_button.html#a0164bdedc3bd0d70858b0ef0ea3f2874">Button</a>, <a class="el" href="class_checkbox.html#a0c2215a4d4e19333bc931f3104a00c2f">Checkbox</a>, <a class="el" href="class_column.html#a8fd9606005c5eb96ae78e9b8dfba1e84">Column</a>, <a class="el" href="class_image.html#acaf9b8064d139d43286e5b755b15a7a8">Image</a>, <a class="el" href="class_row.html#a8ffe6e90e8998f13fcde61d3ee12cefa">Row</a>, <a class="el" href="class_stack.html#adafd7063b754a575feee75199b2776ef">Stack</a>, <a class="el" href="class_text.html#a8e44085849c9c12d2209584c4412ef6b">Text</a>, <a class="el" href="class_text_field.html#acbf88054f6cb7fb22e8f04793f398d95">TextField</a>, <a class="el" href="class_u_i_object.html#ab57b2b497331d4cac61033d05942c9ab">UIObject</a>, <a class="el" href="class_window.html#a45631c1890acbdff3bc1321236b131ef">Window</a></li>
 <li>getSkybox()&#160;:&#160;<a class="el" href="class_scene.html#a454d4fddd81ca0b1b4016bc065cd653a">Scene</a></li>
 <li>getSkyboxColors()&#160;:&#160;<a class="el" href="class_atmosphere.html#a5c3c7bcc17f290335c8c43681448876b">Atmosphere</a></li>
 <li>getSpotlights()&#160;:&#160;<a class="el" href="class_scene.html#a95ec942b938e6629c986f1ecba684262">Scene</a></li>
 <li>getSSAORenderScale()&#160;:&#160;<a class="el" href="class_window.html#aac9117a294cadfd7035c5d4bf0dc73f6">Window</a></li>
 <li>getStatus()&#160;:&#160;<a class="el" href="classopal_1_1_framebuffer.html#a99192c1cb8deeadf357dd695c4384b96">opal::Framebuffer</a></li>
 <li>getSunAngle()&#160;:&#160;<a class="el" href="class_atmosphere.html#abfc9459823400a2a889117cf92b98e99">Atmosphere</a></li>
+<li>getText()&#160;:&#160;<a class="el" href="class_text_field.html#a4f185c032b95957be65afc268a31249d">TextField</a></li>
+<li>getTextInput()&#160;:&#160;<a class="el" href="class_window.html#a41db0761c691e678c26049150364ef19">Window</a></li>
 <li>getTime()&#160;:&#160;<a class="el" href="class_window.html#a3eceaf8292cf3e29e928c31218e5b0c8">Window</a></li>
 <li>getType()&#160;:&#160;<a class="el" href="class_box.html#a474b6aab765ab104ca4f9ed24215d3e7">Box</a>, <a class="el" href="class_convex.html#a9b3847e76c22979840e2dac6679990af">Convex</a>, <a class="el" href="class_shape.html#a1a4b4fa6764bc94365fec828de08d667">Shape</a>, <a class="el" href="class_sphere.html#afec42c7082346cc00a5a28ee9b4fcf87">Sphere</a></li>
 <li>getValue()&#160;:&#160;<a class="el" href="class_worley_noise3_d.html#af44a3b160aaf49863bb90abe9c18166c">WorleyNoise3D</a></li>
 <li>getVelocity()&#160;:&#160;<a class="el" href="structbezel_1_1_rigidbody.html#af6ec75e02c5e17ed4bca27c55f3846f4">bezel::Rigidbody</a>, <a class="el" href="class_camera.html#ad3e377decee8b087e74188cf4e7b0795">Camera</a>, <a class="el" href="class_rigidbody.html#ac858887c2ff98e715ba6bb5546eebc44">Rigidbody</a></li>
 <li>getVertices()&#160;:&#160;<a class="el" href="class_compound_object.html#a861e922b1025bb7bfa000ab858470185">CompoundObject</a>, <a class="el" href="class_core_object.html#adac5522b978d9300dc27bc9233704533">CoreObject</a>, <a class="el" href="class_model.html#a7c876d302f1218a62d6ad2d80eea44a5">Model</a>, <a class="el" href="class_renderable.html#a699e0a52700234e195a44f7be4e4d531">Renderable</a></li>
 <li>getWidth()&#160;:&#160;<a class="el" href="class_render_target.html#ada77bd874308782eaeea700dbcdc1024">RenderTarget</a></li>
-<li>getWindow()&#160;:&#160;<a class="el" href="class_component.html#a64a41360decf2e4b88ebf553fadb20e2">Component</a>, <a class="el" href="classopal_1_1_context.html#a491d00cd9b2f9d2b25adbb640fd0e55f">opal::Context</a></li>
-<li>giPipeline&#160;:&#160;<a class="el" href="classphoton_1_1_global_illumination.html#a1b7e666ba4685cddbdbc79afcea0350d">photon::GlobalIllumination</a></li>
-<li>giRaytracingPipeline&#160;:&#160;<a class="el" href="classphoton_1_1_global_illumination.html#ac1089b15ea482603b0cff35b99dde8a9">photon::GlobalIllumination</a></li>
-<li>giRaytracingShader&#160;:&#160;<a class="el" href="classphoton_1_1_global_illumination.html#ae677b2fb867a7783087ac0bc86ab5d63">photon::GlobalIllumination</a></li>
-<li>giWriteShader&#160;:&#160;<a class="el" href="classphoton_1_1_global_illumination.html#a5c497f5c3e94a8507851b9100625b775">photon::GlobalIllumination</a></li>
+<li>getWindow()&#160;:&#160;<a class="el" href="class_component.html#a64a41360decf2e4b88ebf553fadb20e2">Component</a>, <a class="el" href="classopal_1_1_context.html#adf48857c7ba7d3d4519463365745a98b">opal::Context</a></li>
+<li>glContext&#160;:&#160;<a class="el" href="classopal_1_1_context.html#a49f25e38735205463861d517c9242409">opal::Context</a></li>
 <li>globalInstance&#160;:&#160;<a class="el" href="classopal_1_1_device.html#ad598cc6057b1dda99480dbd529919f97">opal::Device</a></li>
 <li>gMaterial&#160;:&#160;<a class="el" href="class_render_target.html#aaba8415726d19aac146c378b5c571243">RenderTarget</a></li>
 <li>gNormal&#160;:&#160;<a class="el" href="class_render_target.html#a9838f6c1c3ecf06a6910267b82b488fc">RenderTarget</a></li>

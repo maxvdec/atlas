@@ -10,5 +10,7 @@ var searchData=
   ['audioeffect_7',['AudioEffect',['../class_audio_effect.html',1,'']]],
   ['audioengine_8',['AudioEngine',['../class_audio_engine.html',1,'']]],
   ['audioplayer_9',['AudioPlayer',['../class_audio_player.html',1,'']]],
-  ['audiosource_10',['AudioSource',['../class_audio_source.html',1,'']]]
+  ['audiosource_10',['AudioSource',['../class_audio_source.html',1,'']]],
+  ['axispacket_11',['AxisPacket',['../struct_axis_packet.html',1,'']]],
+  ['axistrigger_12',['AxisTrigger',['../struct_axis_trigger.html',1,'']]]
 ];

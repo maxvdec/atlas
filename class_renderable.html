@@ -53,7 +53,7 @@ MathJax.Hub.Config({
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 7</span>
+   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 8</span>
    </div>
    <div id="projectbrief">Build everything, and beyond</div>
   </td>
@@ -144,8 +144,15 @@ Inheritance diagram for Renderable:</div>
 <area href="class_particle_emitter.html" title="Class representing a particle emitter in the game. It emits and manages particles." alt="ParticleEmitter" shape="rect" coords="476,112,585,136"/>
 <area href="class_terrain.html" title="Tessellated terrain surface that can be generated procedurally or from heightmaps." alt="Terrain" shape="rect" coords="595,112,704,136"/>
 <area href="class_u_i_object.html" title="A UIObject is a GameObject that is used for creating user interface elements." alt="UIObject" shape="rect" coords="714,112,823,136"/>
-<area href="class_text.html" title="Represents a text object in the game world. It allows rendering of text with a specific font,..." alt="Text" shape="rect" coords="654,168,763,192"/>
-<area href="class_u_i_view.html" title="A conjunction of UI elements that share the same view and projection matrices. Acts as a container fo..." alt="UIView" shape="rect" coords="773,168,882,192"/>
+<area href="class_button.html" title="Clickable push button for Graphite interfaces." alt="Button" shape="rect" coords="833,168,942,192"/>
+<area href="class_checkbox.html" title="Toggleable checkbox with an optional text label." alt="Checkbox" shape="rect" coords="833,224,942,248"/>
+<area href="class_column.html" title="Vertical layout that stacks children from top to bottom." alt="Column" shape="rect" coords="833,280,942,304"/>
+<area href="class_image.html" title="UI element that renders a textured rectangle on screen." alt="Image" shape="rect" coords="833,336,942,360"/>
+<area href="class_row.html" title="Horizontal layout that arranges children from left to right." alt="Row" shape="rect" coords="833,392,942,416"/>
+<area href="class_stack.html" title="Overlay layout that positions children within the same container." alt="Stack" shape="rect" coords="833,448,942,472"/>
+<area href="class_text.html" title="Represents a text object in the game world. It allows rendering of text with a specific font,..." alt="Text" shape="rect" coords="833,504,942,528"/>
+<area href="class_text_field.html" title="Single-line editable text input for Graphite interfaces." alt="TextField" shape="rect" coords="833,560,942,584"/>
+<area href="class_u_i_view.html" title="A conjunction of UI elements that share the same view and projection matrices. Acts as a container fo..." alt="UIView" shape="rect" coords="833,616,942,640"/>
   </map>
 </div></div>
 <table class="memberdecls">
@@ -240,7 +247,7 @@ Example</h2>
 <div class="ttc" id="aclass_renderable_html_aaa53405a3eb174752fce5e4a2fc8dca8"><div class="ttname"><a href="#aaa53405a3eb174752fce5e4a2fc8dca8">Renderable::initialize</a></div><div class="ttdeci">virtual void initialize()</div><div class="ttdoc">Function to initialize the object. Can be overridden by derived.</div><div class="ttdef"><b>Definition</b> <a href="renderable_8h_source.html#l00092">renderable.h:92</a></div></div>
 <div class="ttc" id="aclass_renderable_html_ae1b11967b98e6ba4393640652242083f"><div class="ttname"><a href="#ae1b11967b98e6ba4393640652242083f">Renderable::setViewMatrix</a></div><div class="ttdeci">virtual void setViewMatrix(const glm::mat4 &amp;view)</div><div class="ttdoc">Function to set the view matrix for the object. Called from Window for internal purposes.</div><div class="ttdef"><b>Definition</b> <a href="renderable_8h_source.html#l00109">renderable.h:109</a></div></div>
 <div class="ttc" id="aclass_renderable_html_afb2aa3ad0ab8dcfc54088173ea7182cd"><div class="ttname"><a href="#afb2aa3ad0ab8dcfc54088173ea7182cd">Renderable::update</a></div><div class="ttdeci">virtual void update(Window &amp;window)</div><div class="ttdoc">Function to update the object each frame.</div><div class="ttdef"><b>Definition</b> <a href="renderable_8h_source.html#l00102">renderable.h:102</a></div></div>
-<div class="ttc" id="aclassopal_1_1_device_html"><div class="ttname"><a href="classopal_1_1_device.html">opal::Device</a></div><div class="ttdoc">Represents the rendering device abstraction for OpenGL/Vulkan. Manages command buffer acquisition,...</div><div class="ttdef"><b>Definition</b> <a href="opal_8h_source.html#l00159">opal.h:159</a></div></div>
+<div class="ttc" id="aclassopal_1_1_device_html"><div class="ttname"><a href="classopal_1_1_device.html">opal::Device</a></div><div class="ttdoc">Represents the rendering device abstraction for OpenGL/Vulkan. Manages command buffer acquisition,...</div><div class="ttdef"><b>Definition</b> <a href="opal_8h_source.html#l00165">opal.h:165</a></div></div>
 <div class="ttc" id="astruct_position3d_html"><div class="ttname"><a href="struct_position3d.html">Position3d</a></div><div class="ttdoc">Structure representing a position in 3D space with double precision. Provides arithmetic operations a...</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00033">units.h:33</a></div></div>
 </div><!-- fragment --> 
 <p class="definition">Definition at line <a class="el" href="renderable_8h_source.html#l00074">74</a> of file <a class="el" href="renderable_8h_source.html">renderable.h</a>.</p>
@@ -585,7 +592,7 @@ Example</h2>
 
 <p>Function to initialize the object. Can be overridden by derived. </p>
 
-<p>Reimplemented in <a class="el" href="class_compound_object.html#ae3bf373a10950faf4aadd63979e6372f">CompoundObject</a>, <a class="el" href="class_core_object.html#a12d021716ccc8a72b2f38567579ecf10">CoreObject</a>, <a class="el" href="struct_fluid.html#a76005a67463cbeb0eb7fd2c83fa2d29a">Fluid</a>, <a class="el" href="class_model.html#a5e3a76dda4214e2014b2964d4170f368">Model</a>, <a class="el" href="class_particle_emitter.html#ae3c78db9b68fadecfcbe8e22a82bba41">ParticleEmitter</a>, <a class="el" href="class_terrain.html#a2e2067f853bbe6384788cd7c19b5d681">Terrain</a>, and <a class="el" href="class_text.html#a7d09c32abc682f8827d9a407a4771036">Text</a>.</p>
+<p>Reimplemented in <a class="el" href="class_button.html#adcb2b81fd89740ac9288c57dc5a58112">Button</a>, <a class="el" href="class_checkbox.html#a328c5ce0d5cec19874a28ce93b94bfd1">Checkbox</a>, <a class="el" href="class_compound_object.html#ae3bf373a10950faf4aadd63979e6372f">CompoundObject</a>, <a class="el" href="class_core_object.html#a12d021716ccc8a72b2f38567579ecf10">CoreObject</a>, <a class="el" href="struct_fluid.html#a76005a67463cbeb0eb7fd2c83fa2d29a">Fluid</a>, <a class="el" href="class_image.html#adb6fb81f40e9ccb3e07ffe77064dcda7">Image</a>, <a class="el" href="class_model.html#a5e3a76dda4214e2014b2964d4170f368">Model</a>, <a class="el" href="class_particle_emitter.html#ae3c78db9b68fadecfcbe8e22a82bba41">ParticleEmitter</a>, <a class="el" href="class_terrain.html#a2e2067f853bbe6384788cd7c19b5d681">Terrain</a>, <a class="el" href="class_text.html#a7d09c32abc682f8827d9a407a4771036">Text</a>, and <a class="el" href="class_text_field.html#ae6e90f4a6d75783a3123e6da660e857a">TextField</a>.</p>
 
 <p class="definition">Definition at line <a class="el" href="renderable_8h_source.html#l00092">92</a> of file <a class="el" href="renderable_8h_source.html">renderable.h</a>.</p>
 <div class="fragment"><div class="line"><span class="lineno">   92</span>{};</div>
@@ -633,7 +640,7 @@ Example</h2>
   </dd>
 </dl>
 
-<p>Implemented in <a class="el" href="class_compound_object.html#a39213ab7f0c0eb6a37776e2c536820b0">CompoundObject</a>, <a class="el" href="class_core_object.html#a95f35d67bf8b203b983714c2d62f4358">CoreObject</a>, <a class="el" href="struct_fluid.html#a15acfdba410bbdd12d82773c6cdc3b49">Fluid</a>, <a class="el" href="class_model.html#a4c61fd71ee18765d2c2621706dae5fbb">Model</a>, <a class="el" href="class_particle_emitter.html#a843f99879457bc5bd078c02e7c5c1c8a">ParticleEmitter</a>, <a class="el" href="class_render_target.html#a05293c8c5affe4c05694cbf05d32344b">RenderTarget</a>, <a class="el" href="class_skybox.html#a25950a2d0cad36d0171241759aabb32e">Skybox</a>, <a class="el" href="class_terrain.html#a34ed61ab198a85dc2e5ad0bc632ed508">Terrain</a>, <a class="el" href="class_text.html#a8af1d9c35c5770ab2a7a7fc1f3fb0633">Text</a>, and <a class="el" href="class_u_i_view.html#aaa84428e72351fa423cccda440087108">UIView</a>.</p>
+<p>Implemented in <a class="el" href="class_button.html#a59962171452b611a67c74ecb68296cc9">Button</a>, <a class="el" href="class_checkbox.html#a992e45d03c8f93555b8c181f98ef78e9">Checkbox</a>, <a class="el" href="class_column.html#a386058aa4ea936aba1ca4a65fbdc84c3">Column</a>, <a class="el" href="class_compound_object.html#a39213ab7f0c0eb6a37776e2c536820b0">CompoundObject</a>, <a class="el" href="class_core_object.html#a95f35d67bf8b203b983714c2d62f4358">CoreObject</a>, <a class="el" href="struct_fluid.html#a15acfdba410bbdd12d82773c6cdc3b49">Fluid</a>, <a class="el" href="class_image.html#a0936635a0d4f2fe66ae0e1fc467607d6">Image</a>, <a class="el" href="class_model.html#a4c61fd71ee18765d2c2621706dae5fbb">Model</a>, <a class="el" href="class_particle_emitter.html#a843f99879457bc5bd078c02e7c5c1c8a">ParticleEmitter</a>, <a class="el" href="class_render_target.html#a05293c8c5affe4c05694cbf05d32344b">RenderTarget</a>, <a class="el" href="class_row.html#a2bc03308fcca1b363a17e83b05d4eeec">Row</a>, <a class="el" href="class_skybox.html#a25950a2d0cad36d0171241759aabb32e">Skybox</a>, <a class="el" href="class_stack.html#a2ff80baf86cd999b75077e5aadfee862">Stack</a>, <a class="el" href="class_terrain.html#a34ed61ab198a85dc2e5ad0bc632ed508">Terrain</a>, <a class="el" href="class_text.html#a8af1d9c35c5770ab2a7a7fc1f3fb0633">Text</a>, <a class="el" href="class_text_field.html#a51a4af47d097ad8bc75d55f7917496f2">TextField</a>, and <a class="el" href="class_u_i_view.html#aaa84428e72351fa423cccda440087108">UIView</a>.</p>
 
 </div>
 </div>
@@ -698,7 +705,7 @@ Example</h2>
   </dd>
 </dl>
 
-<p>Reimplemented in <a class="el" href="class_compound_object.html#aac8d17efbe766307e322e4da95c425dc">CompoundObject</a>, <a class="el" href="class_core_object.html#a9f6f1a397e126ef606125f4fd261f40d">CoreObject</a>, <a class="el" href="struct_fluid.html#a9bbf2c42501fb5d18e2271255d05864c">Fluid</a>, <a class="el" href="class_model.html#a778fb43b905eb3520d8b348eab82e89b">Model</a>, <a class="el" href="class_particle_emitter.html#a8b2ae2752ddf7baa51e5b75848932b0a">ParticleEmitter</a>, <a class="el" href="class_skybox.html#a73068623517fc44f04574290ff4e3fae">Skybox</a>, <a class="el" href="class_terrain.html#abccd0b3c70648c3a463e837db844e021">Terrain</a>, and <a class="el" href="class_u_i_view.html#aa23733f2e111456cbeb74cba03bc259c">UIView</a>.</p>
+<p>Reimplemented in <a class="el" href="class_column.html#a0a42d3b13a8f9af644bdf9c331d2fb2b">Column</a>, <a class="el" href="class_compound_object.html#aac8d17efbe766307e322e4da95c425dc">CompoundObject</a>, <a class="el" href="class_core_object.html#a9f6f1a397e126ef606125f4fd261f40d">CoreObject</a>, <a class="el" href="struct_fluid.html#a9bbf2c42501fb5d18e2271255d05864c">Fluid</a>, <a class="el" href="class_model.html#a778fb43b905eb3520d8b348eab82e89b">Model</a>, <a class="el" href="class_particle_emitter.html#a8b2ae2752ddf7baa51e5b75848932b0a">ParticleEmitter</a>, <a class="el" href="class_row.html#a0e0f529525e642e6d9b05bfa18710ef8">Row</a>, <a class="el" href="class_skybox.html#a73068623517fc44f04574290ff4e3fae">Skybox</a>, <a class="el" href="class_stack.html#aba68fd8fe8fc26997046f0eed044ffd6">Stack</a>, <a class="el" href="class_terrain.html#abccd0b3c70648c3a463e837db844e021">Terrain</a>, and <a class="el" href="class_u_i_view.html#aa23733f2e111456cbeb74cba03bc259c">UIView</a>.</p>
 
 <p class="definition">Definition at line <a class="el" href="renderable_8h_source.html#l00117">117</a> of file <a class="el" href="renderable_8h_source.html">renderable.h</a>.</p>
 <div class="fragment"><div class="line"><span class="lineno">  117</span>{};</div>
@@ -766,7 +773,7 @@ Example</h2>
   </dd>
 </dl>
 
-<p>Reimplemented in <a class="el" href="class_compound_object.html#aca7a1eb53db643e28c4e886896c56a62">CompoundObject</a>, <a class="el" href="class_core_object.html#a11d7ee2d80f597b75ebc745fee83341f">CoreObject</a>, <a class="el" href="struct_fluid.html#aab2d9813ce93f44e31a2554b557c7942">Fluid</a>, <a class="el" href="class_model.html#ab1bc68ab2ef747780f89d5f2954ca05b">Model</a>, <a class="el" href="class_particle_emitter.html#a721156f4d33170c87f04beb8881f7e19">ParticleEmitter</a>, <a class="el" href="class_skybox.html#a4c383f3be4590a1698000c556d6d6b7a">Skybox</a>, <a class="el" href="class_terrain.html#ae2e5016c3e0c967d1d4bc818d411fb08">Terrain</a>, and <a class="el" href="class_u_i_view.html#a206aba53465de15a282ef399630c7868">UIView</a>.</p>
+<p>Reimplemented in <a class="el" href="class_column.html#a8a8ddd0f53852766ceeb2d623311d483">Column</a>, <a class="el" href="class_compound_object.html#aca7a1eb53db643e28c4e886896c56a62">CompoundObject</a>, <a class="el" href="class_core_object.html#a11d7ee2d80f597b75ebc745fee83341f">CoreObject</a>, <a class="el" href="struct_fluid.html#aab2d9813ce93f44e31a2554b557c7942">Fluid</a>, <a class="el" href="class_model.html#ab1bc68ab2ef747780f89d5f2954ca05b">Model</a>, <a class="el" href="class_particle_emitter.html#a721156f4d33170c87f04beb8881f7e19">ParticleEmitter</a>, <a class="el" href="class_row.html#ace6c05edaf182b9391dcafc3a06bac2e">Row</a>, <a class="el" href="class_skybox.html#a4c383f3be4590a1698000c556d6d6b7a">Skybox</a>, <a class="el" href="class_stack.html#acc8c2cc05db657ffbd3b9e480696559e">Stack</a>, <a class="el" href="class_terrain.html#ae2e5016c3e0c967d1d4bc818d411fb08">Terrain</a>, and <a class="el" href="class_u_i_view.html#a206aba53465de15a282ef399630c7868">UIView</a>.</p>
 
 <p class="definition">Definition at line <a class="el" href="renderable_8h_source.html#l00109">109</a> of file <a class="el" href="renderable_8h_source.html">renderable.h</a>.</p>
 <div class="fragment"><div class="line"><span class="lineno">  109</span>{};</div>

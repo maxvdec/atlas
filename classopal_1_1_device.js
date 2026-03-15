@@ -6,6 +6,7 @@ var classopal_1_1_device =
     [ "getDefaultFramebuffer", "classopal_1_1_device.html#aaae40163536bbabe7b6ca6964934b2d9", null ],
     [ "getDeviceInfo", "classopal_1_1_device.html#ad661e872883b83c26c6299af269022e6", null ],
     [ "submitCommandBuffer", "classopal_1_1_device.html#a73b4f7acb3b3edbad7d706f7d43e2d3f", null ],
+    [ "context", "classopal_1_1_device.html#af3c35cedab5b5a6418a6be0d90f02360", null ],
     [ "frameCount", "classopal_1_1_device.html#a4daf2f6750412a5d4ad2a35cef2d77be", null ],
     [ "globalInstance", "classopal_1_1_device.html#ad598cc6057b1dda99480dbd529919f97", null ]
 ];
