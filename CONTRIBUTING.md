@@ -37,6 +37,7 @@ After the prefix, put a short description. If you are working for a specific lib
 - `opal` is for **Opal**
 - `tracer` is for **Tracer**
 - `photon` is for **Photon**
+- `graphite` is for **Graphite**
 
 For example, a branch fixing a bug in the rendering of Bezel, would be: `fix/bezel-rendering`. Thanks for keeping the repo clean and organized.
 
