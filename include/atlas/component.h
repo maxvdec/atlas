@@ -672,6 +672,13 @@ class CompoundObject : public GameObject {
  */
 class UIObject : public GameObject {
     bool canUseDeferredRendering() override { return false; }
+
+  public:
+    virtual Size2d getSize() const { return Size2d(0.0f, 0.0f); }
+    virtual Position2d getScreenPosition() const {
+        return Position2d(0.0f, 0.0f);
+    }
+    virtual void setScreenPosition(const Position2d &newPosition) = 0;
 };
 
 /**

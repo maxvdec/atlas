@@ -18,6 +18,8 @@
 #include <map>
 #include "opal/opal.h"
 #include <string>
+#include <utility>
+#include <utility>
 #include <vector>
 
 /**
@@ -108,15 +110,15 @@ struct Font {
      * @param fontSize The size of the font.
      * @return (Font) The created font instance.
      */
-    static Font fromResource(const std::string& fontName, const Resource& resource,
-                             int fontSize);
+    static Font fromResource(const std::string &fontName,
+                             const Resource &resource, int fontSize);
     /**
      * @brief Gets the font associated with the given name.
      *
      * @param fontName The name of the font to retrieve.
      * @return (Font&) The requested font.
      */
-    static Font& getFont(const std::string& fontName);
+    static Font &getFont(const std::string &fontName);
 
     /**
      * @brief Changes the size of the font. \warning This will regenerate the
@@ -126,7 +128,7 @@ struct Font {
      */
     void changeSize(int newSize);
 
-private:
+  private:
     static std::vector<Font> fonts;
 };
 
@@ -147,7 +149,7 @@ private:
  * ```
  */
 class Text : public UIObject {
-public:
+  public:
     /**
      * @brief The content of the text to render.
      *
@@ -172,8 +174,7 @@ public:
      * @brief Function that constructs a new Text object.
      *
      */
-    Text() {
-    };
+    Text() {};
     /**
      * @brief Function that constructs a new Text object with the given
      * parameters.
@@ -183,10 +184,10 @@ public:
      * @param position The position of the text.
      * @param color The color of the text.
      */
-    Text(const std::string& text, const Font& font,
-         Position2d position = {0, 0}, const Color& color = Color::white())
-        : content(text), font(font), position(position), color(color) {
-    }
+    Text(std::string text, Font font, const Color &color = Color::white(),
+         Position2d position = {.x = 0, .y = 0})
+        : content(std::move(text)), font(std::move(font)), position(position),
+          color(color) {}
 
     /**
      * @brief Prepares vertex buffers, shader state, and fonts for runtime use.
@@ -200,7 +201,24 @@ public:
     void render(float dt, std::shared_ptr<opal::CommandBuffer> commandBuffer,
                 bool updatePipeline = false) override;
 
-private:
+    Size2d getSize() const override {
+        float width = 0.0f;
+        float maxBearingY = 0.0f;
+        for (const char &ch : content) {
+            Character character = font.atlas.at(ch);
+            width += (character.advance >> 6) * 2.0f;
+            maxBearingY = std::max(character.bearing.y, maxBearingY);
+        }
+        return Size2d(width, maxBearingY * 2.0f);
+    }
+
+    Position2d getScreenPosition() const override { return position; }
+
+    void setScreenPosition(const Position2d &newPosition) override {
+        position = newPosition;
+    }
+
+  private:
     std::shared_ptr<opal::DrawingState> vao = nullptr;
     std::shared_ptr<opal::Buffer> vertexBuffer = nullptr;
     size_t vertexBufferCapacity = sizeof(float) * 6 * 4; // capacity in bytes
