@@ -19,6 +19,9 @@ LayoutAnchor getLayoutAnchorForChild(const UIObject *child) {
     if (const auto *row = dynamic_cast<const Row *>(child)) {
         return row->anchor;
     }
+    if (const auto *stack = dynamic_cast<const Stack *>(child)) {
+        return stack->anchor;
+    }
     return LayoutAnchor::TopLeft;
 }
 
@@ -226,6 +229,94 @@ void Row::recalculatePositions() {
         setChildTopLeft(child, {.x = currentX, .y = childY}, childSize);
 
         currentX += childSize.width + spacing;
+    }
+}
+
+void Stack::addChild(UIObject *child) {
+    children.push_back(child);
+    recalculatePositions();
+}
+
+void Stack::setChildren(const std::vector<UIObject *> &newChildren) {
+    children = newChildren;
+    recalculatePositions();
+}
+
+void Stack::setViewMatrix(const glm::mat4 &view) {
+    for (auto &child : children) {
+        if (child == nullptr) {
+            continue;
+        }
+        child->setViewMatrix(view);
+    }
+}
+
+void Stack::setProjectionMatrix(const glm::mat4 &projection) {
+    for (auto &child : children) {
+        if (child == nullptr) {
+            continue;
+        }
+        child->setProjectionMatrix(projection);
+    }
+}
+
+void Stack::render(float dt, std::shared_ptr<opal::CommandBuffer> commandBuffer,
+                   bool updatePipeline) {
+    recalculatePositions();
+    for (auto &child : children) {
+        if (child == nullptr) {
+            continue;
+        }
+        child->render(dt, commandBuffer, updatePipeline);
+    }
+}
+
+void Stack::recalculatePositions() {
+    Size2d layoutSize = getSize();
+    Position2d topLeft =
+        graphite::getAnchoredTopLeft(position, layoutSize, anchor);
+
+    float contentWidth = layoutSize.width - (padding.width * 2.0f);
+    float contentHeight = layoutSize.height - (padding.height * 2.0f);
+
+    for (auto &child : children) {
+        if (child == nullptr) {
+            continue;
+        }
+
+        Size2d childSize = child->getSize();
+        float childX = topLeft.x + padding.width;
+        float childY = topLeft.y + padding.height;
+
+        switch (horizontalAlignment) {
+        case ElementAlignment::Top:
+            childX = topLeft.x + padding.width;
+            break;
+        case ElementAlignment::Center:
+            childX = topLeft.x + padding.width +
+                     ((contentWidth - childSize.width) / 2.0f);
+            break;
+        case ElementAlignment::Bottom:
+            childX =
+                topLeft.x + layoutSize.width - padding.width - childSize.width;
+            break;
+        }
+
+        switch (verticalAlignment) {
+        case ElementAlignment::Top:
+            childY = topLeft.y + padding.height;
+            break;
+        case ElementAlignment::Center:
+            childY = topLeft.y + padding.height +
+                     ((contentHeight - childSize.height) / 2.0f);
+            break;
+        case ElementAlignment::Bottom:
+            childY = topLeft.y + layoutSize.height - padding.height -
+                     childSize.height;
+            break;
+        }
+
+        setChildTopLeft(child, {.x = childX, .y = childY}, childSize);
     }
 }
 

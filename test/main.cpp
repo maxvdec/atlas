@@ -6,6 +6,7 @@
 #include "atlas/object.h"
 #include "atlas/physics.h"
 #include "atlas/scene.h"
+#include "graphite/image.h"
 #include "graphite/text.h"
 #include "graphite/layout.h"
 #include "atlas/texture.h"
@@ -42,7 +43,9 @@ class MainScene : public Scene {
     AreaLight areaLight;
     Controller controller;
     Text welcomeText;
-    Row row;
+    Image previewImage;
+    Row headerRow;
+    Column uiColumn;
 
     bool doesUpdate = true;
     bool fall = false;
@@ -123,9 +126,16 @@ class MainScene : public Scene {
                            Font::fromResource("Arial", fontResource, 36),
                            Color(1.0f, 0.5f, 0.0f, 1.0f));
 
-        row = Row({&welcomeText, &fpsText}, 50.0f,
-                  {.width = 20.0f, .height = 20.0f}, {.x = 20.0f, .y = 20.0f});
-        window.addUIObject(&row);
+        previewImage = Image(
+            Texture::fromResource(Workspace::get().createResource(
+                "ground.jpg", "UIPreviewTexture", ResourceType::Image)),
+            {.width = 320.0f, .height = 180.0f});
+
+        headerRow = Row({&welcomeText, &fpsText}, 30.0f);
+        uiColumn = Column({&headerRow, &previewImage}, 20.0f,
+                          {.width = 20.0f, .height = 20.0f},
+                          {.x = 20.0f, .y = 20.0f});
+        window.addUIObject(&uiColumn);
 
         ball = createDebugSphere(0.5f, 32, 32);
         ball.material.metallic = 1.0f;

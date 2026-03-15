@@ -166,4 +166,65 @@ class Row : public UIObject {
     void recalculatePositions();
 };
 
+class Stack : public UIObject {
+  public:
+    Stack(Position2d pos = {.x = 0, .y = 0}) : position(pos) {
+        recalculatePositions();
+    }
+
+    Stack(const std::vector<UIObject *> &children,
+          Size2d padding = {.width = 0.0f, .height = 0.0f},
+          Position2d pos = {.x = 0, .y = 0})
+        : padding(padding), children(children), position(pos) {
+        recalculatePositions();
+    }
+
+    void render(float dt, std::shared_ptr<opal::CommandBuffer> commandBuffer,
+                bool updatePipeline) override;
+
+    Size2d maxSize{.width = 0.0f, .height = 0.0f};
+    Size2d padding{.width = 0.0f, .height = 0.0f};
+    std::vector<UIObject *> children;
+    Position2d position;
+    ElementAlignment horizontalAlignment = ElementAlignment::Top;
+    ElementAlignment verticalAlignment = ElementAlignment::Top;
+    LayoutAnchor anchor = LayoutAnchor::TopLeft;
+
+    void setViewMatrix(const glm::mat4 &view) override;
+    void setProjectionMatrix(const glm::mat4 &projection) override;
+
+    void addChild(UIObject *child);
+    void setChildren(const std::vector<UIObject *> &newChildren);
+
+    Size2d getSize() const override {
+        float width = 0.0f;
+        float height = 0.0f;
+
+        for (const auto *child : children) {
+            if (child == nullptr) {
+                continue;
+            }
+            Size2d childSize = child->getSize();
+            width = std::max(width, childSize.width);
+            height = std::max(height, childSize.height);
+        }
+
+        return Size2d{
+            .width = std::max(width + (padding.width * 2.0f), maxSize.width),
+            .height =
+                std::max(height + (padding.height * 2.0f), maxSize.height),
+        };
+    }
+
+    Position2d getScreenPosition() const override { return position; }
+
+    void setScreenPosition(const Position2d &newPosition) override {
+        position = newPosition;
+        recalculatePositions();
+    }
+
+  private:
+    void recalculatePositions();
+};
+
 #endif // GRAPHITE_LAYOUT_H
