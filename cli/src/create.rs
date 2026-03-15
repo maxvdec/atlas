@@ -4,28 +4,17 @@ use dialoguer::theme::ColorfulTheme;
 use dialoguer::{Confirm, Input, Select};
 use indicatif::{ProgressBar, ProgressStyle};
 use reqwest::blocking::Client;
-use serde::Deserialize;
 use std::fs;
-use std::io::Write;
+use std::io::{Cursor, Write};
 use std::path::{Path, PathBuf};
 
-#[derive(Deserialize)]
-struct RemoteFile {
-    name: String,
-    path: String,
-    #[serde(rename = "type")]
-    file_type: String,
-    download_url: Option<String>,
-}
-
-#[derive(Deserialize, Clone)]
+#[derive(Clone)]
 struct ReleaseAsset {
     name: String,
-    #[serde(rename = "browser_download_url")]
     download_url: String,
 }
 
-#[derive(Deserialize, Clone)]
+#[derive(Clone)]
 struct Release {
     tag_name: String,
     assets: Vec<ReleaseAsset>,
@@ -54,103 +43,163 @@ fn normalize_platform(input: &str) -> Option<String> {
     }
 }
 
-fn fetch_folder(
+fn github_client() -> Result<Client, Box<dyn std::error::Error>> {
+    Ok(Client::builder().user_agent("atlas-cli").build()?)
+}
+
+fn fetch_latest_release_tag(
     owner: &str,
     repo: &str,
-    path: &str,
-    outdir: &Path,
-    branch: &str,
-    exclude_subpaths: &[&str],
-) -> Result<i32, Box<dyn std::error::Error>> {
-    let url = format!("https://api.github.com/repos/{owner}/{repo}/contents/{path}?ref={branch}");
-    let client = Client::new();
-    let files: Vec<RemoteFile> = client
-        .get(&url)
-        .header("User-Agent", "atlas-cli")
-        .send()?
-        .json()?;
+    client: &Client,
+) -> Result<String, Box<dyn std::error::Error>> {
+    let url = format!("https://github.com/{owner}/{repo}/releases/latest");
+    let response = client.get(&url).send()?.error_for_status()?;
+    let release_url = response.url().path().trim_end_matches('/');
 
+    release_url
+        .rsplit('/')
+        .next()
+        .filter(|segment| !segment.is_empty() && *segment != "latest")
+        .map(str::to_string)
+        .ok_or_else(|| format!("Failed to resolve latest release from {release_url}").into())
+}
+
+fn release_asset_url(owner: &str, repo: &str, tag: &str, asset_name: &str) -> String {
+    format!("https://github.com/{owner}/{repo}/releases/download/{tag}/{asset_name}")
+}
+
+fn release_asset_exists(
+    client: &Client,
+    owner: &str,
+    repo: &str,
+    tag: &str,
+    asset_name: &str,
+) -> bool {
+    client
+        .head(release_asset_url(owner, repo, tag, asset_name))
+        .send()
+        .map(|response| response.status().is_success())
+        .unwrap_or(false)
+}
+
+fn resolve_release(
+    owner: &str,
+    repo: &str,
+    requested_version: &str,
+) -> Result<Release, Box<dyn std::error::Error>> {
+    let client = github_client()?;
+    let tag_name = if requested_version == "latest" {
+        fetch_latest_release_tag(owner, repo, &client)?
+    } else {
+        requested_version.to_string()
+    };
+
+    let mut assets = Vec::new();
+    for asset_name in [
+        "macOS-atlas-metal.a",
+        "macOS-atlas-opengl.a",
+        "macOS-atlas-vulkan.a",
+    ] {
+        if release_asset_exists(&client, owner, repo, &tag_name, asset_name) {
+            assets.push(ReleaseAsset {
+                name: asset_name.to_string(),
+                download_url: release_asset_url(owner, repo, &tag_name, asset_name),
+            });
+        }
+    }
+
+    Ok(Release { tag_name, assets })
+}
+
+fn download_repository_archive(
+    owner: &str,
+    repo: &str,
+    git_ref: &str,
+    prefer_tag: bool,
+) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
+    let client = github_client()?;
+    let ref_kinds = if prefer_tag {
+        ["tags", "heads"]
+    } else {
+        ["heads", "tags"]
+    };
+    let mut last_error: Option<Box<dyn std::error::Error>> = None;
+
+    for ref_kind in ref_kinds {
+        let url = format!("https://github.com/{owner}/{repo}/archive/refs/{ref_kind}/{git_ref}.zip");
+        match client.get(&url).send() {
+            Ok(response) => match response.error_for_status() {
+                Ok(ok_response) => return Ok(ok_response.bytes()?.to_vec()),
+                Err(e) => last_error = Some(Box::new(e)),
+            },
+            Err(e) => last_error = Some(Box::new(e)),
+        }
+    }
+
+    Err(last_error.unwrap_or_else(|| {
+        format!("Failed to download source archive for ref '{git_ref}'").into()
+    }))
+}
+
+fn extract_archive_subpaths(
+    archive_bytes: &[u8],
+    outdir: &Path,
+    mappings: &[(&str, &[&str])],
+) -> Result<usize, Box<dyn std::error::Error>> {
     fs::create_dir_all(outdir)?;
 
-    let mut downloaded_files = 0;
+    let cursor = Cursor::new(archive_bytes);
+    let mut archive = zip::ZipArchive::new(cursor)?;
+    let mut extracted_files = 0;
 
-    for file in files {
-        if file.file_type == "file" {
-            if let Some(download_url) = file.download_url {
-                let response = client
-                    .get(download_url)
-                    .header("User-Agent", "atlas-cli")
-                    .send()?;
-                let mut dest = fs::File::create(outdir.join(&file.name))?;
-                let bytes = response.bytes()?;
-                dest.write_all(&bytes)?;
-                downloaded_files += 1;
-            }
-        } else if file.file_type == "dir" {
-            if exclude_subpaths
-                .iter()
-                .any(|&subpath| file.path.contains(subpath))
-            {
+    for idx in 0..archive.len() {
+        let mut entry = archive.by_index(idx)?;
+        if !entry.is_file() {
+            continue;
+        }
+
+        let Some(path) = entry.enclosed_name().map(|path| path.to_path_buf()) else {
+            continue;
+        };
+
+        let relative: PathBuf = path.iter().skip(1).collect();
+        if relative.as_os_str().is_empty() {
+            continue;
+        }
+
+        for (prefix, excluded_prefixes) in mappings {
+            let Ok(stripped) = relative.strip_prefix(prefix) else {
                 continue;
+            };
+
+            if excluded_prefixes.iter().any(|excluded| stripped.starts_with(excluded)) {
+                break;
             }
-            let subdir = outdir.join(&file.name);
-            downloaded_files +=
-                fetch_folder(owner, repo, &file.path, &subdir, branch, exclude_subpaths)?;
+
+            let destination = outdir.join(stripped);
+            if let Some(parent) = destination.parent() {
+                fs::create_dir_all(parent)?;
+            }
+
+            let mut dest = fs::File::create(destination)?;
+            std::io::copy(&mut entry, &mut dest)?;
+            extracted_files += 1;
+            break;
         }
     }
 
-    Ok(downloaded_files)
+    Ok(extracted_files)
 }
 
-fn fetch_releases(owner: &str, repo: &str) -> Result<Vec<Release>, Box<dyn std::error::Error>> {
-    let url = format!("https://api.github.com/repos/{owner}/{repo}/releases");
-    let client = Client::new();
-    let releases: Vec<Release> = client
-        .get(&url)
-        .header("User-Agent", "atlas-cli")
-        .send()?
-        .json()?;
-    Ok(releases)
-}
-
-fn pick_release(
-    requested_version: &str,
-    releases: &[Release],
-) -> Result<Release, Box<dyn std::error::Error>> {
-    if releases.is_empty() {
-        return Err("No releases found".into());
-    }
-
-    if requested_version != "latest" {
-        if let Some(found) = releases
-            .iter()
-            .find(|release| release.tag_name == requested_version)
-        {
-            return Ok(found.clone());
-        }
-        return Err(format!("Release '{requested_version}' not found").into());
-    }
-
-    let theme = ColorfulTheme::default();
-    let mut sorted = releases.to_vec();
-    sorted.sort_by(|a, b| b.tag_name.cmp(&a.tag_name));
-
-    let mut items = Vec::with_capacity(sorted.len());
-    for (idx, release) in sorted.iter().enumerate() {
-        if idx == 0 {
-            items.push(format!("{} (latest)", release.tag_name));
-        } else {
-            items.push(release.tag_name.clone());
-        }
-    }
-
-    let selection = Select::with_theme(&theme)
-        .with_prompt("Choose Atlas release")
-        .items(&items)
-        .default(0)
-        .interact()?;
-
-    Ok(sorted[selection].clone())
+fn download_headers(
+    owner: &str,
+    repo: &str,
+    git_ref: &str,
+    outdir: &Path,
+    prefer_tag: bool,
+) -> Result<usize, Box<dyn std::error::Error>> {
+    let archive = download_repository_archive(owner, repo, git_ref, prefer_tag)?;
+    extract_archive_subpaths(&archive, outdir, &[("include", &[]), ("extern", &["freetype"])])
 }
 
 fn find_macos_assets(release: &Release) -> Result<AtlasBinarySet, Box<dyn std::error::Error>> {
@@ -198,11 +247,11 @@ fn available_backends(assets: &AtlasBinarySet) -> Vec<String> {
 }
 
 fn download_asset(asset: &ReleaseAsset, out_path: &Path) -> Result<(), Box<dyn std::error::Error>> {
-    let client = Client::new();
+    let client = github_client()?;
     let response = client
         .get(&asset.download_url)
-        .header("User-Agent", "atlas-cli")
-        .send()?;
+        .send()?
+        .error_for_status()?;
     let mut dest = fs::File::create(out_path)?;
     let bytes = response.bytes()?;
     dest.write_all(&bytes)?;
@@ -264,17 +313,60 @@ if(NOT EXISTS "${ATLAS_BINARY}")
     message(FATAL_ERROR "Missing ${ATLAS_BINARY}")
 endif()
 
+include(FetchContent)
+cmake_policy(SET CMP0135 NEW)
+set(JOLT_VERSION "5.5.0")
+
+FetchContent_Declare(
+    JoltPhysics
+    GIT_REPOSITORY https://github.com/jrouwe/JoltPhysics.git
+    GIT_TAG        v${JOLT_VERSION}
+    GIT_SHALLOW    TRUE
+    SOURCE_SUBDIR  Build
+)
+set(JPH_DEBUG_RENDERER  ON  CACHE BOOL "" FORCE)
+set(JPH_PROFILE_ENABLED ON  CACHE BOOL "" FORCE)
+set(JPH_OBJECT_STREAM   ON  CACHE BOOL "" FORCE)
+set(JPH_ENABLE_IPO      OFF CACHE BOOL "" FORCE)
+FetchContent_MakeAvailable(JoltPhysics)
+if(TARGET Jolt)
+    set_target_properties(Jolt PROPERTIES INTERPROCEDURAL_OPTIMIZATION OFF)
+endif()
+message(STATUS "Downloaded Jolt Physics, version ${JOLT_VERSION}")
+
 find_package(SDL3 REQUIRED CONFIG)
+
+if(APPLE)
+    set(OPENAL_LIB /opt/homebrew/opt/openal-soft/lib/libopenal.dylib)
+    set(OPENAL_INCLUDE /opt/homebrew/opt/openal-soft/include)
+else()
+    find_package(OpenAL REQUIRED)
+    set(OPENAL_LIB ${OPENAL_LIBRARY})
+    set(OPENAL_INCLUDE ${OPENAL_INCLUDE_DIR})
+endif()
 
 file(GLOB_RECURSE SOURCE_FILES ##PROJECTNAME##/*.cpp)
 add_executable(##PROJECTNAMELC## ${SOURCE_FILES})
 
-target_include_directories(##PROJECTNAMELC## PRIVATE include lib/include)
+if(ATLAS_BACKEND STREQUAL "METAL")
+    target_compile_definitions(##PROJECTNAMELC## PRIVATE METAL GLM_FORCE_DEPTH_ZERO_TO_ONE)
+elseif(ATLAS_BACKEND STREQUAL "OPENGL")
+    target_compile_definitions(##PROJECTNAMELC## PRIVATE OPENGL)
+elseif(ATLAS_BACKEND STREQUAL "VULKAN")
+    target_compile_definitions(##PROJECTNAMELC## PRIVATE VULKAN GLM_FORCE_DEPTH_ZERO_TO_ONE)
+endif()
+
+target_include_directories(##PROJECTNAMELC## PRIVATE
+    include
+    lib/include
+    ${joltphysics_SOURCE_DIR}
+    ${OPENAL_INCLUDE}
+)
 
 add_library(atlasbundle STATIC IMPORTED GLOBAL)
 set_target_properties(atlasbundle PROPERTIES IMPORTED_LOCATION "${ATLAS_BINARY}")
 
-target_link_libraries(##PROJECTNAMELC## PRIVATE atlasbundle SDL3::SDL3)
+target_link_libraries(##PROJECTNAMELC## PRIVATE atlasbundle SDL3::SDL3 ${OPENAL_LIB})
 
 if(APPLE)
     if(ATLAS_BACKEND STREQUAL "METAL")
@@ -352,18 +444,10 @@ pub fn create(cmd: Commands) {
         platform,
     } = cmd
     {
-        let releases = match fetch_releases("maxvdec", "atlas") {
+        let release = match resolve_release("maxvdec", "atlas", &version) {
             Ok(r) => r,
             Err(e) => {
-                eprintln!("{} {e}", "Failed to fetch releases:".red().bold());
-                return;
-            }
-        };
-
-        let release = match pick_release(&version, &releases) {
-            Ok(r) => r,
-            Err(e) => {
-                eprintln!("{} {e}", "Failed to choose release:".red().bold());
+                eprintln!("{} {e}", "Failed to resolve release:".red().bold());
                 return;
             }
         };
@@ -445,38 +529,37 @@ pub fn create(cmd: Commands) {
             return;
         }
 
-        if fs::create_dir_all(&project_path).is_err() {
-            eprintln!("{}", "Could not create project directory".red().bold());
+        if let Err(e) = fs::create_dir_all(&project_path) {
+            eprintln!("{} {e}", "Could not create project directory:".red().bold());
             return;
         }
 
         let project_root = PathBuf::from(&project_path);
-        if fs::create_dir(project_root.join(&name)).is_err() {
-            eprintln!("{}", "Could not create source directory".red().bold());
+        if let Err(e) = fs::create_dir(project_root.join(&name)) {
+            eprintln!("{} {e}", "Could not create source directory:".red().bold());
             return;
         }
-        if fs::create_dir(project_root.join("assets")).is_err() {
-            eprintln!("{}", "Could not create assets directory".red().bold());
+        if let Err(e) = fs::create_dir(project_root.join("assets")) {
+            eprintln!("{} {e}", "Could not create assets directory:".red().bold());
             return;
         }
-        if fs::create_dir_all(project_root.join("lib/include")).is_err() {
-            eprintln!("{}", "Could not create include directory".red().bold());
+        if let Err(e) = fs::create_dir_all(project_root.join("lib/include")) {
+            eprintln!("{} {e}", "Could not create include directory:".red().bold());
             return;
         }
-        if fs::create_dir(project_root.join("include")).is_err() {
+        if let Err(e) = fs::create_dir(project_root.join("include")) {
             eprintln!(
-                "{}",
-                "Could not create local include directory".red().bold()
+                "{} {e}",
+                "Could not create local include directory:".red().bold()
             );
             return;
         }
 
         let main_path = project_root.join(&name).join("main.cpp");
-        if fs::File::create(&main_path)
-            .and_then(|mut f| f.write_all(TEMPLATE_MAIN.as_bytes()))
-            .is_err()
+        if let Err(e) =
+            fs::File::create(&main_path).and_then(|mut f| f.write_all(TEMPLATE_MAIN.as_bytes()))
         {
-            eprintln!("{}", "Could not write main.cpp".red().bold());
+            eprintln!("{} {e}", "Could not write main.cpp:".red().bold());
             return;
         }
 
@@ -486,57 +569,47 @@ pub fn create(cmd: Commands) {
         }
         spinner.enable_steady_tick(std::time::Duration::from_millis(80));
 
-        let pull_branch = branch.unwrap_or_else(|| String::from("stable"));
+        let prefer_tag = branch.is_none();
+        let pull_branch = branch.unwrap_or_else(|| release.tag_name.clone());
         spinner.set_message("Downloading Atlas headers");
         let outdir = project_root.join("lib/include");
-        if fetch_folder("maxvdec", "atlas", "include", &outdir, &pull_branch, &[]).is_err() {
+        if let Err(e) = download_headers("maxvdec", "atlas", &pull_branch, &outdir, prefer_tag) {
             spinner.finish_and_clear();
-            eprintln!("{}", "Failed to download include files".red().bold());
-            return;
-        }
-        if fetch_folder(
-            "maxvdec",
-            "atlas",
-            "extern",
-            &outdir,
-            &pull_branch,
-            &["freetype"],
-        )
-        .is_err()
-        {
-            spinner.finish_and_clear();
-            eprintln!("{}", "Failed to download extern headers".red().bold());
+            eprintln!(
+                "{} {e}",
+                "Failed to download include files:".red().bold()
+            );
             return;
         }
 
         spinner.set_message("Downloading macOS backend binaries");
         let lib_dir = project_root.join("lib");
         if let Some(asset) = &assets.metal {
-            if download_asset(asset, &lib_dir.join("macOS-atlas-metal.a")).is_err() {
+            if let Err(e) = download_asset(asset, &lib_dir.join("macOS-atlas-metal.a")) {
                 spinner.finish_and_clear();
                 eprintln!(
-                    "{}",
-                    "Failed to download Metal backend library".red().bold()
+                    "{} {e}",
+                    "Failed to download Metal backend library:".red().bold()
                 );
                 return;
             }
         }
         if let Some(asset) = &assets.opengl {
-            if download_asset(asset, &lib_dir.join("macOS-atlas-opengl.a")).is_err() {
+            if let Err(e) = download_asset(asset, &lib_dir.join("macOS-atlas-opengl.a")) {
                 spinner.finish_and_clear();
                 eprintln!(
-                    "{}",
-                    "Failed to download OpenGL backend library".red().bold()
+                    "{} {e}",
+                    "Failed to download OpenGL backend library:".red().bold()
                 );
                 return;
             }
         }
         if let Some(asset) = &assets.vulkan {
-            if download_asset(asset, &lib_dir.join("macOS-atlas-vulkan.a")).is_err() {
+            if let Err(e) = download_asset(asset, &lib_dir.join("macOS-atlas-vulkan.a")) {
                 spinner.finish_and_clear();
                 eprintln!(
-                    "{}",
-                    "Failed to download Vulkan backend library".red().bold()
+                    "{} {e}",
+                    "Failed to download Vulkan backend library:".red().bold()
                 );
                 return;
             }
@@ -550,11 +623,10 @@ pub fn create(cmd: Commands) {
             .replace("##PROJECTNAMELC##", &name.to_lowercase())
             .replace("##BACKEND##", &selected_backend)
             .replace("##BACKEND_OPTIONS##", &backend_options);
-        if fs::File::create(project_root.join("CMakeLists.txt"))
+        if let Err(e) = fs::File::create(project_root.join("CMakeLists.txt"))
             .and_then(|mut f| f.write_all(cmake_content.as_bytes()))
-            .is_err()
         {
-            eprintln!("{}", "Could not write CMakeLists.txt".red().bold());
+            eprintln!("{} {e}", "Could not write CMakeLists.txt:".red().bold());
             return;
         }
 
@@ -564,11 +636,10 @@ pub fn create(cmd: Commands) {
             .replace("((PLATFORM))", &selected_platform)
             .replace("((ATLAS_VERSION))", &release.tag_name);
 
-        if fs::File::create(project_root.join("atlas.toml"))
+        if let Err(e) = fs::File::create(project_root.join("atlas.toml"))
             .and_then(|mut f| f.write_all(atlas_toml.as_bytes()))
-            .is_err()
         {
-            eprintln!("{}", "Could not write atlas.toml".red().bold());
+            eprintln!("{} {e}", "Could not write atlas.toml:".red().bold());
             return;
         }
 
