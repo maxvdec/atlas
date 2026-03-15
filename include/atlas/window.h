@@ -510,6 +510,10 @@ class Window {
 
     bool isMouseButtonActive(MouseButton button);
     bool isMouseButtonPressed(MouseButton button);
+    const std::string &getTextInput() const { return textInputBuffer; }
+    void startTextInput();
+    void stopTextInput();
+    bool isTextInputActive() const { return textInputActive; }
 
     bool isControllerButtonPressed(int controllerID, int buttonIndex);
     float getControllerAxisValue(int controllerID, int axisIndex);
@@ -742,6 +746,10 @@ class Window {
     bool isTriggerPressed(const Trigger &trigger);
     Position2d relativeMousePos;
     std::vector<std::shared_ptr<InputAction>> inputActions;
+    std::array<bool, SDL_SCANCODE_COUNT> keysPressedThisFrame{};
+    std::array<bool, 9> mouseButtonsPressedThisFrame{};
+    std::string textInputBuffer;
+    bool textInputActive = false;
     std::shared_ptr<opal::CommandBuffer> activeCommandBuffer = nullptr;
     CoreWindowReference windowRef;
     std::vector<Renderable *> pendingObjects;

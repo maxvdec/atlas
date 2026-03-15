@@ -7,6 +7,7 @@
 #include "atlas/physics.h"
 #include "atlas/scene.h"
 #include "graphite/image.h"
+#include "graphite/input.h"
 #include "graphite/text.h"
 #include "graphite/layout.h"
 #include "atlas/texture.h"
@@ -44,6 +45,7 @@ class MainScene : public Scene {
     Controller controller;
     Text welcomeText;
     Image previewImage;
+    TextField inputField;
     Row headerRow;
     Column uiColumn;
 
@@ -55,15 +57,17 @@ class MainScene : public Scene {
         if (!doesUpdate)
             return;
 
-        camera.updateWithActions(window, "move", "look", "upAndDown");
-        if (window.isKeyActive(Key::Escape)) {
-            window.releaseMouse();
-            doesUpdate = false;
-        } else if (window.isKeyPressed(Key::Q)) {
-            fall = !fall;
-        }
-        if (fall) {
-            camera.position.y -= 10.f * window.getDeltaTime();
+        if (!inputField.isFocused()) {
+            camera.updateWithActions(window, "move", "look", "upAndDown");
+            if (window.isKeyActive(Key::Escape)) {
+                window.releaseMouse();
+                doesUpdate = false;
+            } else if (window.isKeyPressed(Key::Q)) {
+                fall = !fall;
+            }
+            if (fall) {
+                camera.position.y -= 10.f * window.getDeltaTime();
+            }
         }
     }
 
@@ -131,8 +135,17 @@ class MainScene : public Scene {
                 "ground.jpg", "UIPreviewTexture", ResourceType::Image)),
             {.width = 320.0f, .height = 180.0f});
 
+        inputField =
+            TextField(fpsText.font, 420.0f, {.x = 0.0f, .y = 0.0f}, "",
+                      "Type here...");
+        inputField
+            .setPadding({.width = 18.0f, .height = 12.0f})
+            .setOnChange([](const TextFieldChangeEvent &event) {
+                std::cout << event.text << std::endl;
+            });
+
         headerRow = Row({&welcomeText, &fpsText}, 30.0f);
-        uiColumn = Column({&headerRow, &previewImage}, 20.0f,
+        uiColumn = Column({&headerRow, &previewImage, &inputField}, 20.0f,
                           {.width = 20.0f, .height = 20.0f},
                           {.x = 20.0f, .y = 20.0f});
         window.addUIObject(&uiColumn);
@@ -169,7 +182,7 @@ int main() {
                    .width = 1600,
                    .height = 1200,
                    .renderScale = 1.f,
-                   .mouseCaptured = true,
+                   .mouseCaptured = false,
                    .multisampling = false,
                    .ssaoScale = 0.4f});
     MainScene scene;
