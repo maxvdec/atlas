@@ -1,8 +1,18 @@
+/**
+ * @file default_shaders.h
+ * @brief Generated bundle containing Atlas' built-in Metal shader sources.
+ *
+ * This header is an implementation detail used by the default shader API.
+ * The packed shader strings are consumed internally when Atlas creates one of
+ * its built-in shader programs.
+ */
+
 // This file contains packed shader source code.
 // Metal shaders packed as source
 #ifndef ATLAS_GENERATED_SHADERS_H
 #define ATLAS_GENERATED_SHADERS_H
 
+/// @cond INTERNAL
 static const char* COLOR_FRAG =
 R"(#include <metal_stdlib>
 #include <simd/simd.h>
@@ -9707,5 +9717,7 @@ vertex main0_out main0(main0_in in [[stage_in]])
 }
 )"
 ;
+
+/// @endcond
 
 #endif // ATLAS_GENERATED_SHADERS_H
