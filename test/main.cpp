@@ -46,7 +46,10 @@ class MainScene : public Scene {
     Text welcomeText;
     Image previewImage;
     TextField inputField;
+    Button actionButton;
+    Checkbox demoCheckbox;
     Row headerRow;
+    Row controlsRow;
     Column uiColumn;
 
     bool doesUpdate = true;
@@ -144,8 +147,23 @@ class MainScene : public Scene {
                 std::cout << event.text << std::endl;
             });
 
+        actionButton = Button(fpsText.font, "Click me");
+        actionButton
+            .setMinimumSize({.width = 150.0f, .height = 52.0f})
+            .setOnClick([](const ButtonClickEvent &event) {
+                std::cout << "Button clicked: " << event.label << std::endl;
+            });
+
+        demoCheckbox = Checkbox(fpsText.font, "Enable atlas mode");
+        demoCheckbox.setOnToggle([](const CheckboxToggleEvent &event) {
+            std::cout << "Checkbox " << event.label << ": "
+                      << (event.checked ? "true" : "false") << std::endl;
+        });
+
         headerRow = Row({&welcomeText, &fpsText}, 30.0f);
-        uiColumn = Column({&headerRow, &previewImage, &inputField}, 20.0f,
+        controlsRow = Row({&actionButton, &demoCheckbox}, 22.0f);
+        uiColumn = Column(
+            {&headerRow, &previewImage, &inputField, &controlsRow}, 20.0f,
                           {.width = 20.0f, .height = 20.0f},
                           {.x = 20.0f, .y = 20.0f});
         window.addUIObject(&uiColumn);
