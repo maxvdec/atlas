@@ -42,7 +42,7 @@ class MainScene : public Scene {
     AreaLight areaLight;
     Controller controller;
     Text welcomeText;
-    Column column;
+    Row row;
 
     bool doesUpdate = true;
     bool fall = false;
@@ -123,10 +123,9 @@ class MainScene : public Scene {
                            Font::fromResource("Arial", fontResource, 36),
                            Color(1.0f, 0.5f, 0.0f, 1.0f));
 
-        column =
-            Column({&welcomeText, &fpsText}, 50.0f,
-                   {.width = 20.0f, .height = 20.0f}, {.x = 20.0f, .y = 20.0f});
-        window.addUIObject(&column);
+        row = Row({&welcomeText, &fpsText}, 50.0f,
+                  {.width = 20.0f, .height = 20.0f}, {.x = 20.0f, .y = 20.0f});
+        window.addUIObject(&row);
 
         ball = createDebugSphere(0.5f, 32, 32);
         ball.material.metallic = 1.0f;
@@ -141,7 +140,7 @@ class MainScene : public Scene {
         light = DirectionalLight({0.35f, -1.0f, 0.2f}, Color::white());
         this->setAmbientIntensity(0.2f);
 
-        frameBuffer = RenderTarget(window, RenderTargetType::Scene);
+        frameBuffer = RenderTarget(window, RenderTargetType::Multisampled);
         window.addRenderTarget(&frameBuffer);
         frameBuffer.display(window);
 

@@ -54,3 +54,47 @@ void Column::recalculatePositions() {
         currentY += child->getSize().height + spacing;
     }
 }
+
+void Row::addChild(UIObject *child) {
+    children.push_back(child);
+    recalculatePositions();
+}
+
+void Row::setChildren(const std::vector<UIObject *> &newChildren) {
+    children = newChildren;
+    recalculatePositions();
+}
+
+void Row::setViewMatrix(const glm::mat4 &view) {
+    for (auto &child : children) {
+        child->setViewMatrix(view);
+    }
+}
+
+void Row::setProjectionMatrix(const glm::mat4 &projection) {
+    for (auto &child : children) {
+        child->setProjectionMatrix(projection);
+    }
+}
+
+void Row::render(float dt, std::shared_ptr<opal::CommandBuffer> commandBuffer,
+                 bool updatePipeline) {
+    for (auto &child : children) {
+        child->render(dt, commandBuffer, updatePipeline);
+    }
+}
+
+void Row::recalculatePositions() {
+    float currentX = this->position.x + padding.width;
+
+    for (auto &child : children) {
+        Position2d pos;
+
+        pos.x = currentX;
+        pos.y = this->position.y + padding.height;
+
+        child->setScreenPosition(pos);
+
+        currentX += child->getSize().width + spacing;
+    }
+}
