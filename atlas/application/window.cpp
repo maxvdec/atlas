@@ -206,7 +206,8 @@ std::vector<float> getJoystickAxes(SDL_JoystickID joystickID) {
 
     axes.reserve(axisCount);
     for (int i = 0; i < axisCount; ++i) {
-        axes.push_back(atlasNormalizeAxisValue(SDL_GetJoystickAxis(joystick, i)));
+        axes.push_back(
+            atlasNormalizeAxisValue(SDL_GetJoystickAxis(joystick, i)));
     }
     return axes;
 }
@@ -216,8 +217,8 @@ float getControllerAxisValueForDevice(int controllerID, int axisIndex) {
         SDL_Gamepad *gamepad = getOpenGamepad(controllerID);
         const SDL_GamepadAxis axis = atlasToSDLGamepadAxis(axisIndex);
         if (gamepad != nullptr && axis != SDL_GAMEPAD_AXIS_INVALID) {
-            return normalizeGamepadAxisValue(
-                axisIndex, SDL_GetGamepadAxis(gamepad, axis));
+            return normalizeGamepadAxisValue(axisIndex,
+                                             SDL_GetGamepadAxis(gamepad, axis));
         }
     }
 
@@ -258,28 +259,28 @@ std::pair<float, float> getControllerAxisPairValueForDevice(int controllerID,
         for (int start = 0; start + 1 < limit; start += 2) {
             float x = axes.at(start);
             float y = axes.at(start + 1);
-            candidates.push_back({start, start + 1, std::sqrt(x * x + y * y)});
+            candidates.push_back(
+                {start, start + 1, std::sqrt((x * x) + (y * y))});
         }
 
         if (candidates.empty()) {
             return std::pair<float, float>{0.0f, 0.0f};
         }
 
-        std::sort(candidates.begin(), candidates.end(),
-                  [](const AxisPairCandidate &left,
-                     const AxisPairCandidate &right) {
-                      return left.magnitude > right.magnitude;
-                  });
+        std::sort(
+            candidates.begin(), candidates.end(),
+            [](const AxisPairCandidate &left, const AxisPairCandidate &right) {
+                return left.magnitude > right.magnitude;
+            });
 
-        bool hasPreferredPair =
-            axisIndexX >= 0 && axisIndexY >= 0 &&
-            axisIndexX < static_cast<int>(axes.size()) &&
-            axisIndexY < static_cast<int>(axes.size());
+        bool hasPreferredPair = axisIndexX >= 0 && axisIndexY >= 0 &&
+                                axisIndexX < static_cast<int>(axes.size()) &&
+                                axisIndexY < static_cast<int>(axes.size());
         if (hasPreferredPair) {
             float preferredX = axes.at(axisIndexX);
             float preferredY = axes.at(axisIndexY);
-            float preferredMagnitude =
-                std::sqrt(preferredX * preferredX + preferredY * preferredY);
+            float preferredMagnitude = std::sqrt((preferredX * preferredX) +
+                                                 (preferredY * preferredY));
             if (preferredMagnitude > 0.01f) {
                 return std::pair<float, float>{preferredX, preferredY};
             }
@@ -531,9 +532,8 @@ Window::Window(const WindowConfiguration &config)
 
     if (config.aspectRatioX != DEFAULT_ASPECT_RATIO &&
         config.aspectRatioY != DEFAULT_ASPECT_RATIO) {
-        float aspectRatio =
-            static_cast<float>(config.aspectRatioX) /
-            static_cast<float>(config.aspectRatioY);
+        float aspectRatio = static_cast<float>(config.aspectRatioX) /
+                            static_cast<float>(config.aspectRatioY);
         SDL_SetWindowAspectRatio(window, aspectRatio, aspectRatio);
     }
 
@@ -656,14 +656,12 @@ std::tuple<int, int> Window::getCursorPosition() {
     int pixelHeight = 0;
     atlasGetWindowSizeInPixels(this->windowRef, &pixelWidth, &pixelHeight);
 
-    const float scaleX =
-        windowWidth > 0
-            ? static_cast<float>(pixelWidth) / static_cast<float>(windowWidth)
-            : 1.0f;
-    const float scaleY =
-        windowHeight > 0
-            ? static_cast<float>(pixelHeight) / static_cast<float>(windowHeight)
-            : 1.0f;
+    const float scaleX = windowWidth > 0 ? static_cast<float>(pixelWidth) /
+                                               static_cast<float>(windowWidth)
+                                         : 1.0f;
+    const float scaleY = windowHeight > 0 ? static_cast<float>(pixelHeight) /
+                                                static_cast<float>(windowHeight)
+                                          : 1.0f;
 
     return {static_cast<int>(std::lround(xpos * scaleX)),
             static_cast<int>(std::lround(ypos * scaleY))};
@@ -750,8 +748,8 @@ void Window::run() {
                 if (event.key.windowID == windowID) {
                     const int scancode = static_cast<int>(event.key.scancode);
                     if (scancode >= 0 &&
-                        scancode <
-                            static_cast<int>(this->keysPressedThisFrame.size())) {
+                        scancode < static_cast<int>(
+                                       this->keysPressedThisFrame.size())) {
                         this->keysPressedThisFrame[scancode] = true;
                     }
                 }
@@ -764,8 +762,8 @@ void Window::run() {
                 break;
             case SDL_EVENT_MOUSE_MOTION:
                 if (event.motion.windowID == windowID) {
-                    Position2d movement = {
-                        .x = event.motion.xrel, .y = -event.motion.yrel};
+                    Position2d movement = {.x = event.motion.xrel,
+                                           .y = -event.motion.yrel};
                     this->relativeMousePos.x += movement.x;
                     this->relativeMousePos.y += movement.y;
                     if (this->currentScene != nullptr) {
@@ -1636,10 +1634,10 @@ std::vector<VideoMode> Monitor::queryVideoModes() const {
     std::vector<VideoMode> videoModes;
     videoModes.reserve(std::max(count, 0));
     for (int i = 0; modes != nullptr && i < count; ++i) {
-        videoModes.push_back(
-            {.width = modes[i]->w,
-             .height = modes[i]->h,
-             .refreshRate = static_cast<int>(std::lround(modes[i]->refresh_rate))});
+        videoModes.push_back({.width = modes[i]->w,
+                              .height = modes[i]->h,
+                              .refreshRate = static_cast<int>(
+                                  std::lround(modes[i]->refresh_rate))});
     }
     SDL_free(modes);
     return videoModes;
@@ -1703,7 +1701,8 @@ bool Window::isMouseButtonActive(MouseButton button) {
 bool Window::isMouseButtonPressed(MouseButton button) {
     const int index = static_cast<int>(button);
     return index >= 0 &&
-           index < static_cast<int>(this->mouseButtonsPressedThisFrame.size()) &&
+           index <
+               static_cast<int>(this->mouseButtonsPressedThisFrame.size()) &&
            this->mouseButtonsPressedThisFrame[static_cast<std::size_t>(index)];
 }
 

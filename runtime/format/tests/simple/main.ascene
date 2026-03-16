@@ -1,0 +1,31 @@
+{
+    "name": "Main Scene",
+    "id": "main_scene",
+    "materials": [
+        {
+            "name": "default",
+            "file": "-"
+        }
+    ],
+    "objects": [
+        {
+            "type": "solid",
+            "solid_type": "cube",
+            "position": [1.0, 1.0, 1.0],
+            "rotation": [0.0, 0.0, 0.0],
+            "scale": [1.0, 1.0, 1.0],
+            "material": "default"
+        }
+    ],
+    "lights": [
+        {
+            "type": "ambient",
+            "intensity": 0.2
+        }
+    ],
+    "camera": {
+        "position": [0.0, 0.0, -5.0],
+        "rotation": [0.0, 0.0, 0.0],
+        "fov": 60.0
+    }
+}
