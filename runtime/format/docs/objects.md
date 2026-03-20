@@ -2,6 +2,8 @@
 
 These are the IDs and documentation for the objects that can appear in scene files. These are the objects that are used to represent the entities, components and values in the scene format files.
 
+All objects share a `type` and `name` property, which are used to identify the type of the object and its name in the scene. The `type` property is used to determine how to interpret the other properties of the object, while the `name` property is used to give a human-readable name to the object for easier identification and debugging.
+
 ## Solid (`type = "solid"`)
 
 A solid is simply an object that can be defined as a 3D object with a material and components:

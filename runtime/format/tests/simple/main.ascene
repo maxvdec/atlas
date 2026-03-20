@@ -3,6 +3,7 @@
     "id": "main_scene",
     "objects": [
         {
+            "name": "Cube",
             "type": "solid",
             "solid_type": "cube",
             "position": [1.0, 1.0, 1.0],
