@@ -6,6 +6,12 @@ Atlas divides the important parts of a scene in files. In this case we have two 
 
 * Material files (`.amat`). These are JSON files that pack the information of the materials, such as the textures, colors and other properties.
 
+* Graphite Theme files (`.gtheme`). These are JSON files that pack the information of the Graphite themes, such as the colors, fonts and other properties.
+
+* Terrain Generator files (`.atgen`). These are JSON files that pack the information of the terrain generators, such as the heightmap, textures and other properties.
+
+* Biome files (`.abiome`). These are JSON files that pack the information of the biomes, such as the terrain generator, materials and other properties.
+
 The idea is that the scene format files will reference the material files, so that we can reuse materials across different scenes. This way, we can have a more modular and efficient way of managing our assets.
 
 ## How do I understand a scene format file?
