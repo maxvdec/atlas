@@ -16,3 +16,10 @@ The idea is that the scene format files will reference the material files, so th
 
 ## How do I understand a scene format file?
 To understand a scene format file, start looking through the documentation at this directory and `/docs`, and then look at the code in this directory and `/tests`.
+
+Each scene format file has these main sections:
+* `name`: The name of the scene, which is a string that can be used to identify the scene.
+* `id`: The ID of the scene, which is a string that can be used to identify the scene. The ID is used internally by the engine to reference the scene, while the name is used for display purposes and debugging.
+* `objects`: An array of objects that are present in the scene, which can be of different types (solid, compound, model, particle emitter, terrain, etc.). Each object is defined as an object with a `type` property that specifies the type of the object, and other properties that define the values for that object.
+* `lights`: An array of lights that are present in the scene, which can be of different types (point light, directional light, spotlight, etc.). Each light is defined as an object with a `type` property that specifies the type of the light, and other properties that define the values for that light.
+* `camera`: An object that defines the properties of the camera in the scene, such as its position, rotation, field of view, etc. The camera is defined as an object with a `type` property that specifies the type of the camera (e.g., perspective, orthographic, etc.), and other properties that define the values for that camera.

@@ -9,6 +9,11 @@ A script component is a component that can be added to an object to make it exec
 * `source`: The source of the script, which is a reference to a script file (`.ts`) that defines the code that will be executed by the script component. This can be used to create custom behavior for the object in the scene by writing code in the specified script file.
 * `variables`: A list of pairs of `name` and `value`, which are meant to be used as variables that can be accessed and modified by the script code. The `name` is a string representing the name of the variable, and the `value` can be any JSON value (e.g., string, number, boolean, array, object, etc.) that represents the initial value of the variable. These variables can be used in the script code to store and manipulate data related to the object in the scene. These values though, have to start with a type definer (e.g., `str<Hello, world!>`, `num<42>`, `bool<true>`, `ref<myObject>`, etc.) to indicate the type of the variable, since the script code will need to know the type of the variable to be able to use it correctly.
 
+## Trait Scripts (`type = "trait_script"`)
+A trait script component is simply a script component that is meant to be used as a trait, which means that it can be added to multiple objects in the scene to give them the same behavior and logic defined in the script. It has the same properties as the `Script` component, but with the `type` property set to `trait_script` instead of `script`. Additionally, it has the following properties:
+
+* `traitedType`: The type of the objects that can be traited with this trait script, defined as a string that specifies the type of the objects (e.g., `solid`, `model`, `particle_emitter`, etc.) that can have this trait script added to them. This is used to ensure that the trait script is only added to compatible objects in the scene, and to allow the script code to know what type of object it is attached to for better type checking and error handling.
+
 ## Rigidbody (`type = "rigidbody"`)
 
 A rigidbody component is a component that can be added to an object to make it affected by physics. It has the following properties:
