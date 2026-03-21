@@ -761,7 +761,7 @@ class Window {
     std::vector<Renderable *> lateForwardRenderables;
     std::vector<Fluid *> lateFluids;
     std::vector<RenderTarget *> renderTargets;
-    std::unique_ptr<RenderTarget> screenRenderTarget;
+    std::shared_ptr<RenderTarget> screenRenderTarget;
 
     std::shared_ptr<RenderTarget> gBuffer;
     std::shared_ptr<RenderTarget> ssaoBuffer;

@@ -12,7 +12,7 @@ target target backend="AUTO" bezel_native="OFF":
 
 run backend="AUTO" bezel_native="OFF":
     just build {{ backend }} {{ bezel_native }}
-    MTL_HUD_ENABLED=0 ./build/bin/atlas_test
+    MTL_HUD_ENABLED=0 ./build/bin/atlasrun
 
 debug backend="AUTO" bezel_native="OFF":
     just build {{ backend }} {{ bezel_native }}
