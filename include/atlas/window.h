@@ -381,6 +381,10 @@ class Window {
      *
      */
     ~Window();
+    Window(const Window &) = delete;
+    Window &operator=(const Window &) = delete;
+    Window(Window &&) = delete;
+    Window &operator=(Window &&) = delete;
 
     /**
      * @brief Sets the clear color used before each render pass.

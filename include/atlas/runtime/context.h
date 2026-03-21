@@ -16,6 +16,7 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <vector>
 
 struct ObjectIdentifier {
     std::string type;
@@ -23,26 +24,44 @@ struct ObjectIdentifier {
     int id;
 };
 
+class Context;
+
 class RuntimeScene : public Scene {
   public:
+    std::shared_ptr<Context> context;
+
     void update(Window &window) override;
     void initialize(Window &window) override;
+};
+
+class ProjectConfig {
+  public:
+    std::string renderer;
+    bool globalIllumination;
+    std::string mainScene;
+    bool useUpscaling = false;
+    std::vector<std::string> assetDirectories;
 };
 
 class Context {
   public:
     Context() = default;
-    std::string projectRoot;
+    std::string projectFile;
+    std::string projectDir;
     std::shared_ptr<RuntimeScene> scene;
 
-    std::shared_ptr<Window> window;
+    std::unique_ptr<Window> window;
     std::map<ObjectIdentifier, std::shared_ptr<Renderable>> objects;
 
+    ProjectConfig config;
+
     void runWindowed();
+    void loadProject();
+    void loadMainScene(Window &window);
 };
 
 namespace runtime {
-std::shared_ptr<Context> makeContext(std::string projectRoot);
+std::shared_ptr<Context> makeContext(std::string projectFile);
 };
 
 #endif // RUNTIME_CONTEXT_H

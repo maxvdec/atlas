@@ -10,12 +10,13 @@
 #include "atlas/runtime/context.h"
 #include "atlas/window.h"
 
-int main() {
-    auto context = runtime::makeContext("");
+int main(int argc, char **argv) {
+    if (argc < 2) {
+        printf("Usage: %s <project_file.atlas>\n", argv[0]);
+        return 1;
+    }
+    auto context = runtime::makeContext(argv[1]);
+    context->loadProject();
     context->runWindowed();
     return 0;
 }
-
-void RuntimeScene::initialize([[maybe_unused]] Window &window) {}
-
-void RuntimeScene::update([[maybe_unused]] Window &window) {}

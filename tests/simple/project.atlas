@@ -10,7 +10,14 @@ supported_platforms = "all"
 
 [renderer]
 default = "deferred"
-global_illumination = "none"
+global_illumination = false 
 
 [game]
 main_scene = "main.ascene"
+assets = ["assets/"]
+
+[window]
+dimensions = [1920, 1480]
+mouse_capture = false
+multisampling = false
+ssaoScale = 1.0

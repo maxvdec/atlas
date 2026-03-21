@@ -245,7 +245,7 @@ file(GLOB_RECURSE OPAL_SOURCES     CONFIGURE_DEPENDS opal/*.cpp)
 file(GLOB_RECURSE PHOTON_SOURCES   CONFIGURE_DEPENDS photon/*.cpp)
 file(GLOB_RECURSE GRAPHITE_SOURCES CONFIGURE_DEPENDS graphite/*.cpp)
 file(GLOB_RECURSE RUNTIME_LIB_SOURCES CONFIGURE_DEPENDS runtime/lib/*.cpp)
-file(GLOB_RECURSE RUNTIME_SOURCES CONFIGURE_DEPENDS runtime/bin/*.cpp)
+file(GLOB_RECURSE RUNTIME_SOURCES CONFIGURE_DEPENDS runtime/executable/*.cpp)
 
 # ─── bezel ───────────────────────────────────────────────────────────────────
 add_library(bezel ${BEZEL_SOURCES})
