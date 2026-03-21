@@ -1,0 +1,16 @@
+name = "My Project"
+app_name = "My Project App"
+backend = "METAL"
+platform = "MACOS"
+atlas_version = "alpha8"
+
+[pack]
+icon = "none"
+supported_platforms = "all"
+
+[renderer]
+default = "deferred"
+global_illumination = "none"
+
+[game]
+main_scene = "main.ascene"
