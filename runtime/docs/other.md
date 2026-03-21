@@ -91,6 +91,147 @@ The camera is defined in the `camera` section of the scene format file, which is
   * The third item is for moving up and down
 * `automaticMoving`: A boolean value that indicates whether the camera should move automatically based on the input actions or not. If `true`, the camera will move automatically based on the input actions defined in the `actions` array. If `false`, the camera will not move automatically, and it will require manual control through scripts or other means. 
 
+## Environment
+
+The scene can define an `environment` object. This combines the scene `Environment` settings, the `Atmosphere` settings, and the switch for using the procedurally generated atmosphere skybox.
+
+```json
+"environment": {
+  "fog": {
+    "color": [180, 200, 255],
+    "intensity": 0.015
+  },
+  "volumetricLighting": {
+    "enabled": true,
+    "density": 0.35,
+    "weight": 0.02,
+    "decay": 0.95,
+    "exposure": 0.7
+  },
+  "lightBloom": {
+    "radius": 0.01,
+    "maxSamples": 6
+  },
+  "rimLight": {
+    "intensity": 0.2,
+    "color": [255, 244, 220]
+  },
+  "lookupTexture": "textures/lut.png",
+  "automaticAmbient": true,
+  "atmosphereSky": true,
+  "atmosphere": {
+    "enabled": true,
+    "cycle": true,
+    "timeOfDay": 17.5,
+    "secondsPerHour": 180.0,
+    "wind": [0.02, 0.0, 0.01],
+    "sunColor": [255, 242, 214],
+    "moonColor": [150, 150, 210],
+    "sunSize": 1.0,
+    "moonSize": 1.0,
+    "sunTintStrength": 0.35,
+    "moonTintStrength": 0.8,
+    "starIntensity": 2.5,
+    "globalLight": {
+      "enabled": true,
+      "castsShadows": true,
+      "shadowResolution": 4096
+    },
+    "clouds": {
+      "enabled": true,
+      "frequency": 4,
+      "divisions": 6,
+      "position": [0, 100, 0],
+      "size": [500, 80, 500],
+      "scale": 1.5,
+      "density": 0.45,
+      "densityMultiplier": 1.5,
+      "absorption": 1.1,
+      "scattering": 0.85,
+      "phase": 0.55,
+      "clusterStrength": 0.5,
+      "primaryStepCount": 12,
+      "lightStepCount": 6,
+      "lightStepMultiplier": 1.6,
+      "minStepLength": 0.05,
+      "wind": [0.03, 0.0, 0.02]
+    },
+    "weather": {
+      "enabled": true,
+      "condition": "rain",
+      "intensity": 0.6,
+      "wind": [0.1, -0.4, 0.05]
+    }
+  }
+}
+```
+
+Top-level `environment` properties:
+
+* `fog`: Configures scene fog.
+  * `color`: Fog tint color.
+  * `intensity`: Fog density.
+* `volumetricLighting`: Configures deferred volumetric lighting.
+  * `enabled`: Enables the effect.
+  * `density`: Participating media density.
+  * `weight`: Per-step contribution.
+  * `decay`: Falloff per step.
+  * `exposure`: Final intensity multiplier.
+* `lightBloom`: Controls deferred bloom generation.
+  * `radius`: Bloom blur radius.
+  * `maxSamples`: Number of blur passes.
+* `rimLight`: Controls rim lighting applied in supported shaders.
+  * `intensity`: Rim light strength.
+  * `color`: Rim light tint.
+* `lookupTexture`: Optional LUT texture path or texture definition object.
+* `automaticAmbient`: If `true`, ambient lighting is derived from the active skybox.
+* `atmosphereSky`: If `true`, the scene uses the procedurally generated atmosphere sky instead of a user skybox.
+
+The `environment.atmosphere` object maps to the engine `Atmosphere` configuration:
+
+* `enabled`: Enables atmospheric rendering. This is optional if `atmosphereSky`, `globalLight`, `clouds`, or `weather` are used.
+* `cycle`: Enables the day-night cycle.
+* `timeOfDay`: Time in hours, from `0` to `24`.
+* `secondsPerHour`: Simulation speed for the day-night cycle.
+* `wind`: Global wind vector.
+* `sunColor`: Daylight color.
+* `moonColor`: Night light color.
+* `sunSize`: Sun disk size.
+* `moonSize`: Moon disk size.
+* `sunTintStrength`: Strength of warm daylight tinting.
+* `moonTintStrength`: Strength of moonlight tinting.
+* `starIntensity`: Brightness of stars in the generated sky.
+* `globalLight`: Enables the atmosphere-driven directional light. This can be a boolean or an object.
+  * `enabled`: Enables the atmosphere global light.
+  * `castsShadows`: Enables shadows for that generated light.
+  * `shadowResolution`: Shadow map resolution used by the generated light.
+* `clouds`: Enables and configures procedural volumetric clouds. This can be a boolean or an object.
+  * `enabled`: Enables clouds.
+  * `frequency`: Worley noise frequency.
+  * `divisions`: Worley octave count.
+  * `position`: Cloud volume center.
+  * `size`: Cloud volume size.
+  * `scale`: Sample scale.
+  * `offset`: Noise offset.
+  * `density`: Base density threshold.
+  * `densityMultiplier`: Cluster density multiplier.
+  * `absorption`: Light absorption strength.
+  * `scattering`: Scattering strength.
+  * `phase`: Phase function parameter.
+  * `clusterStrength`: Fine detail strength.
+  * `primaryStepCount`: Primary raymarch steps.
+  * `lightStepCount`: Light sampling steps.
+  * `lightStepMultiplier`: Distance multiplier between light steps.
+  * `minStepLength`: Minimum raymarch step length.
+  * `wind`: Cloud-specific wind vector.
+* `weather`: Enables a static weather state. This can be a boolean or an object.
+  * `enabled`: Enables weather particles.
+  * `condition`: One of `clear`, `rain`, `snow`, or `storm`.
+  * `intensity`: Weather intensity.
+  * `wind`: Wind override used by that weather state.
+
+If both a manual directional light and `environment.atmosphere.globalLight` are defined, the atmosphere global light becomes the active directional light for the scene.
+
 ## Input Actions
 
 Input Actions are defined in a separate file that can be referenced by the camera or other objects in the scene. They are defined as an array of input action objects, where each input action object has a `name` property that specifies the name of the input action, and an `inputs` property that defines the inputs for that action. These files are structured as following:

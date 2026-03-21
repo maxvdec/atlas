@@ -85,6 +85,16 @@ struct PendingComponent {
     json data;
 };
 
+struct RuntimeEnvironmentDefinition {
+    Environment environment;
+    Atmosphere atmosphere;
+    bool automaticAmbient = false;
+    bool useAtmosphereSkybox = false;
+    bool useGlobalLight = false;
+    bool atmosphereCastsShadows = false;
+    int atmosphereShadowResolution = 4096;
+};
+
 class RuntimeScriptComponent final : public Component {
   public:
     std::string source;
@@ -501,6 +511,313 @@ MaterialDefinition loadMaterialDefinition(const json &value,
             loaded.textures.push_back(loadTextureDefinition(
                 textureData, definition.baseDir, TextureType::Color, true));
         }
+    }
+
+    return loaded;
+}
+
+WeatherCondition parseWeatherCondition(const std::string &value) {
+    const std::string token = normalizeToken(value);
+    if (token == "clear") {
+        return WeatherCondition::Clear;
+    }
+    if (token == "rain") {
+        return WeatherCondition::Rain;
+    }
+    if (token == "snow") {
+        return WeatherCondition::Snow;
+    }
+    if (token == "storm" || token == "thunderstorm") {
+        return WeatherCondition::Storm;
+    }
+    throw std::runtime_error("Unknown weather condition: " + value);
+}
+
+RuntimeEnvironmentDefinition
+loadEnvironmentDefinition(const json &sceneData, const std::string &baseDir) {
+    RuntimeEnvironmentDefinition loaded;
+
+    const json *environmentNode = findField(sceneData, {"environment"});
+    if (environmentNode == nullptr) {
+        return loaded;
+    }
+    if (!environmentNode->is_object()) {
+        throw std::runtime_error("Environment definition must be an object");
+    }
+
+    const json &environmentData = *environmentNode;
+
+    if (const json *fogNode = findField(environmentData, {"fog"});
+        fogNode != nullptr) {
+        if (!fogNode->is_object()) {
+            throw std::runtime_error("Environment fog must be an object");
+        }
+        tryReadColorAny(*fogNode, {"color"}, loaded.environment.fog.color);
+        tryReadFloatAny(*fogNode, {"intensity"}, loaded.environment.fog.intensity);
+    }
+
+    if (const json *volumetricNode =
+            findField(environmentData, {"volumetricLighting", "volumetric"});
+        volumetricNode != nullptr) {
+        if (!volumetricNode->is_object()) {
+            throw std::runtime_error(
+                "Environment volumetric lighting must be an object");
+        }
+        tryReadBoolAny(*volumetricNode, {"enabled"},
+                       loaded.environment.volumetricLighting.enabled);
+        tryReadFloatAny(*volumetricNode, {"density"},
+                        loaded.environment.volumetricLighting.density);
+        tryReadFloatAny(*volumetricNode, {"weight"},
+                        loaded.environment.volumetricLighting.weight);
+        tryReadFloatAny(*volumetricNode, {"decay"},
+                        loaded.environment.volumetricLighting.decay);
+        tryReadFloatAny(*volumetricNode, {"exposure"},
+                        loaded.environment.volumetricLighting.exposure);
+    }
+
+    if (const json *bloomNode =
+            findField(environmentData, {"lightBloom", "bloom"});
+        bloomNode != nullptr) {
+        if (!bloomNode->is_object()) {
+            throw std::runtime_error("Environment light bloom must be an "
+                                     "object");
+        }
+        tryReadFloatAny(*bloomNode, {"radius"},
+                        loaded.environment.lightBloom.radius);
+        tryReadIntAny(*bloomNode, {"maxSamples"},
+                      loaded.environment.lightBloom.maxSamples);
+    }
+
+    if (const json *rimNode = findField(environmentData, {"rimLight"});
+        rimNode != nullptr) {
+        if (!rimNode->is_object()) {
+            throw std::runtime_error("Environment rim light must be an object");
+        }
+        tryReadFloatAny(*rimNode, {"intensity"},
+                        loaded.environment.rimLight.intensity);
+        tryReadColorAny(*rimNode, {"color"}, loaded.environment.rimLight.color);
+    }
+
+    if (const json *lookupNode =
+            findField(environmentData,
+                      {"lookupTexture", "lutTexture", "lut"});
+        lookupNode != nullptr && !lookupNode->is_null() &&
+        !isEmptyStringValue(*lookupNode)) {
+        loaded.environment.lookupTexture = loadTextureDefinition(
+            *lookupNode, baseDir, TextureType::Color, false);
+    }
+
+    tryReadBoolAny(environmentData, {"automaticAmbient"},
+                   loaded.automaticAmbient);
+    tryReadBoolAny(environmentData,
+                   {"atmosphereSky", "useAtmosphereSkybox", "proceduralSky",
+                    "proceduralSkybox"},
+                   loaded.useAtmosphereSkybox);
+
+    const json *atmosphereNode = findField(environmentData, {"atmosphere"});
+    if (atmosphereNode != nullptr && !atmosphereNode->is_object()) {
+        throw std::runtime_error("Environment atmosphere must be an object");
+    }
+    const json &atmosphereData =
+        atmosphereNode != nullptr ? *atmosphereNode : environmentData;
+
+    bool hasAtmosphereConfiguration = false;
+    bool explicitAtmosphereEnabled = false;
+    bool atmosphereEnabled = false;
+
+    if (tryReadBoolAny(atmosphereData, {"enabled"}, atmosphereEnabled)) {
+        explicitAtmosphereEnabled = true;
+        hasAtmosphereConfiguration = true;
+    }
+
+    if (tryReadFloatAny(atmosphereData, {"timeOfDay", "time"},
+                        loaded.atmosphere.timeOfDay)) {
+        hasAtmosphereConfiguration = true;
+    }
+    if (tryReadFloatAny(atmosphereData, {"secondsPerHour"},
+                        loaded.atmosphere.secondsPerHour)) {
+        hasAtmosphereConfiguration = true;
+    }
+
+    Position3d vector;
+    if (tryReadVec3Any(atmosphereData, {"wind"}, vector)) {
+        loaded.atmosphere.wind = vector;
+        hasAtmosphereConfiguration = true;
+    }
+
+    if (tryReadColorAny(atmosphereData, {"sunColor"},
+                        loaded.atmosphere.sunColor)) {
+        hasAtmosphereConfiguration = true;
+    }
+    if (tryReadColorAny(atmosphereData, {"moonColor"},
+                        loaded.atmosphere.moonColor)) {
+        hasAtmosphereConfiguration = true;
+    }
+    if (tryReadFloatAny(atmosphereData, {"sunSize"},
+                        loaded.atmosphere.sunSize)) {
+        hasAtmosphereConfiguration = true;
+    }
+    if (tryReadFloatAny(atmosphereData, {"moonSize"},
+                        loaded.atmosphere.moonSize)) {
+        hasAtmosphereConfiguration = true;
+    }
+    if (tryReadFloatAny(atmosphereData, {"sunTintStrength"},
+                        loaded.atmosphere.sunTintStrength)) {
+        hasAtmosphereConfiguration = true;
+    }
+    if (tryReadFloatAny(atmosphereData, {"moonTintStrength"},
+                        loaded.atmosphere.moonTintStrength)) {
+        hasAtmosphereConfiguration = true;
+    }
+    if (tryReadFloatAny(atmosphereData, {"starIntensity"},
+                        loaded.atmosphere.starIntensity)) {
+        hasAtmosphereConfiguration = true;
+    }
+    if (tryReadBoolAny(atmosphereData, {"cycle"}, loaded.atmosphere.cycle)) {
+        hasAtmosphereConfiguration = true;
+    }
+
+    if (const json *globalLightNode =
+            findField(atmosphereData, {"globalLight", "sunLight"});
+        globalLightNode != nullptr) {
+        hasAtmosphereConfiguration = true;
+        if (globalLightNode->is_boolean()) {
+            loaded.useGlobalLight = globalLightNode->get<bool>();
+        } else if (globalLightNode->is_object()) {
+            loaded.useGlobalLight = true;
+            tryReadBoolAny(*globalLightNode, {"enabled"},
+                           loaded.useGlobalLight);
+            tryReadBoolAny(*globalLightNode, {"castsShadows", "castShadows"},
+                           loaded.atmosphereCastsShadows);
+            tryReadIntAny(*globalLightNode, {"shadowResolution"},
+                          loaded.atmosphereShadowResolution);
+        } else {
+            throw std::runtime_error(
+                "Atmosphere globalLight must be a boolean or object");
+        }
+    }
+
+    if (tryReadBoolAny(atmosphereData,
+                       {"useGlobalLight", "globalDirectionalLight"},
+                       loaded.useGlobalLight)) {
+        hasAtmosphereConfiguration = true;
+    }
+    if (tryReadBoolAny(atmosphereData,
+                       {"castsShadows", "castShadows", "sunShadows"},
+                       loaded.atmosphereCastsShadows)) {
+        hasAtmosphereConfiguration = true;
+    }
+    if (tryReadIntAny(atmosphereData, {"shadowResolution"},
+                      loaded.atmosphereShadowResolution)) {
+        hasAtmosphereConfiguration = true;
+    }
+
+    if (const json *cloudsNode = findField(atmosphereData, {"clouds"});
+        cloudsNode != nullptr) {
+        hasAtmosphereConfiguration = true;
+        bool enableClouds = true;
+
+        if (cloudsNode->is_boolean()) {
+            enableClouds = cloudsNode->get<bool>();
+        } else if (cloudsNode->is_object()) {
+            tryReadBoolAny(*cloudsNode, {"enabled"}, enableClouds);
+        } else {
+            throw std::runtime_error("Atmosphere clouds must be a boolean or "
+                                     "object");
+        }
+
+        if (enableClouds) {
+            int frequency = 4;
+            int divisions = 6;
+
+            if (cloudsNode->is_object()) {
+                tryReadIntAny(*cloudsNode, {"frequency"}, frequency);
+                tryReadIntAny(*cloudsNode,
+                              {"divisions", "numberOfDivisions"}, divisions);
+            }
+
+            loaded.atmosphere.addClouds(frequency, divisions);
+
+            if (loaded.atmosphere.clouds != nullptr && cloudsNode->is_object()) {
+                auto &clouds = *loaded.atmosphere.clouds;
+                if (tryReadVec3Any(*cloudsNode, {"position"}, vector)) {
+                    clouds.position = vector;
+                }
+                if (tryReadVec3Any(*cloudsNode, {"size"}, vector)) {
+                    clouds.size = vector;
+                }
+                if (tryReadVec3Any(*cloudsNode, {"offset"}, vector)) {
+                    clouds.offset = vector;
+                }
+                if (tryReadVec3Any(*cloudsNode, {"wind"}, vector)) {
+                    clouds.wind = vector;
+                }
+
+                tryReadFloatAny(*cloudsNode, {"scale"}, clouds.scale);
+                tryReadFloatAny(*cloudsNode, {"density"}, clouds.density);
+                tryReadFloatAny(*cloudsNode, {"densityMultiplier"},
+                                clouds.densityMultiplier);
+                tryReadFloatAny(*cloudsNode, {"absorption"},
+                                clouds.absorption);
+                tryReadFloatAny(*cloudsNode, {"scattering"},
+                                clouds.scattering);
+                tryReadFloatAny(*cloudsNode, {"phase"}, clouds.phase);
+                tryReadFloatAny(*cloudsNode, {"clusterStrength"},
+                                clouds.clusterStrength);
+                tryReadIntAny(*cloudsNode, {"primaryStepCount"},
+                              clouds.primaryStepCount);
+                tryReadIntAny(*cloudsNode, {"lightStepCount"},
+                              clouds.lightStepCount);
+                tryReadFloatAny(*cloudsNode, {"lightStepMultiplier"},
+                                clouds.lightStepMultiplier);
+                tryReadFloatAny(*cloudsNode, {"minStepLength"},
+                                clouds.minStepLength);
+            }
+        }
+    }
+
+    if (const json *weatherNode = findField(atmosphereData, {"weather"});
+        weatherNode != nullptr) {
+        hasAtmosphereConfiguration = true;
+        bool enableWeather = true;
+        WeatherState state;
+        state.wind = loaded.atmosphere.wind;
+
+        if (weatherNode->is_boolean()) {
+            enableWeather = weatherNode->get<bool>();
+        } else if (weatherNode->is_object()) {
+            tryReadBoolAny(*weatherNode, {"enabled"}, enableWeather);
+
+            std::string condition;
+            if (tryReadStringAny(*weatherNode, {"condition", "type"},
+                                 condition)) {
+                state.condition = parseWeatherCondition(condition);
+            }
+            tryReadFloatAny(*weatherNode, {"intensity"}, state.intensity);
+            if (tryReadVec3Any(*weatherNode, {"wind"}, vector)) {
+                state.wind = vector;
+            }
+        } else {
+            throw std::runtime_error("Atmosphere weather must be a boolean or "
+                                     "object");
+        }
+
+        if (enableWeather) {
+            loaded.atmosphere.weatherDelegate =
+                [state](ViewInformation) { return state; };
+            loaded.atmosphere.enableWeather();
+        }
+    }
+
+    const bool shouldEnableAtmosphere =
+        loaded.useAtmosphereSkybox || loaded.useGlobalLight ||
+        (explicitAtmosphereEnabled ? atmosphereEnabled
+                                   : hasAtmosphereConfiguration);
+
+    if (shouldEnableAtmosphere) {
+        loaded.atmosphere.enable();
+    } else {
+        loaded.atmosphere.disable();
     }
 
     return loaded;
@@ -2444,7 +2761,13 @@ void Context::loadMainScene(Window &window) {
 }
 
 void Context::loadScene(Window &window, const json &sceneData) {
+    scene->atmosphere.resetRuntimeState();
+    scene->setUseAtmosphereSkybox(false);
+    scene->setAtmosphereSkybox(nullptr);
     scene->setSkybox(nullptr);
+    scene->setAutomaticAmbient(false);
+    scene->setEnvironment(Environment());
+    scene->atmosphere = Atmosphere();
     scene->clearLights();
     scene->setAmbientColor(Color::white());
     scene->setAmbientIntensity(0.5f);
@@ -2483,6 +2806,12 @@ void Context::loadScene(Window &window, const json &sceneData) {
     window.resetInputActions();
 
     const std::string baseDir = sceneDir.empty() ? projectDir : sceneDir;
+    RuntimeEnvironmentDefinition environmentDefinition =
+        loadEnvironmentDefinition(sceneData, baseDir);
+    scene->setEnvironment(std::move(environmentDefinition.environment));
+    scene->atmosphere = environmentDefinition.atmosphere;
+    scene->setUseAtmosphereSkybox(environmentDefinition.useAtmosphereSkybox);
+    scene->setAutomaticAmbient(environmentDefinition.automaticAmbient);
 
     if (sceneData.contains("inputActions")) {
         loadInputActionsFromJson(window, sceneData["inputActions"], baseDir);
@@ -2745,6 +3074,14 @@ void Context::loadScene(Window &window, const json &sceneData) {
             }
 
             throw std::runtime_error("Unknown light type: " + type);
+        }
+    }
+
+    if (environmentDefinition.useGlobalLight) {
+        scene->atmosphere.useGlobalLight();
+        if (environmentDefinition.atmosphereCastsShadows) {
+            scene->atmosphere.castShadowsFromSunlight(
+                environmentDefinition.atmosphereShadowResolution);
         }
     }
 
