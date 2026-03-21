@@ -10,13 +10,18 @@
 #ifndef RUNTIME_CONTEXT_H
 #define RUNTIME_CONTEXT_H
 
+#include "atlas/camera.h"
 #include "atlas/core/renderable.h"
 #include "atlas/scene.h"
+#include "atlas/texture.h"
 #include <atlas/window.h>
 #include <map>
 #include <memory>
 #include <string>
 #include <vector>
+#include <json.hpp>
+
+using json = nlohmann::json;
 
 struct ObjectIdentifier {
     std::string type;
@@ -32,6 +37,8 @@ class RuntimeScene : public Scene {
 
     void update(Window &window) override;
     void initialize(Window &window) override;
+    void onMouseMove(Window &window, Movement2d movement) override;
+    void onMouseScroll(Window &window, Movement2d offset) override;
 };
 
 class ProjectConfig {
@@ -43,12 +50,24 @@ class ProjectConfig {
     std::vector<std::string> assetDirectories;
 };
 
+#define RUNTIME_LOG(msg)                                                       \
+    std::cout << "\033[1;35m[RUINTIME LOG]: \033[0m" << (msg) << std::endl;
+
 class Context {
   public:
     Context() = default;
     std::string projectFile;
     std::string projectDir;
     std::shared_ptr<RuntimeScene> scene;
+
+    std::unique_ptr<Camera> camera;
+    std::map<std::string, std::unique_ptr<RenderTarget>> renderTargets;
+    std::vector<std::unique_ptr<DirectionalLight>> directionalLights;
+    std::vector<std::unique_ptr<Light>> pointLights;
+    std::vector<std::unique_ptr<Spotlight>> spotlights;
+    std::vector<std::unique_ptr<AreaLight>> areaLights;
+    std::vector<std::string> cameraActions;
+    bool cameraAutomaticMoving = false;
 
     std::unique_ptr<Window> window;
     std::map<ObjectIdentifier, std::shared_ptr<Renderable>> objects;
@@ -58,6 +77,9 @@ class Context {
     void runWindowed();
     void loadProject();
     void loadMainScene(Window &window);
+    void loadScene(Window &window, const json &sceneData);
+
+    void parseObject(const json &objectData);
 };
 
 namespace runtime {

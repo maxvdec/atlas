@@ -119,6 +119,7 @@ Render target settings are defined in the `targets` section of the scene format 
 * `render`: A boolean value that indicates whether to render the scene to this render target or not. If `true`, the scene will be rendered to this render target. If `false`, the scene will not be rendered to this render target.
 * `display`: A boolean value that indicates whether to display the contents of this render target on the screen or not. If `true`, the contents of this render target will be displayed on the screen. If `false`, the contents of this render target will not be displayed on the screen, but it can still be used for other purposes, such as post-processing effects or as a texture for other objects in the scene.
 * `effects`: An array of post-processing effects that are applied to the contents of this render target before it is displayed on the screen. Each effect is defined as an object with a `type` property that specifies the type of the effect, and other properties that define the values for that effect. For example, an effect can be a bloom effect, a color grading effect, a depth of field effect, etc., and each effect will have its own specific properties that define how it modifies the rendered image.
+* `name`: The name of the render target, which is a string that can be used to identify the render target. This is useful for referencing the render target in other parts of the scene format file, such as in post-processing effects or as a texture for other objects in the scene.
 
 ## Render Target Effects
 

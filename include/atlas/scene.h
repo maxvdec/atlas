@@ -221,6 +221,12 @@ class Scene {
      * @brief Returns the manually configured ambient light color.
      */
     Color getAmbientColor() const { return ambientLight.color; }
+    void setAmbientColor(const Color &color) {
+        ambientLight.color = color;
+        if (automaticAmbient) {
+            automaticAmbient = false;
+        }
+    }
 
     /**
      * @brief Returns the manually configured ambient intensity.

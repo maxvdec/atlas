@@ -30,5 +30,3 @@ void RuntimeScene::initialize(Window &window) {
 
     context->loadMainScene(window);
 }
-
-void RuntimeScene::update([[maybe_unused]] Window &window) {}
