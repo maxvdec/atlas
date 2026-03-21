@@ -241,13 +241,8 @@ void bezel::Vehicle::create(const std::shared_ptr<PhysicsWorld> &world) {
     world->physicsSystem.AddStepListener(new_constraint);
 
     constraint = new_constraint;
-    controller = dynamic_cast<JPH::WheeledVehicleController *>(
+    controller = static_cast<JPH::WheeledVehicleController *>(
         new_constraint->GetController());
-
-    if (controller == nullptr) {
-        atlas_warning(
-            "Vehicle created but controller is not WheeledVehicleController");
-    }
 }
 
 void bezel::Vehicle::destroy(const std::shared_ptr<PhysicsWorld> &world) {

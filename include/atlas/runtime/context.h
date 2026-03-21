@@ -18,16 +18,11 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <vector>
 #include <json.hpp>
 
 using json = nlohmann::json;
-
-struct ObjectIdentifier {
-    std::string type;
-    std::string name;
-    int id;
-};
 
 class Context;
 
@@ -58,6 +53,7 @@ class Context {
     Context() = default;
     std::string projectFile;
     std::string projectDir;
+    std::string sceneDir;
     std::shared_ptr<RuntimeScene> scene;
 
     std::unique_ptr<Camera> camera;
@@ -70,7 +66,8 @@ class Context {
     bool cameraAutomaticMoving = false;
 
     std::unique_ptr<Window> window;
-    std::map<ObjectIdentifier, std::shared_ptr<Renderable>> objects;
+    std::vector<std::shared_ptr<Renderable>> objects;
+    std::unordered_map<std::string, GameObject *> objectReferences;
 
     ProjectConfig config;
 
@@ -78,8 +75,6 @@ class Context {
     void loadProject();
     void loadMainScene(Window &window);
     void loadScene(Window &window, const json &sceneData);
-
-    void parseObject(const json &objectData);
 };
 
 namespace runtime {

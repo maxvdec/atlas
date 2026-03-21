@@ -9,6 +9,10 @@
 
 #include "bezel/bezel.h"
 
+bezel::MeshCollider::MeshCollider(const std::vector<Position3d> &vertices,
+                                  const std::vector<uint32_t> &indices)
+    : vertices(vertices), indices(indices) {}
+
 JPH::RefConst<JPH::Shape> bezel::BoxCollider::getJoltShape() const {
     return new JPH::BoxShape(JPH::Vec3(static_cast<float>(halfExtents.x),
                                        static_cast<float>(halfExtents.y),

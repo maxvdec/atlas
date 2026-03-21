@@ -8,13 +8,22 @@
 //
 
 #include "atlas/runtime/context.h"
+#include "atlas/audio.h"
 #include "atlas/effect.h"
 #include "atlas/input.h"
+#include "atlas/object.h"
+#include "atlas/particle.h"
+#include "atlas/physics.h"
 #include "atlas/texture.h"
 #include "atlas/units.h"
 #include "atlas/window.h"
+#include "atlas/workspace.h"
+#include "aurora/procedural.h"
+#include "aurora/terrain.h"
 #include <algorithm>
+#include <array>
 #include <cctype>
+#include <cmath>
 #include <filesystem>
 #include <fstream>
 #include <memory>
@@ -22,6 +31,7 @@
 #include <json.hpp>
 #include <string>
 #include <toml.hpp>
+#include <variant>
 #include <vector>
 
 namespace {
@@ -58,6 +68,86 @@ namespace {
         }                                                                      \
     } while (0)
 
+struct JsonDefinition {
+    json data;
+    std::string baseDir;
+};
+
+struct MaterialDefinition {
+    Material material;
+    std::vector<Texture> textures;
+};
+
+struct PendingComponent {
+    GameObject *object = nullptr;
+    std::string objectType;
+    std::string baseDir;
+    json data;
+};
+
+class RuntimeScriptComponent final : public Component {
+  public:
+    std::string source;
+    json variables;
+    std::string traitedType;
+    bool isTrait = false;
+};
+
+const json *findField(const json &node,
+                      std::initializer_list<const char *> keys) {
+    if (!node.is_object()) {
+        return nullptr;
+    }
+    for (const char *key : keys) {
+        auto it = node.find(key);
+        if (it != node.end()) {
+            return &(*it);
+        }
+    }
+    return nullptr;
+}
+
+bool tryReadStringAny(const json &node,
+                      std::initializer_list<const char *> keys,
+                      std::string &target) {
+    if (const json *field = findField(node, keys);
+        field != nullptr && field->is_string()) {
+        target = field->get<std::string>();
+        return true;
+    }
+    return false;
+}
+
+bool tryReadBoolAny(const json &node,
+                    std::initializer_list<const char *> keys, bool &target) {
+    if (const json *field = findField(node, keys);
+        field != nullptr && field->is_boolean()) {
+        target = field->get<bool>();
+        return true;
+    }
+    return false;
+}
+
+bool tryReadFloatAny(const json &node,
+                     std::initializer_list<const char *> keys, float &target) {
+    if (const json *field = findField(node, keys);
+        field != nullptr && field->is_number()) {
+        target = field->get<float>();
+        return true;
+    }
+    return false;
+}
+
+bool tryReadIntAny(const json &node, std::initializer_list<const char *> keys,
+                   int &target) {
+    if (const json *field = findField(node, keys);
+        field != nullptr && field->is_number()) {
+        target = field->get<int>();
+        return true;
+    }
+    return false;
+}
+
 std::string normalizeToken(std::string value) {
     std::string normalized;
     normalized.reserve(value.size());
@@ -92,6 +182,28 @@ json loadJsonFile(const std::string &path) {
     return data;
 }
 
+JsonDefinition loadJsonDefinition(const json &value,
+                                  const std::string &baseDir) {
+    if (value.is_string()) {
+        const std::string relativePath = value.get<std::string>();
+        if (relativePath.empty()) {
+            throw std::runtime_error("Expected a non-empty JSON definition "
+                                     "path");
+        }
+        const std::string resolvedPath =
+            resolveRuntimePath(baseDir, relativePath);
+        return {
+            .data = loadJsonFile(resolvedPath),
+            .baseDir = std::filesystem::path(resolvedPath).parent_path().string(),
+        };
+    }
+    return {.data = value, .baseDir = baseDir};
+}
+
+bool isEmptyStringValue(const json &value) {
+    return value.is_string() && value.get<std::string>().empty();
+}
+
 bool tryReadVec3(const json &node, const char *key, Position3d &target) {
     auto it = node.find(key);
     if (it == node.end() || !it->is_array() || it->size() != 3) {
@@ -102,6 +214,17 @@ bool tryReadVec3(const json &node, const char *key, Position3d &target) {
     return true;
 }
 
+bool tryReadVec3Any(const json &node,
+                    std::initializer_list<const char *> keys,
+                    Position3d &target) {
+    for (const char *key : keys) {
+        if (tryReadVec3(node, key, target)) {
+            return true;
+        }
+    }
+    return false;
+}
+
 bool tryReadVec2(const json &node, const char *key, Position2d &target) {
     auto it = node.find(key);
     if (it == node.end() || !it->is_array() || it->size() != 2) {
@@ -109,6 +232,17 @@ bool tryReadVec2(const json &node, const char *key, Position2d &target) {
     }
     target = Position2d{(*it)[0].get<float>(), (*it)[1].get<float>()};
     return true;
+}
+
+bool tryReadVec2Any(const json &node,
+                    std::initializer_list<const char *> keys,
+                    Position2d &target) {
+    for (const char *key : keys) {
+        if (tryReadVec2(node, key, target)) {
+            return true;
+        }
+    }
+    return false;
 }
 
 Color parseColor(const json &value) {
@@ -153,6 +287,1305 @@ bool tryReadColor(const json &node, const char *key, Color &target) {
     return true;
 }
 
+bool tryReadColorAny(const json &node,
+                     std::initializer_list<const char *> keys,
+                     Color &target) {
+    for (const char *key : keys) {
+        if (tryReadColor(node, key, target)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+std::string makeRuntimeResourceName(const std::string &prefix,
+                                    const std::string &resolvedPath) {
+    return prefix + ":" +
+           std::filesystem::path(resolvedPath).lexically_normal().string();
+}
+
+ResourceType resourceTypeForTextureType(TextureType type) {
+    if (type == TextureType::Specular) {
+        return ResourceType::SpecularMap;
+    }
+    return ResourceType::Image;
+}
+
+TextureWrappingMode parseTextureWrappingMode(const std::string &value) {
+    const std::string token = normalizeToken(value);
+    if (token == "repeat") {
+        return TextureWrappingMode::Repeat;
+    }
+    if (token == "mirroredrepeat" || token == "mirror") {
+        return TextureWrappingMode::MirroredRepeat;
+    }
+    if (token == "clamptoedge" || token == "edge") {
+        return TextureWrappingMode::ClampToEdge;
+    }
+    if (token == "clamptoborder" || token == "border") {
+        return TextureWrappingMode::ClampToBorder;
+    }
+    throw std::runtime_error("Unknown texture wrapping mode: " + value);
+}
+
+TextureFilteringMode parseTextureFilteringMode(const std::string &value) {
+    const std::string token = normalizeToken(value);
+    if (token == "nearest") {
+        return TextureFilteringMode::Nearest;
+    }
+    if (token == "linear") {
+        return TextureFilteringMode::Linear;
+    }
+    throw std::runtime_error("Unknown texture filtering mode: " + value);
+}
+
+TextureType parseTextureTypeString(const std::string &value) {
+    const std::string token = normalizeToken(value);
+    if (token == "color" || token == "albedo" || token == "diffuse") {
+        return TextureType::Color;
+    }
+    if (token == "specular") {
+        return TextureType::Specular;
+    }
+    if (token == "cubemap") {
+        return TextureType::Cubemap;
+    }
+    if (token == "normal" || token == "normalmap") {
+        return TextureType::Normal;
+    }
+    if (token == "metallic" || token == "metalness") {
+        return TextureType::Metallic;
+    }
+    if (token == "roughness") {
+        return TextureType::Roughness;
+    }
+    if (token == "ao" || token == "ambientocclusion") {
+        return TextureType::AO;
+    }
+    if (token == "opacity" || token == "alpha") {
+        return TextureType::Opacity;
+    }
+    if (token == "depth") {
+        return TextureType::Depth;
+    }
+    if (token == "hdr") {
+        return TextureType::HDR;
+    }
+    throw std::runtime_error("Unknown texture type: " + value);
+}
+
+Resource createRuntimeResource(const std::string &baseDir,
+                               const std::string &path, ResourceType type,
+                               const std::string &prefix) {
+    const std::string resolvedPath = resolveRuntimePath(baseDir, path);
+    return Workspace::get().createResource(
+        resolvedPath, makeRuntimeResourceName(prefix, resolvedPath), type);
+}
+
+Texture loadTextureDefinition(const json &value, const std::string &baseDir,
+                              TextureType defaultType, bool allowOverride) {
+    std::string path;
+    TextureType type = defaultType;
+    TextureParameters params;
+    Color borderColor = {0.0f, 0.0f, 0.0f, 0.0f};
+
+    if (value.is_string()) {
+        path = value.get<std::string>();
+    } else if (value.is_object()) {
+        tryReadStringAny(value, {"path", "source"}, path);
+
+        if (allowOverride) {
+            std::string typeName;
+            if (tryReadStringAny(value, {"textureType", "type"}, typeName)) {
+                type = parseTextureTypeString(typeName);
+            }
+        }
+
+        std::string wrapping;
+        if (tryReadStringAny(value, {"wrappingModeS", "wrapS"}, wrapping)) {
+            params.wrappingModeS = parseTextureWrappingMode(wrapping);
+        }
+        if (tryReadStringAny(value, {"wrappingModeT", "wrapT"}, wrapping)) {
+            params.wrappingModeT = parseTextureWrappingMode(wrapping);
+        }
+
+        std::string filtering;
+        if (tryReadStringAny(value, {"minifyingFilter", "minFilter"},
+                             filtering)) {
+            params.minifyingFilter = parseTextureFilteringMode(filtering);
+        }
+        if (tryReadStringAny(value, {"magnifyingFilter", "magFilter"},
+                             filtering)) {
+            params.magnifyingFilter = parseTextureFilteringMode(filtering);
+        }
+
+        tryReadColorAny(value, {"borderColor"}, borderColor);
+    } else {
+        throw std::runtime_error("Invalid texture definition");
+    }
+
+    if (path.empty()) {
+        throw std::runtime_error("Texture definition is missing a source path");
+    }
+
+    if (type == TextureType::Cubemap) {
+        throw std::runtime_error("Cubemap textures are not supported in this "
+                                 "material slot");
+    }
+
+    Resource resource = createRuntimeResource(
+        baseDir, path, resourceTypeForTextureType(type), "runtime-texture");
+    return Texture::fromResource(resource, type, params, borderColor);
+}
+
+MaterialDefinition loadMaterialDefinition(const json &value,
+                                          const std::string &baseDir) {
+    JsonDefinition definition = loadJsonDefinition(value, baseDir);
+    const json *materialNode = findField(definition.data, {"material"});
+    const json &materialData =
+        materialNode != nullptr && materialNode->is_object() ? *materialNode
+                                                             : definition.data;
+
+    if (!materialData.is_object()) {
+        throw std::runtime_error("Material definition must be an object");
+    }
+
+    MaterialDefinition loaded;
+
+    tryReadColorAny(materialData, {"albedo", "color", "baseColor"},
+                    loaded.material.albedo);
+    tryReadColorAny(materialData, {"emissiveColor", "emissive", "emissionColor"},
+                    loaded.material.emissiveColor);
+    tryReadFloatAny(materialData, {"metallic"}, loaded.material.metallic);
+    tryReadFloatAny(materialData, {"roughness"}, loaded.material.roughness);
+    tryReadFloatAny(materialData, {"ao", "ambientOcclusion"},
+                    loaded.material.ao);
+    tryReadFloatAny(materialData, {"reflectivity"},
+                    loaded.material.reflectivity);
+    tryReadFloatAny(materialData, {"emissiveIntensity", "emissionIntensity"},
+                    loaded.material.emissiveIntensity);
+    tryReadFloatAny(materialData, {"normalMapStrength"},
+                    loaded.material.normalMapStrength);
+    tryReadBoolAny(materialData, {"useNormalMap"},
+                   loaded.material.useNormalMap);
+    tryReadFloatAny(materialData, {"transmittance"},
+                    loaded.material.transmittance);
+    tryReadFloatAny(materialData, {"ior"}, loaded.material.ior);
+
+    auto appendTexture = [&](std::initializer_list<const char *> keys,
+                             TextureType type, bool allowTypeOverride) {
+        if (const json *field = findField(materialData, keys);
+            field != nullptr && !isEmptyStringValue(*field)) {
+            loaded.textures.push_back(loadTextureDefinition(
+                *field, definition.baseDir, type, allowTypeOverride));
+        }
+    };
+
+    appendTexture({"texture", "albedoTexture", "colorTexture",
+                   "diffuseTexture"},
+                  TextureType::Color, false);
+    appendTexture({"specularTexture", "specularMap"}, TextureType::Specular,
+                  false);
+    appendTexture({"normalTexture", "normalMap"}, TextureType::Normal, false);
+    appendTexture({"metallicTexture", "metalnessTexture"},
+                  TextureType::Metallic, false);
+    appendTexture({"roughnessTexture"}, TextureType::Roughness, false);
+    appendTexture({"aoTexture", "ambientOcclusionTexture"}, TextureType::AO,
+                  false);
+    appendTexture({"opacityTexture", "alphaTexture"}, TextureType::Opacity,
+                  false);
+
+    if (const json *texturesField = findField(materialData, {"textures"});
+        texturesField != nullptr && texturesField->is_array()) {
+        for (const auto &textureData : *texturesField) {
+            loaded.textures.push_back(loadTextureDefinition(
+                textureData, definition.baseDir, TextureType::Color, true));
+        }
+    }
+
+    return loaded;
+}
+
+Normal3d normalizeVector(const Position3d &vector, const Normal3d &fallback) {
+    if (std::fabs(vector.x) < 1.0e-6f && std::fabs(vector.y) < 1.0e-6f &&
+        std::fabs(vector.z) < 1.0e-6f) {
+        return fallback;
+    }
+    return Position3d{vector.x, vector.y, vector.z}.normalized();
+}
+
+std::shared_ptr<TerrainGenerator>
+parseTerrainGenerator(const json &value, const std::string &baseDir) {
+    JsonDefinition definition = loadJsonDefinition(value, baseDir);
+    if (!definition.data.is_object()) {
+        throw std::runtime_error("Terrain generator definition must be an "
+                                 "object");
+    }
+
+    std::string algorithm;
+    tryReadStringAny(definition.data, {"algorithm", "type", "generator"},
+                     algorithm);
+    if (algorithm.empty()) {
+        throw std::runtime_error("Terrain generator is missing an algorithm");
+    }
+
+    const std::string token = normalizeToken(algorithm);
+    const json *settingsNode = findField(definition.data, {"settings"});
+    const json &settings =
+        settingsNode != nullptr && settingsNode->is_object() ? *settingsNode
+                                                             : definition.data;
+
+    if (token == "hill" || token == "hills" || token == "perlin" ||
+        token == "perlinnoise") {
+        float scale = 0.01f;
+        float amplitude = 10.0f;
+        tryReadFloatAny(settings, {"scale"}, scale);
+        tryReadFloatAny(settings, {"amplitude", "height"}, amplitude);
+        return std::make_shared<HillGenerator>(scale, amplitude);
+    }
+
+    if (token == "plain" || token == "plains") {
+        float scale = 0.02f;
+        float amplitude = 2.0f;
+        tryReadFloatAny(settings, {"scale"}, scale);
+        tryReadFloatAny(settings, {"amplitude", "height"}, amplitude);
+        return std::make_shared<PlainGenerator>(scale, amplitude);
+    }
+
+    if (token == "mountain" || token == "mountains" || token == "fractal" ||
+        token == "fractalnoise" || token == "simplex" ||
+        token == "simplexnoise" || token == "diamondsquare") {
+        float scale = 10.0f;
+        float amplitude = 100.0f;
+        int octaves = 5;
+        float persistence = 0.5f;
+        tryReadFloatAny(settings, {"scale"}, scale);
+        tryReadFloatAny(settings, {"amplitude", "height"}, amplitude);
+        tryReadIntAny(settings, {"octaves"}, octaves);
+        tryReadFloatAny(settings, {"persistence"}, persistence);
+        return std::make_shared<MountainGenerator>(scale, amplitude, octaves,
+                                                   persistence);
+    }
+
+    if (token == "island" || token == "worley" || token == "worleynoise") {
+        int numFeatures = 10;
+        float scale = 0.01f;
+        tryReadIntAny(settings, {"numFeatures", "features"}, numFeatures);
+        tryReadFloatAny(settings, {"scale"}, scale);
+        return std::make_shared<IslandGenerator>(numFeatures, scale);
+    }
+
+    if (token == "compound" || token == "combined" || token == "composite") {
+        auto compound = std::make_shared<CompoundGenerator>();
+        const json *generatorsNode =
+            findField(settings, {"generators", "items"});
+        if (generatorsNode == nullptr || !generatorsNode->is_array()) {
+            throw std::runtime_error("Compound terrain generator requires a "
+                                     "generators array");
+        }
+
+        for (const auto &childData : *generatorsNode) {
+            auto child = parseTerrainGenerator(childData, definition.baseDir);
+            if (auto hill = std::dynamic_pointer_cast<HillGenerator>(child)) {
+                compound->addGenerator(*hill);
+            } else if (auto plain =
+                           std::dynamic_pointer_cast<PlainGenerator>(child)) {
+                compound->addGenerator(*plain);
+            } else if (auto mountain =
+                           std::dynamic_pointer_cast<MountainGenerator>(child)) {
+                compound->addGenerator(*mountain);
+            } else if (auto island =
+                           std::dynamic_pointer_cast<IslandGenerator>(child)) {
+                compound->addGenerator(*island);
+            } else if (auto nestedCompound =
+                           std::dynamic_pointer_cast<CompoundGenerator>(child)) {
+                compound->addGenerator(*nestedCompound);
+            }
+        }
+
+        return compound;
+    }
+
+    throw std::runtime_error("Unknown terrain generator algorithm: " +
+                             algorithm);
+}
+
+void appendBiomeList(Terrain &terrain, const json &value,
+                     const std::string &baseDir) {
+    JsonDefinition definition = loadJsonDefinition(value, baseDir);
+
+    const json *biomesNode = nullptr;
+    if (definition.data.is_array()) {
+        biomesNode = &definition.data;
+    } else if (definition.data.is_object()) {
+        biomesNode = findField(definition.data, {"biomes"});
+    }
+
+    if (biomesNode == nullptr || !biomesNode->is_array()) {
+        throw std::runtime_error("Biome definition must provide a biomes array");
+    }
+
+    for (const auto &biomeData : *biomesNode) {
+        if (!biomeData.is_object()) {
+            throw std::runtime_error("Biome entry must be an object");
+        }
+
+        Biome biome("", Color());
+        tryReadStringAny(biomeData, {"name"}, biome.name);
+        tryReadColorAny(biomeData, {"color"}, biome.color);
+        bool explicitUseTexture = biome.useTexture;
+        bool hasExplicitUseTexture =
+            tryReadBoolAny(biomeData, {"useTexture"}, explicitUseTexture);
+        tryReadFloatAny(biomeData, {"minHeight"}, biome.minHeight);
+        tryReadFloatAny(biomeData, {"maxHeight"}, biome.maxHeight);
+        tryReadFloatAny(biomeData, {"minMoisture"}, biome.minMoisture);
+        tryReadFloatAny(biomeData, {"maxMoisture"}, biome.maxMoisture);
+        tryReadFloatAny(biomeData, {"minTemperature"}, biome.minTemperature);
+        tryReadFloatAny(biomeData, {"maxTemperature"}, biome.maxTemperature);
+
+        const json *textureField = findField(biomeData, {"texture"});
+        if (textureField != nullptr && !isEmptyStringValue(*textureField)) {
+            biome.attachTexture(loadTextureDefinition(*textureField,
+                                                     definition.baseDir,
+                                                     TextureType::Color, false));
+        }
+
+        if (hasExplicitUseTexture) {
+            biome.useTexture = explicitUseTexture;
+        }
+
+        terrain.addBiome(biome);
+    }
+}
+
+std::optional<std::string>
+findCubemapFace(const std::string &directory,
+                std::initializer_list<const char *> aliases) {
+    const std::filesystem::path dirPath(directory);
+    if (!std::filesystem::exists(dirPath) || !std::filesystem::is_directory(dirPath)) {
+        return std::nullopt;
+    }
+
+    std::vector<std::string> normalizedAliases;
+    normalizedAliases.reserve(aliases.size());
+    for (const char *alias : aliases) {
+        normalizedAliases.push_back(normalizeToken(alias));
+    }
+
+    for (const auto &entry : std::filesystem::directory_iterator(dirPath)) {
+        if (!entry.is_regular_file()) {
+            continue;
+        }
+
+        const std::string stem = normalizeToken(entry.path().stem().string());
+        const std::string filename =
+            normalizeToken(entry.path().filename().string());
+
+        for (const auto &alias : normalizedAliases) {
+            if (stem == alias || filename == alias ||
+                stem.rfind(alias, 0) == 0) {
+                return entry.path().string();
+            }
+        }
+    }
+
+    return std::nullopt;
+}
+
+Cubemap loadCubemapFromPaths(const std::array<std::string, 6> &paths,
+                             const std::string &baseDir) {
+    std::vector<Resource> resources;
+    resources.reserve(paths.size());
+    for (const auto &path : paths) {
+        resources.push_back(
+            createRuntimeResource(baseDir, path, ResourceType::Image,
+                                  "runtime-cubemap-face"));
+    }
+
+    ResourceGroup group = Workspace::get().createResourceGroup(
+        "runtime-cubemap:" + makeRuntimeResourceName("group", paths[0]),
+        resources);
+    return Cubemap::fromResourceGroup(group);
+}
+
+Cubemap loadCubemapDefinition(const json &value, const std::string &baseDir) {
+    if (value.is_string()) {
+        const std::string rawPath = value.get<std::string>();
+        if (rawPath.empty()) {
+            throw std::runtime_error("Skybox cubemap path cannot be empty");
+        }
+
+        const std::string resolvedPath = resolveRuntimePath(baseDir, rawPath);
+        const std::filesystem::path path(resolvedPath);
+
+        if (std::filesystem::is_directory(path)) {
+            auto right =
+                findCubemapFace(resolvedPath,
+                                {"px", "posx", "positivex", "right"});
+            auto left = findCubemapFace(resolvedPath,
+                                        {"nx", "negx", "negativex", "left"});
+            auto top =
+                findCubemapFace(resolvedPath, {"py", "posy", "positivey", "top",
+                                               "up"});
+            auto bottom = findCubemapFace(
+                resolvedPath, {"ny", "negy", "negativey", "bottom", "down"});
+            auto front =
+                findCubemapFace(resolvedPath,
+                                {"pz", "posz", "positivez", "front"});
+            auto back =
+                findCubemapFace(resolvedPath, {"nz", "negz", "negativez",
+                                               "back"});
+
+            if (!right || !left || !top || !bottom || !front || !back) {
+                throw std::runtime_error("Cubemap directory is missing one or "
+                                         "more faces: " + resolvedPath);
+            }
+
+            return loadCubemapFromPaths({*right, *left, *top, *bottom, *front,
+                                         *back},
+                                        "");
+        }
+
+        const std::string extension = normalizeToken(path.extension().string());
+        if (extension == "json" || extension == "acubemap") {
+            return loadCubemapDefinition(
+                loadJsonFile(resolvedPath),
+                std::filesystem::path(resolvedPath).parent_path().string());
+        }
+
+        throw std::runtime_error("Cubemap paths must point to a directory or a "
+                                 "JSON cubemap definition: " + resolvedPath);
+    }
+
+    if (value.is_array() && value.size() == 6) {
+        if (value[0].is_string()) {
+            std::array<std::string, 6> facePaths;
+            for (size_t i = 0; i < facePaths.size(); ++i) {
+                facePaths[i] = value[i].get<std::string>();
+            }
+            return loadCubemapFromPaths(facePaths, baseDir);
+        }
+
+        std::array<Color, 6> colors;
+        for (size_t i = 0; i < colors.size(); ++i) {
+            colors[i] = parseColor(value[i]);
+        }
+        return Cubemap::fromColors(colors, 1024);
+    }
+
+    if (value.is_object()) {
+        if (const json *colorsField = findField(value, {"colors"});
+            colorsField != nullptr && colorsField->is_array() &&
+            colorsField->size() == 6) {
+            std::array<Color, 6> colors;
+            for (size_t i = 0; i < colors.size(); ++i) {
+                colors[i] = parseColor((*colorsField)[i]);
+            }
+            int size = 1024;
+            tryReadIntAny(value, {"size", "resolution"}, size);
+            return Cubemap::fromColors(colors, size);
+        }
+
+        auto readFacePath = [&](std::initializer_list<const char *> keys)
+            -> std::optional<std::string> {
+            if (const json *field = findField(value, keys);
+                field != nullptr && field->is_string()) {
+                return field->get<std::string>();
+            }
+            return std::nullopt;
+        };
+
+        auto right =
+            readFacePath({"px", "posx", "positiveX", "right", "rightFace"});
+        auto left =
+            readFacePath({"nx", "negx", "negativeX", "left", "leftFace"});
+        auto top = readFacePath({"py", "posy", "positiveY", "top", "up"});
+        auto bottom =
+            readFacePath({"ny", "negy", "negativeY", "bottom", "down"});
+        auto front =
+            readFacePath({"pz", "posz", "positiveZ", "front", "frontFace"});
+        auto back =
+            readFacePath({"nz", "negz", "negativeZ", "back", "backFace"});
+
+        if (right && left && top && bottom && front && back) {
+            return loadCubemapFromPaths({*right, *left, *top, *bottom, *front,
+                                         *back},
+                                        baseDir);
+        }
+
+        if (const json *faces = findField(value, {"faces", "cubemap"});
+            faces != nullptr && faces != &value) {
+            return loadCubemapDefinition(*faces, baseDir);
+        }
+    }
+
+    throw std::runtime_error("Invalid cubemap definition");
+}
+
+void registerObjectReference(Context &context, const std::string &reference,
+                             GameObject *object) {
+    if (reference.empty() || object == nullptr) {
+        return;
+    }
+
+    auto registerSingle = [&](const std::string &key) {
+        if (key.empty()) {
+            return;
+        }
+        auto it = context.objectReferences.find(key);
+        if (it != context.objectReferences.end() && it->second != object) {
+            throw std::runtime_error("Duplicate object reference: " + key);
+        }
+        context.objectReferences[key] = object;
+    };
+
+    registerSingle(reference);
+    registerSingle(normalizeToken(reference));
+}
+
+void registerGameObject(Context &context, GameObject &object,
+                        const json &objectData, const std::string &objectType,
+                        size_t generatedIndex) {
+    std::string name;
+    tryReadStringAny(objectData, {"name"}, name);
+    if (name.empty()) {
+        name = objectType + "_" + std::to_string(generatedIndex);
+    }
+
+    registerObjectReference(context, name, &object);
+
+    if (const json *idField = findField(objectData, {"id"}); idField != nullptr) {
+        if (idField->is_string()) {
+            registerObjectReference(context, idField->get<std::string>(),
+                                    &object);
+        } else if (idField->is_number_integer()) {
+            registerObjectReference(context,
+                                    std::to_string(idField->get<int>()), &object);
+        }
+    }
+
+    registerObjectReference(context, std::to_string(object.getId()), &object);
+}
+
+void applyTransform(GameObject &object, const json &objectData) {
+    Position3d position;
+    if (tryReadVec3Any(objectData, {"position"}, position)) {
+        object.setPosition(position);
+    }
+
+    Position3d rotationValues;
+    if (tryReadVec3Any(objectData, {"rotation"}, rotationValues)) {
+        object.setRotation(
+            Rotation3d{rotationValues.x, rotationValues.y, rotationValues.z});
+    }
+
+    Scale3d scale;
+    if (tryReadVec3Any(objectData, {"scale"}, scale)) {
+        object.setScale(scale);
+    }
+
+    Position3d target;
+    if (tryReadVec3Any(objectData, {"target", "lookAt"}, target)) {
+        object.lookAt(target, {0.0f, 1.0f, 0.0f});
+    }
+}
+
+void applyMaterial(GameObject &object, const MaterialDefinition &material) {
+    if (auto *coreObject = dynamic_cast<CoreObject *>(&object);
+        coreObject != nullptr) {
+        coreObject->material = material.material;
+        for (const auto &texture : material.textures) {
+            coreObject->attachTexture(texture);
+        }
+        return;
+    }
+
+    if (auto *model = dynamic_cast<Model *>(&object); model != nullptr) {
+        model->material = material.material;
+        for (auto &mesh : model->getObjects()) {
+            if (mesh != nullptr) {
+                mesh->material = material.material;
+            }
+        }
+        for (const auto &texture : material.textures) {
+            model->attachTexture(texture);
+        }
+    }
+}
+
+void collectPendingComponents(GameObject &object, const json &objectData,
+                              const std::string &baseDir,
+                              std::vector<PendingComponent> &rigidbodies,
+                              std::vector<PendingComponent> &standard,
+                              std::vector<PendingComponent> &joints) {
+    const json *componentsField = findField(objectData, {"components"});
+    if (componentsField == nullptr) {
+        return;
+    }
+
+    JsonDefinition definition = loadJsonDefinition(*componentsField, baseDir);
+    std::vector<json> componentEntries;
+
+    if (definition.data.is_array()) {
+        componentEntries.assign(definition.data.begin(), definition.data.end());
+    } else if (definition.data.is_object()) {
+        if (const json *arrayField = findField(definition.data, {"components"});
+            arrayField != nullptr && arrayField->is_array()) {
+            componentEntries.assign(arrayField->begin(), arrayField->end());
+        } else if (definition.data.contains("type")) {
+            componentEntries.push_back(definition.data);
+        }
+    }
+
+    if (componentEntries.empty()) {
+        throw std::runtime_error("Object components must be an array or a "
+                                 "component definition object");
+    }
+
+    std::string objectType;
+    tryReadStringAny(objectData, {"type"}, objectType);
+    objectType = normalizeToken(objectType);
+
+    for (const auto &componentData : componentEntries) {
+        if (!componentData.is_object()) {
+            throw std::runtime_error("Component entry must be an object");
+        }
+
+        std::string type;
+        tryReadStringAny(componentData, {"type"}, type);
+        const std::string normalizedType = normalizeToken(type);
+
+        PendingComponent pending{
+            .object = &object,
+            .objectType = objectType,
+            .baseDir = definition.baseDir,
+            .data = componentData,
+        };
+
+        if (normalizedType == "rigidbody") {
+            rigidbodies.push_back(std::move(pending));
+        } else if (normalizedType == "joint" ||
+                   normalizedType == "fixedjoint" ||
+                   normalizedType == "hingejoint" ||
+                   normalizedType == "springjoint") {
+            joints.push_back(std::move(pending));
+        } else {
+            standard.push_back(std::move(pending));
+        }
+    }
+}
+
+MotionType parseMotionType(const std::string &value) {
+    const std::string token = normalizeToken(value);
+    if (token == "static") {
+        return MotionType::Static;
+    }
+    if (token == "dynamic") {
+        return MotionType::Dynamic;
+    }
+    if (token == "kinematic") {
+        return MotionType::Kinematic;
+    }
+    throw std::runtime_error("Unknown motion type: " + value);
+}
+
+Space parseSpace(const std::string &value) {
+    const std::string token = normalizeToken(value);
+    if (token == "local") {
+        return Space::Local;
+    }
+    if (token == "world" || token == "global") {
+        return Space::Global;
+    }
+    throw std::runtime_error("Unknown joint space: " + value);
+}
+
+SpringMode parseSpringMode(const std::string &value) {
+    const std::string token = normalizeToken(value);
+    if (token == "frequencyanddamping") {
+        return SpringMode::FrequencyAndDamping;
+    }
+    if (token == "stiffnessanddamping") {
+        return SpringMode::StiffnessAndDamping;
+    }
+    throw std::runtime_error("Unknown spring mode: " + value);
+}
+
+std::variant<GameObject *, WorldBody>
+parseJointEndpoint(Context &context, const json &value, GameObject *fallback) {
+    if (value.is_null()) {
+        if (fallback != nullptr) {
+            return fallback;
+        }
+        throw std::runtime_error("Joint endpoint is missing");
+    }
+
+    if (value.is_string()) {
+        const std::string reference = value.get<std::string>();
+        const std::string token = normalizeToken(reference);
+        if (token == "world") {
+            return WorldBody{};
+        }
+
+        auto it = context.objectReferences.find(reference);
+        if (it != context.objectReferences.end()) {
+            return it->second;
+        }
+
+        it = context.objectReferences.find(token);
+        if (it != context.objectReferences.end()) {
+            return it->second;
+        }
+
+        throw std::runtime_error("Unknown joint object reference: " + reference);
+    }
+
+    if (value.is_number_integer()) {
+        const std::string reference = std::to_string(value.get<int>());
+        auto it = context.objectReferences.find(reference);
+        if (it != context.objectReferences.end()) {
+            return it->second;
+        }
+        throw std::runtime_error("Unknown joint object reference: " + reference);
+    }
+
+    if (value.is_object()) {
+        if (const json *field = findField(value, {"name", "id", "ref", "object"});
+            field != nullptr) {
+            return parseJointEndpoint(context, *field, fallback);
+        }
+    }
+
+    if (fallback != nullptr) {
+        return fallback;
+    }
+
+    throw std::runtime_error("Invalid joint endpoint definition");
+}
+
+void configureJointBase(Joint &joint, Context &context, GameObject &owner,
+                        const json &componentData) {
+    if (const json *parentField = findField(componentData, {"parent"});
+        parentField != nullptr) {
+        auto endpoint = parseJointEndpoint(context, *parentField, nullptr);
+        if (std::holds_alternative<GameObject *>(endpoint)) {
+            joint.parent = std::get<GameObject *>(endpoint);
+        } else {
+            joint.parent = WorldBody{};
+        }
+    } else {
+        joint.parent = WorldBody{};
+    }
+
+    if (const json *childField = findField(componentData, {"child"});
+        childField != nullptr) {
+        auto endpoint = parseJointEndpoint(context, *childField, &owner);
+        if (std::holds_alternative<GameObject *>(endpoint)) {
+            joint.child = std::get<GameObject *>(endpoint);
+        } else {
+            joint.child = WorldBody{};
+        }
+    } else {
+        joint.child = &owner;
+    }
+
+    std::string space;
+    if (tryReadStringAny(componentData, {"space"}, space)) {
+        joint.space = parseSpace(space);
+    }
+
+    tryReadVec3Any(componentData, {"anchor"}, joint.anchor);
+    tryReadFloatAny(componentData, {"breakForce"}, joint.breakForce);
+    tryReadFloatAny(componentData, {"breakTorque"}, joint.breakTorque);
+}
+
+void configureRigidbodyCollider(const std::shared_ptr<Rigidbody> &rigidbody,
+                                GameObject &object, const json &colliderData) {
+    if (!colliderData.is_object()) {
+        throw std::runtime_error("Collider definition must be an object");
+    }
+
+    std::string colliderType;
+    tryReadStringAny(colliderData, {"type"}, colliderType);
+    const std::string token = normalizeToken(colliderType);
+
+    if (token == "box") {
+        Position3d size{1.0f, 1.0f, 1.0f};
+        tryReadVec3Any(colliderData, {"size", "extents", "dimensions"}, size);
+        rigidbody->addBoxCollider(size);
+        return;
+    }
+
+    if (token == "sphere") {
+        float radius = 0.5f;
+        tryReadFloatAny(colliderData, {"radius"}, radius);
+        rigidbody->addSphereCollider(radius);
+        return;
+    }
+
+    if (token == "capsule") {
+        float radius = 0.5f;
+        float height = 1.0f;
+        tryReadFloatAny(colliderData, {"radius"}, radius);
+        tryReadFloatAny(colliderData, {"height"}, height);
+        rigidbody->addCapsuleCollider(radius, height);
+        return;
+    }
+
+    if (token == "mesh") {
+        if (auto *coreObject = dynamic_cast<CoreObject *>(&object);
+            coreObject != nullptr) {
+            rigidbody->addMeshCollider();
+            return;
+        }
+
+        if (auto *model = dynamic_cast<Model *>(&object); model != nullptr) {
+            if (rigidbody->body == nullptr) {
+                rigidbody->body = std::make_shared<bezel::Rigidbody>();
+                rigidbody->body->id.atlasId = object.getId();
+            }
+
+            std::vector<Position3d> vertices;
+            std::vector<uint32_t> indices;
+            uint32_t vertexOffset = 0;
+
+            for (const auto &mesh : model->getObjects()) {
+                if (mesh == nullptr) {
+                    continue;
+                }
+                for (const auto &vertex : mesh->vertices) {
+                    vertices.push_back(vertex.position);
+                }
+                for (const auto &index : mesh->indices) {
+                    indices.push_back(vertexOffset +
+                                      static_cast<uint32_t>(index));
+                }
+                vertexOffset +=
+                    static_cast<uint32_t>(mesh->vertices.size());
+            }
+
+            rigidbody->body->setCollider(
+                std::make_shared<bezel::MeshCollider>(vertices, indices));
+            return;
+        }
+
+        throw std::runtime_error("Mesh colliders are only supported on solid "
+                                 "and model runtime objects");
+    }
+
+    throw std::runtime_error("Unknown collider type: " + colliderType);
+}
+
+float normalizePercentage(float value) {
+    return value > 1.0f ? value / 100.0f : value;
+}
+
+void configureVehicleSettings(bezel::VehicleSettings &settings,
+                              const json &componentData) {
+    const json *settingsNode = findField(componentData, {"settings"});
+    const json &data =
+        settingsNode != nullptr && settingsNode->is_object() ? *settingsNode
+                                                             : componentData;
+
+    Position3d vector;
+    if (tryReadVec3Any(data, {"up"}, vector)) {
+        settings.up = normalizeVector(vector, {0.0f, 1.0f, 0.0f});
+    }
+    if (tryReadVec3Any(data, {"forward"}, vector)) {
+        settings.forward = normalizeVector(vector, {0.0f, 0.0f, 1.0f});
+    }
+    tryReadFloatAny(data, {"maxPitchRollAngleDeg"},
+                    settings.maxPitchRollAngleDeg);
+    tryReadFloatAny(data, {"maxSlopeAngleDeg"}, settings.maxSlopeAngleDeg);
+
+    if (const json *wheelsNode = findField(data, {"wheels"});
+        wheelsNode != nullptr && wheelsNode->is_array()) {
+        settings.wheels.clear();
+        settings.wheels.reserve(wheelsNode->size());
+
+        for (const auto &wheelData : *wheelsNode) {
+            if (!wheelData.is_object()) {
+                throw std::runtime_error("Vehicle wheel definition must be an "
+                                         "object");
+            }
+
+            bezel::VehicleWheelSettings wheel;
+
+            if (tryReadVec3Any(wheelData, {"position"}, vector)) {
+                wheel.position = vector;
+            }
+            tryReadBoolAny(wheelData, {"enableSuspensionForcePoint"},
+                           wheel.enableSuspensionForcePoint);
+            if (tryReadVec3Any(wheelData, {"suspensionForcePoint"}, vector)) {
+                wheel.suspensionForcePoint = vector;
+            }
+            if (tryReadVec3Any(wheelData, {"suspensionDirection"}, vector)) {
+                wheel.suspensionDirection =
+                    normalizeVector(vector, {0.0f, -1.0f, 0.0f});
+            }
+            if (tryReadVec3Any(wheelData, {"steeringAxis"}, vector)) {
+                wheel.steeringAxis =
+                    normalizeVector(vector, {0.0f, 1.0f, 0.0f});
+            }
+            if (tryReadVec3Any(wheelData, {"wheelUp"}, vector)) {
+                wheel.wheelUp = normalizeVector(vector, {0.0f, 1.0f, 0.0f});
+            }
+            if (tryReadVec3Any(wheelData, {"wheelForward"}, vector)) {
+                wheel.wheelForward =
+                    normalizeVector(vector, {0.0f, 0.0f, 1.0f});
+            }
+
+            tryReadFloatAny(wheelData, {"suspensionMinLength"},
+                            wheel.suspensionMinLength);
+            tryReadFloatAny(wheelData, {"suspensionMaxLength"},
+                            wheel.suspensionMaxLength);
+            tryReadFloatAny(wheelData, {"suspensionPreloadLength"},
+                            wheel.suspensionPreloadLength);
+            tryReadFloatAny(wheelData, {"suspensionFrequencyHz"},
+                            wheel.suspensionFrequencyHz);
+            tryReadFloatAny(wheelData, {"suspensionDampingRatio"},
+                            wheel.suspensionDampingRatio);
+            tryReadFloatAny(wheelData, {"radius"}, wheel.radius);
+            tryReadFloatAny(wheelData, {"width"}, wheel.width);
+            tryReadFloatAny(wheelData, {"inertia"}, wheel.inertia);
+            tryReadFloatAny(wheelData, {"angularDamping"},
+                            wheel.angularDamping);
+            tryReadFloatAny(wheelData, {"maxSteerAngleDeg"},
+                            wheel.maxSteerAngleDeg);
+            tryReadFloatAny(wheelData, {"maxBrakeTorque", "maxBreakTorque"},
+                            wheel.maxBrakeTorque);
+            tryReadFloatAny(wheelData,
+                            {"maxHandBrakeTorque", "maxHandBreakTorque"},
+                            wheel.maxHandBrakeTorque);
+
+            settings.wheels.push_back(wheel);
+        }
+    }
+
+    if (const json *controllerNode = findField(data, {"controller"});
+        controllerNode != nullptr && controllerNode->is_object()) {
+        const json &controllerData = *controllerNode;
+
+        if (const json *engineNode = findField(controllerData, {"engine"});
+            engineNode != nullptr && engineNode->is_object()) {
+            tryReadFloatAny(*engineNode, {"maxTorque"},
+                            settings.controller.engine.maxTorque);
+            tryReadFloatAny(*engineNode, {"minRPM"},
+                            settings.controller.engine.minRPM);
+            tryReadFloatAny(*engineNode, {"maxRPM"},
+                            settings.controller.engine.maxRPM);
+            tryReadFloatAny(*engineNode, {"inertia"},
+                            settings.controller.engine.inertia);
+            tryReadFloatAny(*engineNode, {"angularDamping"},
+                            settings.controller.engine.angularDamping);
+        }
+
+        if (const json *transmissionNode =
+                findField(controllerData, {"transmission"});
+            transmissionNode != nullptr && transmissionNode->is_object()) {
+            std::string transmissionType;
+            if (tryReadStringAny(*transmissionNode, {"type", "mode"},
+                                 transmissionType)) {
+                const std::string token = normalizeToken(transmissionType);
+                settings.controller.transmission.mode =
+                    token == "manual"
+                        ? bezel::VehicleTransmissionMode::Manual
+                        : bezel::VehicleTransmissionMode::Auto;
+            }
+
+            if (const json *gearRatios =
+                    findField(*transmissionNode, {"gearRatios"});
+                gearRatios != nullptr && gearRatios->is_array()) {
+                settings.controller.transmission.gearRatios.clear();
+                for (const auto &ratio : *gearRatios) {
+                    if (ratio.is_number()) {
+                        settings.controller.transmission.gearRatios.push_back(
+                            ratio.get<float>());
+                    }
+                }
+            }
+
+            if (const json *reverseRatios =
+                    findField(*transmissionNode, {"reverseGearRatios"});
+                reverseRatios != nullptr && reverseRatios->is_array()) {
+                settings.controller.transmission.reverseGearRatios.clear();
+                for (const auto &ratio : *reverseRatios) {
+                    if (ratio.is_number()) {
+                        settings.controller.transmission.reverseGearRatios
+                            .push_back(ratio.get<float>());
+                    }
+                }
+            } else {
+                float reverseRatio = 0.0f;
+                if (tryReadFloatAny(*transmissionNode, {"reverseGearRatio"},
+                                    reverseRatio)) {
+                    settings.controller.transmission.reverseGearRatios = {
+                        reverseRatio};
+                }
+            }
+
+            tryReadFloatAny(*transmissionNode, {"switchTime"},
+                            settings.controller.transmission.switchTime);
+            tryReadFloatAny(*transmissionNode, {"clutchReleaseTime"},
+                            settings.controller.transmission.clutchReleaseTime);
+            tryReadFloatAny(*transmissionNode, {"switchLatency"},
+                            settings.controller.transmission.switchLatency);
+            tryReadFloatAny(*transmissionNode, {"shiftUpRPM"},
+                            settings.controller.transmission.shiftUpRPM);
+            tryReadFloatAny(*transmissionNode, {"shiftDownRPM"},
+                            settings.controller.transmission.shiftDownRPM);
+            tryReadFloatAny(*transmissionNode, {"clutchStrength"},
+                            settings.controller.transmission.clutchStrength);
+        }
+
+        if (const json *differentialsNode =
+                findField(controllerData, {"differentials"});
+            differentialsNode != nullptr && differentialsNode->is_array()) {
+            settings.controller.differentials.clear();
+
+            for (const auto &differentialData : *differentialsNode) {
+                if (!differentialData.is_object()) {
+                    throw std::runtime_error(
+                        "Vehicle differential definition must be an object");
+                }
+
+                bezel::VehicleDifferential differential;
+                tryReadIntAny(differentialData, {"leftWheel"},
+                              differential.leftWheel);
+                tryReadIntAny(differentialData, {"rightWheel"},
+                              differential.rightWheel);
+                tryReadFloatAny(differentialData, {"differentialRatio"},
+                                differential.differentialRatio);
+                tryReadFloatAny(differentialData, {"leftRightSplit"},
+                                differential.leftRightSplit);
+                tryReadFloatAny(differentialData, {"limitedSlipRatio"},
+                                differential.limitedSlipRatio);
+                tryReadFloatAny(differentialData, {"engineTorqueRatio"},
+                                differential.engineTorqueRatio);
+
+                differential.leftRightSplit =
+                    normalizePercentage(differential.leftRightSplit);
+                differential.engineTorqueRatio =
+                    normalizePercentage(differential.engineTorqueRatio);
+
+                settings.controller.differentials.push_back(differential);
+            }
+        }
+
+        tryReadFloatAny(controllerData, {"differentialLimitedSlipRatio"},
+                        settings.controller.differentialLimitedSlipRatio);
+    }
+}
+
+void attachComponent(Context &context, const PendingComponent &pending) {
+    if (pending.object == nullptr || !pending.data.is_object()) {
+        return;
+    }
+
+    std::string type;
+    tryReadStringAny(pending.data, {"type"}, type);
+    const std::string token = normalizeToken(type);
+
+    if (token == "script" || token == "traitscript") {
+        auto component = std::make_shared<RuntimeScriptComponent>();
+        component->isTrait = token == "traitscript";
+
+        std::string source;
+        if (tryReadStringAny(pending.data, {"source"}, source) &&
+            !source.empty()) {
+            component->source = resolveRuntimePath(pending.baseDir, source);
+        }
+
+        if (const json *variables = findField(pending.data, {"variables"});
+            variables != nullptr) {
+            component->variables = *variables;
+        }
+
+        tryReadStringAny(pending.data, {"traitedType"},
+                         component->traitedType);
+
+        if (component->isTrait && !component->traitedType.empty() &&
+            normalizeToken(component->traitedType) != pending.objectType) {
+            throw std::runtime_error("Trait script is incompatible with object "
+                                     "type: " + component->traitedType);
+        }
+
+        pending.object->addComponent(component);
+        return;
+    }
+
+    if (token == "rigidbody") {
+        auto rigidbody = std::make_shared<Rigidbody>();
+        pending.object->addComponent(rigidbody);
+
+        tryReadStringAny(pending.data, {"sendSignal", "signal"},
+                         rigidbody->sendSignal);
+        tryReadBoolAny(pending.data, {"isSensor"}, rigidbody->isSensor);
+
+        if (const json *collider = findField(pending.data, {"collider"});
+            collider != nullptr) {
+            configureRigidbodyCollider(rigidbody, *pending.object, *collider);
+        }
+
+        float friction = 0.5f;
+        if (tryReadFloatAny(pending.data, {"friction"}, friction)) {
+            rigidbody->setFriction(friction);
+        }
+
+        if (const json *tags = findField(pending.data, {"tags"});
+            tags != nullptr && tags->is_array()) {
+            for (const auto &tag : *tags) {
+                if (tag.is_string()) {
+                    rigidbody->addTag(tag.get<std::string>());
+                }
+            }
+        }
+
+        if (const json *damping = findField(pending.data, {"damping"});
+            damping != nullptr && damping->is_object()) {
+            float linear = 0.0f;
+            float angular = 0.0f;
+            tryReadFloatAny(*damping, {"linear"}, linear);
+            tryReadFloatAny(*damping, {"angular"}, angular);
+            rigidbody->setDamping(linear, angular);
+        }
+
+        float mass = 0.0f;
+        if (tryReadFloatAny(pending.data, {"mass"}, mass)) {
+            rigidbody->setMass(mass);
+        }
+
+        float restitution = 0.0f;
+        if (tryReadFloatAny(pending.data, {"restitution", "restituition"},
+                            restitution)) {
+            rigidbody->setRestitution(restitution);
+        }
+
+        std::string motionType;
+        if (tryReadStringAny(pending.data, {"motionType"}, motionType)) {
+            rigidbody->setMotionType(parseMotionType(motionType));
+        }
+
+        return;
+    }
+
+    if (token == "audioplayer") {
+        auto component = std::make_shared<AudioPlayer>();
+        pending.object->addComponent(component);
+
+        std::string source;
+        if (tryReadStringAny(pending.data, {"source"}, source) &&
+            !source.empty()) {
+            component->setSource(createRuntimeResource(
+                pending.baseDir, source, ResourceType::Audio, "runtime-audio"));
+        }
+
+        bool spatialization = false;
+        if (tryReadBoolAny(pending.data, {"useSpatialization"},
+                           spatialization)) {
+            if (spatialization) {
+                component->useSpatialization();
+            } else {
+                component->disableSpatialization();
+            }
+        }
+
+        Position3d position;
+        if (tryReadVec3Any(pending.data, {"position"}, position)) {
+            component->setPosition(position);
+        }
+
+        bool autoPlay = false;
+        if (tryReadBoolAny(pending.data,
+                           {"autoplay", "autoPlay", "playOnStart"}, autoPlay) &&
+            autoPlay) {
+            component->play();
+        }
+
+        return;
+    }
+
+    if (token == "joint" || token == "fixedjoint") {
+        auto component = std::make_shared<FixedJoint>();
+        pending.object->addComponent(component);
+        configureJointBase(*component, context, *pending.object, pending.data);
+        return;
+    }
+
+    if (token == "hingejoint") {
+        auto component = std::make_shared<HingeJoint>();
+        pending.object->addComponent(component);
+        configureJointBase(*component, context, *pending.object, pending.data);
+
+        Position3d axis;
+        if (tryReadVec3Any(pending.data, {"axis1"}, axis)) {
+            component->axis1 = normalizeVector(axis, {0.0f, 1.0f, 0.0f});
+        }
+        if (tryReadVec3Any(pending.data, {"axis2"}, axis)) {
+            component->axis2 = normalizeVector(axis, {0.0f, 1.0f, 0.0f});
+        }
+
+        if (const json *limits = findField(pending.data, {"limits"});
+            limits != nullptr && limits->is_object()) {
+            tryReadBoolAny(*limits, {"isEnabled", "enabled"},
+                           component->limits.enabled);
+            tryReadFloatAny(*limits, {"minAngle"}, component->limits.minAngle);
+            tryReadFloatAny(*limits, {"maxAngle"}, component->limits.maxAngle);
+        }
+
+        if (const json *motor = findField(pending.data, {"motor"});
+            motor != nullptr && motor->is_object()) {
+            tryReadBoolAny(*motor, {"isEnabled", "enabled"},
+                           component->motor.enabled);
+            tryReadFloatAny(*motor, {"maxForce"}, component->motor.maxForce);
+            tryReadFloatAny(*motor, {"maxTorque"}, component->motor.maxTorque);
+        }
+
+        return;
+    }
+
+    if (token == "springjoint") {
+        auto component = std::make_shared<SpringJoint>();
+        pending.object->addComponent(component);
+        configureJointBase(*component, context, *pending.object, pending.data);
+
+        tryReadVec3Any(pending.data, {"anchorB"}, component->anchorB);
+        tryReadFloatAny(pending.data, {"restLength"}, component->restLength);
+        tryReadBoolAny(pending.data, {"useLimits"}, component->useLimits);
+        tryReadFloatAny(pending.data, {"minLength"}, component->minLength);
+        tryReadFloatAny(pending.data, {"maxLength"}, component->maxLength);
+
+        if (const json *spring = findField(pending.data, {"spring"});
+            spring != nullptr && spring->is_object()) {
+            tryReadBoolAny(*spring, {"enabled", "isEnabled"},
+                           component->spring.enabled);
+            std::string mode;
+            if (tryReadStringAny(*spring, {"mode"}, mode)) {
+                component->spring.mode = parseSpringMode(mode);
+            }
+            tryReadFloatAny(*spring, {"frequencyHz"},
+                            component->spring.frequencyHz);
+            tryReadFloatAny(*spring, {"dampingRatio"},
+                            component->spring.dampingRatio);
+            tryReadFloatAny(*spring, {"stiffness"},
+                            component->spring.stiffness);
+            tryReadFloatAny(*spring, {"damping"},
+                            component->spring.damping);
+        }
+
+        return;
+    }
+
+    if (token == "vehicle") {
+        auto component = std::make_shared<Vehicle>();
+        pending.object->addComponent(component);
+        configureVehicleSettings(component->settings, pending.data);
+        return;
+    }
+
+    throw std::runtime_error("Unknown component type: " + type);
+}
+
 Key parseKeyString(const std::string &value) {
     SDL_Scancode scancode = SDL_GetScancodeFromName(value.c_str());
     if (scancode != SDL_SCANCODE_UNKNOWN) {
@@ -168,17 +1601,19 @@ Key parseKeyString(const std::string &value) {
     }
 
     const std::string token = normalizeToken(value);
-    if (token.size() == 1 && std::isalpha(static_cast<unsigned char>(token[0]))) {
-        std::string letter(1,
-                           static_cast<char>(std::toupper(
-                               static_cast<unsigned char>(token[0]))));
+    if (token.size() == 1 &&
+        std::isalpha(static_cast<unsigned char>(token[0]))) {
+        std::string letter(
+            1, static_cast<char>(std::toupper(static_cast<unsigned char>(
+                   token[0]))));
         scancode = SDL_GetScancodeFromName(letter.c_str());
         if (scancode != SDL_SCANCODE_UNKNOWN) {
             return static_cast<Key>(scancode);
         }
     }
 
-    if (token.size() == 1 && std::isdigit(static_cast<unsigned char>(token[0]))) {
+    if (token.size() == 1 &&
+        std::isdigit(static_cast<unsigned char>(token[0]))) {
         std::string digit(1, token[0]);
         scancode = SDL_GetScancodeFromName(digit.c_str());
         if (scancode != SDL_SCANCODE_UNKNOWN) {
@@ -470,13 +1905,12 @@ std::shared_ptr<InputAction> parseInputAction(const json &actionData) {
 }
 
 void loadInputActionsFromJson(Window &window, const json &inputData,
-                              const std::string &projectDir) {
+                              const std::string &baseDir) {
     if (inputData.is_string()) {
         loadInputActionsFromJson(
             window,
-            loadJsonFile(resolveRuntimePath(projectDir,
-                                            inputData.get<std::string>())),
-            projectDir);
+            loadJsonFile(resolveRuntimePath(baseDir, inputData.get<std::string>())),
+            baseDir);
         return;
     }
 
@@ -585,6 +2019,288 @@ std::shared_ptr<Effect> parseEffect(const json &effectData) {
     throw std::runtime_error("Unknown render target effect type: " + type);
 }
 
+std::shared_ptr<Renderable>
+createRenderable(Context &context, const json &objectData,
+                 const std::string &baseDir,
+                 std::vector<PendingComponent> &rigidbodies,
+                 std::vector<PendingComponent> &standard,
+                 std::vector<PendingComponent> &joints) {
+    if (!objectData.is_object()) {
+        throw std::runtime_error("Scene object entry must be an object");
+    }
+
+    std::string type;
+    tryReadStringAny(objectData, {"type"}, type);
+    if (type.empty()) {
+        throw std::runtime_error("Scene object is missing a type");
+    }
+
+    const std::string normalizedType = normalizeToken(type);
+    const size_t generatedIndex = context.objects.size();
+
+    if (normalizedType == "solid") {
+        std::string solidType;
+        tryReadStringAny(objectData, {"solid_type", "solidType"}, solidType);
+        const std::string normalizedSolidType = normalizeToken(solidType);
+
+        Color color = Color::white();
+        tryReadColorAny(objectData, {"color"}, color);
+
+        auto object = std::make_shared<CoreObject>();
+
+        if (normalizedSolidType == "cube" || normalizedSolidType == "box") {
+            Size3d size{1.0f, 1.0f, 1.0f};
+            tryReadVec3Any(objectData, {"size", "dimensions"}, size);
+            *object = createBox(size, color);
+        } else if (normalizedSolidType == "plane") {
+            Position2d size{1.0f, 1.0f};
+            tryReadVec2Any(objectData, {"size", "dimensions"}, size);
+            *object = createPlane({size.x, size.y}, color);
+        } else if (normalizedSolidType == "pyramid") {
+            Size3d size{1.0f, 1.0f, 1.0f};
+            tryReadVec3Any(objectData, {"size", "dimensions"}, size);
+            *object = createPyramid(size, color);
+        } else if (normalizedSolidType == "sphere") {
+            float radius = 0.5f;
+            int sectorCount = 36;
+            int stackCount = 18;
+            tryReadFloatAny(objectData, {"radius"}, radius);
+            tryReadIntAny(objectData, {"sectorCount"}, sectorCount);
+            tryReadIntAny(objectData, {"stackCount"}, stackCount);
+            *object = createSphere(radius, static_cast<unsigned int>(sectorCount),
+                                   static_cast<unsigned int>(stackCount), color);
+        } else {
+            throw std::runtime_error("Unknown solid type: " + solidType);
+        }
+
+        registerGameObject(context, *object, objectData, normalizedType,
+                           generatedIndex);
+        context.objects.push_back(object);
+
+        if (const json *materialField = findField(objectData, {"material"});
+            materialField != nullptr && !isEmptyStringValue(*materialField)) {
+            applyMaterial(*object,
+                          loadMaterialDefinition(*materialField, baseDir));
+        }
+
+        applyTransform(*object, objectData);
+        collectPendingComponents(*object, objectData, baseDir, rigidbodies,
+                                 standard, joints);
+        return object;
+    }
+
+    if (normalizedType == "compound") {
+        auto object = std::make_shared<CompoundObject>();
+        registerGameObject(context, *object, objectData, normalizedType,
+                           generatedIndex);
+        context.objects.push_back(object);
+
+        if (const json *childrenNode = findField(objectData, {"objects"});
+            childrenNode != nullptr && childrenNode->is_array()) {
+            for (const auto &childData : *childrenNode) {
+                auto child = createRenderable(context, childData, baseDir,
+                                              rigidbodies, standard, joints);
+                auto childObject = std::dynamic_pointer_cast<GameObject>(child);
+                if (childObject == nullptr) {
+                    throw std::runtime_error(
+                        "Compound objects can only contain GameObject-derived "
+                        "children");
+                }
+                object->addObject(childObject.get());
+            }
+        }
+
+        applyTransform(*object, objectData);
+        collectPendingComponents(*object, objectData, baseDir, rigidbodies,
+                                 standard, joints);
+        return object;
+    }
+
+    if (normalizedType == "model") {
+        std::string source;
+        tryReadStringAny(objectData, {"source"}, source);
+        if (source.empty()) {
+            throw std::runtime_error("Model object is missing a source");
+        }
+
+        auto object = std::make_shared<Model>();
+        object->fromResource(createRuntimeResource(baseDir, source,
+                                                   ResourceType::Model,
+                                                   "runtime-model"));
+
+        registerGameObject(context, *object, objectData, normalizedType,
+                           generatedIndex);
+        context.objects.push_back(object);
+
+        if (const json *materialField = findField(objectData, {"material"});
+            materialField != nullptr && !isEmptyStringValue(*materialField)) {
+            applyMaterial(*object,
+                          loadMaterialDefinition(*materialField, baseDir));
+        }
+
+        applyTransform(*object, objectData);
+        collectPendingComponents(*object, objectData, baseDir, rigidbodies,
+                                 standard, joints);
+        return object;
+    }
+
+    if (normalizedType == "particleemitter") {
+        int maxParticles = 100;
+        tryReadIntAny(objectData, {"maxParticles"}, maxParticles);
+
+        auto object = std::make_shared<ParticleEmitter>(
+            static_cast<unsigned int>(maxParticles));
+        registerGameObject(context, *object, objectData, normalizedType,
+                           generatedIndex);
+        context.objects.push_back(object);
+
+        if (const json *textureField = findField(objectData, {"texture"});
+            textureField != nullptr && !isEmptyStringValue(*textureField)) {
+            object->attachTexture(loadTextureDefinition(
+                *textureField, baseDir, TextureType::Color, false));
+        }
+
+        Color color = Color::white();
+        if (tryReadColorAny(objectData, {"color"}, color)) {
+            object->setColor(color);
+        }
+
+        bool useTexture = false;
+        if (tryReadBoolAny(objectData, {"useTexture"}, useTexture)) {
+            if (useTexture) {
+                object->enableTexture();
+            } else {
+                object->disableTexture();
+            }
+        }
+
+        applyTransform(*object, objectData);
+
+        Position3d direction;
+        if (tryReadVec3Any(objectData, {"direction"}, direction)) {
+            object->setDirection(direction);
+        }
+
+        float spawnRadius = 0.1f;
+        if (tryReadFloatAny(objectData, {"spawnRadius"}, spawnRadius)) {
+            object->setSpawnRadius(spawnRadius);
+        }
+
+        float spawnRate = 10.0f;
+        if (tryReadFloatAny(objectData, {"spawnRate"}, spawnRate)) {
+            object->setSpawnRate(spawnRate);
+        }
+
+        std::string emissionType;
+        if (tryReadStringAny(objectData, {"emissionType"}, emissionType)) {
+            const std::string emissionToken = normalizeToken(emissionType);
+            if (emissionToken == "ambient") {
+                object->setEmissionType(ParticleEmissionType::Ambient);
+            } else {
+                object->setEmissionType(ParticleEmissionType::Fountain);
+            }
+        }
+
+        bool emitOnce = false;
+        if (tryReadBoolAny(objectData, {"emitOnce"}, emitOnce) && emitOnce) {
+            object->emitOnce();
+        }
+
+        if (const json *settingsField = findField(objectData, {"settings"});
+            settingsField != nullptr && settingsField->is_object()) {
+            ParticleSettings settings;
+            tryReadFloatAny(*settingsField, {"minLifetime"},
+                            settings.minLifetime);
+            tryReadFloatAny(*settingsField, {"maxLifetime"},
+                            settings.maxLifetime);
+            tryReadFloatAny(*settingsField, {"minSize"}, settings.minSize);
+            tryReadFloatAny(*settingsField, {"maxSize"}, settings.maxSize);
+            tryReadFloatAny(*settingsField, {"fadeSpeed"}, settings.fadeSpeed);
+            tryReadFloatAny(*settingsField, {"gravity"}, settings.gravity);
+            tryReadFloatAny(*settingsField, {"spread"}, settings.spread);
+            tryReadFloatAny(*settingsField, {"speedVariation"},
+                            settings.speedVariation);
+            object->setParticleSettings(settings);
+        }
+
+        collectPendingComponents(*object, objectData, baseDir, rigidbodies,
+                                 standard, joints);
+        return object;
+    }
+
+    if (normalizedType == "terrain") {
+        auto object = std::make_shared<Terrain>();
+        registerGameObject(context, *object, objectData, normalizedType,
+                           generatedIndex);
+        context.objects.push_back(object);
+
+        if (const json *heightmapField = findField(objectData, {"heightmap"});
+            heightmapField != nullptr && !isEmptyStringValue(*heightmapField)) {
+            std::string heightmapPath = heightmapField->get<std::string>();
+            object->heightmap = createRuntimeResource(
+                baseDir, heightmapPath, ResourceType::Image, "runtime-heightmap");
+            object->createdWithMap = true;
+        }
+
+        if (const json *moistureField =
+                findField(objectData, {"moistureTexture"});
+            moistureField != nullptr && !isEmptyStringValue(*moistureField)) {
+            object->moistureTexture = loadTextureDefinition(
+                *moistureField, baseDir, TextureType::Color, false);
+        }
+
+        if (const json *temperatureField =
+                findField(objectData, {"temperatureTexture"});
+            temperatureField != nullptr &&
+            !isEmptyStringValue(*temperatureField)) {
+            object->temperatureTexture = loadTextureDefinition(
+                *temperatureField, baseDir, TextureType::Color, false);
+        }
+
+        if (const json *generatorField = findField(objectData, {"generator"});
+            generatorField != nullptr && !generatorField->is_null() &&
+            !isEmptyStringValue(*generatorField)) {
+            object->generator = parseTerrainGenerator(*generatorField, baseDir);
+        }
+
+        tryReadIntAny(objectData, {"width"}, object->width);
+        tryReadIntAny(objectData, {"height"}, object->height);
+
+        int resolution = static_cast<int>(object->resolution);
+        if (tryReadIntAny(objectData, {"resolution"}, resolution)) {
+            object->resolution = static_cast<unsigned int>(resolution);
+        }
+
+        tryReadFloatAny(objectData, {"maxPeak"}, object->maxPeak);
+        tryReadFloatAny(objectData, {"minPeak", "seaLevel"}, object->seaLevel);
+
+        if (const json *biomesField = findField(objectData, {"biomes"});
+            biomesField != nullptr && !biomesField->is_null() &&
+            !isEmptyStringValue(*biomesField)) {
+            appendBiomeList(*object, *biomesField, baseDir);
+        }
+
+        applyTransform(*object, objectData);
+        collectPendingComponents(*object, objectData, baseDir, rigidbodies,
+                                 standard, joints);
+        return object;
+    }
+
+    if (normalizedType == "skybox") {
+        const json *cubemapField = findField(objectData, {"cubemap"});
+        if (cubemapField == nullptr) {
+            throw std::runtime_error("Skybox object is missing a cubemap");
+        }
+
+        auto skybox = std::make_shared<Skybox>();
+        skybox->cubemap = loadCubemapDefinition(*cubemapField, baseDir);
+        context.objects.push_back(skybox);
+        return skybox;
+    }
+
+    throw std::runtime_error("Unknown scene object type: " + type);
+}
+
 } // namespace
 
 std::shared_ptr<Context> runtime::makeContext(std::string projectFile) {
@@ -627,6 +2343,7 @@ std::shared_ptr<Context> runtime::makeContext(std::string projectFile) {
     context->projectFile = std::move(projectFile);
     context->projectDir =
         std::filesystem::path(context->projectFile).parent_path().string();
+    context->sceneDir = context->projectDir;
     context->scene = std::make_shared<RuntimeScene>();
     context->scene->context = context;
 
@@ -675,6 +2392,8 @@ void Context::loadProject() {
     config.mainScene = mainScene;
     config.assetDirectories = assetDirectories;
     config.useUpscaling = useUpscaling;
+
+    Workspace::get().setRootPath(projectDir);
 }
 
 void RuntimeScene::update(Window &window) {
@@ -710,18 +2429,49 @@ void RuntimeScene::onMouseScroll(Window &window, Movement2d offset) {
 
 void Context::loadMainScene(Window &window) {
     RUNTIME_LOG("Loading main scene: " + config.mainScene);
-    std::ifstream sceneFile(resolveRuntimePath(projectDir, config.mainScene));
+    const std::string resolvedScenePath =
+        resolveRuntimePath(projectDir, config.mainScene);
+    std::ifstream sceneFile(resolvedScenePath);
     if (!sceneFile.is_open()) {
         throw std::runtime_error("Failed to open main scene file: " +
                                  config.mainScene);
     }
 
-    json scene;
-    sceneFile >> scene;
-    loadScene(window, scene);
+    json sceneData;
+    sceneFile >> sceneData;
+    sceneDir = std::filesystem::path(resolvedScenePath).parent_path().string();
+    loadScene(window, sceneData);
 }
 
 void Context::loadScene(Window &window, const json &sceneData) {
+    scene->setSkybox(nullptr);
+    scene->clearLights();
+    scene->setAmbientColor(Color::white());
+    scene->setAmbientIntensity(0.5f);
+
+    for (const auto &pointLight : pointLights) {
+        if (pointLight != nullptr && pointLight->debugObject != nullptr) {
+            window.removeObject(pointLight->debugObject.get());
+        }
+    }
+    for (const auto &spotlight : spotlights) {
+        if (spotlight != nullptr && spotlight->debugObject != nullptr) {
+            window.removeObject(spotlight->debugObject.get());
+        }
+    }
+    for (const auto &areaLight : areaLights) {
+        if (areaLight != nullptr && areaLight->debugObject != nullptr) {
+            window.removeObject(areaLight->debugObject.get());
+        }
+    }
+    for (const auto &object : objects) {
+        if (object != nullptr) {
+            window.removeObject(object.get());
+        }
+    }
+
+    objects.clear();
+    objectReferences.clear();
     renderTargets.clear();
     directionalLights.clear();
     pointLights.clear();
@@ -732,10 +2482,12 @@ void Context::loadScene(Window &window, const json &sceneData) {
     camera = std::make_unique<Camera>();
     window.resetInputActions();
 
+    const std::string baseDir = sceneDir.empty() ? projectDir : sceneDir;
+
     if (sceneData.contains("inputActions")) {
-        loadInputActionsFromJson(window, sceneData["inputActions"], projectDir);
+        loadInputActionsFromJson(window, sceneData["inputActions"], baseDir);
     } else if (sceneData.contains("input_actions")) {
-        loadInputActionsFromJson(window, sceneData["input_actions"], projectDir);
+        loadInputActionsFromJson(window, sceneData["input_actions"], baseDir);
     }
 
     if (sceneData.contains("targets") && sceneData["targets"].is_array()) {
@@ -816,8 +2568,7 @@ void Context::loadScene(Window &window, const json &sceneData) {
         JSON_READ_BOOL(cameraData, "automaticMoving", cameraAutomaticMoving);
 
         if (cameraData.contains("inputActions")) {
-            loadInputActionsFromJson(window, cameraData["inputActions"],
-                                     projectDir);
+            loadInputActionsFromJson(window, cameraData["inputActions"], baseDir);
         }
 
         if (cameraData.contains("actions") && cameraData["actions"].is_array()) {
@@ -995,5 +2746,42 @@ void Context::loadScene(Window &window, const json &sceneData) {
 
             throw std::runtime_error("Unknown light type: " + type);
         }
+    }
+
+    std::vector<PendingComponent> rigidbodyComponents;
+    std::vector<PendingComponent> standardComponents;
+    std::vector<PendingComponent> jointComponents;
+    std::vector<std::shared_ptr<Renderable>> topLevelRenderables;
+
+    if (sceneData.contains("objects") && sceneData["objects"].is_array()) {
+        for (const auto &objectData : sceneData["objects"]) {
+            topLevelRenderables.push_back(createRenderable(
+                *this, objectData, baseDir, rigidbodyComponents,
+                standardComponents, jointComponents));
+        }
+    }
+
+    for (const auto &pending : rigidbodyComponents) {
+        attachComponent(*this, pending);
+    }
+    for (const auto &pending : standardComponents) {
+        attachComponent(*this, pending);
+    }
+    for (const auto &pending : jointComponents) {
+        attachComponent(*this, pending);
+    }
+
+    for (const auto &renderable : topLevelRenderables) {
+        if (renderable == nullptr) {
+            continue;
+        }
+
+        if (auto skybox = std::dynamic_pointer_cast<Skybox>(renderable);
+            skybox != nullptr) {
+            scene->setSkybox(skybox);
+            continue;
+        }
+
+        window.addObject(renderable.get());
     }
 }
