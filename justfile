@@ -10,9 +10,9 @@ target target backend="AUTO" bezel_native="OFF":
     cd build && cmake -G "{{ GENERATOR }}" -DBACKEND={{ backend }} -DBEZEL_NATIVE={{ bezel_native }} -DCMAKE_EXPORT_COMPILE_COMMANDS=ON .. 
     cd build && ninja -j8 {{ target }}
 
-run backend="AUTO" bezel_native="OFF":
+run test="" backend="AUTO" bezel_native="OFF":
     just build {{ backend }} {{ bezel_native }}
-    MTL_HUD_ENABLED=0 ./build/bin/atlas_test
+    test_dir="{{ test }}"; if [ -z "$test_dir" ]; then test_dir="$(tr -d '\n' < tests/default.txt)"; fi; MTL_HUD_ENABLED=0 ./build/bin/atlasrun "tests/$test_dir/project.atlas"
 
 debug backend="AUTO" bezel_native="OFF":
     just build {{ backend }} {{ bezel_native }}

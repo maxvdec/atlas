@@ -215,10 +215,12 @@ typedef std::function<WeatherState(ViewInformation)> WeatherDelegate;
  */
 class Atmosphere {
   public:
+    ~Atmosphere();
+
     /**
      * @brief Current time of day expressed in hours [0, 24).
      */
-    float timeOfDay;
+    float timeOfDay = 12.0f;
     /**
      * @brief Number of simulated seconds per in-game hour.
      */
@@ -373,6 +375,8 @@ class Atmosphere {
      * @brief Toggles automatic day-night cycling when true.
      */
     bool cycle = false;
+
+    void resetRuntimeState();
 
   private:
     WeatherState lastWeather;

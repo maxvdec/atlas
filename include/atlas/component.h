@@ -371,6 +371,17 @@ class GameObject : public Renderable {
         components.push_back(component);
     }
 
+    template <typename T>
+        requires std::is_base_of_v<Component, T>
+    void addComponent(const std::shared_ptr<T> &component) {
+        if (!component) {
+            return;
+        }
+        component->object = this;
+        component->atAttach();
+        components.push_back(component);
+    }
+
     void beforePhysics() override {
         for (auto &component : components) {
             component->beforePhysics();

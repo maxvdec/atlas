@@ -71,6 +71,27 @@ const std::array<SkyKeyframe, 7> &skyKeyframes() {
 }
 } // namespace
 
+Atmosphere::~Atmosphere() { resetRuntimeState(); }
+
+void Atmosphere::resetRuntimeState() {
+    if (Window::mainWindow != nullptr) {
+        if (snowEmitter != nullptr) {
+            Window::mainWindow->removeObject(snowEmitter.get());
+        }
+        if (rainEmitter != nullptr) {
+            Window::mainWindow->removeObject(rainEmitter.get());
+        }
+    }
+
+    mainLight = nullptr;
+    rainEmitter = nullptr;
+    snowEmitter = nullptr;
+    lastWeather = WeatherState();
+    lastSkyboxUpdateTime = -1.0f;
+    skyboxCacheValid = false;
+    lastSkyboxColors = {};
+}
+
 void Atmosphere::update(float dt) {
 
     if (!enabled)

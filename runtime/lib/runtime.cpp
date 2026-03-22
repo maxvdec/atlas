@@ -1,0 +1,32 @@
+//
+// runtime.cpp
+// As part of the Atlas project
+// Created by Max Van den Eynde in 2026
+// --------------------------------------------------
+// Description: Runtime core scene and files
+// Copyright (c) 2026 Max Van den Eynde
+//
+
+#include "atlas/runtime/context.h"
+#include "atlas/window.h"
+
+void RuntimeScene::initialize(Window &window) {
+    // Set the properties of the project
+    if (context->config.renderer == "deferred") {
+        window.useDeferredRendering();
+
+        if (context->config.globalIllumination) {
+            window.enableGlobalIllumination();
+        }
+    } else if (context->config.renderer == "pathtracing") {
+        window.enablePathTracing();
+    }
+
+    if (context->config.useUpscaling) {
+#ifdef METAL
+        window.useMetalUpscaling();
+#endif
+    }
+
+    context->loadMainScene(window);
+}

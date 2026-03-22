@@ -221,6 +221,12 @@ class Scene {
      * @brief Returns the manually configured ambient light color.
      */
     Color getAmbientColor() const { return ambientLight.color; }
+    void setAmbientColor(const Color &color) {
+        ambientLight.color = color;
+        if (automaticAmbient) {
+            automaticAmbient = false;
+        }
+    }
 
     /**
      * @brief Returns the manually configured ambient intensity.
@@ -269,6 +275,13 @@ class Scene {
     const std::vector<Spotlight *> &getSpotlights() const { return spotlights; }
 
     const std::vector<AreaLight *> &getAreaLights() const { return areaLights; }
+
+    void clearLights() {
+        directionalLights.clear();
+        pointLights.clear();
+        spotlights.clear();
+        areaLights.clear();
+    }
 
     /**
      * @brief Set the Skybox object

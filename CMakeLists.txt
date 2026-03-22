@@ -8,7 +8,7 @@ set(JOLT_VERSION "5.5.0")
 
 message("Using Compiler: ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION}")
 
-add_definitions(-DATLAS_VERSION="Alpha 8")
+add_definitions(-DATLAS_VERSION="Alpha 9")
 add_definitions(-DOPAL_VERSION="3 Tetrahedron")
 set(CMAKE_INTERPROCEDURAL_OPTIMIZATION OFF)
 
@@ -241,10 +241,11 @@ file(GLOB_RECURSE FINEWAVE_SOURCES CONFIGURE_DEPENDS finewave/*.cpp)
 file(GLOB_RECURSE AURORA_SOURCES   CONFIGURE_DEPENDS aurora/*.cpp)
 file(GLOB_RECURSE HYDRA_SOURCES    CONFIGURE_DEPENDS hydra/*.cpp)
 file(GLOB_RECURSE ATLAS_SOURCES    CONFIGURE_DEPENDS atlas/*.cpp extern/*.c)
-file(GLOB_RECURSE TEST_SOURCES     CONFIGURE_DEPENDS test/*.cpp)
 file(GLOB_RECURSE OPAL_SOURCES     CONFIGURE_DEPENDS opal/*.cpp)
 file(GLOB_RECURSE PHOTON_SOURCES   CONFIGURE_DEPENDS photon/*.cpp)
 file(GLOB_RECURSE GRAPHITE_SOURCES CONFIGURE_DEPENDS graphite/*.cpp)
+file(GLOB_RECURSE RUNTIME_LIB_SOURCES CONFIGURE_DEPENDS runtime/lib/*.cpp)
+file(GLOB_RECURSE RUNTIME_SOURCES CONFIGURE_DEPENDS runtime/executable/*.cpp)
 
 # ─── bezel ───────────────────────────────────────────────────────────────────
 add_library(bezel ${BEZEL_SOURCES})
@@ -360,14 +361,15 @@ elseif(UNIX)
     target_link_libraries(atlas PRIVATE dl pthread)
 endif()
 
-# ─── atlas_test ──────────────────────────────────────────────────────────────
-get_filename_component(TEST_PATH_ABS "${CMAKE_CURRENT_SOURCE_DIR}/test" ABSOLUTE)
-add_executable(atlas_test ${TEST_SOURCES})
-target_link_libraries(atlas_test PRIVATE atlas)
-target_compile_definitions(atlas_test PRIVATE
-    TEST_PATH="${TEST_PATH_ABS}"
-    JPH_PROFILE_ENABLED=1
-    JPH_DEBUG_RENDERER=1
-    JPH_OBJECT_STREAM=1
-)
-add_dependencies(atlas_test generate_shaders)
+# ─── runtime_lib ──────────────────────────────────────────────────────────────
+add_library(runtime_lib ${RUNTIME_LIB_SOURCES})
+target_link_libraries(runtime_lib PRIVATE atlas)
+target_compile_definitions(runtime_lib PRIVATE RUNTIME_LIB JPH_PROFILE_ENABLED=1 JPH_DEBUG_RENDERER=1 JPH_OBJECT_STREAM=1)
+add_dependencies(runtime_lib generate_shaders)
+
+# ─── runtime ──────────────────────────────────────────────────────────────
+add_executable(atlasrun ${RUNTIME_SOURCES})
+target_link_libraries(atlasrun PRIVATE runtime_lib glm::glm)
+target_compile_definitions(atlasrun PRIVATE RUNTIME_BIN JPH_PROFILE_ENABLED=1 JPH_DEBUG_RENDERER=1 JPH_OBJECT_STREAM=1)
+target_include_directories(atlasrun PRIVATE ${CMAKE_SOURCE_DIR}/runtime/include)
+add_dependencies(atlasrun generate_shaders)

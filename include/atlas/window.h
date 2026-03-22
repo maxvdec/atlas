@@ -381,6 +381,10 @@ class Window {
      *
      */
     ~Window();
+    Window(const Window &) = delete;
+    Window &operator=(const Window &) = delete;
+    Window(Window &&) = delete;
+    Window &operator=(Window &&) = delete;
 
     /**
      * @brief Sets the clear color used before each render pass.
@@ -761,7 +765,7 @@ class Window {
     std::vector<Renderable *> lateForwardRenderables;
     std::vector<Fluid *> lateFluids;
     std::vector<RenderTarget *> renderTargets;
-    std::unique_ptr<RenderTarget> screenRenderTarget;
+    std::shared_ptr<RenderTarget> screenRenderTarget;
 
     std::shared_ptr<RenderTarget> gBuffer;
     std::shared_ptr<RenderTarget> ssaoBuffer;
