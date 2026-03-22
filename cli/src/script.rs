@@ -139,13 +139,11 @@ fn update_tsconfig(project_dir: &Path) -> Result<(), String> {
         let paths = json_object_mut(compiler_options, "paths")?;
         paths.insert(
             String::from("atlas"),
-            Value::Array(vec![Value::String(String::from(
-                "runtime/scripting/atlas.d.ts",
-            ))]),
+            Value::Array(vec![Value::String(String::from("lib/atlas.d.ts"))]),
         );
         paths.insert(
             String::from("atlas/*"),
-            Value::Array(vec![Value::String(String::from("runtime/scripting/*"))]),
+            Value::Array(vec![Value::String(String::from("lib/*"))]),
         );
     }
 
@@ -173,7 +171,6 @@ fn update_tsconfig(project_dir: &Path) -> Result<(), String> {
             Value::String(String::from("graphite")),
             Value::String(String::from("hydra")),
             Value::String(String::from("include")),
-            Value::String(String::from("lib")),
             Value::String(String::from("opal")),
             Value::String(String::from("photon")),
             Value::String(String::from("cli")),
@@ -190,9 +187,8 @@ fn update_tsconfig(project_dir: &Path) -> Result<(), String> {
 
 fn fetch_atlas_types(branch: &str) -> Result<String, String> {
     let client = github_client()?;
-    let url = format!(
-        "https://raw.githubusercontent.com/maxvdec/atlas/{branch}/runtime/scripting/atlas.d.ts"
-    );
+    let url =
+        format!("https://raw.githubusercontent.com/maxvdec/atlas/{branch}/runtime/atlas.d.ts");
     let response = client
         .get(url)
         .send()
@@ -551,7 +547,7 @@ fn init(branch: String) {
         eprintln!("{} {e}", "atlas script init failed:".red().bold());
         return;
     }
-    if let Err(e) = ensure_directory(&project_dir.join("runtime/scripting")) {
+    if let Err(e) = ensure_directory(&project_dir.join("lib")) {
         eprintln!("{} {e}", "atlas script init failed:".red().bold());
         return;
     }
@@ -570,7 +566,7 @@ fn init(branch: String) {
         return;
     }
 
-    let types_path = project_dir.join("runtime/scripting/atlas.d.ts");
+    let types_path = project_dir.join("lib/atlas.d.ts");
     let mut downloaded_types = false;
     match fetch_atlas_types(&branch) {
         Ok(types) => {
