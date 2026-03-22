@@ -244,7 +244,7 @@ else()
 endif()
 
 # ─── Global Includes ─────────────────────────────────────────────────────────
-include_directories(include extern ${OPENAL_INCLUDE})
+include_directories(include extern ${OPENAL_INCLUDE} extern/quickjs)
 
 if(NOT BEZEL_NATIVE)
     include_directories(${joltphysics_SOURCE_DIR})

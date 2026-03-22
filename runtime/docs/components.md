@@ -6,7 +6,7 @@ Components are added to all objects that accept one. These are put in the `compo
 
 A script component is a component that can be added to an object to make it execute a script, which can be used to define custom behavior and logic for the object in the scene. It has the following properties:
 
-* `source`: The source of the script, which is a reference to a script file (`.ts`) that defines the code that will be executed by the script component. This can be used to create custom behavior for the object in the scene by writing code in the specified script file.
+* `name`: The name of the class defined in the script code that will be instantiated and attached to the object. This is defined as a string representing the name of the class, and it should match the name of the class defined in the script code for the component to work correctly.
 * `variables`: A list of pairs of `name` and `value`, which are meant to be used as variables that can be accessed and modified by the script code. The `name` is a string representing the name of the variable, and the `value` can be any JSON value (e.g., string, number, boolean, array, object, etc.) that represents the initial value of the variable. These variables can be used in the script code to store and manipulate data related to the object in the scene. These values though, have to start with a type definer (e.g., `str<Hello, world!>`, `num<42>`, `bool<true>`, `ref<myObject>`, etc.) to indicate the type of the variable, since the script code will need to know the type of the variable to be able to use it correctly.
 
 ## Trait Scripts (`type = "trait_script"`)

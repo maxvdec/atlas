@@ -14,6 +14,7 @@
 #include "atlas/core/renderable.h"
 #include "atlas/scene.h"
 #include "atlas/texture.h"
+#include "quickjs.h"
 #include <atlas/window.h>
 #include <map>
 #include <memory>
@@ -79,6 +80,11 @@ class Context {
 
 namespace runtime {
 std::shared_ptr<Context> makeContext(std::string projectFile);
-};
+
+namespace scripting {
+void dumpExecution(JSContext *ctx);
+bool checkNotException(JSContext *ctx, JSValueConst value, const char *what);
+}; // namespace scripting
+}; // namespace runtime
 
 #endif // RUNTIME_CONTEXT_H
