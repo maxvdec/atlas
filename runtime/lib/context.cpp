@@ -27,6 +27,7 @@
 #include <filesystem>
 #include <fstream>
 #include <memory>
+#include <sstream>
 #include <stdexcept>
 #include <json.hpp>
 #include <string>
@@ -182,14 +183,137 @@ std::string resolveRuntimePath(const std::string &baseDir,
         .string();
 }
 
-json loadJsonFile(const std::string &path) {
+std::string readTextFile(const std::string &path) {
     std::ifstream file(path);
     if (!file.is_open()) {
         throw std::runtime_error("Failed to open JSON file: " + path);
     }
-    json data;
-    file >> data;
-    return data;
+    std::stringstream buffer;
+    buffer << file.rdbuf();
+    return buffer.str();
+}
+
+std::string stripJsonComments(const std::string &text) {
+    std::string result;
+    result.reserve(text.size());
+
+    bool inString = false;
+    bool escaping = false;
+    bool inLineComment = false;
+    bool inBlockComment = false;
+
+    for (size_t i = 0; i < text.size(); ++i) {
+        const char ch = text[i];
+        const char next = i + 1 < text.size() ? text[i + 1] : '\0';
+
+        if (inLineComment) {
+            if (ch == '\n') {
+                inLineComment = false;
+                result.push_back(ch);
+            }
+            continue;
+        }
+
+        if (inBlockComment) {
+            if (ch == '\n') {
+                result.push_back(ch);
+                continue;
+            }
+            if (ch == '*' && next == '/') {
+                inBlockComment = false;
+                ++i;
+            }
+            continue;
+        }
+
+        if (inString) {
+            result.push_back(ch);
+            if (escaping) {
+                escaping = false;
+            } else if (ch == '\\') {
+                escaping = true;
+            } else if (ch == '"') {
+                inString = false;
+            }
+            continue;
+        }
+
+        if (ch == '"') {
+            inString = true;
+            result.push_back(ch);
+            continue;
+        }
+
+        if (ch == '/' && next == '/') {
+            inLineComment = true;
+            ++i;
+            continue;
+        }
+
+        if (ch == '/' && next == '*') {
+            inBlockComment = true;
+            ++i;
+            continue;
+        }
+
+        result.push_back(ch);
+    }
+
+    return result;
+}
+
+std::string stripTrailingJsonCommas(const std::string &text) {
+    std::string result;
+    result.reserve(text.size());
+
+    bool inString = false;
+    bool escaping = false;
+
+    for (size_t i = 0; i < text.size(); ++i) {
+        const char ch = text[i];
+
+        if (inString) {
+            result.push_back(ch);
+            if (escaping) {
+                escaping = false;
+            } else if (ch == '\\') {
+                escaping = true;
+            } else if (ch == '"') {
+                inString = false;
+            }
+            continue;
+        }
+
+        if (ch == '"') {
+            inString = true;
+            result.push_back(ch);
+            continue;
+        }
+
+        if (ch == ',') {
+            size_t nextIndex = i + 1;
+            while (nextIndex < text.size() &&
+                   std::isspace(static_cast<unsigned char>(text[nextIndex]))) {
+                ++nextIndex;
+            }
+
+            if (nextIndex < text.size() &&
+                (text[nextIndex] == '}' || text[nextIndex] == ']')) {
+                continue;
+            }
+        }
+
+        result.push_back(ch);
+    }
+
+    return result;
+}
+
+json loadJsonFile(const std::string &path) {
+    const std::string text = readTextFile(path);
+    const std::string sanitized =
+        stripTrailingJsonCommas(stripJsonComments(text));
+    return json::parse(sanitized);
 }
 
 JsonDefinition loadJsonDefinition(const json &value,
@@ -1255,8 +1379,7 @@ void collectPendingComponents(GameObject &object, const json &objectData,
     }
 
     if (componentEntries.empty()) {
-        throw std::runtime_error("Object components must be an array or a "
-                                 "component definition object");
+        return;
     }
 
     std::string objectType;
@@ -1265,12 +1388,15 @@ void collectPendingComponents(GameObject &object, const json &objectData,
 
     for (const auto &componentData : componentEntries) {
         if (!componentData.is_object()) {
-            throw std::runtime_error("Component entry must be an object");
+            continue;
         }
 
         std::string type;
         tryReadStringAny(componentData, {"type"}, type);
         const std::string normalizedType = normalizeToken(type);
+        if (normalizedType.empty()) {
+            continue;
+        }
 
         PendingComponent pending{
             .object = &object,
@@ -2343,13 +2469,13 @@ createRenderable(Context &context, const json &objectData,
                  std::vector<PendingComponent> &standard,
                  std::vector<PendingComponent> &joints) {
     if (!objectData.is_object()) {
-        throw std::runtime_error("Scene object entry must be an object");
+        return nullptr;
     }
 
     std::string type;
     tryReadStringAny(objectData, {"type"}, type);
     if (type.empty()) {
-        throw std::runtime_error("Scene object is missing a type");
+        return nullptr;
     }
 
     const std::string normalizedType = normalizeToken(type);
@@ -2359,6 +2485,9 @@ createRenderable(Context &context, const json &objectData,
         std::string solidType;
         tryReadStringAny(objectData, {"solid_type", "solidType"}, solidType);
         const std::string normalizedSolidType = normalizeToken(solidType);
+        if (normalizedSolidType.empty()) {
+            return nullptr;
+        }
 
         Color color = Color::white();
         tryReadColorAny(objectData, {"color"}, color);
@@ -2417,6 +2546,9 @@ createRenderable(Context &context, const json &objectData,
             for (const auto &childData : *childrenNode) {
                 auto child = createRenderable(context, childData, baseDir,
                                               rigidbodies, standard, joints);
+                if (child == nullptr) {
+                    continue;
+                }
                 auto childObject = std::dynamic_pointer_cast<GameObject>(child);
                 if (childObject == nullptr) {
                     throw std::runtime_error(
@@ -2437,7 +2569,7 @@ createRenderable(Context &context, const json &objectData,
         std::string source;
         tryReadStringAny(objectData, {"source"}, source);
         if (source.empty()) {
-            throw std::runtime_error("Model object is missing a source");
+            return nullptr;
         }
 
         auto object = std::make_shared<Model>();
@@ -2606,7 +2738,7 @@ createRenderable(Context &context, const json &objectData,
     if (normalizedType == "skybox") {
         const json *cubemapField = findField(objectData, {"cubemap"});
         if (cubemapField == nullptr) {
-            throw std::runtime_error("Skybox object is missing a cubemap");
+            return nullptr;
         }
 
         auto skybox = std::make_shared<Skybox>();
@@ -2748,14 +2880,7 @@ void Context::loadMainScene(Window &window) {
     RUNTIME_LOG("Loading main scene: " + config.mainScene);
     const std::string resolvedScenePath =
         resolveRuntimePath(projectDir, config.mainScene);
-    std::ifstream sceneFile(resolvedScenePath);
-    if (!sceneFile.is_open()) {
-        throw std::runtime_error("Failed to open main scene file: " +
-                                 config.mainScene);
-    }
-
-    json sceneData;
-    sceneFile >> sceneData;
+    json sceneData = loadJsonFile(resolvedScenePath);
     sceneDir = std::filesystem::path(resolvedScenePath).parent_path().string();
     loadScene(window, sceneData);
 }
@@ -2822,13 +2947,13 @@ void Context::loadScene(Window &window, const json &sceneData) {
     if (sceneData.contains("targets") && sceneData["targets"].is_array()) {
         for (const auto &targetData : sceneData["targets"]) {
             if (!targetData.is_object()) {
-                throw std::runtime_error("Render target entry must be an object");
+                continue;
             }
 
             std::string type;
             JSON_READ_STRING(targetData, "type", type);
             if (type.empty()) {
-                throw std::runtime_error("Render target is missing a type");
+                continue;
             }
 
             std::unique_ptr<RenderTarget> target;
@@ -2845,7 +2970,12 @@ void Context::loadScene(Window &window, const json &sceneData) {
 
             if (targetData.contains("effects") && targetData["effects"].is_array()) {
                 for (const auto &effectData : targetData["effects"]) {
-                    target->addEffect(parseEffect(effectData));
+                    try {
+                        target->addEffect(parseEffect(effectData));
+                    } catch (const std::exception &error) {
+                        RUNTIME_LOG("Skipping incomplete render target effect: " +
+                                    std::string(error.what()));
+                    }
                 }
             }
 
@@ -2864,8 +2994,7 @@ void Context::loadScene(Window &window, const json &sceneData) {
             std::string name;
             JSON_READ_STRING(targetData, "name", name);
             if (name.empty()) {
-                throw std::runtime_error("Render target is missing a name "
-                                         "property or it is not a string");
+                continue;
             }
             renderTargets[name] = std::move(target);
         }
@@ -2914,11 +3043,14 @@ void Context::loadScene(Window &window, const json &sceneData) {
     if (sceneData.contains("lights") && sceneData["lights"].is_array()) {
         for (const auto &lightData : sceneData["lights"]) {
             if (!lightData.is_object()) {
-                throw std::runtime_error("Light entry must be an object");
+                continue;
             }
 
             std::string type;
             JSON_READ_STRING(lightData, "type", type);
+            if (type.empty()) {
+                continue;
+            }
             const std::string normalizedType = normalizeToken(type);
 
             if (normalizedType == "ambient" || normalizedType == "ambientlight") {
@@ -3099,13 +3231,28 @@ void Context::loadScene(Window &window, const json &sceneData) {
     }
 
     for (const auto &pending : rigidbodyComponents) {
-        attachComponent(*this, pending);
+        try {
+            attachComponent(*this, pending);
+        } catch (const std::exception &error) {
+            RUNTIME_LOG("Skipping incomplete rigidbody component: " +
+                        std::string(error.what()));
+        }
     }
     for (const auto &pending : standardComponents) {
-        attachComponent(*this, pending);
+        try {
+            attachComponent(*this, pending);
+        } catch (const std::exception &error) {
+            RUNTIME_LOG("Skipping incomplete component: " +
+                        std::string(error.what()));
+        }
     }
     for (const auto &pending : jointComponents) {
-        attachComponent(*this, pending);
+        try {
+            attachComponent(*this, pending);
+        } catch (const std::exception &error) {
+            RUNTIME_LOG("Skipping incomplete joint component: " +
+                        std::string(error.what()));
+        }
     }
 
     for (const auto &renderable : topLevelRenderables) {
