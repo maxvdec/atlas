@@ -1,5 +1,6 @@
 pub mod create;
 pub mod pack;
+pub mod script;
 use clap::Subcommand;
 
 #[derive(Subcommand)]
@@ -37,6 +38,22 @@ pub enum Commands {
     Clangd {
         #[arg(long)]
         backend: Option<String>,
+    },
+    Script {
+        #[command(subcommand)]
+        command: ScriptCommands,
+    },
+}
+
+#[derive(Subcommand)]
+pub enum ScriptCommands {
+    Init {
+        #[arg(default_value_t = String::from("stable"))]
+        branch: String,
+    },
+    Compile,
+    New {
+        path: String,
     },
 }
 

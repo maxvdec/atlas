@@ -22,5 +22,6 @@ fn main() {
         }
         Commands::Run { .. } => pack::run(cli.command),
         Commands::Clangd { .. } => pack::clangd(cli.command),
+        Commands::Script { .. } => script::script(cli.command),
     }
 }
