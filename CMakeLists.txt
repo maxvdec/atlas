@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.15)
 project(Atlas LANGUAGES C CXX)
 
+set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
@@ -240,12 +241,13 @@ endif()
 file(GLOB_RECURSE FINEWAVE_SOURCES CONFIGURE_DEPENDS finewave/*.cpp)
 file(GLOB_RECURSE AURORA_SOURCES   CONFIGURE_DEPENDS aurora/*.cpp)
 file(GLOB_RECURSE HYDRA_SOURCES    CONFIGURE_DEPENDS hydra/*.cpp)
-file(GLOB_RECURSE ATLAS_SOURCES    CONFIGURE_DEPENDS atlas/*.cpp extern/*.c)
+file(GLOB_RECURSE ATLAS_SOURCES    CONFIGURE_DEPENDS atlas/*.cpp extern/glad/*.c)
 file(GLOB_RECURSE OPAL_SOURCES     CONFIGURE_DEPENDS opal/*.cpp)
 file(GLOB_RECURSE PHOTON_SOURCES   CONFIGURE_DEPENDS photon/*.cpp)
 file(GLOB_RECURSE GRAPHITE_SOURCES CONFIGURE_DEPENDS graphite/*.cpp)
 file(GLOB_RECURSE RUNTIME_LIB_SOURCES CONFIGURE_DEPENDS runtime/lib/*.cpp)
 file(GLOB_RECURSE RUNTIME_SOURCES CONFIGURE_DEPENDS runtime/executable/*.cpp)
+file(GLOB_RECURSE QUICKJS_SOURCES CONFIGURE_DEPENDS extern/quickjs/*.c)
 
 # ─── bezel ───────────────────────────────────────────────────────────────────
 add_library(bezel ${BEZEL_SOURCES})
@@ -361,11 +363,28 @@ elseif(UNIX)
     target_link_libraries(atlas PRIVATE dl pthread)
 endif()
 
+# ─── quickjs ──────────────────────────────────────────────────────────────
+add_library(quickjs STATIC ${QUICKJS_SOURCES})
+
+target_include_directories(quickjs PUBLIC
+    ${CMAKE_SOURCE_DIR}/extern/quickjs
+)
+
+if(MSVC)
+    target_compile_options(quickjs PRIVATE /W0)
+else()
+    target_compile_options(quickjs PRIVATE
+        -w
+        -Wno-error
+    )
+endif()
+
 # ─── runtime_lib ──────────────────────────────────────────────────────────────
 add_library(runtime_lib ${RUNTIME_LIB_SOURCES})
-target_link_libraries(runtime_lib PRIVATE atlas)
+target_link_libraries(runtime_lib PRIVATE atlas quickjs)
 target_compile_definitions(runtime_lib PRIVATE RUNTIME_LIB JPH_PROFILE_ENABLED=1 JPH_DEBUG_RENDERER=1 JPH_OBJECT_STREAM=1)
 add_dependencies(runtime_lib generate_shaders)
+target_include_directories(runtime_lib PUBLIC ${CMAKE_SOURCE_DIR}/extern/quickjs)
 
 # ─── runtime ──────────────────────────────────────────────────────────────
 add_executable(atlasrun ${RUNTIME_SOURCES})
