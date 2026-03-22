@@ -31,3 +31,4 @@ Testing
 __pycache__
 build_verify
 dist
+node_modules

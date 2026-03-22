@@ -123,6 +123,8 @@ elseif(BACKEND_METAL)
 endif()
 
 set(SHADER_OUTPUT_FILE "${CMAKE_SOURCE_DIR}/include/atlas/core/default_shaders.h")
+set(RUNTIME_SCRIPT_INPUT_DIR "${CMAKE_SOURCE_DIR}/runtime/scripts")
+set(RUNTIME_SCRIPT_OUTPUT_FILE "${CMAKE_SOURCE_DIR}/include/runtime/atlasScripts.h")
 
 find_package(Python3 COMPONENTS Interpreter REQUIRED)
 
@@ -134,6 +136,11 @@ file(GLOB_RECURSE SHADER_SOURCES
     ${SHADER_INPUT_DIR}/*.tesc
     ${SHADER_INPUT_DIR}/*.tese
     ${SHADER_INPUT_DIR}/*.metal
+)
+
+file(GLOB_RECURSE RUNTIME_SCRIPT_SOURCES CONFIGURE_DEPENDS
+    ${RUNTIME_SCRIPT_INPUT_DIR}/*.js
+    ${RUNTIME_SCRIPT_INPUT_DIR}/*.mjs
 )
 
 if(BACKEND_OPENGL)
@@ -158,6 +165,20 @@ add_custom_command(
 # This named target is what everything else depends on to force ordering.
 add_custom_target(generate_shaders
     DEPENDS ${SHADER_OUTPUT_FILE}
+)
+
+add_custom_command(
+    OUTPUT  ${RUNTIME_SCRIPT_OUTPUT_FILE}
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_SOURCE_DIR}/include/runtime
+    COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/pack_runtime_scripts.py
+                ${RUNTIME_SCRIPT_INPUT_DIR} ${RUNTIME_SCRIPT_OUTPUT_FILE}
+    DEPENDS ${RUNTIME_SCRIPT_SOURCES} ${CMAKE_SOURCE_DIR}/pack_runtime_scripts.py
+    COMMENT "Packing runtime scripts into atlasScripts.h"
+    VERBATIM
+)
+
+add_custom_target(generate_runtime_scripts
+    DEPENDS ${RUNTIME_SCRIPT_OUTPUT_FILE}
 )
 
 # ─── Typst Docs ──────────────────────────────────────────────────────────────
@@ -383,7 +404,7 @@ endif()
 add_library(runtime_lib ${RUNTIME_LIB_SOURCES})
 target_link_libraries(runtime_lib PRIVATE atlas quickjs)
 target_compile_definitions(runtime_lib PRIVATE RUNTIME_LIB JPH_PROFILE_ENABLED=1 JPH_DEBUG_RENDERER=1 JPH_OBJECT_STREAM=1)
-add_dependencies(runtime_lib generate_shaders)
+add_dependencies(runtime_lib generate_shaders generate_runtime_scripts)
 target_include_directories(runtime_lib PUBLIC ${CMAKE_SOURCE_DIR}/extern/quickjs)
 
 # ─── runtime ──────────────────────────────────────────────────────────────

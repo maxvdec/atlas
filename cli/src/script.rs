@@ -11,6 +11,8 @@ use std::process::Command;
 
 const TYPESCRIPT_VERSION: &str = "^5.9.2";
 const ESBUILD_VERSION: &str = "^0.25.5";
+const SCRIPT_BUILD_DIR: &str = ".atlas-script-build";
+const SCRIPT_BUNDLE_FILE: &str = "dist/scripts.js";
 
 fn github_client() -> Result<Client, String> {
     Client::builder()
@@ -129,11 +131,15 @@ fn update_tsconfig(project_dir: &Path) -> Result<(), String> {
         String::from("moduleResolution"),
         Value::String(String::from("Bundler")),
     );
+    compiler_options.insert(String::from("baseUrl"), Value::String(String::from(".")));
+    compiler_options.insert(
+        String::from("ignoreDeprecations"),
+        Value::String(String::from("6.0")),
+    );
     compiler_options.insert(String::from("strict"), Value::Bool(true));
     compiler_options.insert(String::from("noEmit"), Value::Bool(true));
     compiler_options.insert(String::from("skipLibCheck"), Value::Bool(true));
     compiler_options.insert(String::from("verbatimModuleSyntax"), Value::Bool(true));
-    compiler_options.insert(String::from("baseUrl"), Value::String(String::from(".")));
 
     {
         let paths = json_object_mut(compiler_options, "paths")?;
@@ -256,6 +262,7 @@ fn should_skip_directory(path: &Path, root: &Path) -> bool {
             matches!(
                 name.to_str(),
                 Some(".git")
+                    | Some(".atlas-script-build")
                     | Some("node_modules")
                     | Some("dist")
                     | Some("build")
@@ -345,7 +352,54 @@ fn find_local_esbuild(project_dir: &Path) -> Option<PathBuf> {
     None
 }
 
+fn json_string(value: &str) -> Result<String, String> {
+    serde_json::to_string(value).map_err(|e| format!("Failed to encode string: {e}"))
+}
+
+fn write_script_bundle_support_files(
+    project_dir: &Path,
+    entry_points: &[PathBuf],
+) -> Result<PathBuf, String> {
+    let build_dir = project_dir.join(SCRIPT_BUILD_DIR);
+    if build_dir.exists() {
+        fs::remove_dir_all(&build_dir)
+            .map_err(|e| format!("Failed to clean {}: {e}", build_dir.display()))?;
+    }
+
+    ensure_directory(&build_dir)?;
+    let entry_path = build_dir.join("entry.ts");
+    let mut entry_source = String::new();
+    for (index, entry) in entry_points.iter().enumerate() {
+        let relative = entry
+            .strip_prefix(project_dir)
+            .map_err(|e| format!("Failed to resolve {}: {e}", entry.display()))?;
+        let import_path = format!("../{}", normalize_path_for_manifest(relative));
+        entry_source.push_str(&format!(
+            "import * as module_{index} from {};\n",
+            json_string(&import_path)?
+        ));
+    }
+
+    entry_source.push_str("\nexport const AtlasScripts = {\n");
+    for (index, entry) in entry_points.iter().enumerate() {
+        let relative = entry
+            .strip_prefix(project_dir)
+            .map_err(|e| format!("Failed to resolve {}: {e}", entry.display()))?;
+        entry_source.push_str(&format!(
+            "    {}: module_{index},\n",
+            json_string(&normalize_path_for_manifest(relative))?
+        ));
+    }
+    entry_source.push_str("};\n\nexport default AtlasScripts;\n");
+
+    fs::write(&entry_path, entry_source)
+        .map_err(|e| format!("Failed to write {}: {e}", entry_path.display()))?;
+
+    Ok(entry_path)
+}
+
 fn run_esbuild(project_dir: &Path, entry_points: &[PathBuf]) -> Result<(), String> {
+    let entry_path = write_script_bundle_support_files(project_dir, entry_points)?;
     let mut command = if let Some(esbuild_path) = find_local_esbuild(project_dir) {
         Command::new(esbuild_path)
     } else if command_exists("esbuild") {
@@ -361,18 +415,15 @@ fn run_esbuild(project_dir: &Path, entry_points: &[PathBuf]) -> Result<(), Strin
     };
 
     command.current_dir(project_dir);
-    for entry in entry_points {
-        let relative = entry.strip_prefix(project_dir).unwrap_or(entry);
-        command.arg(relative);
-    }
+    let relative_entry = entry_path.strip_prefix(project_dir).unwrap_or(&entry_path);
 
     command
+        .arg(relative_entry)
         .arg("--bundle")
         .arg("--format=esm")
         .arg("--platform=neutral")
         .arg("--target=es2022")
-        .arg("--outbase=.")
-        .arg("--outdir=dist")
+        .arg(format!("--outfile={SCRIPT_BUNDLE_FILE}"))
         .arg("--tsconfig=tsconfig.json")
         .arg("--external:atlas")
         .arg("--external:atlas/*");
@@ -382,6 +433,9 @@ fn run_esbuild(project_dir: &Path, entry_points: &[PathBuf]) -> Result<(), Strin
         .map_err(|e| format!("Failed to run esbuild: {e}"))?;
 
     if output.status.success() {
+        if entry_path.exists() {
+            let _ = fs::remove_dir_all(project_dir.join(SCRIPT_BUILD_DIR));
+        }
         Ok(())
     } else {
         let stdout = String::from_utf8_lossy(&output.stdout);
@@ -528,7 +582,9 @@ fn normalize_script_path(path: &str, project_dir: &Path) -> PathBuf {
 }
 
 fn script_template(component_name: &str) -> String {
-    format!("// This is an Atlas file for component '{component_name}'.\n\nexport {{}};\n")
+    format!(
+        "import {{ Component }} from \"atlas\";\n\nexport class {component_name} extends Component {{\n    init() {{\n        // Called once when the script is initialized\n    }}\n\n    update(deltaTime: number) {{\n        // Called every frame with the time elapsed since the last frame\n    }}\n}}\n"
+    )
 }
 
 fn init(branch: String) {
@@ -658,10 +714,15 @@ fn compile() {
     match run_esbuild(&project_dir, &entry_points) {
         Ok(()) => {
             println!(
-                "{} {} {}",
+                "{} {} {} {}",
                 "Bundled".green().bold(),
                 entry_points.len().to_string().bold(),
-                "TypeScript script(s) into dist/".green().bold()
+                "TypeScript script(s) into".green().bold(),
+                project_dir
+                    .join(SCRIPT_BUNDLE_FILE)
+                    .display()
+                    .to_string()
+                    .bold()
             );
         }
         Err(e) => {
