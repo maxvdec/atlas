@@ -10,10 +10,9 @@
 #ifndef RUNTIME_SCRIPTING_H
 #define RUNTIME_SCRIPTING_H
 
-#include "quickjs.h"
-#include "atlas/runtime/context.h"
 #include <string>
 #include <unordered_map>
+#include "quickjs.h"
 
 struct ScriptHost {
     std::unordered_map<std::string, std::string> modules;
@@ -29,23 +28,21 @@ struct ScriptInstance {
 };
 
 namespace runtime::scripting {
+void dumpExecution(JSContext *ctx);
+bool checkNotException(JSContext *ctx, JSValueConst value, const char *what);
 void installGlobals(JSContext *ctx);
 
-std::string normalizeModuleName(JSContext *ctx, std::string baseName,
-                                std::string name, void *host);
+char *normalizeModuleName(JSContext *ctx, const char *baseName,
+                          const char *name, void *host);
 JSModuleDef *loadModule(JSContext *ctx, const char *name, void *opaque);
-bool evalModule(JSContext *ctx, std::string name, std::string src);
-JSValue importModuleNamespace(JSContext *ctx, std::string name);
+bool evalModule(JSContext *ctx, const std::string &name, const std::string &src);
+JSValue importModuleNamespace(JSContext *ctx, const std::string &name);
 
 ScriptInstance *createScriptInstance(JSContext *ctx,
-                                     std::string entryModuleName,
-                                     std::string scriptPath,
-                                     std::string className);
+                                     const std::string &entryModuleName,
+                                     const std::string &scriptPath,
+                                     const std::string &className);
 
-} // namespace runtime::scripting
-
-namespace runtime::scripting {
-// Debug functions
 JSValue jsPrint(JSContext *ctx, JSValueConst this_val, int argc,
                 JSValueConst *argv);
 } // namespace runtime::scripting

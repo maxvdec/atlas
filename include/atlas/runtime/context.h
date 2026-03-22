@@ -13,6 +13,7 @@
 #include "atlas/camera.h"
 #include "atlas/core/renderable.h"
 #include "atlas/scene.h"
+#include "atlas/runtime/scripting.h"
 #include "atlas/texture.h"
 #include "quickjs.h"
 #include <atlas/window.h>
@@ -57,6 +58,13 @@ class Context {
     std::string sceneDir;
     std::shared_ptr<RuntimeScene> scene;
 
+    JSRuntime *runtime = nullptr;
+    JSContext *context = nullptr;
+    ScriptHost scriptHost;
+    std::unordered_map<std::string, std::string> scriptRegistry;
+    std::unordered_map<std::string, std::string> loadedScriptModules;
+    std::string scriptBundleModuleName = "__atlas_scripts__";
+
     std::unique_ptr<Camera> camera;
     std::map<std::string, std::unique_ptr<RenderTarget>> renderTargets;
     std::vector<std::unique_ptr<DirectionalLight>> directionalLights;
@@ -76,6 +84,9 @@ class Context {
     void loadProject();
     void loadMainScene(Window &window);
     void loadScene(Window &window, const json &sceneData);
+    void initializeScripting();
+    std::string registerScriptModule(const std::string &modulePath);
+    std::string toProjectScriptPath(const std::string &path) const;
 };
 
 namespace runtime {

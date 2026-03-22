@@ -14,12 +14,14 @@
 #include "atlas/object.h"
 #include "atlas/particle.h"
 #include "atlas/physics.h"
+#include "atlas/runtime/scripting.h"
 #include "atlas/texture.h"
 #include "atlas/units.h"
 #include "atlas/window.h"
 #include "atlas/workspace.h"
 #include "aurora/procedural.h"
 #include "aurora/terrain.h"
+#include "runtime/atlasScripts.h"
 #include <algorithm>
 #include <array>
 #include <cctype>
@@ -98,11 +100,122 @@ struct RuntimeEnvironmentDefinition {
 
 class RuntimeScriptComponent final : public Component {
   public:
+    Context *host = nullptr;
     std::string source;
+    std::string className;
+    std::string entryModuleName;
     json variables;
     std::string traitedType;
     bool isTrait = false;
+    std::unique_ptr<ScriptInstance> instance;
+    bool initialized = false;
+
+    void atAttach() override {
+        if (!ensureInstance()) {
+            throw std::runtime_error("Failed to create script instance: " +
+                                     className);
+        }
+    }
+
+    void init() override {
+        if (!ensureInstance() || initialized) {
+            return;
+        }
+        initialized = true;
+        instance->callMethod("init", 0, nullptr);
+    }
+
+    void update(float deltaTime) override {
+        if (!ensureInstance()) {
+            return;
+        }
+
+        JSValue delta = JS_NewFloat64(host->context, deltaTime);
+        JSValueConst args[] = {delta};
+        instance->callMethod("update", 1, args);
+        JS_FreeValue(host->context, delta);
+    }
+
+  private:
+    bool ensureInstance() {
+        if (instance != nullptr) {
+            return true;
+        }
+        if (host == nullptr || host->context == nullptr || className.empty()) {
+            return false;
+        }
+
+        const std::string moduleName = entryModuleName.empty()
+                                           ? host->scriptBundleModuleName
+                                           : entryModuleName;
+        instance.reset(runtime::scripting::createScriptInstance(
+            host->context, moduleName, source, className));
+        if (instance == nullptr) {
+            return false;
+        }
+
+        if (!variables.is_null()) {
+            const std::string serialized = variables.dump();
+            JSValue parsed =
+                JS_ParseJSON(host->context, serialized.c_str(),
+                             serialized.size(), "<atlas:variables>");
+            if (JS_IsException(parsed)) {
+                runtime::scripting::dumpExecution(host->context);
+                JS_FreeValue(host->context, parsed);
+            } else {
+                JS_SetPropertyStr(host->context, instance->instance,
+                                  "variables", parsed);
+            }
+        }
+
+        return true;
+    }
 };
+
+constexpr const char *RUNTIME_SCRIPT_BUNDLE_PATH = "dist/scripts.js";
+constexpr const char *RUNTIME_FILE_MODULE_PREFIX = "__atlas_file__/";
+
+std::string normalizeScriptPath(std::string path) {
+    std::replace(path.begin(), path.end(), '\\', '/');
+    return path;
+}
+
+std::string packScriptSource(const AtlasPackedScriptSource &source) {
+    std::string result;
+    for (std::size_t index = 0; index < source.count; ++index) {
+        result += source.parts[index];
+    }
+    return result;
+}
+
+std::string readTextFile(const std::string &path) {
+    std::ifstream input(path);
+    if (!input.is_open()) {
+        throw std::runtime_error("Failed to open file: " + path);
+    }
+
+    std::ostringstream output;
+    output << input.rdbuf();
+    return output.str();
+}
+
+std::string inferScriptClassName(const std::string &path) {
+    std::string stem = std::filesystem::path(path).stem().string();
+    if (!stem.empty()) {
+        stem[0] = static_cast<char>(
+            std::toupper(static_cast<unsigned char>(stem[0])));
+    }
+    return stem;
+}
+
+void registerBuiltInScriptModules(Context &context) {
+    for (std::size_t index = 0; index < ATLAS_RUNTIME_SCRIPT_MODULE_COUNT;
+         ++index) {
+        const auto &module = ATLAS_RUNTIME_SCRIPT_MODULES[index];
+        context.scriptHost.modules[module.name] =
+            packScriptSource(module.source);
+    }
+}
 
 const json *findField(const json &node,
                       std::initializer_list<const char *> keys) {
@@ -129,8 +242,8 @@ bool tryReadStringAny(const json &node,
     return false;
 }
 
-bool tryReadBoolAny(const json &node,
-                    std::initializer_list<const char *> keys, bool &target) {
+bool tryReadBoolAny(const json &node, std::initializer_list<const char *> keys,
+                    bool &target) {
     if (const json *field = findField(node, keys);
         field != nullptr && field->is_boolean()) {
         target = field->get<bool>();
@@ -139,8 +252,8 @@ bool tryReadBoolAny(const json &node,
     return false;
 }
 
-bool tryReadFloatAny(const json &node,
-                     std::initializer_list<const char *> keys, float &target) {
+bool tryReadFloatAny(const json &node, std::initializer_list<const char *> keys,
+                     float &target) {
     if (const json *field = findField(node, keys);
         field != nullptr && field->is_number()) {
         target = field->get<float>();
@@ -166,8 +279,8 @@ std::string normalizeToken(std::string value) {
         if (ch == ' ' || ch == '_' || ch == '-' || ch == '.') {
             continue;
         }
-        normalized.push_back(static_cast<char>(
-            std::tolower(static_cast<unsigned char>(ch))));
+        normalized.push_back(
+            static_cast<char>(std::tolower(static_cast<unsigned char>(ch))));
     }
     return normalized;
 }
@@ -181,16 +294,6 @@ std::string resolveRuntimePath(const std::string &baseDir,
     return (std::filesystem::path(baseDir) / candidate)
         .lexically_normal()
         .string();
-}
-
-std::string readTextFile(const std::string &path) {
-    std::ifstream file(path);
-    if (!file.is_open()) {
-        throw std::runtime_error("Failed to open JSON file: " + path);
-    }
-    std::stringstream buffer;
-    buffer << file.rdbuf();
-    return buffer.str();
 }
 
 std::string stripJsonComments(const std::string &text) {
@@ -328,7 +431,8 @@ JsonDefinition loadJsonDefinition(const json &value,
             resolveRuntimePath(baseDir, relativePath);
         return {
             .data = loadJsonFile(resolvedPath),
-            .baseDir = std::filesystem::path(resolvedPath).parent_path().string(),
+            .baseDir =
+                std::filesystem::path(resolvedPath).parent_path().string(),
         };
     }
     return {.data = value, .baseDir = baseDir};
@@ -348,8 +452,7 @@ bool tryReadVec3(const json &node, const char *key, Position3d &target) {
     return true;
 }
 
-bool tryReadVec3Any(const json &node,
-                    std::initializer_list<const char *> keys,
+bool tryReadVec3Any(const json &node, std::initializer_list<const char *> keys,
                     Position3d &target) {
     for (const char *key : keys) {
         if (tryReadVec3(node, key, target)) {
@@ -368,8 +471,7 @@ bool tryReadVec2(const json &node, const char *key, Position2d &target) {
     return true;
 }
 
-bool tryReadVec2Any(const json &node,
-                    std::initializer_list<const char *> keys,
+bool tryReadVec2Any(const json &node, std::initializer_list<const char *> keys,
                     Position2d &target) {
     for (const char *key : keys) {
         if (tryReadVec2(node, key, target)) {
@@ -421,8 +523,7 @@ bool tryReadColor(const json &node, const char *key, Color &target) {
     return true;
 }
 
-bool tryReadColorAny(const json &node,
-                     std::initializer_list<const char *> keys,
+bool tryReadColorAny(const json &node, std::initializer_list<const char *> keys,
                      Color &target) {
     for (const char *key : keys) {
         if (tryReadColor(node, key, target)) {
@@ -588,7 +689,8 @@ MaterialDefinition loadMaterialDefinition(const json &value,
 
     tryReadColorAny(materialData, {"albedo", "color", "baseColor"},
                     loaded.material.albedo);
-    tryReadColorAny(materialData, {"emissiveColor", "emissive", "emissionColor"},
+    tryReadColorAny(materialData,
+                    {"emissiveColor", "emissive", "emissionColor"},
                     loaded.material.emissiveColor);
     tryReadFloatAny(materialData, {"metallic"}, loaded.material.metallic);
     tryReadFloatAny(materialData, {"roughness"}, loaded.material.roughness);
@@ -615,9 +717,9 @@ MaterialDefinition loadMaterialDefinition(const json &value,
         }
     };
 
-    appendTexture({"texture", "albedoTexture", "colorTexture",
-                   "diffuseTexture"},
-                  TextureType::Color, false);
+    appendTexture(
+        {"texture", "albedoTexture", "colorTexture", "diffuseTexture"},
+        TextureType::Color, false);
     appendTexture({"specularTexture", "specularMap"}, TextureType::Specular,
                   false);
     appendTexture({"normalTexture", "normalMap"}, TextureType::Normal, false);
@@ -677,7 +779,8 @@ loadEnvironmentDefinition(const json &sceneData, const std::string &baseDir) {
             throw std::runtime_error("Environment fog must be an object");
         }
         tryReadColorAny(*fogNode, {"color"}, loaded.environment.fog.color);
-        tryReadFloatAny(*fogNode, {"intensity"}, loaded.environment.fog.intensity);
+        tryReadFloatAny(*fogNode, {"intensity"},
+                        loaded.environment.fog.intensity);
     }
 
     if (const json *volumetricNode =
@@ -723,8 +826,7 @@ loadEnvironmentDefinition(const json &sceneData, const std::string &baseDir) {
     }
 
     if (const json *lookupNode =
-            findField(environmentData,
-                      {"lookupTexture", "lutTexture", "lut"});
+            findField(environmentData, {"lookupTexture", "lutTexture", "lut"});
         lookupNode != nullptr && !lookupNode->is_null() &&
         !isEmptyStringValue(*lookupNode)) {
         loaded.environment.lookupTexture = loadTextureDefinition(
@@ -856,13 +958,14 @@ loadEnvironmentDefinition(const json &sceneData, const std::string &baseDir) {
 
             if (cloudsNode->is_object()) {
                 tryReadIntAny(*cloudsNode, {"frequency"}, frequency);
-                tryReadIntAny(*cloudsNode,
-                              {"divisions", "numberOfDivisions"}, divisions);
+                tryReadIntAny(*cloudsNode, {"divisions", "numberOfDivisions"},
+                              divisions);
             }
 
             loaded.atmosphere.addClouds(frequency, divisions);
 
-            if (loaded.atmosphere.clouds != nullptr && cloudsNode->is_object()) {
+            if (loaded.atmosphere.clouds != nullptr &&
+                cloudsNode->is_object()) {
                 auto &clouds = *loaded.atmosphere.clouds;
                 if (tryReadVec3Any(*cloudsNode, {"position"}, vector)) {
                     clouds.position = vector;
@@ -881,10 +984,8 @@ loadEnvironmentDefinition(const json &sceneData, const std::string &baseDir) {
                 tryReadFloatAny(*cloudsNode, {"density"}, clouds.density);
                 tryReadFloatAny(*cloudsNode, {"densityMultiplier"},
                                 clouds.densityMultiplier);
-                tryReadFloatAny(*cloudsNode, {"absorption"},
-                                clouds.absorption);
-                tryReadFloatAny(*cloudsNode, {"scattering"},
-                                clouds.scattering);
+                tryReadFloatAny(*cloudsNode, {"absorption"}, clouds.absorption);
+                tryReadFloatAny(*cloudsNode, {"scattering"}, clouds.scattering);
                 tryReadFloatAny(*cloudsNode, {"phase"}, clouds.phase);
                 tryReadFloatAny(*cloudsNode, {"clusterStrength"},
                                 clouds.clusterStrength);
@@ -927,8 +1028,9 @@ loadEnvironmentDefinition(const json &sceneData, const std::string &baseDir) {
         }
 
         if (enableWeather) {
-            loaded.atmosphere.weatherDelegate =
-                [state](ViewInformation) { return state; };
+            loaded.atmosphere.weatherDelegate = [state](ViewInformation) {
+                return state;
+            };
             loaded.atmosphere.enableWeather();
         }
     }
@@ -972,9 +1074,9 @@ parseTerrainGenerator(const json &value, const std::string &baseDir) {
 
     const std::string token = normalizeToken(algorithm);
     const json *settingsNode = findField(definition.data, {"settings"});
-    const json &settings =
-        settingsNode != nullptr && settingsNode->is_object() ? *settingsNode
-                                                             : definition.data;
+    const json &settings = settingsNode != nullptr && settingsNode->is_object()
+                               ? *settingsNode
+                               : definition.data;
 
     if (token == "hill" || token == "hills" || token == "perlin" ||
         token == "perlinnoise") {
@@ -1033,13 +1135,15 @@ parseTerrainGenerator(const json &value, const std::string &baseDir) {
                            std::dynamic_pointer_cast<PlainGenerator>(child)) {
                 compound->addGenerator(*plain);
             } else if (auto mountain =
-                           std::dynamic_pointer_cast<MountainGenerator>(child)) {
+                           std::dynamic_pointer_cast<MountainGenerator>(
+                               child)) {
                 compound->addGenerator(*mountain);
             } else if (auto island =
                            std::dynamic_pointer_cast<IslandGenerator>(child)) {
                 compound->addGenerator(*island);
             } else if (auto nestedCompound =
-                           std::dynamic_pointer_cast<CompoundGenerator>(child)) {
+                           std::dynamic_pointer_cast<CompoundGenerator>(
+                               child)) {
                 compound->addGenerator(*nestedCompound);
             }
         }
@@ -1063,7 +1167,8 @@ void appendBiomeList(Terrain &terrain, const json &value,
     }
 
     if (biomesNode == nullptr || !biomesNode->is_array()) {
-        throw std::runtime_error("Biome definition must provide a biomes array");
+        throw std::runtime_error(
+            "Biome definition must provide a biomes array");
     }
 
     for (const auto &biomeData : *biomesNode) {
@@ -1086,9 +1191,8 @@ void appendBiomeList(Terrain &terrain, const json &value,
 
         const json *textureField = findField(biomeData, {"texture"});
         if (textureField != nullptr && !isEmptyStringValue(*textureField)) {
-            biome.attachTexture(loadTextureDefinition(*textureField,
-                                                     definition.baseDir,
-                                                     TextureType::Color, false));
+            biome.attachTexture(loadTextureDefinition(
+                *textureField, definition.baseDir, TextureType::Color, false));
         }
 
         if (hasExplicitUseTexture) {
@@ -1103,7 +1207,8 @@ std::optional<std::string>
 findCubemapFace(const std::string &directory,
                 std::initializer_list<const char *> aliases) {
     const std::filesystem::path dirPath(directory);
-    if (!std::filesystem::exists(dirPath) || !std::filesystem::is_directory(dirPath)) {
+    if (!std::filesystem::exists(dirPath) ||
+        !std::filesystem::is_directory(dirPath)) {
         return std::nullopt;
     }
 
@@ -1138,9 +1243,8 @@ Cubemap loadCubemapFromPaths(const std::array<std::string, 6> &paths,
     std::vector<Resource> resources;
     resources.reserve(paths.size());
     for (const auto &path : paths) {
-        resources.push_back(
-            createRuntimeResource(baseDir, path, ResourceType::Image,
-                                  "runtime-cubemap-face"));
+        resources.push_back(createRuntimeResource(
+            baseDir, path, ResourceType::Image, "runtime-cubemap-face"));
     }
 
     ResourceGroup group = Workspace::get().createResourceGroup(
@@ -1160,31 +1264,27 @@ Cubemap loadCubemapDefinition(const json &value, const std::string &baseDir) {
         const std::filesystem::path path(resolvedPath);
 
         if (std::filesystem::is_directory(path)) {
-            auto right =
-                findCubemapFace(resolvedPath,
-                                {"px", "posx", "positivex", "right"});
+            auto right = findCubemapFace(resolvedPath,
+                                         {"px", "posx", "positivex", "right"});
             auto left = findCubemapFace(resolvedPath,
                                         {"nx", "negx", "negativex", "left"});
-            auto top =
-                findCubemapFace(resolvedPath, {"py", "posy", "positivey", "top",
-                                               "up"});
+            auto top = findCubemapFace(
+                resolvedPath, {"py", "posy", "positivey", "top", "up"});
             auto bottom = findCubemapFace(
                 resolvedPath, {"ny", "negy", "negativey", "bottom", "down"});
-            auto front =
-                findCubemapFace(resolvedPath,
-                                {"pz", "posz", "positivez", "front"});
-            auto back =
-                findCubemapFace(resolvedPath, {"nz", "negz", "negativez",
-                                               "back"});
+            auto front = findCubemapFace(resolvedPath,
+                                         {"pz", "posz", "positivez", "front"});
+            auto back = findCubemapFace(resolvedPath,
+                                        {"nz", "negz", "negativez", "back"});
 
             if (!right || !left || !top || !bottom || !front || !back) {
                 throw std::runtime_error("Cubemap directory is missing one or "
-                                         "more faces: " + resolvedPath);
+                                         "more faces: " +
+                                         resolvedPath);
             }
 
-            return loadCubemapFromPaths({*right, *left, *top, *bottom, *front,
-                                         *back},
-                                        "");
+            return loadCubemapFromPaths(
+                {*right, *left, *top, *bottom, *front, *back}, "");
         }
 
         const std::string extension = normalizeToken(path.extension().string());
@@ -1195,7 +1295,8 @@ Cubemap loadCubemapDefinition(const json &value, const std::string &baseDir) {
         }
 
         throw std::runtime_error("Cubemap paths must point to a directory or a "
-                                 "JSON cubemap definition: " + resolvedPath);
+                                 "JSON cubemap definition: " +
+                                 resolvedPath);
     }
 
     if (value.is_array() && value.size() == 6) {
@@ -1249,9 +1350,8 @@ Cubemap loadCubemapDefinition(const json &value, const std::string &baseDir) {
             readFacePath({"nz", "negz", "negativeZ", "back", "backFace"});
 
         if (right && left && top && bottom && front && back) {
-            return loadCubemapFromPaths({*right, *left, *top, *bottom, *front,
-                                         *back},
-                                        baseDir);
+            return loadCubemapFromPaths(
+                {*right, *left, *top, *bottom, *front, *back}, baseDir);
         }
 
         if (const json *faces = findField(value, {"faces", "cubemap"});
@@ -1295,13 +1395,14 @@ void registerGameObject(Context &context, GameObject &object,
 
     registerObjectReference(context, name, &object);
 
-    if (const json *idField = findField(objectData, {"id"}); idField != nullptr) {
+    if (const json *idField = findField(objectData, {"id"});
+        idField != nullptr) {
         if (idField->is_string()) {
             registerObjectReference(context, idField->get<std::string>(),
                                     &object);
         } else if (idField->is_number_integer()) {
-            registerObjectReference(context,
-                                    std::to_string(idField->get<int>()), &object);
+            registerObjectReference(
+                context, std::to_string(idField->get<int>()), &object);
         }
     }
 
@@ -1480,7 +1581,8 @@ parseJointEndpoint(Context &context, const json &value, GameObject *fallback) {
             return it->second;
         }
 
-        throw std::runtime_error("Unknown joint object reference: " + reference);
+        throw std::runtime_error("Unknown joint object reference: " +
+                                 reference);
     }
 
     if (value.is_number_integer()) {
@@ -1489,11 +1591,13 @@ parseJointEndpoint(Context &context, const json &value, GameObject *fallback) {
         if (it != context.objectReferences.end()) {
             return it->second;
         }
-        throw std::runtime_error("Unknown joint object reference: " + reference);
+        throw std::runtime_error("Unknown joint object reference: " +
+                                 reference);
     }
 
     if (value.is_object()) {
-        if (const json *field = findField(value, {"name", "id", "ref", "object"});
+        if (const json *field =
+                findField(value, {"name", "id", "ref", "object"});
             field != nullptr) {
             return parseJointEndpoint(context, *field, fallback);
         }
@@ -1603,8 +1707,7 @@ void configureRigidbodyCollider(const std::shared_ptr<Rigidbody> &rigidbody,
                     indices.push_back(vertexOffset +
                                       static_cast<uint32_t>(index));
                 }
-                vertexOffset +=
-                    static_cast<uint32_t>(mesh->vertices.size());
+                vertexOffset += static_cast<uint32_t>(mesh->vertices.size());
             }
 
             rigidbody->body->setCollider(
@@ -1626,9 +1729,9 @@ float normalizePercentage(float value) {
 void configureVehicleSettings(bezel::VehicleSettings &settings,
                               const json &componentData) {
     const json *settingsNode = findField(componentData, {"settings"});
-    const json &data =
-        settingsNode != nullptr && settingsNode->is_object() ? *settingsNode
-                                                             : componentData;
+    const json &data = settingsNode != nullptr && settingsNode->is_object()
+                           ? *settingsNode
+                           : componentData;
 
     Position3d vector;
     if (tryReadVec3Any(data, {"up"}, vector)) {
@@ -1731,9 +1834,8 @@ void configureVehicleSettings(bezel::VehicleSettings &settings,
                                  transmissionType)) {
                 const std::string token = normalizeToken(transmissionType);
                 settings.controller.transmission.mode =
-                    token == "manual"
-                        ? bezel::VehicleTransmissionMode::Manual
-                        : bezel::VehicleTransmissionMode::Auto;
+                    token == "manual" ? bezel::VehicleTransmissionMode::Manual
+                                      : bezel::VehicleTransmissionMode::Auto;
             }
 
             if (const json *gearRatios =
@@ -1831,12 +1933,43 @@ void attachComponent(Context &context, const PendingComponent &pending) {
 
     if (token == "script" || token == "traitscript") {
         auto component = std::make_shared<RuntimeScriptComponent>();
+        component->host = &context;
         component->isTrait = token == "traitscript";
+
+        tryReadStringAny(pending.data, {"name", "class", "className"},
+                         component->className);
 
         std::string source;
         if (tryReadStringAny(pending.data, {"source"}, source) &&
             !source.empty()) {
-            component->source = resolveRuntimePath(pending.baseDir, source);
+            const std::string resolvedSource =
+                resolveRuntimePath(pending.baseDir, source);
+            std::string extension =
+                std::filesystem::path(resolvedSource).extension().string();
+            std::transform(extension.begin(), extension.end(),
+                           extension.begin(), [](unsigned char value) {
+                               return static_cast<char>(std::tolower(value));
+                           });
+
+            if (extension == ".js" || extension == ".mjs") {
+                component->entryModuleName =
+                    context.registerScriptModule(resolvedSource);
+                component->source.clear();
+            } else {
+                component->entryModuleName = context.scriptBundleModuleName;
+                component->source = context.toProjectScriptPath(resolvedSource);
+            }
+
+            if (component->className.empty()) {
+                component->className = inferScriptClassName(resolvedSource);
+            }
+        } else if (!component->className.empty()) {
+            if (const auto it =
+                    context.scriptRegistry.find(component->className);
+                it != context.scriptRegistry.end()) {
+                component->entryModuleName = context.scriptBundleModuleName;
+                component->source = it->second;
+            }
         }
 
         if (const json *variables = findField(pending.data, {"variables"});
@@ -1844,13 +1977,33 @@ void attachComponent(Context &context, const PendingComponent &pending) {
             component->variables = *variables;
         }
 
-        tryReadStringAny(pending.data, {"traitedType"},
-                         component->traitedType);
+        tryReadStringAny(pending.data, {"traitedType"}, component->traitedType);
 
         if (component->isTrait && !component->traitedType.empty() &&
             normalizeToken(component->traitedType) != pending.objectType) {
             throw std::runtime_error("Trait script is incompatible with object "
-                                     "type: " + component->traitedType);
+                                     "type: " +
+                                     component->traitedType);
+        }
+
+        if (component->className.empty()) {
+            throw std::runtime_error(
+                "Script component is missing a class name");
+        }
+
+        if (component->entryModuleName.empty()) {
+            throw std::runtime_error(
+                "Script component could not resolve class: " +
+                component->className);
+        }
+
+        if (component->entryModuleName == context.scriptBundleModuleName &&
+            !context.scriptHost.modules.contains(
+                context.scriptBundleModuleName)) {
+            throw std::runtime_error(
+                "Compiled script bundle not found: " +
+                resolveRuntimePath(context.projectDir,
+                                   RUNTIME_SCRIPT_BUNDLE_PATH));
         }
 
         pending.object->addComponent(component);
@@ -2012,8 +2165,7 @@ void attachComponent(Context &context, const PendingComponent &pending) {
                             component->spring.dampingRatio);
             tryReadFloatAny(*spring, {"stiffness"},
                             component->spring.stiffness);
-            tryReadFloatAny(*spring, {"damping"},
-                            component->spring.damping);
+            tryReadFloatAny(*spring, {"damping"}, component->spring.damping);
         }
 
         return;
@@ -2046,9 +2198,8 @@ Key parseKeyString(const std::string &value) {
     const std::string token = normalizeToken(value);
     if (token.size() == 1 &&
         std::isalpha(static_cast<unsigned char>(token[0]))) {
-        std::string letter(
-            1, static_cast<char>(std::toupper(static_cast<unsigned char>(
-                   token[0]))));
+        std::string letter(1, static_cast<char>(std::toupper(
+                                  static_cast<unsigned char>(token[0]))));
         scancode = SDL_GetScancodeFromName(letter.c_str());
         if (scancode != SDL_SCANCODE_UNKNOWN) {
             return static_cast<Key>(scancode);
@@ -2216,10 +2367,11 @@ AxisTrigger parseAxisTrigger(const json &triggerData) {
             axisIndexY = triggerData["indexes"][1].get<int>();
         }
         if (axisIndex < 0) {
-            throw std::runtime_error("Controller axis trigger is missing index");
+            throw std::runtime_error(
+                "Controller axis trigger is missing index");
         }
-        return AxisTrigger::controller(controllerId, axisIndex,
-                                       axisIndexY < 0, axisIndexY);
+        return AxisTrigger::controller(controllerId, axisIndex, axisIndexY < 0,
+                                       axisIndexY);
     }
 
     if (normalizedType == "custom") {
@@ -2231,10 +2383,9 @@ AxisTrigger parseAxisTrigger(const json &triggerData) {
                                            parseTrigger(triggers[1]), {}, {});
             }
             if (triggers.size() == 4) {
-                return AxisTrigger::custom(parseTrigger(triggers[0]),
-                                           parseTrigger(triggers[1]),
-                                           parseTrigger(triggers[2]),
-                                           parseTrigger(triggers[3]));
+                return AxisTrigger::custom(
+                    parseTrigger(triggers[0]), parseTrigger(triggers[1]),
+                    parseTrigger(triggers[2]), parseTrigger(triggers[3]));
             }
         }
 
@@ -2297,7 +2448,8 @@ std::shared_ptr<InputAction> parseInputAction(const json &actionData) {
 
     std::shared_ptr<InputAction> action;
 
-    if (actionData.contains("triggerAxes") && actionData["triggerAxes"].is_array()) {
+    if (actionData.contains("triggerAxes") &&
+        actionData["triggerAxes"].is_array()) {
         std::vector<AxisTrigger> triggers;
         for (const auto &triggerData : actionData["triggerAxes"]) {
             triggers.push_back(parseAxisTrigger(triggerData));
@@ -2350,10 +2502,10 @@ std::shared_ptr<InputAction> parseInputAction(const json &actionData) {
 void loadInputActionsFromJson(Window &window, const json &inputData,
                               const std::string &baseDir) {
     if (inputData.is_string()) {
-        loadInputActionsFromJson(
-            window,
-            loadJsonFile(resolveRuntimePath(baseDir, inputData.get<std::string>())),
-            baseDir);
+        loadInputActionsFromJson(window,
+                                 loadJsonFile(resolveRuntimePath(
+                                     baseDir, inputData.get<std::string>())),
+                                 baseDir);
         return;
     }
 
@@ -2386,7 +2538,8 @@ void loadInputActionsFromJson(Window &window, const json &inputData,
 
 std::shared_ptr<Effect> parseEffect(const json &effectData) {
     if (!effectData.is_object()) {
-        throw std::runtime_error("Render target effect entry must be an object");
+        throw std::runtime_error(
+            "Render target effect entry must be an object");
     }
 
     std::string type;
@@ -2513,8 +2666,9 @@ createRenderable(Context &context, const json &objectData,
             tryReadFloatAny(objectData, {"radius"}, radius);
             tryReadIntAny(objectData, {"sectorCount"}, sectorCount);
             tryReadIntAny(objectData, {"stackCount"}, stackCount);
-            *object = createSphere(radius, static_cast<unsigned int>(sectorCount),
-                                   static_cast<unsigned int>(stackCount), color);
+            *object =
+                createSphere(radius, static_cast<unsigned int>(sectorCount),
+                             static_cast<unsigned int>(stackCount), color);
         } else {
             throw std::runtime_error("Unknown solid type: " + solidType);
         }
@@ -2573,9 +2727,8 @@ createRenderable(Context &context, const json &objectData,
         }
 
         auto object = std::make_shared<Model>();
-        object->fromResource(createRuntimeResource(baseDir, source,
-                                                   ResourceType::Model,
-                                                   "runtime-model"));
+        object->fromResource(createRuntimeResource(
+            baseDir, source, ResourceType::Model, "runtime-model"));
 
         registerGameObject(context, *object, objectData, normalizedType,
                            generatedIndex);
@@ -2686,8 +2839,9 @@ createRenderable(Context &context, const json &objectData,
         if (const json *heightmapField = findField(objectData, {"heightmap"});
             heightmapField != nullptr && !isEmptyStringValue(*heightmapField)) {
             std::string heightmapPath = heightmapField->get<std::string>();
-            object->heightmap = createRuntimeResource(
-                baseDir, heightmapPath, ResourceType::Image, "runtime-heightmap");
+            object->heightmap =
+                createRuntimeResource(baseDir, heightmapPath,
+                                      ResourceType::Image, "runtime-heightmap");
             object->createdWithMap = true;
         }
 
@@ -2789,7 +2943,8 @@ std::shared_ptr<Context> runtime::makeContext(std::string projectFile) {
         .multisampling = multisampling,
         .ssaoScale = ssaoScale,
     });
-    context->projectFile = std::move(projectFile);
+    context->projectFile =
+        std::filesystem::absolute(std::move(projectFile)).string();
     context->projectDir =
         std::filesystem::path(context->projectFile).parent_path().string();
     context->sceneDir = context->projectDir;
@@ -2797,6 +2952,67 @@ std::shared_ptr<Context> runtime::makeContext(std::string projectFile) {
     context->scene->context = context;
 
     return context;
+}
+
+void Context::initializeScripting() {
+    if (runtime == nullptr) {
+        runtime = JS_NewRuntime();
+        if (runtime == nullptr) {
+            throw std::runtime_error("Failed to create QuickJS runtime");
+        }
+    }
+
+    if (context == nullptr) {
+        context = JS_NewContext(runtime);
+        if (context == nullptr) {
+            throw std::runtime_error("Failed to create QuickJS context");
+        }
+        runtime::scripting::installGlobals(context);
+        JS_SetModuleLoaderFunc(runtime, runtime::scripting::normalizeModuleName,
+                               runtime::scripting::loadModule, &scriptHost);
+    }
+
+    scriptHost.modules.clear();
+    loadedScriptModules.clear();
+    registerBuiltInScriptModules(*this);
+
+    const std::string bundlePath =
+        resolveRuntimePath(projectDir, RUNTIME_SCRIPT_BUNDLE_PATH);
+    if (std::filesystem::exists(bundlePath)) {
+        scriptHost.modules[scriptBundleModuleName] = readTextFile(bundlePath);
+    }
+}
+
+std::string Context::toProjectScriptPath(const std::string &path) const {
+    std::filesystem::path absolutePath = std::filesystem::path(path);
+    if (!absolutePath.is_absolute()) {
+        return normalizeScriptPath(path);
+    }
+
+    std::filesystem::path projectPath = std::filesystem::absolute(projectDir);
+    std::error_code error;
+    std::filesystem::path relative =
+        std::filesystem::relative(absolutePath, projectPath, error);
+    if (!error && !relative.empty()) {
+        return normalizeScriptPath(relative.string());
+    }
+
+    return normalizeScriptPath(absolutePath.string());
+}
+
+std::string Context::registerScriptModule(const std::string &modulePath) {
+    const std::string absolutePath =
+        std::filesystem::absolute(modulePath).string();
+    if (const auto it = loadedScriptModules.find(absolutePath);
+        it != loadedScriptModules.end()) {
+        return it->second;
+    }
+
+    const std::string moduleName = std::string(RUNTIME_FILE_MODULE_PREFIX) +
+                                   toProjectScriptPath(absolutePath);
+    scriptHost.modules[moduleName] = readTextFile(absolutePath);
+    loadedScriptModules[absolutePath] = moduleName;
+    return moduleName;
 }
 
 void Context::runWindowed() {
@@ -2836,6 +3052,17 @@ void Context::loadProject() {
         }
     }
 
+    scriptRegistry.clear();
+    if (auto *scriptsTable = configTable["scripts"].as_table()) {
+        for (const auto &[name, value] : *scriptsTable) {
+            if (!value.is_string()) {
+                continue;
+            }
+            scriptRegistry[std::string(name.str())] = toProjectScriptPath(
+                resolveRuntimePath(projectDir, value.as_string()->get()));
+        }
+    }
+
     config.renderer = defaultRenderer;
     config.globalIllumination = globalIllumination;
     config.mainScene = mainScene;
@@ -2843,6 +3070,7 @@ void Context::loadProject() {
     config.useUpscaling = useUpscaling;
 
     Workspace::get().setRootPath(projectDir);
+    initializeScripting();
 }
 
 void RuntimeScene::update(Window &window) {
@@ -2962,19 +3190,21 @@ void Context::loadScene(Window &window, const json &sceneData) {
                 target = std::make_unique<RenderTarget>(
                     window, RenderTargetType::Multisampled);
             } else if (normalizedType == "scene") {
-                target =
-                    std::make_unique<RenderTarget>(window, RenderTargetType::Scene);
+                target = std::make_unique<RenderTarget>(
+                    window, RenderTargetType::Scene);
             } else {
                 throw std::runtime_error("Unknown render target type: " + type);
             }
 
-            if (targetData.contains("effects") && targetData["effects"].is_array()) {
+            if (targetData.contains("effects") &&
+                targetData["effects"].is_array()) {
                 for (const auto &effectData : targetData["effects"]) {
                     try {
                         target->addEffect(parseEffect(effectData));
                     } catch (const std::exception &error) {
-                        RUNTIME_LOG("Skipping incomplete render target effect: " +
-                                    std::string(error.what()));
+                        RUNTIME_LOG(
+                            "Skipping incomplete render target effect: " +
+                            std::string(error.what()));
                     }
                 }
             }
@@ -3026,10 +3256,12 @@ void Context::loadScene(Window &window, const json &sceneData) {
         JSON_READ_BOOL(cameraData, "automaticMoving", cameraAutomaticMoving);
 
         if (cameraData.contains("inputActions")) {
-            loadInputActionsFromJson(window, cameraData["inputActions"], baseDir);
+            loadInputActionsFromJson(window, cameraData["inputActions"],
+                                     baseDir);
         }
 
-        if (cameraData.contains("actions") && cameraData["actions"].is_array()) {
+        if (cameraData.contains("actions") &&
+            cameraData["actions"].is_array()) {
             for (const auto &actionValue : cameraData["actions"]) {
                 if (actionValue.is_string()) {
                     cameraActions.push_back(actionValue.get<std::string>());
@@ -3053,7 +3285,8 @@ void Context::loadScene(Window &window, const json &sceneData) {
             }
             const std::string normalizedType = normalizeToken(type);
 
-            if (normalizedType == "ambient" || normalizedType == "ambientlight") {
+            if (normalizedType == "ambient" ||
+                normalizedType == "ambientlight") {
                 Color ambientColor = Color::white();
                 float intensity = 0.5f;
                 tryReadColor(lightData, "color", ambientColor);

@@ -8,7 +8,6 @@
 //
 
 #include "atlas/runtime/scripting.h"
-#include "atlas/runtime/context.h"
 #include <iostream>
 #include <quickjs.h>
 #include <string>
@@ -40,7 +39,7 @@ void runtime::scripting::dumpExecution(JSContext *ctx) {
     JS_FreeValue(ctx, exceptionVal);
 }
 
-bool runtime::scripting::checkNotException(JSContext *ctx, JSValue value,
+bool runtime::scripting::checkNotException(JSContext *ctx, JSValueConst value,
                                            const char *what) {
     if (JS_IsException(value)) {
         std::cout << BOLD << RED << "Error during " << what << ": " << RESET;
@@ -57,22 +56,23 @@ void runtime::scripting::installGlobals(JSContext *ctx) {
     JS_FreeValue(ctx, global);
 }
 
-std::string runtime::scripting::normalizeModuleName(JSContext *ctx,
-                                                    std::string baseName,
-                                                    std::string name,
-                                                    void *opaque) {
+char *runtime::scripting::normalizeModuleName(JSContext *ctx,
+                                              const char *baseName,
+                                              const char *name,
+                                              void *opaque) {
     auto *host = static_cast<ScriptHost *>(opaque);
+    const std::string base = baseName == nullptr ? "" : baseName;
+    const std::string module = name == nullptr ? "" : name;
 
-    if (host->modules.contains(name)) {
-        return js_strdup(ctx, name.c_str());
+    if (host->modules.contains(module)) {
+        return js_strdup(ctx, module.c_str());
     }
 
-    if (name[0] == '.') {
-        std::string base = baseName.empty() ? "" : baseName;
+    if (!module.empty() && module[0] == '.') {
         auto slash = base.rfind('/');
         std::string dir =
             (slash == std::string::npos) ? "" : base.substr(0, slash + 1);
-        std::string resolved = dir + name;
+        std::string resolved = dir + module;
 
         while (true) {
             auto pos = resolved.find("/./");
@@ -101,9 +101,8 @@ std::string runtime::scripting::normalizeModuleName(JSContext *ctx,
     }
 
     JS_ThrowReferenceError(ctx, "Could not resolve module '%s' from '%s'",
-                           name.c_str(),
-                           baseName.empty() ? "<root>" : baseName.c_str());
-    return "";
+                           module.c_str(), base.empty() ? "<root>" : base.c_str());
+    return nullptr;
 }
 
 JSModuleDef *runtime::scripting::loadModule(JSContext *ctx,
@@ -131,8 +130,8 @@ JSModuleDef *runtime::scripting::loadModule(JSContext *ctx,
     return m;
 }
 
-bool runtime::scripting::evalModule(JSContext *ctx, std::string name,
-                                    std::string src) {
+bool runtime::scripting::evalModule(JSContext *ctx, const std::string &name,
+                                    const std::string &src) {
     JSValue compiled = JS_Eval(ctx, src.c_str(), src.length(), name.c_str(),
                                JS_EVAL_TYPE_MODULE | JS_EVAL_FLAG_COMPILE_ONLY);
     if (!checkNotException(ctx, compiled, "compile module")) {
@@ -149,7 +148,7 @@ bool runtime::scripting::evalModule(JSContext *ctx, std::string name,
 }
 
 JSValue runtime::scripting::importModuleNamespace(JSContext *ctx,
-                                                  std::string module_name) {
+                                                  const std::string &module_name) {
     std::string src = "import * as ns from '" + module_name +
                       "';\n"
                       "globalThis.__atlas_tmp_ns = ns;\n";
@@ -181,8 +180,8 @@ ScriptInstance::~ScriptInstance() {
     }
 }
 
-bool ScriptInstance::callMethod(const char *method_name, int argc = 0,
-                                JSValue *argv = nullptr) {
+bool ScriptInstance::callMethod(const char *method_name, int argc,
+                                JSValueConst *argv) {
     JSValue fn = JS_GetPropertyStr(ctx, instance, method_name);
     if (JS_IsException(fn)) {
         runtime::scripting::dumpExecution(ctx);
@@ -208,39 +207,43 @@ bool ScriptInstance::callMethod(const char *method_name, int argc = 0,
     return true;
 }
 
-ScriptInstance *create_script_instance(JSContext *ctx,
-                                       const char *entry_module_name,
-                                       const char *script_path,
-                                       const char *class_name) {
+ScriptInstance *runtime::scripting::createScriptInstance(
+    JSContext *ctx, const std::string &entryModuleName,
+    const std::string &scriptPath, const std::string &className) {
     JSValue ns =
-        runtime::scripting::importModuleNamespace(ctx, entry_module_name);
+        runtime::scripting::importModuleNamespace(ctx, entryModuleName);
     if (JS_IsException(ns)) {
         runtime::scripting::dumpExecution(ctx);
         return nullptr;
     }
 
-    JSValue atlas_scripts = JS_GetPropertyStr(ctx, ns, "default");
-    JS_FreeValue(ctx, ns);
-    if (JS_IsException(atlas_scripts)) {
-        runtime::scripting::dumpExecution(ctx);
-        return nullptr;
+    JSValue script_exports = JS_UNDEFINED;
+    if (scriptPath.empty()) {
+        script_exports = ns;
+    } else {
+        JSValue atlas_scripts = JS_GetPropertyStr(ctx, ns, "default");
+        JS_FreeValue(ctx, ns);
+        if (JS_IsException(atlas_scripts)) {
+            runtime::scripting::dumpExecution(ctx);
+            return nullptr;
+        }
+
+        script_exports = JS_GetPropertyStr(ctx, atlas_scripts, scriptPath.c_str());
+        JS_FreeValue(ctx, atlas_scripts);
+        if (JS_IsException(script_exports)) {
+            runtime::scripting::dumpExecution(ctx);
+            return nullptr;
+        }
+
+        if (JS_IsUndefined(script_exports)) {
+            std::cerr << "Script exports not found for path: " << scriptPath
+                      << "\n";
+            JS_FreeValue(ctx, script_exports);
+            return nullptr;
+        }
     }
 
-    JSValue script_exports = JS_GetPropertyStr(ctx, atlas_scripts, script_path);
-    JS_FreeValue(ctx, atlas_scripts);
-    if (JS_IsException(script_exports)) {
-        runtime::scripting::dumpExecution(ctx);
-        return nullptr;
-    }
-
-    if (JS_IsUndefined(script_exports)) {
-        std::cerr << "Script exports not found for path: " << script_path
-                  << "\n";
-        JS_FreeValue(ctx, script_exports);
-        return nullptr;
-    }
-
-    JSValue ctor = JS_GetPropertyStr(ctx, script_exports, class_name);
+    JSValue ctor = JS_GetPropertyStr(ctx, script_exports, className.c_str());
     JS_FreeValue(ctx, script_exports);
     if (JS_IsException(ctor)) {
         runtime::scripting::dumpExecution(ctx);
@@ -248,7 +251,7 @@ ScriptInstance *create_script_instance(JSContext *ctx,
     }
 
     if (!JS_IsFunction(ctx, ctor)) {
-        std::cerr << "Export '" << class_name
+        std::cerr << "Export '" << className
                   << "' is not a constructor/function\n";
         JS_FreeValue(ctx, ctor);
         return nullptr;
