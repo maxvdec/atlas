@@ -365,7 +365,6 @@ void GlobalContactListener::fireOnCollisionExit(const JPH::BodyID &inBody1,
 }
 
 void JoltCollisionDispatcher::setup(bezel::PhysicsWorld *world) {
-    std::cout << "Setting up JoltCollisionDispatcher" << std::endl;
     this->contactListener = std::make_shared<GlobalContactListener>();
     world->physicsSystem.SetContactListener(contactListener.get());
 }

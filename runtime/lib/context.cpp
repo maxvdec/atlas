@@ -16,12 +16,13 @@
 #include "atlas/physics.h"
 #include "atlas/runtime/scripting.h"
 #include "atlas/texture.h"
+#include "atlas/tracer/log.h"
 #include "atlas/units.h"
 #include "atlas/window.h"
 #include "atlas/workspace.h"
 #include "aurora/procedural.h"
 #include "aurora/terrain.h"
-#include "runtime/atlasScripts.h"
+#include "atlas/runtime/atlasScripts.h"
 #include <algorithm>
 #include <array>
 #include <cctype>
@@ -2933,6 +2934,7 @@ std::shared_ptr<Context> runtime::makeContext(std::string projectFile) {
         multisampling = (*windowTable)["multisampling"].value_or(false);
         ssaoScale = (*windowTable)["ssaoScale"].value_or(0.4f);
     }
+    Logger::getInstance().setConsoleFilter(false, true, true);
 
     context->window = std::make_unique<Window>(WindowConfiguration{
         .title = "Atlas Runtime",
@@ -2943,6 +2945,7 @@ std::shared_ptr<Context> runtime::makeContext(std::string projectFile) {
         .multisampling = multisampling,
         .ssaoScale = ssaoScale,
     });
+
     context->projectFile =
         std::filesystem::absolute(std::move(projectFile)).string();
     context->projectDir =

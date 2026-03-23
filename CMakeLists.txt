@@ -124,7 +124,7 @@ endif()
 
 set(SHADER_OUTPUT_FILE "${CMAKE_SOURCE_DIR}/include/atlas/core/default_shaders.h")
 set(RUNTIME_SCRIPT_INPUT_DIR "${CMAKE_SOURCE_DIR}/runtime/scripts")
-set(RUNTIME_SCRIPT_OUTPUT_FILE "${CMAKE_SOURCE_DIR}/include/runtime/atlasScripts.h")
+set(RUNTIME_SCRIPT_OUTPUT_FILE "${CMAKE_SOURCE_DIR}/include/atlas/runtime/atlasScripts.h")
 
 find_package(Python3 COMPONENTS Interpreter REQUIRED)
 
