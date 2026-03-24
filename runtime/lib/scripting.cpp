@@ -8,12 +8,15 @@
 //
 
 #include "atlas/runtime/scripting.h"
+#include "atlas/audio.h"
 #include "atlas/object.h"
 #include "atlas/runtime/context.h"
 #include "atlas/window.h"
+#include "atlas/workspace.h"
 #include <algorithm>
 #include <cctype>
 #include <cstdint>
+#include <filesystem>
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include <iostream>
@@ -32,10 +35,13 @@ namespace {
 
 constexpr const char *ATLAS_OBJECT_ID_PROP = "__atlasObjectId";
 constexpr const char *ATLAS_COMPONENT_ID_PROP = "__atlasComponentId";
+constexpr const char *ATLAS_AUDIO_PLAYER_ID_PROP = "__atlasAudioPlayerId";
 constexpr const char *ATLAS_INSTANCE_OWNER_ID_PROP = "__atlasInstanceOwnerId";
 constexpr const char *ATLAS_INSTANCE_INDEX_PROP = "__atlasInstanceIndex";
 constexpr const char *ATLAS_GENERATION_PROP = "__atlasGeneration";
 constexpr const char *ATLAS_IS_CORE_OBJECT_PROP = "__atlasIsCoreObject";
+constexpr const char *ATLAS_NATIVE_COMPONENT_KIND_PROP =
+    "__atlasNativeComponentKind";
 
 ScriptHost *getHost(JSContext *ctx) {
     return static_cast<ScriptHost *>(JS_GetContextOpaque(ctx));
@@ -56,6 +62,41 @@ std::string normalizeToken(std::string value) {
 
 std::string makeComponentLookupKey(int ownerId, const std::string &name) {
     return std::to_string(ownerId) + ":" + normalizeToken(name);
+}
+
+ResourceType toNativeResourceType(int type) {
+    switch (type) {
+    case 1:
+        return ResourceType::Image;
+    case 2:
+        return ResourceType::SpecularMap;
+    case 3:
+        return ResourceType::Audio;
+    case 4:
+        return ResourceType::Font;
+    case 5:
+        return ResourceType::Model;
+    default:
+        return ResourceType::File;
+    }
+}
+
+int toScriptResourceType(ResourceType type) {
+    switch (type) {
+    case ResourceType::Image:
+        return 1;
+    case ResourceType::SpecularMap:
+        return 2;
+    case ResourceType::Audio:
+        return 3;
+    case ResourceType::Font:
+        return 4;
+    case ResourceType::Model:
+        return 5;
+    case ResourceType::File:
+    default:
+        return 0;
+    }
 }
 
 std::uint64_t makeInstanceKey(int ownerId, std::uint32_t index) {
@@ -297,6 +338,8 @@ bool ensureBuiltins(JSContext *ctx, ScriptHost &host) {
                    host.instancePrototype);
     cachePrototype(ctx, host.atlasNamespace, "CoreVertex",
                    host.coreVertexPrototype);
+    cachePrototype(ctx, host.atlasNamespace, "Resource",
+                   host.resourcePrototype);
     cachePrototype(ctx, host.atlasUnitsNamespace, "Position3d",
                    host.position3dPrototype);
     cachePrototype(ctx, host.atlasUnitsNamespace, "Position2d",
@@ -339,6 +382,16 @@ JSValue makeColor(JSContext *ctx, ScriptHost &host, const Color &value) {
     setProperty(ctx, result, "g", JS_NewFloat64(ctx, value.g));
     setProperty(ctx, result, "b", JS_NewFloat64(ctx, value.b));
     setProperty(ctx, result, "a", JS_NewFloat64(ctx, value.a));
+    return result;
+}
+
+JSValue makeResource(JSContext *ctx, ScriptHost &host, const Resource &resource) {
+    JSValue result = newObjectFromPrototype(ctx, host.resourcePrototype);
+    setProperty(ctx, result, "type",
+                JS_NewInt32(ctx, toScriptResourceType(resource.type)));
+    setProperty(ctx, result, "path",
+                JS_NewString(ctx, resource.path.string().c_str()));
+    setProperty(ctx, result, "name", JS_NewString(ctx, resource.name.c_str()));
     return result;
 }
 
@@ -409,6 +462,23 @@ bool parseColor(JSContext *ctx, JSValueConst value, Color &out) {
     return true;
 }
 
+bool parseResource(JSContext *ctx, JSValueConst value, Resource &out) {
+    std::string path;
+    std::string name;
+    std::int64_t type = 0;
+
+    if (!readStringProperty(ctx, value, "path", path) ||
+        !readStringProperty(ctx, value, "name", name)) {
+        return false;
+    }
+
+    readIntProperty(ctx, value, "type", type);
+    out.path = path;
+    out.name = name;
+    out.type = toNativeResourceType(static_cast<int>(type));
+    return true;
+}
+
 bool parseQuaternion(JSContext *ctx, JSValueConst value, glm::quat &out) {
     double x = 0.0;
     double y = 0.0;
@@ -473,6 +543,15 @@ bool parseMaterial(JSContext *ctx, JSValueConst value, Material &out) {
     out.transmittance = static_cast<float>(transmittance);
     out.ior = static_cast<float>(ior);
     return true;
+}
+
+ScriptAudioPlayerState *findAudioPlayerState(ScriptHost &host,
+                                             std::uint64_t audioPlayerId) {
+    auto it = host.audioPlayers.find(audioPlayerId);
+    if (it == host.audioPlayers.end()) {
+        return nullptr;
+    }
+    return &it->second;
 }
 
 bool parseCoreVertex(JSContext *ctx, JSValueConst value, CoreVertex &out) {
@@ -978,6 +1057,317 @@ JSValue jsGetComponentByName(JSContext *ctx, JSValueConst, int argc,
     return JS_DupValue(ctx, componentIt->second.value);
 }
 
+JSValue jsLoadResource(JSContext *ctx, JSValueConst, int argc,
+                       JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || host->context == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected path and resource type");
+    }
+
+    if (!ensureBuiltins(ctx, *host)) {
+        return JS_EXCEPTION;
+    }
+
+    const char *path = JS_ToCString(ctx, argv[0]);
+    if (path == nullptr) {
+        return JS_ThrowTypeError(ctx, "Expected resource path");
+    }
+
+    std::int64_t type = 0;
+    if (!getInt64(ctx, argv[1], type)) {
+        JS_FreeCString(ctx, path);
+        return JS_ThrowTypeError(ctx, "Expected resource type");
+    }
+
+    std::string name;
+    if (argc > 2 && !JS_IsUndefined(argv[2])) {
+        const char *providedName = JS_ToCString(ctx, argv[2]);
+        if (providedName != nullptr) {
+            name = providedName;
+            JS_FreeCString(ctx, providedName);
+        }
+    }
+
+    std::filesystem::path resourcePath(path);
+    if (name.empty()) {
+        name = resourcePath.stem().string();
+        if (name.empty()) {
+            name = resourcePath.filename().string();
+        }
+    }
+
+    Resource resource = Workspace::get().createResource(
+        resourcePath, name, toNativeResourceType(static_cast<int>(type)));
+    JS_FreeCString(ctx, path);
+    return makeResource(ctx, *host, resource);
+}
+
+JSValue jsGetResourceByName(JSContext *ctx, JSValueConst, int argc,
+                            JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 1) {
+        return JS_ThrowTypeError(ctx, "Expected resource name");
+    }
+
+    if (!ensureBuiltins(ctx, *host)) {
+        return JS_EXCEPTION;
+    }
+
+    const char *name = JS_ToCString(ctx, argv[0]);
+    if (name == nullptr) {
+        return JS_ThrowTypeError(ctx, "Expected resource name");
+    }
+
+    Resource resource = Workspace::get().getResource(name);
+    JS_FreeCString(ctx, name);
+
+    if (resource.name.empty()) {
+        return JS_NULL;
+    }
+
+    if (argc > 1 && !JS_IsUndefined(argv[1])) {
+        std::int64_t expectedType = 0;
+        if (getInt64(ctx, argv[1], expectedType) &&
+            resource.type != toNativeResourceType(static_cast<int>(expectedType))) {
+            return JS_NULL;
+        }
+    }
+
+    return makeResource(ctx, *host, resource);
+}
+
+JSValue jsCreateAudioPlayer(JSContext *ctx, JSValueConst, int argc,
+                            JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 1) {
+        return JS_ThrowTypeError(ctx, "Expected audio player wrapper");
+    }
+
+    std::uint64_t audioPlayerId = host->nextAudioPlayerId++;
+    auto component = std::make_shared<AudioPlayer>();
+
+    host->audioPlayers[audioPlayerId] = {.component = component,
+                                         .value = JS_DupValue(ctx, argv[0]),
+                                         .attached = false};
+
+    JSValue wrapper = JS_DupValue(ctx, argv[0]);
+    setProperty(ctx, wrapper, "id",
+                JS_NewInt64(ctx, static_cast<int64_t>(audioPlayerId)));
+    setProperty(ctx, wrapper, ATLAS_AUDIO_PLAYER_ID_PROP,
+                JS_NewInt64(ctx, static_cast<int64_t>(audioPlayerId)));
+    setProperty(ctx, wrapper, ATLAS_GENERATION_PROP,
+                JS_NewInt64(ctx, static_cast<int64_t>(host->generation)));
+    setProperty(ctx, wrapper, ATLAS_NATIVE_COMPONENT_KIND_PROP,
+                JS_NewString(ctx, "audio-player"));
+    JS_FreeValue(ctx, wrapper);
+
+    return JS_UNDEFINED;
+}
+
+ScriptAudioPlayerState *resolveAudioPlayer(JSContext *ctx, ScriptHost &host,
+                                           JSValueConst value) {
+    std::int64_t audioPlayerId = 0;
+    if (!getInt64(ctx, value, audioPlayerId)) {
+        JS_ThrowTypeError(ctx, "Expected audio player id");
+        return nullptr;
+    }
+
+    ScriptAudioPlayerState *state =
+        findAudioPlayerState(host, static_cast<std::uint64_t>(audioPlayerId));
+    if (state == nullptr || !state->component) {
+        JS_ThrowReferenceError(ctx, "Unknown audio player id");
+        return nullptr;
+    }
+
+    return state;
+}
+
+JSValue jsInitAudioPlayer(JSContext *ctx, JSValueConst, int argc,
+                          JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 1) {
+        return JS_ThrowTypeError(ctx, "Expected audio player id");
+    }
+
+    auto *state = resolveAudioPlayer(ctx, *host, argv[0]);
+    if (state == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    state->component->init();
+    return JS_UNDEFINED;
+}
+
+JSValue jsPlayAudioPlayer(JSContext *ctx, JSValueConst, int argc,
+                          JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 1) {
+        return JS_ThrowTypeError(ctx, "Expected audio player id");
+    }
+
+    auto *state = resolveAudioPlayer(ctx, *host, argv[0]);
+    if (state == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    state->component->play();
+    return JS_UNDEFINED;
+}
+
+JSValue jsPauseAudioPlayer(JSContext *ctx, JSValueConst, int argc,
+                           JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 1) {
+        return JS_ThrowTypeError(ctx, "Expected audio player id");
+    }
+
+    auto *state = resolveAudioPlayer(ctx, *host, argv[0]);
+    if (state == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    state->component->pause();
+    return JS_UNDEFINED;
+}
+
+JSValue jsStopAudioPlayer(JSContext *ctx, JSValueConst, int argc,
+                          JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 1) {
+        return JS_ThrowTypeError(ctx, "Expected audio player id");
+    }
+
+    auto *state = resolveAudioPlayer(ctx, *host, argv[0]);
+    if (state == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    state->component->stop();
+    return JS_UNDEFINED;
+}
+
+JSValue jsSetAudioPlayerVolume(JSContext *ctx, JSValueConst, int argc,
+                               JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected audio player id and volume");
+    }
+
+    auto *state = resolveAudioPlayer(ctx, *host, argv[0]);
+    if (state == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    double volume = 1.0;
+    if (!getDouble(ctx, argv[1], volume)) {
+        return JS_ThrowTypeError(ctx, "Expected volume");
+    }
+
+    state->component->setVolume(static_cast<float>(volume));
+    return JS_UNDEFINED;
+}
+
+JSValue jsSetAudioPlayerLoop(JSContext *ctx, JSValueConst, int argc,
+                             JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected audio player id and loop flag");
+    }
+
+    auto *state = resolveAudioPlayer(ctx, *host, argv[0]);
+    if (state == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    state->component->setLoop(JS_ToBool(ctx, argv[1]) == 1);
+    return JS_UNDEFINED;
+}
+
+JSValue jsSetAudioPlayerSource(JSContext *ctx, JSValueConst, int argc,
+                               JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected audio player id and resource");
+    }
+
+    auto *state = resolveAudioPlayer(ctx, *host, argv[0]);
+    if (state == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    Resource resource;
+    if (!parseResource(ctx, argv[1], resource)) {
+        return JS_ThrowTypeError(ctx, "Expected Resource");
+    }
+
+    state->component->setSource(resource);
+    return JS_UNDEFINED;
+}
+
+JSValue jsUpdateAudioPlayer(JSContext *ctx, JSValueConst, int argc,
+                            JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected audio player id and delta time");
+    }
+
+    auto *state = resolveAudioPlayer(ctx, *host, argv[0]);
+    if (state == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    double deltaTime = 0.0;
+    if (!getDouble(ctx, argv[1], deltaTime)) {
+        return JS_ThrowTypeError(ctx, "Expected delta time");
+    }
+
+    state->component->update(static_cast<float>(deltaTime));
+    return JS_UNDEFINED;
+}
+
+JSValue jsSetAudioPlayerPosition(JSContext *ctx, JSValueConst, int argc,
+                                 JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected audio player id and position");
+    }
+
+    auto *state = resolveAudioPlayer(ctx, *host, argv[0]);
+    if (state == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    Position3d position;
+    if (!parsePosition3d(ctx, argv[1], position)) {
+        return JS_ThrowTypeError(ctx, "Expected Position3d");
+    }
+
+    state->component->setPosition(position);
+    return JS_UNDEFINED;
+}
+
+JSValue jsUseSpatialAudio(JSContext *ctx, JSValueConst, int argc,
+                          JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx,
+                                 "Expected audio player id and enabled flag");
+    }
+
+    auto *state = resolveAudioPlayer(ctx, *host, argv[0]);
+    if (state == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    if (JS_ToBool(ctx, argv[1]) == 1) {
+        state->component->useSpatialization();
+    } else {
+        state->component->disableSpatialization();
+    }
+
+    return JS_UNDEFINED;
+}
+
 class HostedScriptComponent final : public Component {
   public:
     HostedScriptComponent(JSContext *context, ScriptHost *scriptHost,
@@ -1057,6 +1447,41 @@ JSValue jsAddComponent(JSContext *ctx, JSValueConst, int argc,
     if (object == nullptr) {
         return JS_ThrowReferenceError(ctx, "Unknown Atlas object id: %d",
                                       static_cast<int>(ownerId));
+    }
+
+    std::string nativeKind;
+    if (readStringProperty(ctx, argv[1], ATLAS_NATIVE_COMPONENT_KIND_PROP,
+                           nativeKind) &&
+        nativeKind == "audio-player") {
+        std::int64_t audioPlayerId = 0;
+        if (!readIntProperty(ctx, argv[1], ATLAS_AUDIO_PLAYER_ID_PROP,
+                             audioPlayerId)) {
+            return JS_ThrowReferenceError(ctx, "AudioPlayer wrapper is invalid");
+        }
+
+        auto *audioState = findAudioPlayerState(
+            *host, static_cast<std::uint64_t>(audioPlayerId));
+        if (audioState == nullptr || !audioState->component) {
+            return JS_ThrowReferenceError(ctx, "Unknown audio player id");
+        }
+
+        if (audioState->attached) {
+            return JS_ThrowTypeError(ctx,
+                                     "AudioPlayer is already attached to an object");
+        }
+
+        object->addComponent(audioState->component);
+        runtime::scripting::registerComponentInstance(
+            ctx, *host, audioState->component.get(),
+            static_cast<int>(ownerId), "AudioPlayer", argv[1]);
+        audioState->attached = true;
+
+        auto objectIt = host->objectCache.find(static_cast<int>(ownerId));
+        if (objectIt != host->objectCache.end()) {
+            syncObjectWrapper(ctx, *host, *object);
+        }
+
+        return JS_DupValue(ctx, argv[1]);
     }
 
     std::string componentName = "Component";
@@ -1498,11 +1923,18 @@ void runtime::scripting::clearSceneBindings(JSContext *ctx, ScriptHost &host) {
         JS_FreeValue(ctx, state.value);
     }
     host.componentStates.clear();
+
+    for (auto &[_, state] : host.audioPlayers) {
+        JS_FreeValue(ctx, state.value);
+    }
+    host.audioPlayers.clear();
+
     host.componentIds.clear();
     host.componentOrder.clear();
     host.componentLookup.clear();
     host.objectStates.clear();
     host.nextComponentId = 1;
+    host.nextAudioPlayerId = 1;
     host.generation += 1;
 }
 
@@ -1557,9 +1989,48 @@ void runtime::scripting::installGlobals(JSContext *ctx) {
     JS_SetPropertyStr(ctx, global, "__atlasGetComponentByName",
                       JS_NewCFunction(ctx, jsGetComponentByName,
                                       "__atlasGetComponentByName", 2));
+    JS_SetPropertyStr(ctx, global, "__atlasLoadResource",
+                      JS_NewCFunction(ctx, jsLoadResource, "__atlasLoadResource",
+                                      3));
+    JS_SetPropertyStr(ctx, global, "__atlasGetResourceByName",
+                      JS_NewCFunction(ctx, jsGetResourceByName,
+                                      "__atlasGetResourceByName", 2));
     JS_SetPropertyStr(ctx, global, "__atlasAddComponent",
                       JS_NewCFunction(ctx, jsAddComponent, "__atlasAddComponent",
                                       2));
+    JS_SetPropertyStr(ctx, global, "__atlasCreateAudioPlayer",
+                      JS_NewCFunction(ctx, jsCreateAudioPlayer,
+                                      "__atlasCreateAudioPlayer", 1));
+    JS_SetPropertyStr(ctx, global, "__atlasInitAudioPlayer",
+                      JS_NewCFunction(ctx, jsInitAudioPlayer,
+                                      "__atlasInitAudioPlayer", 1));
+    JS_SetPropertyStr(ctx, global, "__atlasPlayAudioPlayer",
+                      JS_NewCFunction(ctx, jsPlayAudioPlayer,
+                                      "__atlasPlayAudioPlayer", 1));
+    JS_SetPropertyStr(ctx, global, "__atlasPauseAudioPlayer",
+                      JS_NewCFunction(ctx, jsPauseAudioPlayer,
+                                      "__atlasPauseAudioPlayer", 1));
+    JS_SetPropertyStr(ctx, global, "__atlasStopAudioPlayer",
+                      JS_NewCFunction(ctx, jsStopAudioPlayer,
+                                      "__atlasStopAudioPlayer", 1));
+    JS_SetPropertyStr(ctx, global, "__atlasSetAudioPlayerVolume",
+                      JS_NewCFunction(ctx, jsSetAudioPlayerVolume,
+                                      "__atlasSetAudioPlayerVolume", 2));
+    JS_SetPropertyStr(ctx, global, "__atlasSetAudioPlayerLoop",
+                      JS_NewCFunction(ctx, jsSetAudioPlayerLoop,
+                                      "__atlasSetAudioPlayerLoop", 2));
+    JS_SetPropertyStr(ctx, global, "__atlasSetAudioPlayerSource",
+                      JS_NewCFunction(ctx, jsSetAudioPlayerSource,
+                                      "__atlasSetAudioPlayerSource", 2));
+    JS_SetPropertyStr(ctx, global, "__atlasUpdateAudioPlayer",
+                      JS_NewCFunction(ctx, jsUpdateAudioPlayer,
+                                      "__atlasUpdateAudioPlayer", 2));
+    JS_SetPropertyStr(ctx, global, "__atlasSetAudioPlayerPosition",
+                      JS_NewCFunction(ctx, jsSetAudioPlayerPosition,
+                                      "__atlasSetAudioPlayerPosition", 2));
+    JS_SetPropertyStr(ctx, global, "__atlasUseSpatialAudio",
+                      JS_NewCFunction(ctx, jsUseSpatialAudio,
+                                      "__atlasUseSpatialAudio", 2));
     JS_SetPropertyStr(ctx, global, "__atlasCreateCoreObject",
                       JS_NewCFunction(ctx, jsCreateCoreObject,
                                       "__atlasCreateCoreObject", 1));

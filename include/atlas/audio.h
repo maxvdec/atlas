@@ -124,6 +124,16 @@ class AudioPlayer : public Component {
         source->stop();
     }
 
+    void setLoop(bool loop) {
+        ensureSourceInitialized();
+        source->setLooping(loop);
+    }
+
+    void setVolume(float volume) {
+        ensureSourceInitialized();
+        source->setVolume(volume);
+    }
+
     /**
      * @brief Set the source from where the audio will be played.
      *

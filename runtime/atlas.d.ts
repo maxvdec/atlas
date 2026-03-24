@@ -155,6 +155,41 @@ declare module "atlas" {
             stackCount: number,
         ): CoreObject;
     }
+
+    export enum ResourceType {
+        File,
+        Texture,
+        SpecularMap,
+        Audio,
+        Font,
+        Model,
+    }
+
+    export class Resource {
+        type: ResourceType;
+        path: string;
+        name: string;
+
+        constructor(type: ResourceType, path: string, name: string);
+
+        static fromAssetPath(
+            path: string,
+            type: ResourceType,
+            name?: string,
+        ): Resource;
+
+        static fromName(name: string, type: ResourceType): Resource | null;
+    }
+
+    export class ResourceGroup {
+        resources: Resource[];
+        name: string;
+
+        constructor(resources: Resource[], name: string);
+
+        addResource(resource: Resource): void;
+        getResourceByName(name: string): Resource | null;
+    }
 }
 
 declare module "atlas/units" {
@@ -323,5 +358,28 @@ declare module "atlas/units" {
         divide(other: Size2d | number): Size2d;
 
         is(other: Size2d): boolean;
+    }
+}
+
+declare module "atlas/audio" {
+    import { Component, Resource } from "atlas";
+    import { Position3d } from "atlas/units";
+
+    export class AudioPlayer extends Component {
+        constructor();
+
+        override init(): void;
+        play(): void;
+        pause(): void;
+        stop(): void;
+        setVolume(volume: number): void;
+        setLoop(loop: boolean): void;
+
+        setSource(resource: Resource): void;
+
+        override update(dt: number): void;
+
+        setPosition(position: Position3d): void;
+        useSpatialAudio(enabled: boolean): void;
     }
 }

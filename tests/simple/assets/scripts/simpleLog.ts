@@ -11,7 +11,7 @@ export class SimpleLog extends Component {
     }
 
     update(deltaTime: number) {
-        let parent = this.getObject("Cub");
+        let parent = this.getObject("Cube");
         parent.setPosition(Position3d.zero());
     }
 }

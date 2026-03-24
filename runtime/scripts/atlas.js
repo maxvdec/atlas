@@ -274,10 +274,46 @@ export class CoreObject extends GameObject {
     }
 
     static sphere(radius, sectorCount = 36, stackCount = 18) {
-        return globalThis.__atlasCreateSphere(
-            radius,
-            sectorCount,
-            stackCount,
-        );
+        return globalThis.__atlasCreateSphere(radius, sectorCount, stackCount);
+    }
+}
+
+export const ResourceType = Object.freeze({
+    File: 0,
+    Texture: 1,
+    SpecularMap: 2,
+    Audio: 3,
+    Font: 4,
+    Model: 5,
+});
+
+export class Resource {
+    constructor(type, path, name) {
+        this.type = type;
+        this.path = path;
+        this.name = name;
+    }
+
+    static fromAssetPath(path, type, name) {
+        return globalThis.__atlasLoadResource(path, type, name);
+    }
+
+    static fromName(name, type) {
+        return globalThis.__atlasGetResourceByName(name, type);
+    }
+}
+
+export class ResourceGroup {
+    constructor(resources, name) {
+        this.resources = resources;
+        this.name = name;
+    }
+
+    addResource(resource) {
+        this.resources.push(resource);
+    }
+
+    getResourceByName(name) {
+        return this.resources.find((r) => r.name === name) || null;
     }
 }

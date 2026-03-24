@@ -11,6 +11,7 @@
 #define RUNTIME_SCRIPTING_H
 
 #include <cstdint>
+#include <memory>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -19,6 +20,7 @@
 class Context;
 class GameObject;
 class Component;
+class AudioPlayer;
 
 struct ScriptObjectState {
     GameObject *object = nullptr;
@@ -32,6 +34,12 @@ struct ScriptComponentState {
     JSValue value = JS_UNDEFINED;
 };
 
+struct ScriptAudioPlayerState {
+    std::shared_ptr<AudioPlayer> component;
+    JSValue value = JS_UNDEFINED;
+    bool attached = false;
+};
+
 struct ScriptHost {
     Context *context = nullptr;
     std::unordered_map<std::string, std::string> modules;
@@ -42,6 +50,7 @@ struct ScriptHost {
     std::unordered_map<Component *, std::uint64_t> componentIds;
     std::unordered_map<int, std::vector<std::uint64_t>> componentOrder;
     std::unordered_map<std::string, std::uint64_t> componentLookup;
+    std::unordered_map<std::uint64_t, ScriptAudioPlayerState> audioPlayers;
     JSValue atlasNamespace = JS_UNDEFINED;
     JSValue atlasUnitsNamespace = JS_UNDEFINED;
     JSValue componentPrototype = JS_UNDEFINED;
@@ -50,12 +59,14 @@ struct ScriptHost {
     JSValue materialPrototype = JS_UNDEFINED;
     JSValue instancePrototype = JS_UNDEFINED;
     JSValue coreVertexPrototype = JS_UNDEFINED;
+    JSValue resourcePrototype = JS_UNDEFINED;
     JSValue position3dPrototype = JS_UNDEFINED;
     JSValue position2dPrototype = JS_UNDEFINED;
     JSValue colorPrototype = JS_UNDEFINED;
     JSValue size2dPrototype = JS_UNDEFINED;
     JSValue quaternionPrototype = JS_UNDEFINED;
     std::uint64_t nextComponentId = 1;
+    std::uint64_t nextAudioPlayerId = 1;
     std::uint64_t generation = 1;
 };
 
