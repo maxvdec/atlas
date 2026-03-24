@@ -1,6 +1,6 @@
 import { Component } from "atlas";
 import { Debug } from "atlas/log";
-import { Size2d } from "atlas/units";
+import { Position3d, Size2d } from "atlas/units";
 
 export class SimpleLog extends Component {
     init() {
@@ -11,6 +11,7 @@ export class SimpleLog extends Component {
     }
 
     update(deltaTime: number) {
-        // Called every frame with the time elapsed since the last frame
+        let parent = this.getObject("Cub");
+        parent.setPosition(Position3d.zero());
     }
 }

@@ -10,12 +10,53 @@
 #ifndef RUNTIME_SCRIPTING_H
 #define RUNTIME_SCRIPTING_H
 
+#include <cstdint>
 #include <string>
 #include <unordered_map>
+#include <vector>
 #include "quickjs.h"
 
+class Context;
+class GameObject;
+class Component;
+
+struct ScriptObjectState {
+    GameObject *object = nullptr;
+    bool attachedToWindow = false;
+};
+
+struct ScriptComponentState {
+    Component *component = nullptr;
+    int ownerId = 0;
+    std::string name;
+    JSValue value = JS_UNDEFINED;
+};
+
 struct ScriptHost {
+    Context *context = nullptr;
     std::unordered_map<std::string, std::string> modules;
+    std::unordered_map<int, JSValue> objectCache;
+    std::unordered_map<int, ScriptObjectState> objectStates;
+    std::unordered_map<std::uint64_t, JSValue> instanceCache;
+    std::unordered_map<std::uint64_t, ScriptComponentState> componentStates;
+    std::unordered_map<Component *, std::uint64_t> componentIds;
+    std::unordered_map<int, std::vector<std::uint64_t>> componentOrder;
+    std::unordered_map<std::string, std::uint64_t> componentLookup;
+    JSValue atlasNamespace = JS_UNDEFINED;
+    JSValue atlasUnitsNamespace = JS_UNDEFINED;
+    JSValue componentPrototype = JS_UNDEFINED;
+    JSValue gameObjectPrototype = JS_UNDEFINED;
+    JSValue coreObjectPrototype = JS_UNDEFINED;
+    JSValue materialPrototype = JS_UNDEFINED;
+    JSValue instancePrototype = JS_UNDEFINED;
+    JSValue coreVertexPrototype = JS_UNDEFINED;
+    JSValue position3dPrototype = JS_UNDEFINED;
+    JSValue position2dPrototype = JS_UNDEFINED;
+    JSValue colorPrototype = JS_UNDEFINED;
+    JSValue size2dPrototype = JS_UNDEFINED;
+    JSValue quaternionPrototype = JS_UNDEFINED;
+    std::uint64_t nextComponentId = 1;
+    std::uint64_t generation = 1;
 };
 
 struct ScriptInstance {
@@ -31,6 +72,11 @@ namespace runtime::scripting {
 void dumpExecution(JSContext *ctx);
 bool checkNotException(JSContext *ctx, JSValueConst value, const char *what);
 void installGlobals(JSContext *ctx);
+void clearSceneBindings(JSContext *ctx, ScriptHost &host);
+std::uint64_t registerComponentInstance(JSContext *ctx, ScriptHost &host,
+                                        Component *component, int ownerId,
+                                        const std::string &name,
+                                        JSValueConst value);
 
 char *normalizeModuleName(JSContext *ctx, const char *baseName,
                           const char *name, void *host);

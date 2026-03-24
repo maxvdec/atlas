@@ -17,8 +17,143 @@ declare module "atlas/log" {
 
 declare module "atlas" {
     export abstract class Component {
+        parentId: number;
+
         abstract init(): void;
         abstract update(deltaTime: number): void;
+
+        getParent(): GameObject;
+        getParent<T extends Component>(
+            type: new (...args: any[]) => T,
+        ): T | null;
+        getObject(identifier: number | string): CoreObject;
+    }
+
+    export class Material {
+        constructor();
+
+        albedo: Color;
+        metallic: number;
+        roughness: number;
+        ao: number;
+        reflectivity: number;
+        emissiveColor: Color;
+        emissiveIntensity: number;
+        normalMapStrength: number;
+        useNormalMap: boolean;
+        transmittance: number;
+        ior: number;
+    }
+
+    export class CoreVertex {
+        constructor(
+            position?: Position3d,
+            color?: Color,
+            textureCoord?: Position2d,
+            normal?: Normal3d,
+            tangent?: Normal3d,
+            bitangent?: Normal3d,
+        );
+
+        position: Position3d;
+        color: Color;
+        textureCoord: Position2d;
+        normal: Normal3d;
+        tangent: Normal3d;
+        bitangent: Normal3d;
+    }
+
+    export class Instance {
+        position: Position3d;
+        rotation: Rotation3d;
+        scale: Scale3d;
+
+        move(position: Position3d): void;
+        setPosition(position: Position3d): void;
+        setRotation(rotation: Rotation3d): void;
+        rotate(rotation: Rotation3d): void;
+        setScale(scale: Scale3d): void;
+        scaleBy(scale: Scale3d): void;
+
+        equals(other: Instance): boolean;
+    }
+
+    export abstract class GameObject {
+        id: number;
+        components: Component[];
+        position: Position3d;
+        rotation: Rotation3d;
+        scale: Scale3d;
+        name: string;
+
+        constructor();
+
+        abstract attachTexture(texture: Texture): void;
+        abstract setPosition(position: Position3d): void;
+        abstract move(position: Position3d): void;
+        abstract setRotation(rotation: Rotation3d): void;
+        abstract lookAt(target: Position3d, up?: Normal3d): void;
+        abstract rotate(rotation: Rotation3d): void;
+        abstract setScale(scale: Scale3d): void;
+        abstract scaleBy(scale: Scale3d): void;
+        abstract show(): void;
+        abstract hide(): void;
+
+        addComponent<T extends Component>(component: T): void;
+    }
+
+    export class CoreObject extends GameObject {
+        vertices: CoreVertex[];
+        indices: number[];
+        textures: Texture[];
+        material: Material;
+        instances: Instance[];
+        position: Position3d;
+        rotation: Rotation3d;
+        scale: Scale3d;
+        castsShadows: boolean;
+        name: string;
+
+        constructor();
+
+        makeEmissive(color: Color, intensity: number): void;
+        attachVertices(vertices: CoreVertex[]): void;
+        attachIndices(indices: number[]): void;
+        //attachTexture(texture: Texture): void;
+
+        setPosition(position: Position3d): void;
+        move(position: Position3d): void;
+        setRotation(rotation: Rotation3d): void;
+        setRotationQuaternion(rotation: Quaternion): void;
+        rotate(rotation: Rotation3d): void;
+        lookAt(target: Position3d, up?: Normal3d): void;
+        setScale(scale: Scale3d): void;
+        scaleBy(scale: Scale3d): void;
+
+        clone(): CoreObject;
+
+        show(): void;
+        hide(): void;
+
+        addComponent<T extends Component>(component: T): void;
+
+        enableDeferredRendering(): void;
+        disableDeferredRendering(): void;
+
+        createInstance(): Instance;
+
+        getComponent<T extends Component>(
+            type: new (...args: any[]) => T,
+        ): T | null;
+
+        static box(size: Size3d): CoreObject;
+        static plane(size: Size2d): CoreObject;
+        static pyramid(size: Size3d): CoreObject;
+        static sphere(
+            radius: number,
+            sectorCount: number,
+            stackCount: number,
+        ): CoreObject;
     }
 }
 

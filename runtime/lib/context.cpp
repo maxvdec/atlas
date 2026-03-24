@@ -169,6 +169,10 @@ class RuntimeScriptComponent final : public Component {
             }
         }
 
+        runtime::scripting::registerComponentInstance(
+            host->context, host->scriptHost, this, object->getId(), className,
+            instance->instance);
+
         return true;
     }
 };
@@ -1395,6 +1399,7 @@ void registerGameObject(Context &context, GameObject &object,
     }
 
     registerObjectReference(context, name, &object);
+    context.objectNames[object.getId()] = name;
 
     if (const json *idField = findField(objectData, {"id"});
         idField != nullptr) {
@@ -2970,11 +2975,15 @@ void Context::initializeScripting() {
         if (context == nullptr) {
             throw std::runtime_error("Failed to create QuickJS context");
         }
+        JS_SetContextOpaque(context, &scriptHost);
         runtime::scripting::installGlobals(context);
         JS_SetModuleLoaderFunc(runtime, runtime::scripting::normalizeModuleName,
                                runtime::scripting::loadModule, &scriptHost);
     }
 
+    scriptHost.context = this;
+    JS_SetContextOpaque(context, &scriptHost);
+    runtime::scripting::clearSceneBindings(context, scriptHost);
     scriptHost.modules.clear();
     loadedScriptModules.clear();
     registerBuiltInScriptModules(*this);
@@ -3151,6 +3160,7 @@ void Context::loadScene(Window &window, const json &sceneData) {
 
     objects.clear();
     objectReferences.clear();
+    objectNames.clear();
     renderTargets.clear();
     directionalLights.clear();
     pointLights.clear();
@@ -3160,6 +3170,11 @@ void Context::loadScene(Window &window, const json &sceneData) {
     cameraAutomaticMoving = false;
     camera = std::make_unique<Camera>();
     window.resetInputActions();
+    if (context != nullptr) {
+        runtime::scripting::clearSceneBindings(context, scriptHost);
+    } else {
+        scriptHost.generation += 1;
+    }
 
     const std::string baseDir = sceneDir.empty() ? projectDir : sceneDir;
     RuntimeEnvironmentDefinition environmentDefinition =

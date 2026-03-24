@@ -77,6 +77,7 @@ class Context {
     std::unique_ptr<Window> window;
     std::vector<std::shared_ptr<Renderable>> objects;
     std::unordered_map<std::string, GameObject *> objectReferences;
+    std::unordered_map<int, std::string> objectNames;
 
     ProjectConfig config;
 
