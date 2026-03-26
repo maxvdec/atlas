@@ -51,6 +51,7 @@ struct ScriptHost {
     std::unordered_map<int, std::vector<std::uint64_t>> componentOrder;
     std::unordered_map<std::string, std::uint64_t> componentLookup;
     std::unordered_map<std::uint64_t, ScriptAudioPlayerState> audioPlayers;
+    JSValue cameraValue = JS_UNDEFINED;
     JSValue atlasNamespace = JS_UNDEFINED;
     JSValue atlasUnitsNamespace = JS_UNDEFINED;
     JSValue componentPrototype = JS_UNDEFINED;
@@ -60,6 +61,7 @@ struct ScriptHost {
     JSValue instancePrototype = JS_UNDEFINED;
     JSValue coreVertexPrototype = JS_UNDEFINED;
     JSValue resourcePrototype = JS_UNDEFINED;
+    JSValue cameraPrototype = JS_UNDEFINED;
     JSValue position3dPrototype = JS_UNDEFINED;
     JSValue position2dPrototype = JS_UNDEFINED;
     JSValue colorPrototype = JS_UNDEFINED;

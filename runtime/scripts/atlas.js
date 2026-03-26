@@ -21,6 +21,10 @@ export class Component {
         }
         return null;
     }
+
+    getCamera() {
+        return globalThis.__atlasGetCamera();
+    }
 }
 
 export class Material {
@@ -315,5 +319,52 @@ export class ResourceGroup {
 
     getResourceByName(name) {
         return this.resources.find((r) => r.name === name) || null;
+    }
+}
+
+export class Camera {
+    constructor() {
+        this.position = new Position3d(0, 0, 3);
+        this.target = Position3d.zero();
+        this.fov = 45;
+        this.nearClip = 0.5;
+        this.farClip = 1000;
+        this.orthographicSize = 5;
+        this.movementSpeed = 2;
+        this.mouseSensitivity = 0.1;
+        this.controllerLookSensitivity = 180;
+        this.lookSmoothness = 0.15;
+        this.useOrthographic = false;
+        this.focusDepth = 20;
+        this.focusRange = 10;
+        return globalThis.__atlasGetCamera() ?? this;
+    }
+
+    move(position) {
+        this.position.x += position.x;
+        this.position.y += position.y;
+        this.position.z += position.z;
+        return globalThis.__atlasUpdateCamera(this);
+    }
+
+    setPosition(position) {
+        this.position = position;
+        return globalThis.__atlasUpdateCamera(this);
+    }
+
+    setPositionKeepingOrientation(position) {
+        return globalThis.__atlasSetPositionKeepingOrientation(this, position);
+    }
+
+    lookAt(target, up = Position3d.up()) {
+        return globalThis.__atlasLookAtCamera(this, target, up);
+    }
+
+    moveTo(position, speed) {
+        return globalThis.__atlasMoveCameraTo(this, position, speed);
+    }
+
+    getDirection() {
+        return globalThis.__atlasGetCameraDirection(this);
     }
 }

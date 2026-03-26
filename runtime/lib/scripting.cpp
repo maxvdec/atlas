@@ -16,6 +16,7 @@
 #include <algorithm>
 #include <cctype>
 #include <cstdint>
+#include <cmath>
 #include <filesystem>
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
@@ -40,6 +41,7 @@ constexpr const char *ATLAS_INSTANCE_OWNER_ID_PROP = "__atlasInstanceOwnerId";
 constexpr const char *ATLAS_INSTANCE_INDEX_PROP = "__atlasInstanceIndex";
 constexpr const char *ATLAS_GENERATION_PROP = "__atlasGeneration";
 constexpr const char *ATLAS_IS_CORE_OBJECT_PROP = "__atlasIsCoreObject";
+constexpr const char *ATLAS_CAMERA_PROP = "__atlasCamera";
 constexpr const char *ATLAS_NATIVE_COMPONENT_KIND_PROP =
     "__atlasNativeComponentKind";
 
@@ -248,6 +250,19 @@ GameObject *findObjectByName(ScriptHost &host, const std::string &name) {
     return nullptr;
 }
 
+Camera *getSceneCamera(ScriptHost &host) {
+    if (host.context == nullptr) {
+        return nullptr;
+    }
+    if (host.context->camera != nullptr) {
+        return host.context->camera.get();
+    }
+    if (host.context->window != nullptr) {
+        return host.context->window->getCamera();
+    }
+    return nullptr;
+}
+
 void assignObjectName(Context &context, GameObject &object,
                       const std::string &name) {
     const int objectId = object.getId();
@@ -340,6 +355,7 @@ bool ensureBuiltins(JSContext *ctx, ScriptHost &host) {
                    host.coreVertexPrototype);
     cachePrototype(ctx, host.atlasNamespace, "Resource",
                    host.resourcePrototype);
+    cachePrototype(ctx, host.atlasNamespace, "Camera", host.cameraPrototype);
     cachePrototype(ctx, host.atlasUnitsNamespace, "Position3d",
                    host.position3dPrototype);
     cachePrototype(ctx, host.atlasUnitsNamespace, "Position2d",
@@ -552,6 +568,109 @@ ScriptAudioPlayerState *findAudioPlayerState(ScriptHost &host,
         return nullptr;
     }
     return &it->second;
+}
+
+JSValue syncCameraWrapper(JSContext *ctx, ScriptHost &host, Camera &camera) {
+    if (!ensureBuiltins(ctx, host)) {
+        return JS_EXCEPTION;
+    }
+
+    JSValue wrapper = JS_UNDEFINED;
+    if (!JS_IsUndefined(host.cameraValue)) {
+        wrapper = JS_DupValue(ctx, host.cameraValue);
+    } else {
+        wrapper = newObjectFromPrototype(ctx, host.cameraPrototype);
+        host.cameraValue = JS_DupValue(ctx, wrapper);
+    }
+
+    setProperty(ctx, wrapper, ATLAS_CAMERA_PROP, JS_NewBool(ctx, true));
+    setProperty(ctx, wrapper, ATLAS_GENERATION_PROP,
+                JS_NewInt64(ctx, static_cast<int64_t>(host.generation)));
+    setProperty(ctx, wrapper, "position", makePosition3d(ctx, host, camera.position));
+    setProperty(ctx, wrapper, "target", makePosition3d(ctx, host, camera.target));
+    setProperty(ctx, wrapper, "fov", JS_NewFloat64(ctx, camera.fov));
+    setProperty(ctx, wrapper, "nearClip", JS_NewFloat64(ctx, camera.nearClip));
+    setProperty(ctx, wrapper, "farClip", JS_NewFloat64(ctx, camera.farClip));
+    setProperty(ctx, wrapper, "orthographicSize",
+                JS_NewFloat64(ctx, camera.orthographicSize));
+    setProperty(ctx, wrapper, "movementSpeed",
+                JS_NewFloat64(ctx, camera.movementSpeed));
+    setProperty(ctx, wrapper, "mouseSensitivity",
+                JS_NewFloat64(ctx, camera.mouseSensitivity));
+    setProperty(ctx, wrapper, "controllerLookSensitivity",
+                JS_NewFloat64(ctx, camera.controllerLookSensitivity));
+    setProperty(ctx, wrapper, "lookSmoothness",
+                JS_NewFloat64(ctx, camera.lookSmoothness));
+    setProperty(ctx, wrapper, "useOrthographic",
+                JS_NewBool(ctx, camera.useOrthographic));
+    setProperty(ctx, wrapper, "focusDepth",
+                JS_NewFloat64(ctx, camera.focusDepth));
+    setProperty(ctx, wrapper, "focusRange",
+                JS_NewFloat64(ctx, camera.focusRange));
+    return wrapper;
+}
+
+bool applyCamera(JSContext *ctx, JSValueConst wrapper, Camera &camera) {
+    Position3d position = camera.position;
+    Point3d target = camera.target;
+    double fov = camera.fov;
+    double nearClip = camera.nearClip;
+    double farClip = camera.farClip;
+    double orthographicSize = camera.orthographicSize;
+    double movementSpeed = camera.movementSpeed;
+    double mouseSensitivity = camera.mouseSensitivity;
+    double controllerLookSensitivity = camera.controllerLookSensitivity;
+    double lookSmoothness = camera.lookSmoothness;
+    bool useOrthographic = camera.useOrthographic;
+    double focusDepth = camera.focusDepth;
+    double focusRange = camera.focusRange;
+
+    JSValue value = JS_GetPropertyStr(ctx, wrapper, "position");
+    if (!JS_IsException(value) && !JS_IsUndefined(value)) {
+        parsePosition3d(ctx, value, position);
+    }
+    JS_FreeValue(ctx, value);
+
+    value = JS_GetPropertyStr(ctx, wrapper, "target");
+    if (!JS_IsException(value) && !JS_IsUndefined(value)) {
+        parsePosition3d(ctx, value, target);
+    }
+    JS_FreeValue(ctx, value);
+
+    readNumberProperty(ctx, wrapper, "fov", fov);
+    readNumberProperty(ctx, wrapper, "nearClip", nearClip);
+    readNumberProperty(ctx, wrapper, "farClip", farClip);
+    readNumberProperty(ctx, wrapper, "orthographicSize", orthographicSize);
+    readNumberProperty(ctx, wrapper, "movementSpeed", movementSpeed);
+    readNumberProperty(ctx, wrapper, "mouseSensitivity", mouseSensitivity);
+    readNumberProperty(ctx, wrapper, "controllerLookSensitivity",
+                       controllerLookSensitivity);
+    readNumberProperty(ctx, wrapper, "lookSmoothness", lookSmoothness);
+    readBoolProperty(ctx, wrapper, "useOrthographic", useOrthographic);
+    readNumberProperty(ctx, wrapper, "focusDepth", focusDepth);
+    readNumberProperty(ctx, wrapper, "focusRange", focusRange);
+
+    camera.setPosition(position);
+    if (target.x != position.x || target.y != position.y ||
+        target.z != position.z) {
+        camera.lookAt(target);
+    } else {
+        camera.target = target;
+    }
+    camera.fov = static_cast<float>(fov);
+    camera.nearClip = static_cast<float>(nearClip);
+    camera.farClip = static_cast<float>(farClip);
+    camera.orthographicSize = static_cast<float>(orthographicSize);
+    camera.movementSpeed = static_cast<float>(movementSpeed);
+    camera.mouseSensitivity = static_cast<float>(mouseSensitivity);
+    camera.controllerLookSensitivity =
+        static_cast<float>(controllerLookSensitivity);
+    camera.lookSmoothness = static_cast<float>(lookSmoothness);
+    camera.useOrthographic = useOrthographic;
+    camera.focusDepth = static_cast<float>(focusDepth);
+    camera.focusRange = static_cast<float>(focusRange);
+
+    return true;
 }
 
 bool parseCoreVertex(JSContext *ctx, JSValueConst value, CoreVertex &out) {
@@ -986,6 +1105,24 @@ Instance *resolveInstanceArg(JSContext *ctx, ScriptHost &host,
     return &object->instances[static_cast<std::size_t>(index)];
 }
 
+Camera *resolveCameraArg(JSContext *ctx, ScriptHost &host, JSValueConst value) {
+    if (!ensureCurrentGeneration(ctx, host, value)) {
+        return nullptr;
+    }
+
+    bool isCamera = false;
+    if (!readBoolProperty(ctx, value, ATLAS_CAMERA_PROP, isCamera) || !isCamera) {
+        JS_ThrowTypeError(ctx, "Expected Atlas camera handle");
+        return nullptr;
+    }
+
+    Camera *camera = getSceneCamera(host);
+    if (camera == nullptr) {
+        JS_ThrowReferenceError(ctx, "Atlas camera is unavailable");
+    }
+    return camera;
+}
+
 JSValue jsGetObjectById(JSContext *ctx, JSValueConst, int argc,
                         JSValueConst *argv) {
     auto *host = getHost(ctx);
@@ -1003,6 +1140,155 @@ JSValue jsGetObjectById(JSContext *ctx, JSValueConst, int argc,
         return JS_NULL;
     }
     return syncObjectWrapper(ctx, *host, *object);
+}
+
+JSValue jsGetCamera(JSContext *ctx, JSValueConst, int, JSValueConst *) {
+    auto *host = getHost(ctx);
+    if (host == nullptr) {
+        return JS_NULL;
+    }
+
+    Camera *camera = getSceneCamera(*host);
+    if (camera == nullptr) {
+        return JS_NULL;
+    }
+
+    return syncCameraWrapper(ctx, *host, *camera);
+}
+
+JSValue jsUpdateCamera(JSContext *ctx, JSValueConst, int argc,
+                       JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 1) {
+        return JS_ThrowTypeError(ctx, "Expected camera");
+    }
+
+    Camera *camera = resolveCameraArg(ctx, *host, argv[0]);
+    if (camera == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    if (!applyCamera(ctx, argv[0], *camera)) {
+        return JS_EXCEPTION;
+    }
+
+    return syncCameraWrapper(ctx, *host, *camera);
+}
+
+JSValue jsSetPositionKeepingOrientation(JSContext *ctx, JSValueConst, int argc,
+                                        JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected camera and position");
+    }
+
+    Camera *camera = resolveCameraArg(ctx, *host, argv[0]);
+    if (camera == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    Position3d position;
+    if (!parsePosition3d(ctx, argv[1], position)) {
+        return JS_ThrowTypeError(ctx, "Expected Position3d");
+    }
+
+    camera->setPositionKeepingOrientation(position);
+    return syncCameraWrapper(ctx, *host, *camera);
+}
+
+JSValue jsLookAtCamera(JSContext *ctx, JSValueConst, int argc,
+                       JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected camera and target");
+    }
+
+    Camera *camera = resolveCameraArg(ctx, *host, argv[0]);
+    if (camera == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    Point3d target;
+    if (!parsePosition3d(ctx, argv[1], target)) {
+        return JS_ThrowTypeError(ctx, "Expected target Position3d");
+    }
+
+    if (target.x != camera->position.x || target.y != camera->position.y ||
+        target.z != camera->position.z) {
+        camera->lookAt(target);
+    } else {
+        camera->target = target;
+    }
+
+    return syncCameraWrapper(ctx, *host, *camera);
+}
+
+JSValue jsMoveCameraTo(JSContext *ctx, JSValueConst, int argc,
+                       JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 3) {
+        return JS_ThrowTypeError(ctx, "Expected camera, position, and speed");
+    }
+
+    Camera *camera = resolveCameraArg(ctx, *host, argv[0]);
+    if (camera == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    Position3d targetPosition;
+    if (!parsePosition3d(ctx, argv[1], targetPosition)) {
+        return JS_ThrowTypeError(ctx, "Expected target Position3d");
+    }
+
+    double speed = 0.0;
+    if (!getDouble(ctx, argv[2], speed)) {
+        return JS_ThrowTypeError(ctx, "Expected speed");
+    }
+
+    const double dx = targetPosition.x - camera->position.x;
+    const double dy = targetPosition.y - camera->position.y;
+    const double dz = targetPosition.z - camera->position.z;
+    const double distance = std::sqrt(dx * dx + dy * dy + dz * dz);
+
+    if (distance == 0.0) {
+        return syncCameraWrapper(ctx, *host, *camera);
+    }
+
+    if (speed <= 0.0 || distance <= speed) {
+        camera->setPositionKeepingOrientation(targetPosition);
+        return syncCameraWrapper(ctx, *host, *camera);
+    }
+
+    const double factor = speed / distance;
+    camera->setPositionKeepingOrientation(
+        Position3d(camera->position.x + dx * factor,
+                   camera->position.y + dy * factor,
+                   camera->position.z + dz * factor));
+    return syncCameraWrapper(ctx, *host, *camera);
+}
+
+JSValue jsGetCameraDirection(JSContext *ctx, JSValueConst, int argc,
+                             JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr) {
+        return JS_NULL;
+    }
+
+    Camera *camera = nullptr;
+    if (argc > 0 && !JS_IsUndefined(argv[0]) && !JS_IsNull(argv[0])) {
+        camera = resolveCameraArg(ctx, *host, argv[0]);
+        if (camera == nullptr) {
+            return JS_EXCEPTION;
+        }
+    } else {
+        camera = getSceneCamera(*host);
+    }
+
+    if (camera == nullptr) {
+        return JS_NULL;
+    }
+
+    return makePosition3d(ctx, *host, camera->getFrontVector());
 }
 
 JSValue jsGetObjectByName(JSContext *ctx, JSValueConst, int argc,
@@ -1909,6 +2195,11 @@ bool runtime::scripting::checkNotException(JSContext *ctx, JSValueConst value,
 }
 
 void runtime::scripting::clearSceneBindings(JSContext *ctx, ScriptHost &host) {
+    if (!JS_IsUndefined(host.cameraValue)) {
+        JS_FreeValue(ctx, host.cameraValue);
+        host.cameraValue = JS_UNDEFINED;
+    }
+
     for (auto &[_, value] : host.objectCache) {
         JS_FreeValue(ctx, value);
     }
@@ -1980,6 +2271,23 @@ void runtime::scripting::installGlobals(JSContext *ctx) {
     JSValue global = JS_GetGlobalObject(ctx);
     JS_SetPropertyStr(ctx, global, "print",
                       JS_NewCFunction(ctx, jsPrint, "print", 1));
+    JS_SetPropertyStr(ctx, global, "__atlasGetCamera",
+                      JS_NewCFunction(ctx, jsGetCamera, "__atlasGetCamera", 0));
+    JS_SetPropertyStr(ctx, global, "__atlasUpdateCamera",
+                      JS_NewCFunction(ctx, jsUpdateCamera,
+                                      "__atlasUpdateCamera", 1));
+    JS_SetPropertyStr(ctx, global, "__atlasSetPositionKeepingOrientation",
+                      JS_NewCFunction(ctx, jsSetPositionKeepingOrientation,
+                                      "__atlasSetPositionKeepingOrientation", 2));
+    JS_SetPropertyStr(ctx, global, "__atlasLookAtCamera",
+                      JS_NewCFunction(ctx, jsLookAtCamera,
+                                      "__atlasLookAtCamera", 3));
+    JS_SetPropertyStr(ctx, global, "__atlasMoveCameraTo",
+                      JS_NewCFunction(ctx, jsMoveCameraTo,
+                                      "__atlasMoveCameraTo", 3));
+    JS_SetPropertyStr(ctx, global, "__atlasGetCameraDirection",
+                      JS_NewCFunction(ctx, jsGetCameraDirection,
+                                      "__atlasGetCameraDirection", 1));
     JS_SetPropertyStr(ctx, global, "__atlasGetObjectById",
                       JS_NewCFunction(ctx, jsGetObjectById,
                                       "__atlasGetObjectById", 1));

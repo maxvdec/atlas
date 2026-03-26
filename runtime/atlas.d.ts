@@ -16,6 +16,18 @@ declare module "atlas/log" {
 }
 
 declare module "atlas" {
+    import {
+        Position3d,
+        Rotation3d,
+        Scale3d,
+        Color,
+        Position2d,
+        Size2d,
+        Quaternion,
+        Normal3d,
+        Size3d,
+        Point3d,
+    } from "atlas/units";
     export abstract class Component {
         parentId: number;
 
@@ -27,6 +39,7 @@ declare module "atlas" {
             type: new (...args: any[]) => T,
         ): T | null;
         getObject(identifier: number | string): CoreObject;
+        getCamera(): Camera;
     }
 
     export class Material {
@@ -88,7 +101,7 @@ declare module "atlas" {
 
         constructor();
 
-        abstract attachTexture(texture: Texture): void;
+        //abstract attachTexture(texture: Texture): void;
         abstract setPosition(position: Position3d): void;
         abstract move(position: Position3d): void;
         abstract setRotation(rotation: Rotation3d): void;
@@ -105,7 +118,7 @@ declare module "atlas" {
     export class CoreObject extends GameObject {
         vertices: CoreVertex[];
         indices: number[];
-        textures: Texture[];
+        //textures: Texture[];
         material: Material;
         instances: Instance[];
         position: Position3d;
@@ -189,6 +202,31 @@ declare module "atlas" {
 
         addResource(resource: Resource): void;
         getResourceByName(name: string): Resource | null;
+    }
+
+    export class Camera {
+        position: Position3d;
+        target: Point3d;
+        fov: number;
+        nearClip: number;
+        farClip: number;
+        orthographicSize: number;
+        movementSpeed: number;
+        mouseSensitivity: number;
+        controllerLookSensitivity: number;
+        lookSmoothness: number;
+        useOrthographic: boolean;
+        focusDepth: number;
+        focusRange: number;
+
+        constructor();
+
+        move(offset: Position3d): void;
+        setPosition(position: Position3d): void;
+        setPositionKeepingOrientation(position: Position3d): void;
+        lookAt(target: Point3d, up?: Normal3d): void;
+        moveTo(target: Point3d, speed: number): void;
+        getDirection(): Normal3d;
     }
 }
 
@@ -363,7 +401,7 @@ declare module "atlas/units" {
 
 declare module "atlas/audio" {
     import { Component, Resource } from "atlas";
-    import { Position3d } from "atlas/units";
+    import { Color, Position3d } from "atlas/units";
 
     export class AudioPlayer extends Component {
         constructor();
