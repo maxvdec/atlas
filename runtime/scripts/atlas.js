@@ -1,5 +1,32 @@
 import { Color, Position2d, Position3d } from "atlas/units";
 
+export class Scene {
+    constructor() {
+        this.name = "";
+        return globalThis.__atlasGetScene() ?? this;
+    }
+
+    setAmbientIntensity(intensity) {
+        return globalThis.__atlasSetSceneAmbientIntensity(this, intensity);
+    }
+
+    setAutomaticAmbient(enabled) {
+        return globalThis.__atlasSetSceneAutomaticAmbient(this, enabled);
+    }
+
+    setSkybox(skybox) {
+        return globalThis.__atlasSetSceneSkybox(this, skybox);
+    }
+
+    useAtmosphereSkybox(enabled) {
+        return globalThis.__atlasUseAtmosphereSkybox(this, enabled);
+    }
+
+    getCamera() {
+        return globalThis.__atlasGetCamera();
+    }
+}
+
 export class Component {
     init() {}
     update(deltaTime) {}
@@ -22,8 +49,12 @@ export class Component {
         return null;
     }
 
+    getScene() {
+        return globalThis.__atlasGetScene();
+    }
+
     getCamera() {
-        return globalThis.__atlasGetCamera();
+        return this.getScene()?.getCamera() ?? null;
     }
 }
 

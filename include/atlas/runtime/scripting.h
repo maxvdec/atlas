@@ -21,6 +21,10 @@ class Context;
 class GameObject;
 class Component;
 class AudioPlayer;
+struct Texture;
+struct Cubemap;
+class Skybox;
+class RenderTarget;
 
 struct ScriptObjectState {
     GameObject *object = nullptr;
@@ -40,6 +44,30 @@ struct ScriptAudioPlayerState {
     bool attached = false;
 };
 
+struct ScriptTextureState {
+    std::shared_ptr<Texture> texture;
+    JSValue value = JS_UNDEFINED;
+};
+
+struct ScriptCubemapState {
+    std::shared_ptr<Cubemap> cubemap;
+    JSValue value = JS_UNDEFINED;
+};
+
+struct ScriptSkyboxState {
+    std::shared_ptr<Skybox> skybox;
+    JSValue value = JS_UNDEFINED;
+    std::uint64_t cubemapId = 0;
+};
+
+struct ScriptRenderTargetState {
+    std::shared_ptr<RenderTarget> renderTarget;
+    JSValue value = JS_UNDEFINED;
+    bool attached = false;
+    std::vector<std::uint64_t> outTextureIds;
+    std::uint64_t depthTextureId = 0;
+};
+
 struct ScriptHost {
     Context *context = nullptr;
     std::unordered_map<std::string, std::string> modules;
@@ -51,9 +79,15 @@ struct ScriptHost {
     std::unordered_map<int, std::vector<std::uint64_t>> componentOrder;
     std::unordered_map<std::string, std::uint64_t> componentLookup;
     std::unordered_map<std::uint64_t, ScriptAudioPlayerState> audioPlayers;
+    std::unordered_map<std::uint64_t, ScriptTextureState> textures;
+    std::unordered_map<std::uint64_t, ScriptCubemapState> cubemaps;
+    std::unordered_map<std::uint64_t, ScriptSkyboxState> skyboxes;
+    std::unordered_map<std::uint64_t, ScriptRenderTargetState> renderTargets;
     JSValue cameraValue = JS_UNDEFINED;
+    JSValue sceneValue = JS_UNDEFINED;
     JSValue atlasNamespace = JS_UNDEFINED;
     JSValue atlasUnitsNamespace = JS_UNDEFINED;
+    JSValue atlasGraphicsNamespace = JS_UNDEFINED;
     JSValue componentPrototype = JS_UNDEFINED;
     JSValue gameObjectPrototype = JS_UNDEFINED;
     JSValue coreObjectPrototype = JS_UNDEFINED;
@@ -62,6 +96,11 @@ struct ScriptHost {
     JSValue coreVertexPrototype = JS_UNDEFINED;
     JSValue resourcePrototype = JS_UNDEFINED;
     JSValue cameraPrototype = JS_UNDEFINED;
+    JSValue scenePrototype = JS_UNDEFINED;
+    JSValue texturePrototype = JS_UNDEFINED;
+    JSValue cubemapPrototype = JS_UNDEFINED;
+    JSValue skyboxPrototype = JS_UNDEFINED;
+    JSValue renderTargetPrototype = JS_UNDEFINED;
     JSValue position3dPrototype = JS_UNDEFINED;
     JSValue position2dPrototype = JS_UNDEFINED;
     JSValue colorPrototype = JS_UNDEFINED;
@@ -69,6 +108,10 @@ struct ScriptHost {
     JSValue quaternionPrototype = JS_UNDEFINED;
     std::uint64_t nextComponentId = 1;
     std::uint64_t nextAudioPlayerId = 1;
+    std::uint64_t nextTextureId = 1;
+    std::uint64_t nextCubemapId = 1;
+    std::uint64_t nextSkyboxId = 1;
+    std::uint64_t nextRenderTargetId = 1;
     std::uint64_t generation = 1;
 };
 

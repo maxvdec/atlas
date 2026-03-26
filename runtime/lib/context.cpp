@@ -3122,10 +3122,20 @@ void Context::loadMainScene(Window &window) {
         resolveRuntimePath(projectDir, config.mainScene);
     json sceneData = loadJsonFile(resolvedScenePath);
     sceneDir = std::filesystem::path(resolvedScenePath).parent_path().string();
+    currentSceneName = std::filesystem::path(resolvedScenePath).stem().string();
+    auto sceneNameIt = sceneData.find("name");
+    if (sceneNameIt != sceneData.end() && sceneNameIt->is_string()) {
+        currentSceneName = sceneNameIt->get<std::string>();
+    }
     loadScene(window, sceneData);
 }
 
 void Context::loadScene(Window &window, const json &sceneData) {
+    auto sceneNameIt = sceneData.find("name");
+    if (sceneNameIt != sceneData.end() && sceneNameIt->is_string()) {
+        currentSceneName = sceneNameIt->get<std::string>();
+    }
+
     scene->atmosphere.resetRuntimeState();
     scene->setUseAtmosphereSkybox(false);
     scene->setAtmosphereSkybox(nullptr);

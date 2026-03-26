@@ -11,9 +11,11 @@
 #include "atlas/audio.h"
 #include "atlas/object.h"
 #include "atlas/runtime/context.h"
+#include "atlas/texture.h"
 #include "atlas/window.h"
 #include "atlas/workspace.h"
 #include <algorithm>
+#include <array>
 #include <cctype>
 #include <cstdint>
 #include <cmath>
@@ -39,9 +41,14 @@ constexpr const char *ATLAS_COMPONENT_ID_PROP = "__atlasComponentId";
 constexpr const char *ATLAS_AUDIO_PLAYER_ID_PROP = "__atlasAudioPlayerId";
 constexpr const char *ATLAS_INSTANCE_OWNER_ID_PROP = "__atlasInstanceOwnerId";
 constexpr const char *ATLAS_INSTANCE_INDEX_PROP = "__atlasInstanceIndex";
+constexpr const char *ATLAS_TEXTURE_ID_PROP = "__atlasTextureId";
+constexpr const char *ATLAS_CUBEMAP_ID_PROP = "__atlasCubemapId";
+constexpr const char *ATLAS_SKYBOX_ID_PROP = "__atlasSkyboxId";
+constexpr const char *ATLAS_RENDER_TARGET_ID_PROP = "__atlasRenderTargetId";
 constexpr const char *ATLAS_GENERATION_PROP = "__atlasGeneration";
 constexpr const char *ATLAS_IS_CORE_OBJECT_PROP = "__atlasIsCoreObject";
 constexpr const char *ATLAS_CAMERA_PROP = "__atlasCamera";
+constexpr const char *ATLAS_SCENE_PROP = "__atlasScene";
 constexpr const char *ATLAS_NATIVE_COMPONENT_KIND_PROP =
     "__atlasNativeComponentKind";
 
@@ -96,6 +103,114 @@ int toScriptResourceType(ResourceType type) {
     case ResourceType::Model:
         return 5;
     case ResourceType::File:
+    default:
+        return 0;
+    }
+}
+
+TextureType toNativeTextureType(int type) {
+    switch (type) {
+    case 1:
+        return TextureType::Specular;
+    case 2:
+        return TextureType::Cubemap;
+    case 3:
+        return TextureType::Depth;
+    case 4:
+        return TextureType::DepthCube;
+    case 5:
+        return TextureType::Normal;
+    case 6:
+        return TextureType::Parallax;
+    case 7:
+        return TextureType::SSAONoise;
+    case 8:
+        return TextureType::SSAO;
+    case 9:
+        return TextureType::Metallic;
+    case 10:
+        return TextureType::Roughness;
+    case 11:
+        return TextureType::AO;
+    case 12:
+        return TextureType::Opacity;
+    case 13:
+        return TextureType::HDR;
+    case 0:
+    default:
+        return TextureType::Color;
+    }
+}
+
+int toScriptTextureType(TextureType type) {
+    switch (type) {
+    case TextureType::Specular:
+        return 1;
+    case TextureType::Cubemap:
+        return 2;
+    case TextureType::Depth:
+        return 3;
+    case TextureType::DepthCube:
+        return 4;
+    case TextureType::Normal:
+        return 5;
+    case TextureType::Parallax:
+        return 6;
+    case TextureType::SSAONoise:
+        return 7;
+    case TextureType::SSAO:
+        return 8;
+    case TextureType::Metallic:
+        return 9;
+    case TextureType::Roughness:
+        return 10;
+    case TextureType::AO:
+        return 11;
+    case TextureType::Opacity:
+        return 12;
+    case TextureType::HDR:
+        return 13;
+    case TextureType::Color:
+    default:
+        return 0;
+    }
+}
+
+RenderTargetType toNativeRenderTargetType(int type) {
+    switch (type) {
+    case 1:
+        return RenderTargetType::Multisampled;
+    case 2:
+        return RenderTargetType::Shadow;
+    case 3:
+        return RenderTargetType::CubeShadow;
+    case 4:
+        return RenderTargetType::GBuffer;
+    case 5:
+        return RenderTargetType::SSAO;
+    case 6:
+        return RenderTargetType::SSAOBlur;
+    case 0:
+    default:
+        return RenderTargetType::Scene;
+    }
+}
+
+int toScriptRenderTargetType(RenderTargetType type) {
+    switch (type) {
+    case RenderTargetType::Multisampled:
+        return 1;
+    case RenderTargetType::Shadow:
+        return 2;
+    case RenderTargetType::CubeShadow:
+        return 3;
+    case RenderTargetType::GBuffer:
+        return 4;
+    case RenderTargetType::SSAO:
+        return 5;
+    case RenderTargetType::SSAOBlur:
+        return 6;
+    case RenderTargetType::Scene:
     default:
         return 0;
     }
@@ -263,6 +378,19 @@ Camera *getSceneCamera(ScriptHost &host) {
     return nullptr;
 }
 
+Scene *getScene(ScriptHost &host) {
+    if (host.context == nullptr) {
+        return nullptr;
+    }
+    if (host.context->window != nullptr) {
+        Scene *currentScene = host.context->window->getCurrentScene();
+        if (currentScene != nullptr) {
+            return currentScene;
+        }
+    }
+    return host.context->scene.get();
+}
+
 void assignObjectName(Context &context, GameObject &object,
                       const std::string &name) {
     const int objectId = object.getId();
@@ -341,6 +469,15 @@ bool ensureBuiltins(JSContext *ctx, ScriptHost &host) {
         }
     }
 
+    if (JS_IsUndefined(host.atlasGraphicsNamespace)) {
+        host.atlasGraphicsNamespace =
+            runtime::scripting::importModuleNamespace(ctx, "atlas/graphics");
+        if (JS_IsException(host.atlasGraphicsNamespace)) {
+            runtime::scripting::dumpExecution(ctx);
+            return false;
+        }
+    }
+
     cachePrototype(ctx, host.atlasNamespace, "Component",
                    host.componentPrototype);
     cachePrototype(ctx, host.atlasNamespace, "GameObject",
@@ -356,6 +493,15 @@ bool ensureBuiltins(JSContext *ctx, ScriptHost &host) {
     cachePrototype(ctx, host.atlasNamespace, "Resource",
                    host.resourcePrototype);
     cachePrototype(ctx, host.atlasNamespace, "Camera", host.cameraPrototype);
+    cachePrototype(ctx, host.atlasNamespace, "Scene", host.scenePrototype);
+    cachePrototype(ctx, host.atlasGraphicsNamespace, "Texture",
+                   host.texturePrototype);
+    cachePrototype(ctx, host.atlasGraphicsNamespace, "Cubemap",
+                   host.cubemapPrototype);
+    cachePrototype(ctx, host.atlasGraphicsNamespace, "Skybox",
+                   host.skyboxPrototype);
+    cachePrototype(ctx, host.atlasGraphicsNamespace, "RenderTarget",
+                   host.renderTargetPrototype);
     cachePrototype(ctx, host.atlasUnitsNamespace, "Position3d",
                    host.position3dPrototype);
     cachePrototype(ctx, host.atlasUnitsNamespace, "Position2d",
@@ -568,6 +714,397 @@ ScriptAudioPlayerState *findAudioPlayerState(ScriptHost &host,
         return nullptr;
     }
     return &it->second;
+}
+
+bool getArrayLength(JSContext *ctx, JSValueConst value, std::uint32_t &length) {
+    JSValue lengthValue = JS_GetPropertyStr(ctx, value, "length");
+    if (JS_IsException(lengthValue)) {
+        return false;
+    }
+    const bool ok = getUint32(ctx, lengthValue, length);
+    JS_FreeValue(ctx, lengthValue);
+    return ok;
+}
+
+bool parseColorArray(JSContext *ctx, JSValueConst value,
+                     std::array<Color, 6> &out) {
+    if (!JS_IsArray(value)) {
+        return false;
+    }
+
+    std::uint32_t length = 0;
+    if (!getArrayLength(ctx, value, length) || length != out.size()) {
+        return false;
+    }
+
+    for (std::uint32_t i = 0; i < length; ++i) {
+        JSValue item = JS_GetPropertyUint32(ctx, value, i);
+        if (JS_IsException(item) || !parseColor(ctx, item, out[i])) {
+            JS_FreeValue(ctx, item);
+            return false;
+        }
+        JS_FreeValue(ctx, item);
+    }
+
+    return true;
+}
+
+bool parseResourceVector(JSContext *ctx, JSValueConst value,
+                         std::vector<Resource> &out) {
+    if (!JS_IsArray(value)) {
+        return false;
+    }
+
+    std::uint32_t length = 0;
+    if (!getArrayLength(ctx, value, length)) {
+        return false;
+    }
+
+    out.clear();
+    out.reserve(length);
+    for (std::uint32_t i = 0; i < length; ++i) {
+        JSValue item = JS_GetPropertyUint32(ctx, value, i);
+        if (JS_IsException(item)) {
+            JS_FreeValue(ctx, item);
+            return false;
+        }
+        Resource resource;
+        const bool ok = parseResource(ctx, item, resource);
+        JS_FreeValue(ctx, item);
+        if (!ok) {
+            return false;
+        }
+        out.push_back(resource);
+    }
+
+    return true;
+}
+
+ScriptTextureState *findTextureState(ScriptHost &host, std::uint64_t textureId) {
+    auto it = host.textures.find(textureId);
+    if (it == host.textures.end()) {
+        return nullptr;
+    }
+    return &it->second;
+}
+
+ScriptCubemapState *findCubemapState(ScriptHost &host, std::uint64_t cubemapId) {
+    auto it = host.cubemaps.find(cubemapId);
+    if (it == host.cubemaps.end()) {
+        return nullptr;
+    }
+    return &it->second;
+}
+
+ScriptSkyboxState *findSkyboxState(ScriptHost &host, std::uint64_t skyboxId) {
+    auto it = host.skyboxes.find(skyboxId);
+    if (it == host.skyboxes.end()) {
+        return nullptr;
+    }
+    return &it->second;
+}
+
+ScriptRenderTargetState *findRenderTargetState(ScriptHost &host,
+                                               std::uint64_t renderTargetId) {
+    auto it = host.renderTargets.find(renderTargetId);
+    if (it == host.renderTargets.end()) {
+        return nullptr;
+    }
+    return &it->second;
+}
+
+std::uint64_t registerTextureState(ScriptHost &host, const Texture &texture) {
+    const std::uint64_t textureId = host.nextTextureId++;
+    host.textures[textureId] = {.texture = std::make_shared<Texture>(texture),
+                                .value = JS_UNDEFINED};
+    return textureId;
+}
+
+std::uint64_t registerCubemapState(ScriptHost &host, const Cubemap &cubemap) {
+    const std::uint64_t cubemapId = host.nextCubemapId++;
+    host.cubemaps[cubemapId] = {.cubemap = std::make_shared<Cubemap>(cubemap),
+                                .value = JS_UNDEFINED};
+    return cubemapId;
+}
+
+JSValue syncTextureWrapper(JSContext *ctx, ScriptHost &host,
+                           std::uint64_t textureId) {
+    auto *state = findTextureState(host, textureId);
+    if (state == nullptr || !state->texture) {
+        return JS_NULL;
+    }
+    if (!ensureBuiltins(ctx, host)) {
+        return JS_EXCEPTION;
+    }
+
+    JSValue wrapper = JS_UNDEFINED;
+    if (!JS_IsUndefined(state->value)) {
+        wrapper = JS_DupValue(ctx, state->value);
+    } else {
+        wrapper = newObjectFromPrototype(ctx, host.texturePrototype);
+        state->value = JS_DupValue(ctx, wrapper);
+    }
+
+    const Resource resource = state->texture->resource;
+    setProperty(ctx, wrapper, ATLAS_TEXTURE_ID_PROP,
+                JS_NewInt64(ctx, static_cast<int64_t>(textureId)));
+    setProperty(ctx, wrapper, ATLAS_GENERATION_PROP,
+                JS_NewInt64(ctx, static_cast<int64_t>(host.generation)));
+    setProperty(ctx, wrapper, "type",
+                JS_NewInt32(ctx, toScriptTextureType(state->texture->type)));
+    setProperty(ctx, wrapper, "resource", makeResource(ctx, host, resource));
+    setProperty(ctx, wrapper, "width",
+                JS_NewInt32(ctx, state->texture->creationData.width));
+    setProperty(ctx, wrapper, "height",
+                JS_NewInt32(ctx, state->texture->creationData.height));
+    setProperty(ctx, wrapper, "channels",
+                JS_NewInt32(ctx, state->texture->creationData.channels));
+    setProperty(ctx, wrapper, "id",
+                JS_NewInt64(ctx, static_cast<int64_t>(state->texture->id)));
+    setProperty(ctx, wrapper, "borderColor",
+                makeColor(ctx, host, state->texture->borderColor));
+    return wrapper;
+}
+
+JSValue syncCubemapWrapper(JSContext *ctx, ScriptHost &host,
+                           std::uint64_t cubemapId) {
+    auto *state = findCubemapState(host, cubemapId);
+    if (state == nullptr || !state->cubemap) {
+        return JS_NULL;
+    }
+    if (!ensureBuiltins(ctx, host)) {
+        return JS_EXCEPTION;
+    }
+
+    JSValue wrapper = JS_UNDEFINED;
+    if (!JS_IsUndefined(state->value)) {
+        wrapper = JS_DupValue(ctx, state->value);
+    } else {
+        wrapper = newObjectFromPrototype(ctx, host.cubemapPrototype);
+        state->value = JS_DupValue(ctx, wrapper);
+    }
+
+    JSValue resources = JS_NewArray(ctx);
+    for (std::uint32_t i = 0; i < state->cubemap->resources.size(); ++i) {
+        JS_SetPropertyUint32(ctx, resources, i,
+                             makeResource(ctx, host, state->cubemap->resources[i]));
+    }
+
+    setProperty(ctx, wrapper, ATLAS_CUBEMAP_ID_PROP,
+                JS_NewInt64(ctx, static_cast<int64_t>(cubemapId)));
+    setProperty(ctx, wrapper, ATLAS_GENERATION_PROP,
+                JS_NewInt64(ctx, static_cast<int64_t>(host.generation)));
+    setProperty(ctx, wrapper, "resources", resources);
+    setProperty(ctx, wrapper, "id",
+                JS_NewInt64(ctx, static_cast<int64_t>(state->cubemap->id)));
+    return wrapper;
+}
+
+JSValue syncSkyboxWrapper(JSContext *ctx, ScriptHost &host,
+                          std::uint64_t skyboxId) {
+    auto *state = findSkyboxState(host, skyboxId);
+    if (state == nullptr || !state->skybox) {
+        return JS_NULL;
+    }
+    if (!ensureBuiltins(ctx, host)) {
+        return JS_EXCEPTION;
+    }
+
+    JSValue wrapper = JS_UNDEFINED;
+    if (!JS_IsUndefined(state->value)) {
+        wrapper = JS_DupValue(ctx, state->value);
+    } else {
+        wrapper = newObjectFromPrototype(ctx, host.skyboxPrototype);
+        state->value = JS_DupValue(ctx, wrapper);
+    }
+
+    setProperty(ctx, wrapper, ATLAS_SKYBOX_ID_PROP,
+                JS_NewInt64(ctx, static_cast<int64_t>(skyboxId)));
+    setProperty(ctx, wrapper, ATLAS_GENERATION_PROP,
+                JS_NewInt64(ctx, static_cast<int64_t>(host.generation)));
+    if (state->cubemapId != 0) {
+        setProperty(ctx, wrapper, "cubemap",
+                    syncCubemapWrapper(ctx, host, state->cubemapId));
+    }
+    return wrapper;
+}
+
+void syncRenderTargetTextureStates(ScriptHost &host, std::uint64_t renderTargetId) {
+    auto *state = findRenderTargetState(host, renderTargetId);
+    if (state == nullptr || !state->renderTarget) {
+        return;
+    }
+
+    auto assignTexture = [&](std::uint64_t &slot, const Texture &texture) {
+        if (texture.id == 0 && texture.texture == nullptr) {
+            slot = 0;
+            return;
+        }
+        if (slot == 0) {
+            slot = registerTextureState(host, texture);
+            return;
+        }
+        auto *textureState = findTextureState(host, slot);
+        if (textureState != nullptr && textureState->texture) {
+            *textureState->texture = texture;
+        }
+    };
+
+    std::vector<std::uint64_t> currentOutTextureIds = state->outTextureIds;
+    state->outTextureIds.clear();
+    std::size_t outTextureIndex = 0;
+    auto pushTexture = [&](const Texture &texture) {
+        if (texture.id == 0 && texture.texture == nullptr) {
+            return;
+        }
+        std::uint64_t slot = 0;
+        if (outTextureIndex < currentOutTextureIds.size()) {
+            slot = currentOutTextureIds[outTextureIndex];
+        }
+        assignTexture(slot, texture);
+        if (slot != 0) {
+            state->outTextureIds.push_back(slot);
+        }
+        outTextureIndex += 1;
+    };
+
+    switch (state->renderTarget->type) {
+    case RenderTargetType::GBuffer:
+        pushTexture(state->renderTarget->gPosition);
+        pushTexture(state->renderTarget->gNormal);
+        pushTexture(state->renderTarget->gAlbedoSpec);
+        pushTexture(state->renderTarget->gMaterial);
+        break;
+    case RenderTargetType::Shadow:
+    case RenderTargetType::CubeShadow:
+        break;
+    default:
+        pushTexture(state->renderTarget->texture);
+        if (state->renderTarget->brightTexture.id != 0 ||
+            state->renderTarget->brightTexture.texture != nullptr) {
+            pushTexture(state->renderTarget->brightTexture);
+        }
+        break;
+    }
+
+    if (state->renderTarget->type == RenderTargetType::Shadow ||
+        state->renderTarget->type == RenderTargetType::CubeShadow) {
+        assignTexture(state->depthTextureId, state->renderTarget->texture);
+    } else if (state->renderTarget->depthTexture.id != 0 ||
+               state->renderTarget->depthTexture.texture != nullptr) {
+        assignTexture(state->depthTextureId, state->renderTarget->depthTexture);
+    } else {
+        state->depthTextureId = 0;
+    }
+}
+
+JSValue syncRenderTargetWrapper(JSContext *ctx, ScriptHost &host,
+                                std::uint64_t renderTargetId) {
+    auto *state = findRenderTargetState(host, renderTargetId);
+    if (state == nullptr || !state->renderTarget) {
+        return JS_NULL;
+    }
+    if (!ensureBuiltins(ctx, host)) {
+        return JS_EXCEPTION;
+    }
+
+    syncRenderTargetTextureStates(host, renderTargetId);
+
+    JSValue wrapper = JS_UNDEFINED;
+    if (!JS_IsUndefined(state->value)) {
+        wrapper = JS_DupValue(ctx, state->value);
+    } else {
+        wrapper = newObjectFromPrototype(ctx, host.renderTargetPrototype);
+        state->value = JS_DupValue(ctx, wrapper);
+    }
+
+    JSValue outTextures = JS_NewArray(ctx);
+    for (std::uint32_t i = 0; i < state->outTextureIds.size(); ++i) {
+        JS_SetPropertyUint32(ctx, outTextures, i,
+                             syncTextureWrapper(ctx, host, state->outTextureIds[i]));
+    }
+
+    setProperty(ctx, wrapper, ATLAS_RENDER_TARGET_ID_PROP,
+                JS_NewInt64(ctx, static_cast<int64_t>(renderTargetId)));
+    setProperty(ctx, wrapper, ATLAS_GENERATION_PROP,
+                JS_NewInt64(ctx, static_cast<int64_t>(host.generation)));
+    setProperty(ctx, wrapper, "type",
+                JS_NewInt32(ctx,
+                            toScriptRenderTargetType(state->renderTarget->type)));
+    setProperty(ctx, wrapper, "resolution",
+                JS_NewInt32(ctx, state->renderTarget->getWidth()));
+    setProperty(ctx, wrapper, "outTextures", outTextures);
+    if (state->depthTextureId != 0) {
+        setProperty(ctx, wrapper, "depthTexture",
+                    syncTextureWrapper(ctx, host, state->depthTextureId));
+    } else {
+        setProperty(ctx, wrapper, "depthTexture", JS_NULL);
+    }
+    return wrapper;
+}
+
+JSValue syncSceneWrapper(JSContext *ctx, ScriptHost &host, Scene &scene) {
+    (void)scene;
+    if (!ensureBuiltins(ctx, host)) {
+        return JS_EXCEPTION;
+    }
+
+    JSValue wrapper = JS_UNDEFINED;
+    if (!JS_IsUndefined(host.sceneValue)) {
+        wrapper = JS_DupValue(ctx, host.sceneValue);
+    } else {
+        wrapper = newObjectFromPrototype(ctx, host.scenePrototype);
+        host.sceneValue = JS_DupValue(ctx, wrapper);
+    }
+
+    std::string name;
+    if (host.context != nullptr) {
+        name = host.context->currentSceneName;
+    }
+
+    setProperty(ctx, wrapper, ATLAS_SCENE_PROP, JS_NewBool(ctx, true));
+    setProperty(ctx, wrapper, ATLAS_GENERATION_PROP,
+                JS_NewInt64(ctx, static_cast<int64_t>(host.generation)));
+    setProperty(ctx, wrapper, "name", JS_NewString(ctx, name.c_str()));
+    return wrapper;
+}
+
+Texture createEmptyTexture(int width, int height, TextureType type,
+                           Color borderColor) {
+    opal::TextureFormat format = opal::TextureFormat::Rgba8;
+    opal::TextureDataFormat dataFormat = opal::TextureDataFormat::Rgba;
+
+    switch (type) {
+    case TextureType::Depth:
+    case TextureType::DepthCube:
+        format = opal::TextureFormat::DepthComponent24;
+        dataFormat = opal::TextureDataFormat::DepthComponent;
+        break;
+    case TextureType::HDR:
+        format = opal::TextureFormat::Rgba16F;
+        dataFormat = opal::TextureDataFormat::Rgba;
+        break;
+    case TextureType::AO:
+    case TextureType::Opacity:
+    case TextureType::SSAONoise:
+    case TextureType::SSAO:
+        format = opal::TextureFormat::Red8;
+        dataFormat = opal::TextureDataFormat::Red;
+        break;
+    default:
+        break;
+    }
+
+    return Texture::create(width, height, format, dataFormat, type, {},
+                           borderColor);
+}
+
+Texture createSolidTexture(Color color, TextureType type, int width, int height) {
+    const int checkSize = std::max(width, height);
+    Texture texture =
+        Texture::createCheckerboard(width, height, checkSize, color, color);
+    texture.type = type;
+    return texture;
 }
 
 JSValue syncCameraWrapper(JSContext *ctx, ScriptHost &host, Camera &camera) {
@@ -1123,6 +1660,106 @@ Camera *resolveCameraArg(JSContext *ctx, ScriptHost &host, JSValueConst value) {
     return camera;
 }
 
+Scene *resolveSceneArg(JSContext *ctx, ScriptHost &host, JSValueConst value) {
+    if (!ensureCurrentGeneration(ctx, host, value)) {
+        return nullptr;
+    }
+
+    bool isScene = false;
+    if (!readBoolProperty(ctx, value, ATLAS_SCENE_PROP, isScene) || !isScene) {
+        JS_ThrowTypeError(ctx, "Expected Atlas scene handle");
+        return nullptr;
+    }
+
+    Scene *scene = getScene(host);
+    if (scene == nullptr) {
+        JS_ThrowReferenceError(ctx, "Atlas scene is unavailable");
+    }
+    return scene;
+}
+
+ScriptTextureState *resolveTexture(JSContext *ctx, ScriptHost &host,
+                                   JSValueConst value) {
+    if (!ensureCurrentGeneration(ctx, host, value)) {
+        return nullptr;
+    }
+
+    std::int64_t textureId = 0;
+    if (!readIntProperty(ctx, value, ATLAS_TEXTURE_ID_PROP, textureId)) {
+        JS_ThrowTypeError(ctx, "Expected Atlas texture handle");
+        return nullptr;
+    }
+
+    auto *state = findTextureState(host, static_cast<std::uint64_t>(textureId));
+    if (state == nullptr || !state->texture) {
+        JS_ThrowReferenceError(ctx, "Unknown Atlas texture id");
+        return nullptr;
+    }
+    return state;
+}
+
+ScriptCubemapState *resolveCubemap(JSContext *ctx, ScriptHost &host,
+                                   JSValueConst value) {
+    if (!ensureCurrentGeneration(ctx, host, value)) {
+        return nullptr;
+    }
+
+    std::int64_t cubemapId = 0;
+    if (!readIntProperty(ctx, value, ATLAS_CUBEMAP_ID_PROP, cubemapId)) {
+        JS_ThrowTypeError(ctx, "Expected Atlas cubemap handle");
+        return nullptr;
+    }
+
+    auto *state = findCubemapState(host, static_cast<std::uint64_t>(cubemapId));
+    if (state == nullptr || !state->cubemap) {
+        JS_ThrowReferenceError(ctx, "Unknown Atlas cubemap id");
+        return nullptr;
+    }
+    return state;
+}
+
+ScriptSkyboxState *resolveSkybox(JSContext *ctx, ScriptHost &host,
+                                 JSValueConst value) {
+    if (!ensureCurrentGeneration(ctx, host, value)) {
+        return nullptr;
+    }
+
+    std::int64_t skyboxId = 0;
+    if (!readIntProperty(ctx, value, ATLAS_SKYBOX_ID_PROP, skyboxId)) {
+        JS_ThrowTypeError(ctx, "Expected Atlas skybox handle");
+        return nullptr;
+    }
+
+    auto *state = findSkyboxState(host, static_cast<std::uint64_t>(skyboxId));
+    if (state == nullptr || !state->skybox) {
+        JS_ThrowReferenceError(ctx, "Unknown Atlas skybox id");
+        return nullptr;
+    }
+    return state;
+}
+
+ScriptRenderTargetState *resolveRenderTarget(JSContext *ctx, ScriptHost &host,
+                                             JSValueConst value) {
+    if (!ensureCurrentGeneration(ctx, host, value)) {
+        return nullptr;
+    }
+
+    std::int64_t renderTargetId = 0;
+    if (!readIntProperty(ctx, value, ATLAS_RENDER_TARGET_ID_PROP,
+                         renderTargetId)) {
+        JS_ThrowTypeError(ctx, "Expected Atlas render target handle");
+        return nullptr;
+    }
+
+    auto *state = findRenderTargetState(
+        host, static_cast<std::uint64_t>(renderTargetId));
+    if (state == nullptr || !state->renderTarget) {
+        JS_ThrowReferenceError(ctx, "Unknown Atlas render target id");
+        return nullptr;
+    }
+    return state;
+}
+
 JSValue jsGetObjectById(JSContext *ctx, JSValueConst, int argc,
                         JSValueConst *argv) {
     auto *host = getHost(ctx);
@@ -1289,6 +1926,464 @@ JSValue jsGetCameraDirection(JSContext *ctx, JSValueConst, int argc,
     }
 
     return makePosition3d(ctx, *host, camera->getFrontVector());
+}
+
+JSValue jsGetScene(JSContext *ctx, JSValueConst, int, JSValueConst *) {
+    auto *host = getHost(ctx);
+    if (host == nullptr) {
+        return JS_NULL;
+    }
+
+    Scene *scene = getScene(*host);
+    if (scene == nullptr) {
+        return JS_NULL;
+    }
+
+    return syncSceneWrapper(ctx, *host, *scene);
+}
+
+JSValue jsSetSceneAmbientIntensity(JSContext *ctx, JSValueConst, int argc,
+                                   JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected scene and intensity");
+    }
+
+    Scene *scene = resolveSceneArg(ctx, *host, argv[0]);
+    if (scene == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    double intensity = 0.0;
+    if (!getDouble(ctx, argv[1], intensity)) {
+        return JS_ThrowTypeError(ctx, "Expected intensity");
+    }
+
+    scene->setAmbientIntensity(static_cast<float>(intensity));
+    return syncSceneWrapper(ctx, *host, *scene);
+}
+
+JSValue jsSetSceneAutomaticAmbient(JSContext *ctx, JSValueConst, int argc,
+                                   JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected scene and enabled flag");
+    }
+
+    Scene *scene = resolveSceneArg(ctx, *host, argv[0]);
+    if (scene == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    scene->setAutomaticAmbient(JS_ToBool(ctx, argv[1]) == 1);
+    return syncSceneWrapper(ctx, *host, *scene);
+}
+
+JSValue jsSetSceneSkybox(JSContext *ctx, JSValueConst, int argc,
+                         JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected scene and skybox");
+    }
+
+    Scene *scene = resolveSceneArg(ctx, *host, argv[0]);
+    if (scene == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    auto *skyboxState = resolveSkybox(ctx, *host, argv[1]);
+    if (skyboxState == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    scene->setSkybox(skyboxState->skybox);
+    return syncSceneWrapper(ctx, *host, *scene);
+}
+
+JSValue jsUseAtmosphereSkybox(JSContext *ctx, JSValueConst, int argc,
+                              JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected scene and enabled flag");
+    }
+
+    Scene *scene = resolveSceneArg(ctx, *host, argv[0]);
+    if (scene == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    scene->setUseAtmosphereSkybox(JS_ToBool(ctx, argv[1]) == 1);
+    return syncSceneWrapper(ctx, *host, *scene);
+}
+
+JSValue jsCreateTextureFromResource(JSContext *ctx, JSValueConst, int argc,
+                                    JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected resource and texture type");
+    }
+
+    Resource resource;
+    if (JS_IsString(argv[0])) {
+        const char *name = JS_ToCString(ctx, argv[0]);
+        if (name == nullptr) {
+            return JS_ThrowTypeError(ctx, "Expected resource");
+        }
+        resource = Workspace::get().getResource(name);
+        JS_FreeCString(ctx, name);
+    } else if (!parseResource(ctx, argv[0], resource)) {
+        return JS_ThrowTypeError(ctx, "Expected Resource or resource name");
+    }
+
+    if (resource.name.empty() && resource.path.empty()) {
+        return JS_ThrowReferenceError(ctx, "Unknown resource");
+    }
+
+    std::int64_t type = 0;
+    if (!getInt64(ctx, argv[1], type)) {
+        return JS_ThrowTypeError(ctx, "Expected texture type");
+    }
+
+    const std::uint64_t textureId = registerTextureState(
+        *host, Texture::fromResource(resource,
+                                     toNativeTextureType(static_cast<int>(type))));
+    return syncTextureWrapper(ctx, *host, textureId);
+}
+
+JSValue jsCreateEmptyTexture(JSContext *ctx, JSValueConst, int argc,
+                             JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 3) {
+        return JS_ThrowTypeError(ctx, "Expected width, height, and texture type");
+    }
+
+    std::int64_t width = 0;
+    std::int64_t height = 0;
+    std::int64_t type = 0;
+    if (!getInt64(ctx, argv[0], width) || !getInt64(ctx, argv[1], height) ||
+        !getInt64(ctx, argv[2], type)) {
+        return JS_ThrowTypeError(ctx, "Expected width, height, and texture type");
+    }
+
+    Color borderColor(0.0f, 0.0f, 0.0f, 0.0f);
+    if (argc > 3 && !JS_IsUndefined(argv[3])) {
+        if (!parseColor(ctx, argv[3], borderColor)) {
+            return JS_ThrowTypeError(ctx, "Expected border color");
+        }
+    }
+
+    const std::uint64_t textureId =
+        registerTextureState(*host,
+                             createEmptyTexture(static_cast<int>(width),
+                                                static_cast<int>(height),
+                                                toNativeTextureType(
+                                                    static_cast<int>(type)),
+                                                borderColor));
+    return syncTextureWrapper(ctx, *host, textureId);
+}
+
+JSValue jsCreateColorTexture(JSContext *ctx, JSValueConst, int argc,
+                             JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 4) {
+        return JS_ThrowTypeError(ctx,
+                                 "Expected color, texture type, width, and height");
+    }
+
+    Color color;
+    std::int64_t type = 0;
+    std::int64_t width = 0;
+    std::int64_t height = 0;
+    if (!parseColor(ctx, argv[0], color) || !getInt64(ctx, argv[1], type) ||
+        !getInt64(ctx, argv[2], width) || !getInt64(ctx, argv[3], height)) {
+        return JS_ThrowTypeError(ctx,
+                                 "Expected color, texture type, width, and height");
+    }
+
+    const std::uint64_t textureId = registerTextureState(
+        *host, createSolidTexture(color,
+                                  toNativeTextureType(static_cast<int>(type)),
+                                  static_cast<int>(width),
+                                  static_cast<int>(height)));
+    return syncTextureWrapper(ctx, *host, textureId);
+}
+
+JSValue jsCreateCheckerboardTexture(JSContext *ctx, JSValueConst, int argc,
+                                    JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 6) {
+        return JS_ThrowTypeError(
+            ctx,
+            "Expected texture, width, height, check size, and two colors");
+    }
+
+    auto *state = resolveTexture(ctx, *host, argv[0]);
+    if (state == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    std::int64_t textureId = 0;
+    readIntProperty(ctx, argv[0], ATLAS_TEXTURE_ID_PROP, textureId);
+
+    std::int64_t width = 0;
+    std::int64_t height = 0;
+    std::int64_t checkSize = 0;
+    Color color1;
+    Color color2;
+    if (!getInt64(ctx, argv[1], width) || !getInt64(ctx, argv[2], height) ||
+        !getInt64(ctx, argv[3], checkSize) || !parseColor(ctx, argv[4], color1) ||
+        !parseColor(ctx, argv[5], color2)) {
+        return JS_ThrowTypeError(
+            ctx,
+            "Expected texture, width, height, check size, and two colors");
+    }
+
+    *state->texture = Texture::createCheckerboard(
+        static_cast<int>(width), static_cast<int>(height),
+        static_cast<int>(checkSize), color1, color2);
+    return syncTextureWrapper(ctx, *host, static_cast<std::uint64_t>(textureId));
+}
+
+JSValue jsCreateDoubleCheckerboardTexture(JSContext *ctx, JSValueConst, int argc,
+                                          JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 8) {
+        return JS_ThrowTypeError(
+            ctx,
+            "Expected texture, width, height, two check sizes, and three colors");
+    }
+
+    auto *state = resolveTexture(ctx, *host, argv[0]);
+    if (state == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    std::int64_t textureId = 0;
+    readIntProperty(ctx, argv[0], ATLAS_TEXTURE_ID_PROP, textureId);
+
+    std::int64_t width = 0;
+    std::int64_t height = 0;
+    std::int64_t checkSizeBig = 0;
+    std::int64_t checkSizeSmall = 0;
+    Color color1;
+    Color color2;
+    Color color3;
+    if (!getInt64(ctx, argv[1], width) || !getInt64(ctx, argv[2], height) ||
+        !getInt64(ctx, argv[3], checkSizeBig) ||
+        !getInt64(ctx, argv[4], checkSizeSmall) ||
+        !parseColor(ctx, argv[5], color1) || !parseColor(ctx, argv[6], color2) ||
+        !parseColor(ctx, argv[7], color3)) {
+        return JS_ThrowTypeError(
+            ctx,
+            "Expected texture, width, height, two check sizes, and three colors");
+    }
+
+    *state->texture = Texture::createDoubleCheckerboard(
+        static_cast<int>(width), static_cast<int>(height),
+        static_cast<int>(checkSizeBig), static_cast<int>(checkSizeSmall), color1,
+        color2, color3);
+    return syncTextureWrapper(ctx, *host, static_cast<std::uint64_t>(textureId));
+}
+
+JSValue jsDisplayTexture(JSContext *ctx, JSValueConst, int argc,
+                         JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || host->context == nullptr || host->context->window == nullptr ||
+        argc < 1) {
+        return JS_ThrowTypeError(ctx, "Expected texture");
+    }
+
+    auto *state = resolveTexture(ctx, *host, argv[0]);
+    if (state == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    state->texture->display(*host->context->window);
+    std::int64_t textureId = 0;
+    readIntProperty(ctx, argv[0], ATLAS_TEXTURE_ID_PROP, textureId);
+    return syncTextureWrapper(ctx, *host, static_cast<std::uint64_t>(textureId));
+}
+
+JSValue jsCreateCubemap(JSContext *ctx, JSValueConst, int argc,
+                        JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 1) {
+        return JS_ThrowTypeError(ctx, "Expected resource array");
+    }
+
+    std::vector<Resource> resources;
+    if (!parseResourceVector(ctx, argv[0], resources) || resources.size() != 6) {
+        return JS_ThrowTypeError(ctx, "Expected six cubemap resources");
+    }
+
+    ResourceGroup group;
+    group.groupName = "ScriptCubemap";
+    group.resources = resources;
+    const std::uint64_t cubemapId =
+        registerCubemapState(*host, Cubemap::fromResourceGroup(group));
+    return syncCubemapWrapper(ctx, *host, cubemapId);
+}
+
+JSValue jsCreateCubemapFromGroup(JSContext *ctx, JSValueConst, int argc,
+                                 JSValueConst *argv) {
+    return jsCreateCubemap(ctx, JS_UNDEFINED, argc, argv);
+}
+
+JSValue jsGetCubemapAverageColor(JSContext *ctx, JSValueConst, int argc,
+                                 JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 1) {
+        return JS_ThrowTypeError(ctx, "Expected cubemap");
+    }
+
+    auto *state = resolveCubemap(ctx, *host, argv[0]);
+    if (state == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    return makeColor(ctx, *host, state->cubemap->averageColor);
+}
+
+JSValue jsUpdateCubemapWithColors(JSContext *ctx, JSValueConst, int argc,
+                                  JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected cubemap and six colors");
+    }
+
+    auto *state = resolveCubemap(ctx, *host, argv[0]);
+    if (state == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    std::array<Color, 6> colors;
+    if (!parseColorArray(ctx, argv[1], colors)) {
+        return JS_ThrowTypeError(ctx, "Expected an array of six colors");
+    }
+
+    state->cubemap->updateWithColors(colors);
+    std::int64_t cubemapId = 0;
+    readIntProperty(ctx, argv[0], ATLAS_CUBEMAP_ID_PROP, cubemapId);
+    return syncCubemapWrapper(ctx, *host, static_cast<std::uint64_t>(cubemapId));
+}
+
+JSValue jsCreateSkybox(JSContext *ctx, JSValueConst, int argc,
+                       JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || host->context == nullptr || host->context->window == nullptr ||
+        argc < 1) {
+        return JS_ThrowTypeError(ctx, "Expected cubemap");
+    }
+
+    auto *cubemapState = resolveCubemap(ctx, *host, argv[0]);
+    if (cubemapState == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    std::int64_t cubemapId = 0;
+    readIntProperty(ctx, argv[0], ATLAS_CUBEMAP_ID_PROP, cubemapId);
+
+    const std::uint64_t skyboxId = host->nextSkyboxId++;
+    host->skyboxes[skyboxId] = {
+        .skybox = Skybox::create(*cubemapState->cubemap, *host->context->window),
+        .value = JS_UNDEFINED,
+        .cubemapId = static_cast<std::uint64_t>(cubemapId)
+    };
+    return syncSkyboxWrapper(ctx, *host, skyboxId);
+}
+
+JSValue jsCreateRenderTarget(JSContext *ctx, JSValueConst, int argc,
+                             JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || host->context == nullptr || host->context->window == nullptr) {
+        return JS_ThrowInternalError(ctx, "Atlas scripting host unavailable");
+    }
+
+    std::int64_t type = 0;
+    std::int64_t resolution = 1024;
+    if (argc > 0 && !JS_IsUndefined(argv[0]) && !getInt64(ctx, argv[0], type)) {
+        return JS_ThrowTypeError(ctx, "Expected render target type");
+    }
+    if (argc > 1 && !JS_IsUndefined(argv[1]) &&
+        !getInt64(ctx, argv[1], resolution)) {
+        return JS_ThrowTypeError(ctx, "Expected resolution");
+    }
+
+    const std::uint64_t renderTargetId = host->nextRenderTargetId++;
+    host->renderTargets[renderTargetId] = {
+        .renderTarget = std::make_shared<RenderTarget>(
+            *host->context->window, toNativeRenderTargetType(static_cast<int>(type)),
+            static_cast<int>(resolution)),
+        .value = JS_UNDEFINED,
+        .attached = false,
+        .outTextureIds = {},
+        .depthTextureId = 0
+    };
+    return syncRenderTargetWrapper(ctx, *host, renderTargetId);
+}
+
+JSValue jsAddRenderTargetToPassQueue(JSContext *ctx, JSValueConst, int argc,
+                                     JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || host->context == nullptr || host->context->window == nullptr ||
+        argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected render target and pass type");
+    }
+
+    auto *state = resolveRenderTarget(ctx, *host, argv[0]);
+    if (state == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    std::int64_t passType = 0;
+    if (!getInt64(ctx, argv[1], passType)) {
+        return JS_ThrowTypeError(ctx, "Expected pass type");
+    }
+
+    switch (passType) {
+    case 0:
+        host->context->window->useDeferredRendering();
+        break;
+    case 1:
+        host->context->window->usesDeferred = false;
+        host->context->window->usePathTracing = false;
+        break;
+    case 2:
+        host->context->window->enablePathTracing();
+        break;
+    default:
+        return JS_ThrowRangeError(ctx, "Unknown render pass type");
+    }
+
+    if (!state->attached) {
+        host->context->window->addRenderTarget(state->renderTarget.get());
+        state->attached = true;
+    }
+
+    std::int64_t renderTargetId = 0;
+    readIntProperty(ctx, argv[0], ATLAS_RENDER_TARGET_ID_PROP, renderTargetId);
+    return syncRenderTargetWrapper(ctx, *host,
+                                   static_cast<std::uint64_t>(renderTargetId));
+}
+
+JSValue jsDisplayRenderTarget(JSContext *ctx, JSValueConst, int argc,
+                              JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || host->context == nullptr || host->context->window == nullptr ||
+        argc < 1) {
+        return JS_ThrowTypeError(ctx, "Expected render target");
+    }
+
+    auto *state = resolveRenderTarget(ctx, *host, argv[0]);
+    if (state == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    state->renderTarget->display(*host->context->window);
+    std::int64_t renderTargetId = 0;
+    readIntProperty(ctx, argv[0], ATLAS_RENDER_TARGET_ID_PROP, renderTargetId);
+    return syncRenderTargetWrapper(ctx, *host,
+                                   static_cast<std::uint64_t>(renderTargetId));
 }
 
 JSValue jsGetObjectByName(JSContext *ctx, JSValueConst, int argc,
@@ -2199,6 +3294,10 @@ void runtime::scripting::clearSceneBindings(JSContext *ctx, ScriptHost &host) {
         JS_FreeValue(ctx, host.cameraValue);
         host.cameraValue = JS_UNDEFINED;
     }
+    if (!JS_IsUndefined(host.sceneValue)) {
+        JS_FreeValue(ctx, host.sceneValue);
+        host.sceneValue = JS_UNDEFINED;
+    }
 
     for (auto &[_, value] : host.objectCache) {
         JS_FreeValue(ctx, value);
@@ -2220,12 +3319,36 @@ void runtime::scripting::clearSceneBindings(JSContext *ctx, ScriptHost &host) {
     }
     host.audioPlayers.clear();
 
+    for (auto &[_, state] : host.textures) {
+        JS_FreeValue(ctx, state.value);
+    }
+    host.textures.clear();
+
+    for (auto &[_, state] : host.cubemaps) {
+        JS_FreeValue(ctx, state.value);
+    }
+    host.cubemaps.clear();
+
+    for (auto &[_, state] : host.skyboxes) {
+        JS_FreeValue(ctx, state.value);
+    }
+    host.skyboxes.clear();
+
+    for (auto &[_, state] : host.renderTargets) {
+        JS_FreeValue(ctx, state.value);
+    }
+    host.renderTargets.clear();
+
     host.componentIds.clear();
     host.componentOrder.clear();
     host.componentLookup.clear();
     host.objectStates.clear();
     host.nextComponentId = 1;
     host.nextAudioPlayerId = 1;
+    host.nextTextureId = 1;
+    host.nextCubemapId = 1;
+    host.nextSkyboxId = 1;
+    host.nextRenderTargetId = 1;
     host.generation += 1;
 }
 
@@ -2271,6 +3394,20 @@ void runtime::scripting::installGlobals(JSContext *ctx) {
     JSValue global = JS_GetGlobalObject(ctx);
     JS_SetPropertyStr(ctx, global, "print",
                       JS_NewCFunction(ctx, jsPrint, "print", 1));
+    JS_SetPropertyStr(ctx, global, "__atlasGetScene",
+                      JS_NewCFunction(ctx, jsGetScene, "__atlasGetScene", 0));
+    JS_SetPropertyStr(ctx, global, "__atlasSetSceneAmbientIntensity",
+                      JS_NewCFunction(ctx, jsSetSceneAmbientIntensity,
+                                      "__atlasSetSceneAmbientIntensity", 2));
+    JS_SetPropertyStr(ctx, global, "__atlasSetSceneAutomaticAmbient",
+                      JS_NewCFunction(ctx, jsSetSceneAutomaticAmbient,
+                                      "__atlasSetSceneAutomaticAmbient", 2));
+    JS_SetPropertyStr(ctx, global, "__atlasSetSceneSkybox",
+                      JS_NewCFunction(ctx, jsSetSceneSkybox,
+                                      "__atlasSetSceneSkybox", 2));
+    JS_SetPropertyStr(ctx, global, "__atlasUseAtmosphereSkybox",
+                      JS_NewCFunction(ctx, jsUseAtmosphereSkybox,
+                                      "__atlasUseAtmosphereSkybox", 2));
     JS_SetPropertyStr(ctx, global, "__atlasGetCamera",
                       JS_NewCFunction(ctx, jsGetCamera, "__atlasGetCamera", 0));
     JS_SetPropertyStr(ctx, global, "__atlasUpdateCamera",
@@ -2288,6 +3425,48 @@ void runtime::scripting::installGlobals(JSContext *ctx) {
     JS_SetPropertyStr(ctx, global, "__atlasGetCameraDirection",
                       JS_NewCFunction(ctx, jsGetCameraDirection,
                                       "__atlasGetCameraDirection", 1));
+    JS_SetPropertyStr(ctx, global, "__atlasCreateTextureFromResource",
+                      JS_NewCFunction(ctx, jsCreateTextureFromResource,
+                                      "__atlasCreateTextureFromResource", 2));
+    JS_SetPropertyStr(ctx, global, "__atlasCreateEmptyTexture",
+                      JS_NewCFunction(ctx, jsCreateEmptyTexture,
+                                      "__atlasCreateEmptyTexture", 4));
+    JS_SetPropertyStr(ctx, global, "__atlasCreateColorTexture",
+                      JS_NewCFunction(ctx, jsCreateColorTexture,
+                                      "__atlasCreateColorTexture", 4));
+    JS_SetPropertyStr(ctx, global, "__atlasCreateCheckerboardTexture",
+                      JS_NewCFunction(ctx, jsCreateCheckerboardTexture,
+                                      "__atlasCreateCheckerboardTexture", 6));
+    JS_SetPropertyStr(ctx, global, "__atlasCreateDoubleCheckerboardTexture",
+                      JS_NewCFunction(ctx, jsCreateDoubleCheckerboardTexture,
+                                      "__atlasCreateDoubleCheckerboardTexture", 8));
+    JS_SetPropertyStr(ctx, global, "__atlasDisplayTexture",
+                      JS_NewCFunction(ctx, jsDisplayTexture,
+                                      "__atlasDisplayTexture", 1));
+    JS_SetPropertyStr(ctx, global, "__atlasCreateCubemap",
+                      JS_NewCFunction(ctx, jsCreateCubemap,
+                                      "__atlasCreateCubemap", 1));
+    JS_SetPropertyStr(ctx, global, "__atlasCreateCubemapFromGroup",
+                      JS_NewCFunction(ctx, jsCreateCubemapFromGroup,
+                                      "__atlasCreateCubemapFromGroup", 1));
+    JS_SetPropertyStr(ctx, global, "__atlasGetCubemapAverageColor",
+                      JS_NewCFunction(ctx, jsGetCubemapAverageColor,
+                                      "__atlasGetCubemapAverageColor", 1));
+    JS_SetPropertyStr(ctx, global, "__atlasUpdateCubemapWithColors",
+                      JS_NewCFunction(ctx, jsUpdateCubemapWithColors,
+                                      "__atlasUpdateCubemapWithColors", 2));
+    JS_SetPropertyStr(ctx, global, "__atlasCreateSkybox",
+                      JS_NewCFunction(ctx, jsCreateSkybox,
+                                      "__atlasCreateSkybox", 1));
+    JS_SetPropertyStr(ctx, global, "__atlasCreateRenderTarget",
+                      JS_NewCFunction(ctx, jsCreateRenderTarget,
+                                      "__atlasCreateRenderTarget", 2));
+    JS_SetPropertyStr(ctx, global, "__atlasAddRenderTargetToPassQueue",
+                      JS_NewCFunction(ctx, jsAddRenderTargetToPassQueue,
+                                      "__atlasAddRenderTargetToPassQueue", 2));
+    JS_SetPropertyStr(ctx, global, "__atlasDisplayRenderTarget",
+                      JS_NewCFunction(ctx, jsDisplayRenderTarget,
+                                      "__atlasDisplayRenderTarget", 1));
     JS_SetPropertyStr(ctx, global, "__atlasGetObjectById",
                       JS_NewCFunction(ctx, jsGetObjectById,
                                       "__atlasGetObjectById", 1));

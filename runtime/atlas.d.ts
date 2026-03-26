@@ -28,6 +28,53 @@ declare module "atlas" {
         Size3d,
         Point3d,
     } from "atlas/units";
+    import { Texture, Skybox } from "atlas/graphics";
+
+    export type Fog = {
+        color: Color;
+        intensity: number;
+    };
+
+    export type VolumetricLighting = {
+        enabled: boolean;
+        density: number;
+        weight: number;
+        decay: number;
+        exposure: number;
+    };
+
+    export type LightBloomConfiguration = {
+        radius: number;
+        maxSamples: number;
+    };
+
+    export type RimLightingConfiguration = {
+        color: Color;
+        intensity: number;
+    };
+
+    export type Environment = {
+        fog: Fog;
+        volumetricLighting: VolumetricLighting;
+        lightBloom: LightBloomConfiguration;
+        rimLighting: RimLightingConfiguration;
+        lookupTexture: Texture;
+    };
+
+    export class Scene {
+        name: string;
+
+        setAmbientIntensity(intensity: number): void;
+        setAutomaticAmbient(enabled: boolean): void;
+
+        setSkybox(skybox: Skybox): void;
+        useAtmosphereSkybox(enabled: boolean): void;
+
+        getCamera(): Camera;
+
+        //atmosphere: Atmosphere;
+    }
+
     export abstract class Component {
         parentId: number;
 
@@ -39,7 +86,7 @@ declare module "atlas" {
             type: new (...args: any[]) => T,
         ): T | null;
         getObject(identifier: number | string): CoreObject;
-        getCamera(): Camera;
+        getScene(): Scene;
     }
 
     export class Material {
@@ -227,6 +274,124 @@ declare module "atlas" {
         lookAt(target: Point3d, up?: Normal3d): void;
         moveTo(target: Point3d, speed: number): void;
         getDirection(): Normal3d;
+    }
+}
+
+declare module "atlas/graphics" {
+    import { Resource, ResourceGroup } from "atlas";
+    import { Color } from "atlas/units";
+
+    export enum TextureType {
+        Color,
+        Specular,
+        Cubemap,
+        Depth,
+        DepthCube,
+        Normal,
+        Parallax,
+        SSAONoise,
+        SSAO,
+        Metallic,
+        Roughness,
+        AO,
+        Opacity,
+        HDR,
+    }
+
+    export class Texture {
+        type: TextureType;
+        resource: Resource;
+        width: number;
+        height: number;
+        channels: number;
+        id: number;
+        borderColor: Color;
+
+        static fromResource(
+            resource: Resource | string,
+            type: TextureType,
+        ): Texture;
+
+        static createEmpty(
+            width: number,
+            height: number,
+            type: TextureType,
+            borderColor?: Color,
+        ): Texture;
+
+        static createColor(
+            color: Color,
+            type: TextureType,
+            width: number,
+            height: number,
+        ): Texture;
+
+        createCheckerboard(
+            width: number,
+            height: number,
+            checkSize: number,
+            color1: Color,
+            color2: Color,
+        ): void;
+
+        createDoubleCheckerboard(
+            width: number,
+            height: number,
+            checkSizeBig: number,
+            checkSizeSmall: number,
+            color1: Color,
+            color2: Color,
+            color3: Color,
+        ): void;
+
+        displayToWindow(): void;
+    }
+
+    export class Cubemap {
+        resources: Resource[];
+        id: number;
+
+        constructor(resources: Resource[]);
+
+        getAverageColor(): Color;
+        static fromResourceGroup(resourceGroup: ResourceGroup): Cubemap | null;
+        updateWithColors(colors: Color[]): void;
+    }
+
+    export enum RenderTargetType {
+        Scene,
+        Multisampled,
+        Shadow,
+        CubeShadow,
+        GBuffer,
+        SSAO,
+        SSAOBlur,
+    }
+
+    export enum RenderPassType {
+        Deferred,
+        Forward,
+        PathTracing,
+    }
+
+    export class RenderTarget {
+        type: RenderTargetType;
+        resolution: number;
+        outTextures: Texture[];
+        depthTexture: Texture | null;
+
+        constructor(type: RenderTargetType, resolution: number);
+
+        //addEffect(effect: Effect): void;
+
+        addToPassQueue(type: RenderPassType): void;
+        display(): void;
+    }
+
+    export class Skybox {
+        cubemap: Cubemap;
+
+        constructor(cubemap: Cubemap);
     }
 }
 

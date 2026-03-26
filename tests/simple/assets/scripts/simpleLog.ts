@@ -1,4 +1,5 @@
 import { Component } from "atlas";
+import { RenderPassType, RenderTarget, RenderTargetType } from "atlas/graphics";
 import { Debug } from "atlas/log";
 import { Position3d, Size2d } from "atlas/units";
 

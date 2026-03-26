@@ -56,6 +56,7 @@ class Context {
     std::string projectFile;
     std::string projectDir;
     std::string sceneDir;
+    std::string currentSceneName;
     std::shared_ptr<RuntimeScene> scene;
 
     JSRuntime *runtime = nullptr;
