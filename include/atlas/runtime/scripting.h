@@ -29,6 +29,7 @@ class RenderTarget;
 struct ScriptObjectState {
     GameObject *object = nullptr;
     bool attachedToWindow = false;
+    std::vector<std::uint64_t> textureIds;
 };
 
 struct ScriptComponentState {

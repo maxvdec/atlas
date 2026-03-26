@@ -9,6 +9,7 @@
 
 #include "atlas/runtime/scripting.h"
 #include "atlas/audio.h"
+#include "atlas/effect.h"
 #include "atlas/object.h"
 #include "atlas/runtime/context.h"
 #include "atlas/texture.h"
@@ -570,6 +571,17 @@ bool parsePosition3d(JSContext *ctx, JSValueConst value, Position3d &out) {
     return true;
 }
 
+bool parsePosition2d(JSContext *ctx, JSValueConst value, Position2d &out) {
+    double x = 0.0;
+    double y = 0.0;
+    if (!readNumberProperty(ctx, value, "x", x) ||
+        !readNumberProperty(ctx, value, "y", y)) {
+        return false;
+    }
+    out = Position2d(x, y);
+    return true;
+}
+
 JSValue makeRotation3d(JSContext *ctx, ScriptHost &host,
                        const Rotation3d &value) {
     JSValue result = newObjectFromPrototype(ctx, host.position3dPrototype);
@@ -1107,6 +1119,153 @@ Texture createSolidTexture(Color color, TextureType type, int width, int height)
     return texture;
 }
 
+std::shared_ptr<Effect> parseEffectValue(JSContext *ctx, JSValueConst value) {
+    std::string type;
+    if (JS_IsString(value)) {
+        const char *name = JS_ToCString(ctx, value);
+        if (name == nullptr) {
+            return nullptr;
+        }
+        type = name;
+        JS_FreeCString(ctx, name);
+    } else {
+        if (!readStringProperty(ctx, value, "type", type)) {
+            return nullptr;
+        }
+    }
+
+    const std::string normalizedType = normalizeToken(type);
+
+    if (normalizedType == "inversion" || normalizedType == "invert") {
+        return Inversion::create();
+    }
+    if (normalizedType == "grayscale") {
+        return Grayscale::create();
+    }
+    if (normalizedType == "sharpen") {
+        return Sharpen::create();
+    }
+    if (normalizedType == "blur") {
+        double magnitude = 16.0;
+        if (!JS_IsString(value)) {
+            readNumberProperty(ctx, value, "magnitude", magnitude);
+        }
+        return Blur::create(static_cast<float>(magnitude));
+    }
+    if (normalizedType == "edgedetection") {
+        return EdgeDetection::create();
+    }
+    if (normalizedType == "colorcorrection") {
+        ColorCorrectionParameters params;
+        if (!JS_IsString(value)) {
+            double exposure = params.exposure;
+            double contrast = params.contrast;
+            double saturation = params.saturation;
+            double gamma = params.gamma;
+            double temperature = params.temperature;
+            double tint = params.tint;
+            readNumberProperty(ctx, value, "exposure", exposure);
+            readNumberProperty(ctx, value, "contrast", contrast);
+            readNumberProperty(ctx, value, "saturation", saturation);
+            readNumberProperty(ctx, value, "gamma", gamma);
+            readNumberProperty(ctx, value, "temperature", temperature);
+            readNumberProperty(ctx, value, "tint", tint);
+            params.exposure = static_cast<float>(exposure);
+            params.contrast = static_cast<float>(contrast);
+            params.saturation = static_cast<float>(saturation);
+            params.gamma = static_cast<float>(gamma);
+            params.temperature = static_cast<float>(temperature);
+            params.tint = static_cast<float>(tint);
+        }
+        return ColorCorrection::create(params);
+    }
+    if (normalizedType == "motionblur") {
+        MotionBlurParameters params;
+        if (!JS_IsString(value)) {
+            std::int64_t size = params.size;
+            JSValue sizeValue = JS_GetPropertyStr(ctx, value, "size");
+            if (!JS_IsException(sizeValue)) {
+                getInt64(ctx, sizeValue, size);
+            }
+            JS_FreeValue(ctx, sizeValue);
+            double separation = params.separation;
+            readNumberProperty(ctx, value, "separation", separation);
+            params.size = static_cast<int>(size);
+            params.separation = static_cast<float>(separation);
+        }
+        return MotionBlur::create(params);
+    }
+    if (normalizedType == "chromaticaberration") {
+        ChromaticAberrationParameters params;
+        if (!JS_IsString(value)) {
+            double red = params.red;
+            double green = params.green;
+            double blue = params.blue;
+            readNumberProperty(ctx, value, "red", red);
+            readNumberProperty(ctx, value, "green", green);
+            readNumberProperty(ctx, value, "blue", blue);
+            params.red = static_cast<float>(red);
+            params.green = static_cast<float>(green);
+            params.blue = static_cast<float>(blue);
+            JSValue direction = JS_GetPropertyStr(ctx, value, "direction");
+            if (!JS_IsException(direction) && !JS_IsUndefined(direction)) {
+                parsePosition2d(ctx, direction, params.direction);
+            }
+            JS_FreeValue(ctx, direction);
+        }
+        return ChromaticAberration::create(params);
+    }
+    if (normalizedType == "posterization") {
+        PosterizationParameters params;
+        if (!JS_IsString(value)) {
+            double levels = params.levels;
+            readNumberProperty(ctx, value, "levels", levels);
+            params.levels = static_cast<float>(levels);
+        }
+        return Posterization::create(params);
+    }
+    if (normalizedType == "pixelation") {
+        PixelationParameters params;
+        if (!JS_IsString(value)) {
+            std::int64_t pixelSize = params.pixelSize;
+            JSValue pixelSizeValue = JS_GetPropertyStr(ctx, value, "pixelSize");
+            if (!JS_IsException(pixelSizeValue)) {
+                getInt64(ctx, pixelSizeValue, pixelSize);
+            }
+            JS_FreeValue(ctx, pixelSizeValue);
+            params.pixelSize = static_cast<int>(pixelSize);
+        }
+        return Pixelation::create(params);
+    }
+    if (normalizedType == "dialation" || normalizedType == "dilation") {
+        DilationParameters params;
+        if (!JS_IsString(value)) {
+            std::int64_t size = params.size;
+            JSValue sizeValue = JS_GetPropertyStr(ctx, value, "size");
+            if (!JS_IsException(sizeValue)) {
+                getInt64(ctx, sizeValue, size);
+            }
+            JS_FreeValue(ctx, sizeValue);
+            double separation = params.separation;
+            readNumberProperty(ctx, value, "separation", separation);
+            params.size = static_cast<int>(size);
+            params.separation = static_cast<float>(separation);
+        }
+        return Dilation::create(params);
+    }
+    if (normalizedType == "filmgrain") {
+        FilmGrainParameters params;
+        if (!JS_IsString(value)) {
+            double amount = params.amount;
+            readNumberProperty(ctx, value, "amount", amount);
+            params.amount = static_cast<float>(amount);
+        }
+        return FilmGrain::create(params);
+    }
+
+    return nullptr;
+}
+
 JSValue syncCameraWrapper(JSContext *ctx, ScriptHost &host, Camera &camera) {
     if (!ensureBuiltins(ctx, host)) {
         return JS_EXCEPTION;
@@ -1308,6 +1467,40 @@ void attachObjectIfReady(ScriptHost &host, GameObject &object) {
     state.attachedToWindow = true;
 }
 
+void syncObjectTextureStates(ScriptHost &host, CoreObject &object) {
+    auto &state = host.objectStates[object.getId()];
+    std::vector<std::uint64_t> currentTextureIds = state.textureIds;
+    state.textureIds.clear();
+
+    auto assignTexture = [&](std::uint64_t &slot, const Texture &texture) {
+        if (texture.id == 0 && texture.texture == nullptr) {
+            slot = 0;
+            return;
+        }
+        if (slot == 0) {
+            slot = registerTextureState(host, texture);
+            return;
+        }
+        auto *textureState = findTextureState(host, slot);
+        if (textureState != nullptr && textureState->texture) {
+            *textureState->texture = texture;
+            return;
+        }
+        slot = registerTextureState(host, texture);
+    };
+
+    for (std::size_t i = 0; i < object.textures.size(); ++i) {
+        std::uint64_t slot = 0;
+        if (i < currentTextureIds.size()) {
+            slot = currentTextureIds[i];
+        }
+        assignTexture(slot, object.textures[i]);
+        if (slot != 0) {
+            state.textureIds.push_back(slot);
+        }
+    }
+}
+
 JSValue syncObjectWrapper(JSContext *ctx, ScriptHost &host, GameObject &object);
 
 JSValue syncInstanceWrapper(JSContext *ctx, ScriptHost &host, CoreObject &object,
@@ -1429,6 +1622,8 @@ JSValue syncObjectWrapper(JSContext *ctx, ScriptHost &host, GameObject &object) 
     setProperty(ctx, wrapper, "name", JS_NewString(ctx, name.c_str()));
 
     if (auto *core = dynamic_cast<CoreObject *>(&object); core != nullptr) {
+        syncObjectTextureStates(host, *core);
+
         JSValue vertices = JS_NewArray(ctx);
         for (std::uint32_t i = 0; i < core->vertices.size(); ++i) {
             JS_SetPropertyUint32(ctx, vertices, i,
@@ -1447,9 +1642,19 @@ JSValue syncObjectWrapper(JSContext *ctx, ScriptHost &host, GameObject &object) 
                                  syncInstanceWrapper(ctx, host, *core, i));
         }
 
+        JSValue textures = JS_NewArray(ctx);
+        auto stateIt = host.objectStates.find(objectId);
+        if (stateIt != host.objectStates.end()) {
+            for (std::uint32_t i = 0; i < stateIt->second.textureIds.size(); ++i) {
+                JS_SetPropertyUint32(
+                    ctx, textures, i,
+                    syncTextureWrapper(ctx, host, stateIt->second.textureIds[i]));
+            }
+        }
+
         setProperty(ctx, wrapper, "vertices", vertices);
         setProperty(ctx, wrapper, "indices", indices);
-        setProperty(ctx, wrapper, "textures", JS_NewArray(ctx));
+        setProperty(ctx, wrapper, "textures", textures);
         setProperty(ctx, wrapper, "material", makeMaterial(ctx, host, core->material));
         setProperty(ctx, wrapper, "instances", instances);
         setProperty(ctx, wrapper, "castsShadows",
@@ -2366,6 +2571,31 @@ JSValue jsAddRenderTargetToPassQueue(JSContext *ctx, JSValueConst, int argc,
                                    static_cast<std::uint64_t>(renderTargetId));
 }
 
+JSValue jsAddRenderTargetEffect(JSContext *ctx, JSValueConst, int argc,
+                                JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected render target and effect");
+    }
+
+    auto *state = resolveRenderTarget(ctx, *host, argv[0]);
+    if (state == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    auto effect = parseEffectValue(ctx, argv[1]);
+    if (effect == nullptr) {
+        return JS_ThrowTypeError(ctx, "Expected Atlas effect");
+    }
+
+    state->renderTarget->addEffect(effect);
+
+    std::int64_t renderTargetId = 0;
+    readIntProperty(ctx, argv[0], ATLAS_RENDER_TARGET_ID_PROP, renderTargetId);
+    return syncRenderTargetWrapper(ctx, *host,
+                                   static_cast<std::uint64_t>(renderTargetId));
+}
+
 JSValue jsDisplayRenderTarget(JSContext *ctx, JSValueConst, int argc,
                               JSValueConst *argv) {
     auto *host = getHost(ctx);
@@ -2891,7 +3121,8 @@ std::shared_ptr<CoreObject> ownCoreObject(ScriptHost &host,
         host.context->objects.push_back(object);
     }
     host.objectStates[object->getId()] = {.object = object.get(),
-                                          .attachedToWindow = attachedToWindow};
+                                          .attachedToWindow = attachedToWindow,
+                                          .textureIds = {}};
     return object;
 }
 
@@ -3056,6 +3287,28 @@ JSValue jsMakeEmissive(JSContext *ctx, JSValueConst, int argc,
                          static_cast<float>(intensity));
     attachObjectIfReady(*host, *object);
     return JS_UNDEFINED;
+}
+
+JSValue jsAttachTexture(JSContext *ctx, JSValueConst, int argc,
+                        JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected object and texture");
+    }
+
+    GameObject *object = resolveObjectArg(ctx, *host, argv[0]);
+    if (object == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    auto *textureState = resolveTexture(ctx, *host, argv[1]);
+    if (textureState == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    object->attachTexture(*textureState->texture);
+    attachObjectIfReady(*host, *object);
+    return syncObjectWrapper(ctx, *host, *object);
 }
 
 JSValue jsShowObject(JSContext *ctx, JSValueConst, int argc,
@@ -3461,6 +3714,9 @@ void runtime::scripting::installGlobals(JSContext *ctx) {
     JS_SetPropertyStr(ctx, global, "__atlasCreateRenderTarget",
                       JS_NewCFunction(ctx, jsCreateRenderTarget,
                                       "__atlasCreateRenderTarget", 2));
+    JS_SetPropertyStr(ctx, global, "__atlasAddRenderTargetEffect",
+                      JS_NewCFunction(ctx, jsAddRenderTargetEffect,
+                                      "__atlasAddRenderTargetEffect", 2));
     JS_SetPropertyStr(ctx, global, "__atlasAddRenderTargetToPassQueue",
                       JS_NewCFunction(ctx, jsAddRenderTargetToPassQueue,
                                       "__atlasAddRenderTargetToPassQueue", 2));
@@ -3545,6 +3801,9 @@ void runtime::scripting::installGlobals(JSContext *ctx) {
     JS_SetPropertyStr(ctx, global, "__atlasMakeEmissive",
                       JS_NewCFunction(ctx, jsMakeEmissive,
                                       "__atlasMakeEmissive", 3));
+    JS_SetPropertyStr(ctx, global, "__atlasAttachTexture",
+                      JS_NewCFunction(ctx, jsAttachTexture,
+                                      "__atlasAttachTexture", 2));
     JS_SetPropertyStr(ctx, global, "__atlasShowObject",
                       JS_NewCFunction(ctx, jsShowObject, "__atlasShowObject",
                                       1));

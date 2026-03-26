@@ -148,7 +148,9 @@ export class GameObject {
         this.name = "";
     }
 
-    attachTexture(texture) {}
+    attachTexture(texture) {
+        return globalThis.__atlasAttachTexture(this, texture);
+    }
 
     setPosition(position) {
         this.position = position;

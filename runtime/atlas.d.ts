@@ -148,7 +148,7 @@ declare module "atlas" {
 
         constructor();
 
-        //abstract attachTexture(texture: Texture): void;
+        abstract attachTexture(texture: Texture): void;
         abstract setPosition(position: Position3d): void;
         abstract move(position: Position3d): void;
         abstract setRotation(rotation: Rotation3d): void;
@@ -165,7 +165,7 @@ declare module "atlas" {
     export class CoreObject extends GameObject {
         vertices: CoreVertex[];
         indices: number[];
-        //textures: Texture[];
+        textures: Texture[];
         material: Material;
         instances: Instance[];
         position: Position3d;
@@ -179,7 +179,7 @@ declare module "atlas" {
         makeEmissive(color: Color, intensity: number): void;
         attachVertices(vertices: CoreVertex[]): void;
         attachIndices(indices: number[]): void;
-        //attachTexture(texture: Texture): void;
+        attachTexture(texture: Texture): void;
 
         setPosition(position: Position3d): void;
         move(position: Position3d): void;
@@ -279,7 +279,7 @@ declare module "atlas" {
 
 declare module "atlas/graphics" {
     import { Resource, ResourceGroup } from "atlas";
-    import { Color } from "atlas/units";
+    import { Color, Magnitude2d } from "atlas/units";
 
     export enum TextureType {
         Color,
@@ -374,6 +374,40 @@ declare module "atlas/graphics" {
         PathTracing,
     }
 
+    export const Effects: {
+        Inversion: { type: "Inversion" };
+        Grayscale: { type: "Grayscale" };
+        Sharpen: { type: "Sharpen" };
+        Blur: { type: "Blur"; magnitude: number };
+        EdgeDetection: { type: "EdgeDetection" };
+        ColorCorrection: {
+            type: "ColorCorrection";
+            exposure: number;
+            contrast: number;
+            saturation: number;
+            gamma: number;
+            temperature: number;
+            tint: number;
+        };
+        MotionBlur: { type: "MotionBlur"; size: number; separation: number };
+        ChromaticAberration: {
+            type: "ChromaticAberration";
+            red: number;
+            green: number;
+            blue: number;
+            direction: Magnitude2d;
+        };
+        Posterization: { type: "Posterization"; levels: number };
+        Pixelation: { type: "Pixelation"; pixelSize: number };
+        Dialation: { type: "Dilation"; size: number; separation: number };
+        Dilation: { type: "Dilation"; size: number; separation: number };
+        FilmGrain: { type: "FilmGrain"; amount: number };
+    };
+
+    export type Effect =
+        | keyof typeof Effects
+        | (typeof Effects)[keyof typeof Effects];
+
     export class RenderTarget {
         type: RenderTargetType;
         resolution: number;
@@ -382,7 +416,7 @@ declare module "atlas/graphics" {
 
         constructor(type: RenderTargetType, resolution: number);
 
-        //addEffect(effect: Effect): void;
+        addEffect(effect: Effect): void;
 
         addToPassQueue(type: RenderPassType): void;
         display(): void;

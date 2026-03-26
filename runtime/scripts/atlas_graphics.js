@@ -34,6 +34,36 @@ export const RenderPassType = Object.freeze({
     PathTracing: 2,
 });
 
+export const Effects = Object.freeze({
+    Inversion: { type: "Inversion" },
+    Grayscale: { type: "Grayscale" },
+    Sharpen: { type: "Sharpen" },
+    Blur: { type: "Blur", magnitude: 16 },
+    EdgeDetection: { type: "EdgeDetection" },
+    ColorCorrection: {
+        type: "ColorCorrection",
+        exposure: 0,
+        contrast: 1,
+        saturation: 1,
+        gamma: 1,
+        temperature: 0,
+        tint: 0,
+    },
+    MotionBlur: { type: "MotionBlur", size: 8, separation: 1 },
+    ChromaticAberration: {
+        type: "ChromaticAberration",
+        red: 0.01,
+        green: 0.006,
+        blue: -0.006,
+        direction: { x: 0, y: 0 },
+    },
+    Posterization: { type: "Posterization", levels: 5 },
+    Pixelation: { type: "Pixelation", pixelSize: 8 },
+    Dialation: { type: "Dilation", size: 8, separation: 1 },
+    Dilation: { type: "Dilation", size: 8, separation: 1 },
+    FilmGrain: { type: "FilmGrain", amount: 0.05 },
+});
+
 export class Texture {
     constructor() {
         this.type = TextureType.Color;
@@ -134,6 +164,10 @@ export class RenderTarget {
         this.outTextures = [];
         this.depthTexture = null;
         return globalThis.__atlasCreateRenderTarget(type, resolution);
+    }
+
+    addEffect(effect) {
+        return globalThis.__atlasAddRenderTargetEffect(this, effect);
     }
 
     addToPassQueue(type) {
