@@ -620,3 +620,299 @@ declare module "atlas/audio" {
         useSpatialAudio(enabled: boolean): void;
     }
 }
+
+declare module "atlas/input" {
+    import { Position2d } from "atlas/units";
+
+    export enum Key {
+        Unknown,
+        Space,
+        Apostrophe,
+        Comma,
+        Minus,
+        Period,
+        Slash,
+        Key0,
+        Key1,
+        Key2,
+        Key3,
+        Key4,
+        Key5,
+        Key6,
+        Key7,
+        Key8,
+        Key9,
+        Semicolon,
+        Equal,
+        A,
+        B,
+        C,
+        D,
+        E,
+        F,
+        G,
+        H,
+        I,
+        J,
+        K,
+        L,
+        M,
+        N,
+        O,
+        P,
+        Q,
+        R,
+        S,
+        T,
+        U,
+        V,
+        W,
+        X,
+        Y,
+        Z,
+        LeftBracket,
+        Backslash,
+        RightBracket,
+        GraveAccent,
+        Escape,
+        Enter,
+        Tab,
+        Backspace,
+        Insert,
+        Delete,
+        Right,
+        Left,
+        Down,
+        Up,
+        PageUp,
+        PageDown,
+        Home,
+        End,
+        CapsLock,
+        ScrollLock,
+        NumLock,
+        PrintScreen,
+        Pause,
+        F1,
+        F2,
+        F3,
+        F4,
+        F5,
+        F6,
+        F7,
+        F8,
+        F9,
+        F10,
+        F11,
+        F12,
+        F13,
+        F14,
+        F15,
+        F16,
+        F17,
+        F18,
+        F19,
+        F20,
+        F21,
+        F22,
+        F23,
+        F24,
+        F25,
+        KP0,
+        KP1,
+        KP2,
+        KP3,
+        KP4,
+        KP5,
+        KP6,
+        KP7,
+        KP8,
+        KP9,
+        KPDecimal,
+        KPDivide,
+        KPMultiply,
+        KPSubtract,
+        KPAdd,
+        KPEnter,
+        KPEqual,
+        LeftShift,
+        LeftControl,
+        LeftAlt,
+        LeftSuper,
+        RightShift,
+        RightControl,
+        RightAlt,
+        RightSuper,
+        Menu,
+    }
+
+    export enum MouseButton {
+        Left,
+        Right,
+        Middle,
+        X1,
+        X2,
+        Button6,
+        Button7,
+        Button8,
+        Last,
+    }
+
+    export enum TriggerType {
+        MouseButton,
+        Key,
+        ControllerButton,
+    }
+
+    export type ControllerButtonTrigger = {
+        controllerID: number;
+        buttonIndex: number;
+    };
+
+    export class Trigger {
+        type: TriggerType;
+        mouseButton?: MouseButton;
+        key?: Key;
+        controllerButton?: ControllerButtonTrigger;
+
+        static fromKey(key: Key): Trigger;
+        static fromMouseButton(mouseButton: MouseButton): Trigger;
+        static fromControllerButton(
+            controllerID: number,
+            buttonIndex: number,
+        ): Trigger;
+    }
+
+    export enum AxisTriggerType {
+        MouseAxis,
+        KeyCustom,
+        ControllerAxis,
+    }
+
+    export class AxisTrigger {
+        type: AxisTriggerType;
+
+        positiveX: Trigger;
+        negativeX: Trigger;
+        positiveY: Trigger;
+        negativeY: Trigger;
+
+        controllerId?: number;
+        controllerAxisSingle: boolean;
+        axisIndex?: number;
+        axisIndexY: number;
+
+        isJoystick: boolean;
+
+        static fromMouse(): AxisTrigger;
+        static fromKeys(
+            positiveX: Key,
+            negativeX: Key,
+            positiveY: Key,
+            negativeY: Key,
+        ): AxisTrigger;
+        static fromControllerAxis(
+            controllerId: number,
+            axisIndex: number,
+            single: boolean,
+            axisIndexY?: number,
+        ): AxisTrigger;
+    }
+
+    export type AxisPacket = {
+        deltaX: number;
+        deltaY: number;
+        x: number;
+        y: number;
+        valueX: number;
+        valueY: number;
+        inputDeltaX: number;
+        inputDeltaY: number;
+        hasValueInput: boolean;
+        hasDeltaInput: boolean;
+    };
+
+    export type MousePacket = {
+        xpos: number;
+        ypos: number;
+        xoffset: number;
+        yoffset: number;
+        constrainPitch: boolean;
+        firstMouse: boolean;
+    };
+
+    export type MouseScrollPacket = {
+        xoffset: number;
+        yoffset: number;
+    };
+
+    export class InputAction {
+        triggers: Trigger[];
+        axisTriggers: AxisTrigger[];
+        name: string;
+        isAxis: boolean;
+        isAxisSingle: boolean;
+        normalized: boolean;
+        invertY: boolean;
+
+        static createButtonAction(
+            name: string,
+            triggers: Trigger[],
+        ): InputAction;
+        static createAxisAction(
+            name: string,
+            axisTriggers: AxisTrigger[],
+        ): InputAction;
+        static createSingleAxisAction(
+            name: string,
+            positiveTrigger: Trigger,
+            negativeTrigger: Trigger,
+        ): InputAction;
+    }
+
+    export const Input: {
+        addAction(action: InputAction): InputAction;
+        resetActions(): void;
+
+        isKeyActive(key: Key): boolean;
+        isKeyPressed(key: Key): boolean;
+        isMouseButtonActive(button: MouseButton): boolean;
+        isMouseButtonPressed(button: MouseButton): boolean;
+
+        getTextInput(): string;
+        startTextInput(): void;
+        stopTextInput(): void;
+        isTextInputActive(): boolean;
+
+        isControllerButtonPressed(
+            controllerID: number,
+            buttonIndex: number,
+        ): boolean;
+        getControllerAxisValue(
+            controllerID: number,
+            axisIndex: number,
+        ): number;
+        getControllerAxisPairValue(
+            controllerID: number,
+            axisIndexX: number,
+            axisIndexY: number,
+        ): Position2d;
+
+        captureMouse(): void;
+        releaseMouse(): void;
+        getMousePosition(): Position2d;
+
+        isActionTriggered(name: string): boolean;
+        isActionCurrentlyActive(name: string): boolean;
+        getAxisActionValue(name: string): AxisPacket;
+    };
+
+    export abstract class Interactive {
+        abstract onKeyPress(key: Key, dt: number): void;
+        abstract onKeyRelease(key: Key, dt: number): void;
+        abstract onMouseMove(packet: MousePacket, dt: number): void;
+        abstract onMouseButtonPress(button: MouseButton, dt: number): void;
+        abstract onMouseScroll(packet: MouseScrollPacket, dt: number): void;
+        abstract onEachFrame(dt: number): void;
+    }
+}

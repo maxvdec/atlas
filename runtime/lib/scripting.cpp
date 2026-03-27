@@ -10,6 +10,7 @@
 #include "atlas/runtime/scripting.h"
 #include "atlas/audio.h"
 #include "atlas/effect.h"
+#include "atlas/input.h"
 #include "atlas/object.h"
 #include "atlas/runtime/context.h"
 #include "atlas/texture.h"
@@ -52,6 +53,148 @@ constexpr const char *ATLAS_CAMERA_PROP = "__atlasCamera";
 constexpr const char *ATLAS_SCENE_PROP = "__atlasScene";
 constexpr const char *ATLAS_NATIVE_COMPONENT_KIND_PROP =
     "__atlasNativeComponentKind";
+
+const auto ATLAS_KEY_ENTRIES = std::to_array<std::pair<const char *, Key>>({
+    {"Unknown", Key::Unknown},
+    {"Space", Key::Space},
+    {"Apostrophe", Key::Apostrophe},
+    {"Comma", Key::Comma},
+    {"Minus", Key::Minus},
+    {"Period", Key::Period},
+    {"Slash", Key::Slash},
+    {"Key0", Key::Key0},
+    {"Key1", Key::Key1},
+    {"Key2", Key::Key2},
+    {"Key3", Key::Key3},
+    {"Key4", Key::Key4},
+    {"Key5", Key::Key5},
+    {"Key6", Key::Key6},
+    {"Key7", Key::Key7},
+    {"Key8", Key::Key8},
+    {"Key9", Key::Key9},
+    {"Semicolon", Key::Semicolon},
+    {"Equal", Key::Equal},
+    {"A", Key::A},
+    {"B", Key::B},
+    {"C", Key::C},
+    {"D", Key::D},
+    {"E", Key::E},
+    {"F", Key::F},
+    {"G", Key::G},
+    {"H", Key::H},
+    {"I", Key::I},
+    {"J", Key::J},
+    {"K", Key::K},
+    {"L", Key::L},
+    {"M", Key::M},
+    {"N", Key::N},
+    {"O", Key::O},
+    {"P", Key::P},
+    {"Q", Key::Q},
+    {"R", Key::R},
+    {"S", Key::S},
+    {"T", Key::T},
+    {"U", Key::U},
+    {"V", Key::V},
+    {"W", Key::W},
+    {"X", Key::X},
+    {"Y", Key::Y},
+    {"Z", Key::Z},
+    {"LeftBracket", Key::LeftBracket},
+    {"Backslash", Key::Backslash},
+    {"RightBracket", Key::RightBracket},
+    {"GraveAccent", Key::GraveAccent},
+    {"Escape", Key::Escape},
+    {"Enter", Key::Enter},
+    {"Tab", Key::Tab},
+    {"Backspace", Key::Backspace},
+    {"Insert", Key::Insert},
+    {"Delete", Key::Delete},
+    {"Right", Key::Right},
+    {"Left", Key::Left},
+    {"Down", Key::Down},
+    {"Up", Key::Up},
+    {"PageUp", Key::PageUp},
+    {"PageDown", Key::PageDown},
+    {"Home", Key::Home},
+    {"End", Key::End},
+    {"CapsLock", Key::CapsLock},
+    {"ScrollLock", Key::ScrollLock},
+    {"NumLock", Key::NumLock},
+    {"PrintScreen", Key::PrintScreen},
+    {"Pause", Key::Pause},
+    {"F1", Key::F1},
+    {"F2", Key::F2},
+    {"F3", Key::F3},
+    {"F4", Key::F4},
+    {"F5", Key::F5},
+    {"F6", Key::F6},
+    {"F7", Key::F7},
+    {"F8", Key::F8},
+    {"F9", Key::F9},
+    {"F10", Key::F10},
+    {"F11", Key::F11},
+    {"F12", Key::F12},
+    {"F13", Key::F13},
+    {"F14", Key::F14},
+    {"F15", Key::F15},
+    {"F16", Key::F16},
+    {"F17", Key::F17},
+    {"F18", Key::F18},
+    {"F19", Key::F19},
+    {"F20", Key::F20},
+    {"F21", Key::F21},
+    {"F22", Key::F22},
+    {"F23", Key::F23},
+    {"F24", Key::F24},
+    {"F25", Key::F25},
+    {"KP0", Key::KP0},
+    {"KP1", Key::KP1},
+    {"KP2", Key::KP2},
+    {"KP3", Key::KP3},
+    {"KP4", Key::KP4},
+    {"KP5", Key::KP5},
+    {"KP6", Key::KP6},
+    {"KP7", Key::KP7},
+    {"KP8", Key::KP8},
+    {"KP9", Key::KP9},
+    {"KPDecimal", Key::KPDecimal},
+    {"KPDivide", Key::KPDivide},
+    {"KPMultiply", Key::KPMultiply},
+    {"KPSubtract", Key::KPSubtract},
+    {"KPAdd", Key::KPAdd},
+    {"KPEnter", Key::KPEnter},
+    {"KPEqual", Key::KPEqual},
+    {"LeftShift", Key::LeftShift},
+    {"LeftControl", Key::LeftControl},
+    {"LeftAlt", Key::LeftAlt},
+    {"LeftSuper", Key::LeftSuper},
+    {"RightShift", Key::RightShift},
+    {"RightControl", Key::RightControl},
+    {"RightAlt", Key::RightAlt},
+    {"RightSuper", Key::RightSuper},
+    {"Menu", Key::Menu},
+});
+
+const auto ATLAS_MOUSE_BUTTON_ENTRIES =
+    std::to_array<std::pair<const char *, MouseButton>>({
+    {"Left", MouseButton::Left},
+    {"Right", MouseButton::Right},
+    {"Middle", MouseButton::Middle},
+    {"X1", MouseButton::Button4},
+    {"X2", MouseButton::Button5},
+    {"Button4", MouseButton::Button4},
+    {"Button5", MouseButton::Button5},
+    {"Button6", MouseButton::Button6},
+    {"Button7", MouseButton::Button7},
+    {"Button8", MouseButton::Button8},
+    {"Last", MouseButton::Last},
+    });
+
+const std::array<MouseButton, 8> ATLAS_MOUSE_BUTTONS = {
+    MouseButton::Left, MouseButton::Right, MouseButton::Middle,
+    MouseButton::Button4, MouseButton::Button5, MouseButton::Button6,
+    MouseButton::Button7, MouseButton::Button8};
 
 ScriptHost *getHost(JSContext *ctx) {
     return static_cast<ScriptHost *>(JS_GetContextOpaque(ctx));
@@ -789,6 +932,277 @@ bool parseResourceVector(JSContext *ctx, JSValueConst value,
         out.push_back(resource);
     }
 
+    return true;
+}
+
+JSValue makePlainPosition2d(JSContext *ctx, const Position2d &value) {
+    JSValue result = JS_NewObject(ctx);
+    setProperty(ctx, result, "x", JS_NewFloat64(ctx, value.x));
+    setProperty(ctx, result, "y", JS_NewFloat64(ctx, value.y));
+    return result;
+}
+
+JSValue makeAxisPacketValue(JSContext *ctx, const AxisPacket &packet) {
+    JSValue result = JS_NewObject(ctx);
+    setProperty(ctx, result, "deltaX", JS_NewFloat64(ctx, packet.deltaX));
+    setProperty(ctx, result, "deltaY", JS_NewFloat64(ctx, packet.deltaY));
+    setProperty(ctx, result, "x", JS_NewFloat64(ctx, packet.x));
+    setProperty(ctx, result, "y", JS_NewFloat64(ctx, packet.y));
+    setProperty(ctx, result, "valueX", JS_NewFloat64(ctx, packet.valueX));
+    setProperty(ctx, result, "valueY", JS_NewFloat64(ctx, packet.valueY));
+    setProperty(ctx, result, "inputDeltaX",
+                JS_NewFloat64(ctx, packet.inputDeltaX));
+    setProperty(ctx, result, "inputDeltaY",
+                JS_NewFloat64(ctx, packet.inputDeltaY));
+    setProperty(ctx, result, "hasValueInput",
+                JS_NewBool(ctx, packet.hasValueInput));
+    setProperty(ctx, result, "hasDeltaInput",
+                JS_NewBool(ctx, packet.hasDeltaInput));
+    return result;
+}
+
+JSValue makeMousePacketValue(JSContext *ctx, const MousePacket &packet) {
+    JSValue result = JS_NewObject(ctx);
+    setProperty(ctx, result, "xpos", JS_NewFloat64(ctx, packet.xpos));
+    setProperty(ctx, result, "ypos", JS_NewFloat64(ctx, packet.ypos));
+    setProperty(ctx, result, "xoffset", JS_NewFloat64(ctx, packet.xoffset));
+    setProperty(ctx, result, "yoffset", JS_NewFloat64(ctx, packet.yoffset));
+    setProperty(ctx, result, "constrainPitch",
+                JS_NewBool(ctx, packet.constrainPitch));
+    setProperty(ctx, result, "firstMouse", JS_NewBool(ctx, packet.firstMouse));
+    return result;
+}
+
+JSValue makeMouseScrollPacketValue(JSContext *ctx,
+                                   const MouseScrollPacket &packet) {
+    JSValue result = JS_NewObject(ctx);
+    setProperty(ctx, result, "xoffset", JS_NewFloat64(ctx, packet.xoffset));
+    setProperty(ctx, result, "yoffset", JS_NewFloat64(ctx, packet.yoffset));
+    return result;
+}
+
+bool parseTrigger(JSContext *ctx, JSValueConst value, Trigger &out) {
+    std::int64_t type = 0;
+    if (!readIntProperty(ctx, value, "type", type)) {
+        return false;
+    }
+
+    switch (static_cast<TriggerType>(type)) {
+    case TriggerType::MouseButton: {
+        std::int64_t button = 0;
+        if (!readIntProperty(ctx, value, "mouseButton", button)) {
+            return false;
+        }
+        out = Trigger::fromMouseButton(static_cast<MouseButton>(button));
+        return true;
+    }
+    case TriggerType::Key: {
+        std::int64_t key = 0;
+        if (!readIntProperty(ctx, value, "key", key)) {
+            return false;
+        }
+        out = Trigger::fromKey(static_cast<Key>(key));
+        return true;
+    }
+    case TriggerType::ControllerButton: {
+        JSValue controllerButton = JS_GetPropertyStr(ctx, value, "controllerButton");
+        if (JS_IsException(controllerButton) || JS_IsUndefined(controllerButton)) {
+            JS_FreeValue(ctx, controllerButton);
+            return false;
+        }
+        std::int64_t controllerID = 0;
+        std::int64_t buttonIndex = 0;
+        const bool ok = readIntProperty(ctx, controllerButton, "controllerID",
+                                        controllerID) &&
+                        readIntProperty(ctx, controllerButton, "buttonIndex",
+                                        buttonIndex);
+        JS_FreeValue(ctx, controllerButton);
+        if (!ok) {
+            return false;
+        }
+        out = Trigger::fromControllerButton(static_cast<int>(controllerID),
+                                            static_cast<int>(buttonIndex));
+        return true;
+    }
+    }
+
+    return false;
+}
+
+bool parseAxisTrigger(JSContext *ctx, JSValueConst value, AxisTrigger &out) {
+    std::int64_t type = 0;
+    if (!readIntProperty(ctx, value, "type", type)) {
+        return false;
+    }
+
+    switch (static_cast<AxisTriggerType>(type)) {
+    case AxisTriggerType::MouseAxis:
+        out = AxisTrigger::mouse();
+        break;
+    case AxisTriggerType::KeyCustom: {
+        Trigger positiveX;
+        Trigger negativeX;
+        Trigger positiveY;
+        Trigger negativeY;
+
+        JSValue prop = JS_GetPropertyStr(ctx, value, "positiveX");
+        if (JS_IsException(prop) || !parseTrigger(ctx, prop, positiveX)) {
+            JS_FreeValue(ctx, prop);
+            return false;
+        }
+        JS_FreeValue(ctx, prop);
+
+        prop = JS_GetPropertyStr(ctx, value, "negativeX");
+        if (JS_IsException(prop) || !parseTrigger(ctx, prop, negativeX)) {
+            JS_FreeValue(ctx, prop);
+            return false;
+        }
+        JS_FreeValue(ctx, prop);
+
+        prop = JS_GetPropertyStr(ctx, value, "positiveY");
+        if (JS_IsException(prop) || !parseTrigger(ctx, prop, positiveY)) {
+            JS_FreeValue(ctx, prop);
+            return false;
+        }
+        JS_FreeValue(ctx, prop);
+
+        prop = JS_GetPropertyStr(ctx, value, "negativeY");
+        if (JS_IsException(prop) || !parseTrigger(ctx, prop, negativeY)) {
+            JS_FreeValue(ctx, prop);
+            return false;
+        }
+        JS_FreeValue(ctx, prop);
+
+        out = AxisTrigger::custom(positiveX, negativeX, positiveY, negativeY);
+        break;
+    }
+    case AxisTriggerType::ControllerAxis: {
+        std::int64_t controllerId = CONTROLLER_UNDEFINED;
+        std::int64_t axisIndex = -1;
+        std::int64_t axisIndexY = -1;
+        bool single = false;
+
+        readIntProperty(ctx, value, "controllerId", controllerId);
+        readIntProperty(ctx, value, "axisIndex", axisIndex);
+        readIntProperty(ctx, value, "axisIndexY", axisIndexY);
+        readBoolProperty(ctx, value, "controllerAxisSingle", single);
+
+        if (axisIndex < 0) {
+            return false;
+        }
+
+        out = AxisTrigger::controller(static_cast<int>(controllerId),
+                                      static_cast<int>(axisIndex), single,
+                                      static_cast<int>(axisIndexY));
+        break;
+    }
+    }
+
+    bool isJoystick = out.isJoystick;
+    readBoolProperty(ctx, value, "isJoystick", isJoystick);
+    out.isJoystick = isJoystick;
+    return true;
+}
+
+bool parseInputAction(JSContext *ctx, JSValueConst value, InputAction &out) {
+    std::string name;
+    if (!readStringProperty(ctx, value, "name", name)) {
+        return false;
+    }
+
+    bool isAxis = false;
+    readBoolProperty(ctx, value, "isAxis", isAxis);
+    bool isAxisSingle = false;
+    readBoolProperty(ctx, value, "isAxisSingle", isAxisSingle);
+
+    out = InputAction();
+    out.name = name;
+    out.isAxis = isAxis;
+    out.isAxisSingle = isAxisSingle;
+
+    if (isAxis) {
+        JSValue axisTriggers = JS_GetPropertyStr(ctx, value, "axisTriggers");
+        if (!JS_IsException(axisTriggers) && JS_IsArray(axisTriggers)) {
+            std::uint32_t length = 0;
+            if (!getArrayLength(ctx, axisTriggers, length)) {
+                JS_FreeValue(ctx, axisTriggers);
+                return false;
+            }
+            out.axisTriggers.clear();
+            out.axisTriggers.reserve(length);
+            for (std::uint32_t i = 0; i < length; ++i) {
+                JSValue axisTriggerValue = JS_GetPropertyUint32(ctx, axisTriggers, i);
+                AxisTrigger axisTrigger;
+                const bool ok =
+                    !JS_IsException(axisTriggerValue) &&
+                    parseAxisTrigger(ctx, axisTriggerValue, axisTrigger);
+                JS_FreeValue(ctx, axisTriggerValue);
+                if (!ok) {
+                    JS_FreeValue(ctx, axisTriggers);
+                    return false;
+                }
+                out.axisTriggers.push_back(axisTrigger);
+            }
+        }
+        JS_FreeValue(ctx, axisTriggers);
+    } else {
+        JSValue triggers = JS_GetPropertyStr(ctx, value, "triggers");
+        if (!JS_IsException(triggers) && JS_IsArray(triggers)) {
+            std::uint32_t length = 0;
+            if (!getArrayLength(ctx, triggers, length)) {
+                JS_FreeValue(ctx, triggers);
+                return false;
+            }
+            out.buttonTriggers.clear();
+            out.buttonTriggers.reserve(length);
+            for (std::uint32_t i = 0; i < length; ++i) {
+                JSValue triggerValue = JS_GetPropertyUint32(ctx, triggers, i);
+                Trigger trigger;
+                const bool ok = !JS_IsException(triggerValue) &&
+                                parseTrigger(ctx, triggerValue, trigger);
+                JS_FreeValue(ctx, triggerValue);
+                if (!ok) {
+                    JS_FreeValue(ctx, triggers);
+                    return false;
+                }
+                out.buttonTriggers.push_back(trigger);
+            }
+        }
+        JS_FreeValue(ctx, triggers);
+    }
+
+    bool normalized = out.normalize2D;
+    bool invertY = out.invertControllerY;
+    double controllerDeadzone = out.controllerDeadzone;
+    readBoolProperty(ctx, value, "normalized", normalized);
+    readBoolProperty(ctx, value, "invertY", invertY);
+    readNumberProperty(ctx, value, "controllerDeadzone", controllerDeadzone);
+    out.normalize2D = normalized;
+    out.invertControllerY = invertY;
+    out.controllerDeadzone = static_cast<float>(controllerDeadzone);
+    return true;
+}
+
+bool callObjectMethod(JSContext *ctx, JSValueConst object, const char *methodName,
+                      int argc, JSValueConst *argv) {
+    JSValue fn = JS_GetPropertyStr(ctx, object, methodName);
+    if (JS_IsException(fn)) {
+        runtime::scripting::dumpExecution(ctx);
+        return false;
+    }
+    if (JS_IsUndefined(fn) || !JS_IsFunction(ctx, fn)) {
+        JS_FreeValue(ctx, fn);
+        return false;
+    }
+
+    JSValue ret = JS_Call(ctx, fn, object, argc, argv);
+    JS_FreeValue(ctx, fn);
+    if (JS_IsException(ret)) {
+        runtime::scripting::dumpExecution(ctx);
+        return false;
+    }
+
+    JS_FreeValue(ctx, ret);
     return true;
 }
 
@@ -2979,6 +3393,334 @@ JSValue jsUseSpatialAudio(JSContext *ctx, JSValueConst, int argc,
     return JS_UNDEFINED;
 }
 
+JSValue jsGetInputConstants(JSContext *ctx, JSValueConst, int, JSValueConst *) {
+    JSValue result = JS_NewObject(ctx);
+    JSValue keyObject = JS_NewObject(ctx);
+    for (const auto &[name, key] : ATLAS_KEY_ENTRIES) {
+        setProperty(ctx, keyObject, name,
+                    JS_NewInt32(ctx, static_cast<int>(key)));
+    }
+
+    JSValue mouseButtonObject = JS_NewObject(ctx);
+    for (const auto &[name, button] : ATLAS_MOUSE_BUTTON_ENTRIES) {
+        setProperty(ctx, mouseButtonObject, name,
+                    JS_NewInt32(ctx, static_cast<int>(button)));
+    }
+
+    JSValue triggerTypeObject = JS_NewObject(ctx);
+    setProperty(ctx, triggerTypeObject, "MouseButton",
+                JS_NewInt32(ctx, static_cast<int>(TriggerType::MouseButton)));
+    setProperty(ctx, triggerTypeObject, "Key",
+                JS_NewInt32(ctx, static_cast<int>(TriggerType::Key)));
+    setProperty(ctx, triggerTypeObject, "ControllerButton",
+                JS_NewInt32(ctx,
+                            static_cast<int>(TriggerType::ControllerButton)));
+
+    JSValue axisTriggerTypeObject = JS_NewObject(ctx);
+    setProperty(ctx, axisTriggerTypeObject, "MouseAxis",
+                JS_NewInt32(ctx, static_cast<int>(AxisTriggerType::MouseAxis)));
+    setProperty(ctx, axisTriggerTypeObject, "KeyCustom",
+                JS_NewInt32(ctx, static_cast<int>(AxisTriggerType::KeyCustom)));
+    setProperty(ctx, axisTriggerTypeObject, "ControllerAxis",
+                JS_NewInt32(ctx,
+                            static_cast<int>(AxisTriggerType::ControllerAxis)));
+
+    setProperty(ctx, result, "Key", keyObject);
+    setProperty(ctx, result, "MouseButton", mouseButtonObject);
+    setProperty(ctx, result, "TriggerType", triggerTypeObject);
+    setProperty(ctx, result, "AxisTriggerType", axisTriggerTypeObject);
+    return result;
+}
+
+JSValue jsRegisterInputAction(JSContext *ctx, JSValueConst, int argc,
+                              JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || host->context == nullptr || host->context->window == nullptr ||
+        argc < 1) {
+        return JS_ThrowTypeError(ctx, "Expected input action");
+    }
+
+    InputAction action;
+    if (!parseInputAction(ctx, argv[0], action)) {
+        return JS_ThrowTypeError(ctx, "Expected InputAction");
+    }
+
+    auto existing = host->context->window->getInputAction(action.name);
+    if (existing != nullptr) {
+        *existing = action;
+    } else {
+        host->context->window->addInputAction(std::make_shared<InputAction>(action));
+    }
+
+    return JS_DupValue(ctx, argv[0]);
+}
+
+JSValue jsResetInputActions(JSContext *ctx, JSValueConst, int, JSValueConst *) {
+    auto *host = getHost(ctx);
+    if (host != nullptr && host->context != nullptr &&
+        host->context->window != nullptr) {
+        host->context->window->resetInputActions();
+    }
+    return JS_UNDEFINED;
+}
+
+JSValue jsIsKeyActive(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || host->context == nullptr || host->context->window == nullptr ||
+        argc < 1) {
+        return JS_FALSE;
+    }
+
+    std::int64_t key = 0;
+    if (!getInt64(ctx, argv[0], key)) {
+        return JS_ThrowTypeError(ctx, "Expected key");
+    }
+    return JS_NewBool(ctx,
+                      host->context->window->isKeyActive(static_cast<Key>(key)));
+}
+
+JSValue jsIsKeyPressed(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || host->context == nullptr || host->context->window == nullptr ||
+        argc < 1) {
+        return JS_FALSE;
+    }
+
+    std::int64_t key = 0;
+    if (!getInt64(ctx, argv[0], key)) {
+        return JS_ThrowTypeError(ctx, "Expected key");
+    }
+    return JS_NewBool(
+        ctx, host->context->window->isKeyPressed(static_cast<Key>(key)));
+}
+
+JSValue jsIsMouseButtonActive(JSContext *ctx, JSValueConst, int argc,
+                              JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || host->context == nullptr || host->context->window == nullptr ||
+        argc < 1) {
+        return JS_FALSE;
+    }
+
+    std::int64_t button = 0;
+    if (!getInt64(ctx, argv[0], button)) {
+        return JS_ThrowTypeError(ctx, "Expected mouse button");
+    }
+    return JS_NewBool(ctx, host->context->window->isMouseButtonActive(
+                               static_cast<MouseButton>(button)));
+}
+
+JSValue jsIsMouseButtonPressed(JSContext *ctx, JSValueConst, int argc,
+                               JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || host->context == nullptr || host->context->window == nullptr ||
+        argc < 1) {
+        return JS_FALSE;
+    }
+
+    std::int64_t button = 0;
+    if (!getInt64(ctx, argv[0], button)) {
+        return JS_ThrowTypeError(ctx, "Expected mouse button");
+    }
+    return JS_NewBool(ctx, host->context->window->isMouseButtonPressed(
+                               static_cast<MouseButton>(button)));
+}
+
+JSValue jsGetTextInput(JSContext *ctx, JSValueConst, int, JSValueConst *) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || host->context == nullptr || host->context->window == nullptr) {
+        return JS_NewString(ctx, "");
+    }
+    return JS_NewString(ctx, host->context->window->getTextInput().c_str());
+}
+
+JSValue jsStartTextInput(JSContext *ctx, JSValueConst, int, JSValueConst *) {
+    auto *host = getHost(ctx);
+    if (host != nullptr && host->context != nullptr &&
+        host->context->window != nullptr) {
+        host->context->window->startTextInput();
+    }
+    return JS_UNDEFINED;
+}
+
+JSValue jsStopTextInput(JSContext *ctx, JSValueConst, int, JSValueConst *) {
+    auto *host = getHost(ctx);
+    if (host != nullptr && host->context != nullptr &&
+        host->context->window != nullptr) {
+        host->context->window->stopTextInput();
+    }
+    return JS_UNDEFINED;
+}
+
+JSValue jsIsTextInputActive(JSContext *ctx, JSValueConst, int, JSValueConst *) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || host->context == nullptr || host->context->window == nullptr) {
+        return JS_FALSE;
+    }
+    return JS_NewBool(ctx, host->context->window->isTextInputActive());
+}
+
+JSValue jsIsControllerButtonPressed(JSContext *ctx, JSValueConst, int argc,
+                                    JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || host->context == nullptr || host->context->window == nullptr ||
+        argc < 2) {
+        return JS_FALSE;
+    }
+
+    std::int64_t controllerID = 0;
+    std::int64_t buttonIndex = 0;
+    if (!getInt64(ctx, argv[0], controllerID) ||
+        !getInt64(ctx, argv[1], buttonIndex)) {
+        return JS_ThrowTypeError(ctx,
+                                 "Expected controller id and button index");
+    }
+
+    return JS_NewBool(ctx, host->context->window->isControllerButtonPressed(
+                               static_cast<int>(controllerID),
+                               static_cast<int>(buttonIndex)));
+}
+
+JSValue jsGetControllerAxisValue(JSContext *ctx, JSValueConst, int argc,
+                                 JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || host->context == nullptr || host->context->window == nullptr ||
+        argc < 2) {
+        return JS_NewFloat64(ctx, 0.0);
+    }
+
+    std::int64_t controllerID = 0;
+    std::int64_t axisIndex = 0;
+    if (!getInt64(ctx, argv[0], controllerID) ||
+        !getInt64(ctx, argv[1], axisIndex)) {
+        return JS_ThrowTypeError(ctx, "Expected controller id and axis index");
+    }
+
+    return JS_NewFloat64(ctx, host->context->window->getControllerAxisValue(
+                                  static_cast<int>(controllerID),
+                                  static_cast<int>(axisIndex)));
+}
+
+JSValue jsGetControllerAxisPairValue(JSContext *ctx, JSValueConst, int argc,
+                                     JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || host->context == nullptr || host->context->window == nullptr ||
+        argc < 3) {
+        return makePlainPosition2d(ctx, Position2d(0.0, 0.0));
+    }
+
+    std::int64_t controllerID = 0;
+    std::int64_t axisIndexX = 0;
+    std::int64_t axisIndexY = 0;
+    if (!getInt64(ctx, argv[0], controllerID) ||
+        !getInt64(ctx, argv[1], axisIndexX) ||
+        !getInt64(ctx, argv[2], axisIndexY)) {
+        return JS_ThrowTypeError(
+            ctx, "Expected controller id and axis indices");
+    }
+
+    const auto value = host->context->window->getControllerAxisPairValue(
+        static_cast<int>(controllerID), static_cast<int>(axisIndexX),
+        static_cast<int>(axisIndexY));
+    return makePlainPosition2d(ctx, Position2d(value.first, value.second));
+}
+
+JSValue jsCaptureMouse(JSContext *ctx, JSValueConst, int, JSValueConst *) {
+    auto *host = getHost(ctx);
+    if (host != nullptr && host->context != nullptr &&
+        host->context->window != nullptr) {
+        host->context->window->captureMouse();
+    }
+    return JS_UNDEFINED;
+}
+
+JSValue jsReleaseMouse(JSContext *ctx, JSValueConst, int, JSValueConst *) {
+    auto *host = getHost(ctx);
+    if (host != nullptr && host->context != nullptr &&
+        host->context->window != nullptr) {
+        host->context->window->releaseMouse();
+    }
+    return JS_UNDEFINED;
+}
+
+JSValue jsGetMousePosition(JSContext *ctx, JSValueConst, int, JSValueConst *) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || host->context == nullptr || host->context->window == nullptr) {
+        return makePlainPosition2d(ctx, Position2d(0.0, 0.0));
+    }
+
+    const auto [x, y] = host->context->window->getCursorPosition();
+    return makePlainPosition2d(ctx, Position2d(x, y));
+}
+
+JSValue jsIsActionTriggered(JSContext *ctx, JSValueConst, int argc,
+                            JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || host->context == nullptr || host->context->window == nullptr ||
+        argc < 1) {
+        return JS_FALSE;
+    }
+
+    const char *name = JS_ToCString(ctx, argv[0]);
+    if (name == nullptr) {
+        return JS_ThrowTypeError(ctx, "Expected action name");
+    }
+    const bool result = host->context->window->isActionTriggered(name);
+    JS_FreeCString(ctx, name);
+    return JS_NewBool(ctx, result);
+}
+
+JSValue jsIsActionCurrentlyActive(JSContext *ctx, JSValueConst, int argc,
+                                  JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || host->context == nullptr || host->context->window == nullptr ||
+        argc < 1) {
+        return JS_FALSE;
+    }
+
+    const char *name = JS_ToCString(ctx, argv[0]);
+    if (name == nullptr) {
+        return JS_ThrowTypeError(ctx, "Expected action name");
+    }
+    const bool result = host->context->window->isActionCurrentlyActive(name);
+    JS_FreeCString(ctx, name);
+    return JS_NewBool(ctx, result);
+}
+
+JSValue jsGetAxisActionValue(JSContext *ctx, JSValueConst, int argc,
+                             JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || host->context == nullptr || host->context->window == nullptr ||
+        argc < 1) {
+        return makeAxisPacketValue(ctx, {});
+    }
+
+    const char *name = JS_ToCString(ctx, argv[0]);
+    if (name == nullptr) {
+        return JS_ThrowTypeError(ctx, "Expected action name");
+    }
+    const AxisPacket packet = host->context->window->getAxisActionValue(name);
+    JS_FreeCString(ctx, name);
+    return makeAxisPacketValue(ctx, packet);
+}
+
+JSValue jsRegisterInteractive(JSContext *ctx, JSValueConst, int argc,
+                              JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 1 || !JS_IsObject(argv[0])) {
+        return JS_ThrowTypeError(ctx, "Expected interactive object");
+    }
+
+    for (const JSValue &interactive : host->interactiveValues) {
+        if (JS_IsStrictEqual(ctx, interactive, argv[0])) {
+            return JS_DupValue(ctx, argv[0]);
+        }
+    }
+
+    host->interactiveValues.push_back(JS_DupValue(ctx, argv[0]));
+    return JS_DupValue(ctx, argv[0]);
+}
+
 class HostedScriptComponent final : public Component {
   public:
     HostedScriptComponent(JSContext *context, ScriptHost *scriptHost,
@@ -3592,9 +4334,16 @@ void runtime::scripting::clearSceneBindings(JSContext *ctx, ScriptHost &host) {
     }
     host.renderTargets.clear();
 
+    for (JSValue &interactive : host.interactiveValues) {
+        JS_FreeValue(ctx, interactive);
+    }
+    host.interactiveValues.clear();
+
     host.componentIds.clear();
     host.componentOrder.clear();
     host.componentLookup.clear();
+    host.interactiveKeyStates.clear();
+    host.interactiveFirstMouse = true;
     host.objectStates.clear();
     host.nextComponentId = 1;
     host.nextAudioPlayerId = 1;
@@ -3603,6 +4352,92 @@ void runtime::scripting::clearSceneBindings(JSContext *ctx, ScriptHost &host) {
     host.nextSkyboxId = 1;
     host.nextRenderTargetId = 1;
     host.generation += 1;
+}
+
+void runtime::scripting::dispatchInteractiveFrame(JSContext *ctx, ScriptHost &host,
+                                                  Window &window,
+                                                  float deltaTime) {
+    if (host.interactiveValues.empty()) {
+        host.interactiveKeyStates.clear();
+        return;
+    }
+
+    auto dispatch = [&](const char *methodName, int argc, JSValue *args) {
+        JSValueConst *constArgs = args;
+        for (JSValue &interactive : host.interactiveValues) {
+            callObjectMethod(ctx, interactive, methodName, argc, constArgs);
+        }
+        for (int i = 0; i < argc; ++i) {
+            JS_FreeValue(ctx, args[i]);
+        }
+    };
+
+    for (const auto &[_, key] : ATLAS_KEY_ENTRIES) {
+        const int keyCode = static_cast<int>(key);
+        const bool active = window.isKeyActive(key);
+        const bool previous = host.interactiveKeyStates[keyCode];
+        if (active && !previous) {
+            JSValue args[] = {JS_NewInt32(ctx, keyCode),
+                              JS_NewFloat64(ctx, deltaTime)};
+            dispatch("onKeyPress", 2, args);
+        } else if (!active && previous) {
+            JSValue args[] = {JS_NewInt32(ctx, keyCode),
+                              JS_NewFloat64(ctx, deltaTime)};
+            dispatch("onKeyRelease", 2, args);
+        }
+        host.interactiveKeyStates[keyCode] = active;
+    }
+
+    for (MouseButton button : ATLAS_MOUSE_BUTTONS) {
+        if (!window.isMouseButtonPressed(button)) {
+            continue;
+        }
+        JSValue args[] = {JS_NewInt32(ctx, static_cast<int>(button)),
+                          JS_NewFloat64(ctx, deltaTime)};
+        dispatch("onMouseButtonPress", 2, args);
+    }
+
+    JSValue frameArgs[] = {JS_NewFloat64(ctx, deltaTime)};
+    dispatch("onEachFrame", 1, frameArgs);
+}
+
+void runtime::scripting::dispatchInteractiveMouseMove(JSContext *ctx,
+                                                      ScriptHost &host,
+                                                      Window &window,
+                                                      const MousePacket &packet,
+                                                      float deltaTime) {
+    if (host.interactiveValues.empty()) {
+        return;
+    }
+
+    JSValue args[] = {makeMousePacketValue(ctx, packet),
+                      JS_NewFloat64(ctx, deltaTime)};
+    JSValueConst *constArgs = args;
+    for (JSValue &interactive : host.interactiveValues) {
+        callObjectMethod(ctx, interactive, "onMouseMove", 2, constArgs);
+    }
+    JS_FreeValue(ctx, args[0]);
+    JS_FreeValue(ctx, args[1]);
+
+    (void)window;
+    host.interactiveFirstMouse = false;
+}
+
+void runtime::scripting::dispatchInteractiveMouseScroll(
+    JSContext *ctx, ScriptHost &host, const MouseScrollPacket &packet,
+    float deltaTime) {
+    if (host.interactiveValues.empty()) {
+        return;
+    }
+
+    JSValue args[] = {makeMouseScrollPacketValue(ctx, packet),
+                      JS_NewFloat64(ctx, deltaTime)};
+    JSValueConst *constArgs = args;
+    for (JSValue &interactive : host.interactiveValues) {
+        callObjectMethod(ctx, interactive, "onMouseScroll", 2, constArgs);
+    }
+    JS_FreeValue(ctx, args[0]);
+    JS_FreeValue(ctx, args[1]);
 }
 
 std::uint64_t runtime::scripting::registerComponentInstance(
@@ -3678,6 +4513,69 @@ void runtime::scripting::installGlobals(JSContext *ctx) {
     JS_SetPropertyStr(ctx, global, "__atlasGetCameraDirection",
                       JS_NewCFunction(ctx, jsGetCameraDirection,
                                       "__atlasGetCameraDirection", 1));
+    JS_SetPropertyStr(ctx, global, "__atlasGetInputConstants",
+                      JS_NewCFunction(ctx, jsGetInputConstants,
+                                      "__atlasGetInputConstants", 0));
+    JS_SetPropertyStr(ctx, global, "__atlasRegisterInputAction",
+                      JS_NewCFunction(ctx, jsRegisterInputAction,
+                                      "__atlasRegisterInputAction", 1));
+    JS_SetPropertyStr(ctx, global, "__atlasResetInputActions",
+                      JS_NewCFunction(ctx, jsResetInputActions,
+                                      "__atlasResetInputActions", 0));
+    JS_SetPropertyStr(ctx, global, "__atlasIsKeyActive",
+                      JS_NewCFunction(ctx, jsIsKeyActive,
+                                      "__atlasIsKeyActive", 1));
+    JS_SetPropertyStr(ctx, global, "__atlasIsKeyPressed",
+                      JS_NewCFunction(ctx, jsIsKeyPressed,
+                                      "__atlasIsKeyPressed", 1));
+    JS_SetPropertyStr(ctx, global, "__atlasIsMouseButtonActive",
+                      JS_NewCFunction(ctx, jsIsMouseButtonActive,
+                                      "__atlasIsMouseButtonActive", 1));
+    JS_SetPropertyStr(ctx, global, "__atlasIsMouseButtonPressed",
+                      JS_NewCFunction(ctx, jsIsMouseButtonPressed,
+                                      "__atlasIsMouseButtonPressed", 1));
+    JS_SetPropertyStr(ctx, global, "__atlasGetTextInput",
+                      JS_NewCFunction(ctx, jsGetTextInput,
+                                      "__atlasGetTextInput", 0));
+    JS_SetPropertyStr(ctx, global, "__atlasStartTextInput",
+                      JS_NewCFunction(ctx, jsStartTextInput,
+                                      "__atlasStartTextInput", 0));
+    JS_SetPropertyStr(ctx, global, "__atlasStopTextInput",
+                      JS_NewCFunction(ctx, jsStopTextInput,
+                                      "__atlasStopTextInput", 0));
+    JS_SetPropertyStr(ctx, global, "__atlasIsTextInputActive",
+                      JS_NewCFunction(ctx, jsIsTextInputActive,
+                                      "__atlasIsTextInputActive", 0));
+    JS_SetPropertyStr(ctx, global, "__atlasIsControllerButtonPressed",
+                      JS_NewCFunction(ctx, jsIsControllerButtonPressed,
+                                      "__atlasIsControllerButtonPressed", 2));
+    JS_SetPropertyStr(ctx, global, "__atlasGetControllerAxisValue",
+                      JS_NewCFunction(ctx, jsGetControllerAxisValue,
+                                      "__atlasGetControllerAxisValue", 2));
+    JS_SetPropertyStr(ctx, global, "__atlasGetControllerAxisPairValue",
+                      JS_NewCFunction(ctx, jsGetControllerAxisPairValue,
+                                      "__atlasGetControllerAxisPairValue", 3));
+    JS_SetPropertyStr(ctx, global, "__atlasCaptureMouse",
+                      JS_NewCFunction(ctx, jsCaptureMouse,
+                                      "__atlasCaptureMouse", 0));
+    JS_SetPropertyStr(ctx, global, "__atlasReleaseMouse",
+                      JS_NewCFunction(ctx, jsReleaseMouse,
+                                      "__atlasReleaseMouse", 0));
+    JS_SetPropertyStr(ctx, global, "__atlasGetMousePosition",
+                      JS_NewCFunction(ctx, jsGetMousePosition,
+                                      "__atlasGetMousePosition", 0));
+    JS_SetPropertyStr(ctx, global, "__atlasIsActionTriggered",
+                      JS_NewCFunction(ctx, jsIsActionTriggered,
+                                      "__atlasIsActionTriggered", 1));
+    JS_SetPropertyStr(ctx, global, "__atlasIsActionCurrentlyActive",
+                      JS_NewCFunction(ctx, jsIsActionCurrentlyActive,
+                                      "__atlasIsActionCurrentlyActive", 1));
+    JS_SetPropertyStr(ctx, global, "__atlasGetAxisActionValue",
+                      JS_NewCFunction(ctx, jsGetAxisActionValue,
+                                      "__atlasGetAxisActionValue", 1));
+    JS_SetPropertyStr(ctx, global, "__atlasRegisterInteractive",
+                      JS_NewCFunction(ctx, jsRegisterInteractive,
+                                      "__atlasRegisterInteractive", 1));
     JS_SetPropertyStr(ctx, global, "__atlasCreateTextureFromResource",
                       JS_NewCFunction(ctx, jsCreateTextureFromResource,
                                       "__atlasCreateTextureFromResource", 2));

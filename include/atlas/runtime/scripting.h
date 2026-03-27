@@ -21,10 +21,13 @@ class Context;
 class GameObject;
 class Component;
 class AudioPlayer;
+class Window;
 struct Texture;
 struct Cubemap;
 class Skybox;
 class RenderTarget;
+struct MousePacket;
+struct MouseScrollPacket;
 
 struct ScriptObjectState {
     GameObject *object = nullptr;
@@ -84,6 +87,9 @@ struct ScriptHost {
     std::unordered_map<std::uint64_t, ScriptCubemapState> cubemaps;
     std::unordered_map<std::uint64_t, ScriptSkyboxState> skyboxes;
     std::unordered_map<std::uint64_t, ScriptRenderTargetState> renderTargets;
+    std::vector<JSValue> interactiveValues;
+    std::unordered_map<int, bool> interactiveKeyStates;
+    bool interactiveFirstMouse = true;
     JSValue cameraValue = JS_UNDEFINED;
     JSValue sceneValue = JS_UNDEFINED;
     JSValue atlasNamespace = JS_UNDEFINED;
@@ -134,6 +140,14 @@ std::uint64_t registerComponentInstance(JSContext *ctx, ScriptHost &host,
                                         Component *component, int ownerId,
                                         const std::string &name,
                                         JSValueConst value);
+void dispatchInteractiveFrame(JSContext *ctx, ScriptHost &host, Window &window,
+                              float deltaTime);
+void dispatchInteractiveMouseMove(JSContext *ctx, ScriptHost &host,
+                                  Window &window, const MousePacket &packet,
+                                  float deltaTime);
+void dispatchInteractiveMouseScroll(JSContext *ctx, ScriptHost &host,
+                                    const MouseScrollPacket &packet,
+                                    float deltaTime);
 
 char *normalizeModuleName(JSContext *ctx, const char *baseName,
                           const char *name, void *host);

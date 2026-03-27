@@ -3088,6 +3088,11 @@ void Context::loadProject() {
 void RuntimeScene::update(Window &window) {
     if (context == nullptr || context->camera == nullptr ||
         !context->cameraAutomaticMoving) {
+        if (context != nullptr && context->context != nullptr) {
+            runtime::scripting::dispatchInteractiveFrame(
+                context->context, context->scriptHost, window,
+                window.getDeltaTime());
+        }
         return;
     }
 
@@ -3098,9 +3103,28 @@ void RuntimeScene::update(Window &window) {
     } else {
         context->camera->update(window);
     }
+
+    if (context->context != nullptr) {
+        runtime::scripting::dispatchInteractiveFrame(
+            context->context, context->scriptHost, window, window.getDeltaTime());
+    }
 }
 
 void RuntimeScene::onMouseMove(Window &window, Movement2d movement) {
+    if (context != nullptr && context->context != nullptr) {
+        const auto [x, y] = window.getCursorPosition();
+        MousePacket packet;
+        packet.xpos = static_cast<float>(x);
+        packet.ypos = static_cast<float>(y);
+        packet.xoffset = movement.x;
+        packet.yoffset = movement.y;
+        packet.constrainPitch = true;
+        packet.firstMouse = context->scriptHost.interactiveFirstMouse;
+        runtime::scripting::dispatchInteractiveMouseMove(
+            context->context, context->scriptHost, window, packet,
+            window.getDeltaTime());
+    }
+
     if (context == nullptr || context->camera == nullptr ||
         !context->cameraAutomaticMoving || context->cameraActions.size() >= 3) {
         return;
@@ -3109,6 +3133,12 @@ void RuntimeScene::onMouseMove(Window &window, Movement2d movement) {
 }
 
 void RuntimeScene::onMouseScroll(Window &window, Movement2d offset) {
+    if (context != nullptr && context->context != nullptr) {
+        MouseScrollPacket packet{offset.x, offset.y};
+        runtime::scripting::dispatchInteractiveMouseScroll(
+            context->context, context->scriptHost, packet, window.getDeltaTime());
+    }
+
     if (context == nullptr || context->camera == nullptr ||
         !context->cameraAutomaticMoving || context->cameraActions.size() >= 3) {
         return;
