@@ -11,6 +11,7 @@
 #include "atlas/audio.h"
 #include "atlas/effect.h"
 #include "atlas/input.h"
+#include "atlas/light.h"
 #include "atlas/object.h"
 #include "atlas/runtime/context.h"
 #include "atlas/texture.h"
@@ -47,6 +48,11 @@ constexpr const char *ATLAS_TEXTURE_ID_PROP = "__atlasTextureId";
 constexpr const char *ATLAS_CUBEMAP_ID_PROP = "__atlasCubemapId";
 constexpr const char *ATLAS_SKYBOX_ID_PROP = "__atlasSkyboxId";
 constexpr const char *ATLAS_RENDER_TARGET_ID_PROP = "__atlasRenderTargetId";
+constexpr const char *ATLAS_POINT_LIGHT_ID_PROP = "__atlasPointLightId";
+constexpr const char *ATLAS_DIRECTIONAL_LIGHT_ID_PROP =
+    "__atlasDirectionalLightId";
+constexpr const char *ATLAS_SPOT_LIGHT_ID_PROP = "__atlasSpotLightId";
+constexpr const char *ATLAS_AREA_LIGHT_ID_PROP = "__atlasAreaLightId";
 constexpr const char *ATLAS_GENERATION_PROP = "__atlasGeneration";
 constexpr const char *ATLAS_IS_CORE_OBJECT_PROP = "__atlasIsCoreObject";
 constexpr const char *ATLAS_CAMERA_PROP = "__atlasCamera";
@@ -646,6 +652,14 @@ bool ensureBuiltins(JSContext *ctx, ScriptHost &host) {
                    host.skyboxPrototype);
     cachePrototype(ctx, host.atlasGraphicsNamespace, "RenderTarget",
                    host.renderTargetPrototype);
+    cachePrototype(ctx, host.atlasGraphicsNamespace, "Light",
+                   host.pointLightPrototype);
+    cachePrototype(ctx, host.atlasGraphicsNamespace, "DirectionalLight",
+                   host.directionalLightPrototype);
+    cachePrototype(ctx, host.atlasGraphicsNamespace, "SpotLight",
+                   host.spotLightPrototype);
+    cachePrototype(ctx, host.atlasGraphicsNamespace, "AreaLight",
+                   host.areaLightPrototype);
     cachePrototype(ctx, host.atlasUnitsNamespace, "Position3d",
                    host.position3dPrototype);
     cachePrototype(ctx, host.atlasUnitsNamespace, "Position2d",
@@ -679,6 +693,13 @@ JSValue makePosition2d(JSContext *ctx, ScriptHost &host,
     JSValue result = newObjectFromPrototype(ctx, host.position2dPrototype);
     setProperty(ctx, result, "x", JS_NewFloat64(ctx, value.x));
     setProperty(ctx, result, "y", JS_NewFloat64(ctx, value.y));
+    return result;
+}
+
+JSValue makeSize2d(JSContext *ctx, ScriptHost &host, const Size2d &value) {
+    JSValue result = newObjectFromPrototype(ctx, host.size2dPrototype);
+    setProperty(ctx, result, "width", JS_NewFloat64(ctx, value.width));
+    setProperty(ctx, result, "height", JS_NewFloat64(ctx, value.height));
     return result;
 }
 
@@ -1239,6 +1260,42 @@ ScriptRenderTargetState *findRenderTargetState(ScriptHost &host,
     return &it->second;
 }
 
+ScriptPointLightState *findPointLightState(ScriptHost &host,
+                                           std::uint64_t lightId) {
+    auto it = host.pointLights.find(lightId);
+    if (it == host.pointLights.end()) {
+        return nullptr;
+    }
+    return &it->second;
+}
+
+ScriptDirectionalLightState *findDirectionalLightState(ScriptHost &host,
+                                                       std::uint64_t lightId) {
+    auto it = host.directionalLights.find(lightId);
+    if (it == host.directionalLights.end()) {
+        return nullptr;
+    }
+    return &it->second;
+}
+
+ScriptSpotLightState *findSpotLightState(ScriptHost &host,
+                                         std::uint64_t lightId) {
+    auto it = host.spotLights.find(lightId);
+    if (it == host.spotLights.end()) {
+        return nullptr;
+    }
+    return &it->second;
+}
+
+ScriptAreaLightState *findAreaLightState(ScriptHost &host,
+                                         std::uint64_t lightId) {
+    auto it = host.areaLights.find(lightId);
+    if (it == host.areaLights.end()) {
+        return nullptr;
+    }
+    return &it->second;
+}
+
 std::uint64_t registerTextureState(ScriptHost &host, const Texture &texture) {
     const std::uint64_t textureId = host.nextTextureId++;
     host.textures[textureId] = {.texture = std::make_shared<Texture>(texture),
@@ -1466,6 +1523,187 @@ JSValue syncRenderTargetWrapper(JSContext *ctx, ScriptHost &host,
     } else {
         setProperty(ctx, wrapper, "depthTexture", JS_NULL);
     }
+    return wrapper;
+}
+
+void syncPointLightDebugObject(Light &light) {
+    if (light.debugObject == nullptr) {
+        return;
+    }
+    light.debugObject->setPosition(light.position);
+    light.debugObject->setColor(light.color);
+}
+
+void syncSpotLightDebugObject(Spotlight &light) {
+    if (light.debugObject == nullptr) {
+        return;
+    }
+    light.debugObject->setPosition(light.position);
+    light.setColor(light.color);
+    light.updateDebugObjectRotation();
+}
+
+void syncAreaLightDebugObject(AreaLight &light) {
+    if (light.debugObject == nullptr) {
+        return;
+    }
+    light.debugObject->setPosition(light.position);
+    light.debugObject->lookAt(light.position + light.getNormal(), light.up);
+    light.debugObject->material.albedo = light.color;
+    light.debugObject->material.emissiveColor = light.color;
+    light.debugObject->material.emissiveIntensity =
+        std::clamp(light.intensity * 0.2f, 1.0f, 8.0f);
+}
+
+JSValue syncPointLightWrapper(JSContext *ctx, ScriptHost &host,
+                              std::uint64_t lightId) {
+    auto *state = findPointLightState(host, lightId);
+    if (state == nullptr || state->light == nullptr) {
+        return JS_NULL;
+    }
+    if (!ensureBuiltins(ctx, host)) {
+        return JS_EXCEPTION;
+    }
+
+    JSValue wrapper = JS_UNDEFINED;
+    if (!JS_IsUndefined(state->value)) {
+        wrapper = JS_DupValue(ctx, state->value);
+    } else {
+        wrapper = newObjectFromPrototype(ctx, host.pointLightPrototype);
+        state->value = JS_DupValue(ctx, wrapper);
+    }
+
+    setProperty(ctx, wrapper, ATLAS_POINT_LIGHT_ID_PROP,
+                JS_NewInt64(ctx, static_cast<int64_t>(lightId)));
+    setProperty(ctx, wrapper, ATLAS_GENERATION_PROP,
+                JS_NewInt64(ctx, static_cast<int64_t>(host.generation)));
+    setProperty(ctx, wrapper, "position",
+                makePosition3d(ctx, host, state->light->position));
+    setProperty(ctx, wrapper, "color", makeColor(ctx, host, state->light->color));
+    setProperty(ctx, wrapper, "shineColor",
+                makeColor(ctx, host, state->light->shineColor));
+    setProperty(ctx, wrapper, "intensity",
+                JS_NewFloat64(ctx, state->light->intensity));
+    setProperty(ctx, wrapper, "distance",
+                JS_NewFloat64(ctx, state->light->distance));
+    return wrapper;
+}
+
+JSValue syncDirectionalLightWrapper(JSContext *ctx, ScriptHost &host,
+                                    std::uint64_t lightId) {
+    auto *state = findDirectionalLightState(host, lightId);
+    if (state == nullptr || state->light == nullptr) {
+        return JS_NULL;
+    }
+    if (!ensureBuiltins(ctx, host)) {
+        return JS_EXCEPTION;
+    }
+
+    JSValue wrapper = JS_UNDEFINED;
+    if (!JS_IsUndefined(state->value)) {
+        wrapper = JS_DupValue(ctx, state->value);
+    } else {
+        wrapper = newObjectFromPrototype(ctx, host.directionalLightPrototype);
+        state->value = JS_DupValue(ctx, wrapper);
+    }
+
+    setProperty(ctx, wrapper, ATLAS_DIRECTIONAL_LIGHT_ID_PROP,
+                JS_NewInt64(ctx, static_cast<int64_t>(lightId)));
+    setProperty(ctx, wrapper, ATLAS_GENERATION_PROP,
+                JS_NewInt64(ctx, static_cast<int64_t>(host.generation)));
+    setProperty(ctx, wrapper, "direction",
+                makePosition3d(ctx, host, state->light->direction));
+    setProperty(ctx, wrapper, "color", makeColor(ctx, host, state->light->color));
+    setProperty(ctx, wrapper, "shineColor",
+                makeColor(ctx, host, state->light->shineColor));
+    setProperty(ctx, wrapper, "intensity",
+                JS_NewFloat64(ctx, state->light->intensity));
+    return wrapper;
+}
+
+JSValue syncSpotLightWrapper(JSContext *ctx, ScriptHost &host,
+                             std::uint64_t lightId) {
+    auto *state = findSpotLightState(host, lightId);
+    if (state == nullptr || state->light == nullptr) {
+        return JS_NULL;
+    }
+    if (!ensureBuiltins(ctx, host)) {
+        return JS_EXCEPTION;
+    }
+
+    JSValue wrapper = JS_UNDEFINED;
+    if (!JS_IsUndefined(state->value)) {
+        wrapper = JS_DupValue(ctx, state->value);
+    } else {
+        wrapper = newObjectFromPrototype(ctx, host.spotLightPrototype);
+        state->value = JS_DupValue(ctx, wrapper);
+    }
+
+    const double cutOff =
+        glm::degrees(std::acos(std::clamp(static_cast<double>(state->light->cutOff),
+                                          -1.0, 1.0)));
+    const double outerCutOff =
+        glm::degrees(std::acos(std::clamp(
+            static_cast<double>(state->light->outerCutoff), -1.0, 1.0)));
+
+    setProperty(ctx, wrapper, ATLAS_SPOT_LIGHT_ID_PROP,
+                JS_NewInt64(ctx, static_cast<int64_t>(lightId)));
+    setProperty(ctx, wrapper, ATLAS_GENERATION_PROP,
+                JS_NewInt64(ctx, static_cast<int64_t>(host.generation)));
+    setProperty(ctx, wrapper, "position",
+                makePosition3d(ctx, host, state->light->position));
+    setProperty(ctx, wrapper, "direction",
+                makePosition3d(ctx, host, state->light->direction));
+    setProperty(ctx, wrapper, "color", makeColor(ctx, host, state->light->color));
+    setProperty(ctx, wrapper, "shineColor",
+                makeColor(ctx, host, state->light->shineColor));
+    setProperty(ctx, wrapper, "range", JS_NewFloat64(ctx, state->light->range));
+    setProperty(ctx, wrapper, "cutOff", JS_NewFloat64(ctx, cutOff));
+    setProperty(ctx, wrapper, "outerCutOff", JS_NewFloat64(ctx, outerCutOff));
+    setProperty(ctx, wrapper, "intensity",
+                JS_NewFloat64(ctx, state->light->intensity));
+    return wrapper;
+}
+
+JSValue syncAreaLightWrapper(JSContext *ctx, ScriptHost &host,
+                             std::uint64_t lightId) {
+    auto *state = findAreaLightState(host, lightId);
+    if (state == nullptr || state->light == nullptr) {
+        return JS_NULL;
+    }
+    if (!ensureBuiltins(ctx, host)) {
+        return JS_EXCEPTION;
+    }
+
+    JSValue wrapper = JS_UNDEFINED;
+    if (!JS_IsUndefined(state->value)) {
+        wrapper = JS_DupValue(ctx, state->value);
+    } else {
+        wrapper = newObjectFromPrototype(ctx, host.areaLightPrototype);
+        state->value = JS_DupValue(ctx, wrapper);
+    }
+
+    setProperty(ctx, wrapper, ATLAS_AREA_LIGHT_ID_PROP,
+                JS_NewInt64(ctx, static_cast<int64_t>(lightId)));
+    setProperty(ctx, wrapper, ATLAS_GENERATION_PROP,
+                JS_NewInt64(ctx, static_cast<int64_t>(host.generation)));
+    setProperty(ctx, wrapper, "position",
+                makePosition3d(ctx, host, state->light->position));
+    setProperty(ctx, wrapper, "right",
+                makePosition3d(ctx, host, state->light->right));
+    setProperty(ctx, wrapper, "up", makePosition3d(ctx, host, state->light->up));
+    setProperty(ctx, wrapper, "size", makeSize2d(ctx, host, state->light->size));
+    setProperty(ctx, wrapper, "color", makeColor(ctx, host, state->light->color));
+    setProperty(ctx, wrapper, "shineColor",
+                makeColor(ctx, host, state->light->shineColor));
+    setProperty(ctx, wrapper, "intensity",
+                JS_NewFloat64(ctx, state->light->intensity));
+    setProperty(ctx, wrapper, "range", JS_NewFloat64(ctx, state->light->range));
+    setProperty(ctx, wrapper, "angle", JS_NewFloat64(ctx, state->light->angle));
+    setProperty(ctx, wrapper, "castsBothSides",
+                JS_NewBool(ctx, state->light->castsBothSides));
+    setProperty(ctx, wrapper, "rotation",
+                makeRotation3d(ctx, host, state->light->rotation));
     return wrapper;
 }
 
@@ -2195,6 +2433,208 @@ bool applyCoreObject(JSContext *ctx, ScriptHost &host, JSValueConst wrapper,
     return true;
 }
 
+bool applyPointLight(JSContext *ctx, JSValueConst wrapper, Light &light) {
+    Position3d position = light.position;
+    Color color = light.color;
+    Color shineColor = light.shineColor;
+    double intensity = light.intensity;
+    double distance = light.distance;
+
+    JSValue value = JS_GetPropertyStr(ctx, wrapper, "position");
+    if (!JS_IsException(value) && !JS_IsUndefined(value)) {
+        parsePosition3d(ctx, value, position);
+    }
+    JS_FreeValue(ctx, value);
+
+    value = JS_GetPropertyStr(ctx, wrapper, "color");
+    if (!JS_IsException(value) && !JS_IsUndefined(value)) {
+        parseColor(ctx, value, color);
+    }
+    JS_FreeValue(ctx, value);
+
+    value = JS_GetPropertyStr(ctx, wrapper, "shineColor");
+    if (!JS_IsException(value) && !JS_IsUndefined(value)) {
+        parseColor(ctx, value, shineColor);
+    }
+    JS_FreeValue(ctx, value);
+
+    readNumberProperty(ctx, wrapper, "intensity", intensity);
+    readNumberProperty(ctx, wrapper, "distance", distance);
+
+    light.position = position;
+    light.setColor(color);
+    light.shineColor = shineColor;
+    light.intensity = static_cast<float>(intensity);
+    light.distance = static_cast<float>(distance);
+    syncPointLightDebugObject(light);
+    return true;
+}
+
+bool applyDirectionalLight(JSContext *ctx, JSValueConst wrapper,
+                           DirectionalLight &light) {
+    Magnitude3d direction = light.direction;
+    Color color = light.color;
+    Color shineColor = light.shineColor;
+    double intensity = light.intensity;
+
+    JSValue value = JS_GetPropertyStr(ctx, wrapper, "direction");
+    if (!JS_IsException(value) && !JS_IsUndefined(value)) {
+        parsePosition3d(ctx, value, direction);
+    }
+    JS_FreeValue(ctx, value);
+
+    value = JS_GetPropertyStr(ctx, wrapper, "color");
+    if (!JS_IsException(value) && !JS_IsUndefined(value)) {
+        parseColor(ctx, value, color);
+    }
+    JS_FreeValue(ctx, value);
+
+    value = JS_GetPropertyStr(ctx, wrapper, "shineColor");
+    if (!JS_IsException(value) && !JS_IsUndefined(value)) {
+        parseColor(ctx, value, shineColor);
+    }
+    JS_FreeValue(ctx, value);
+
+    readNumberProperty(ctx, wrapper, "intensity", intensity);
+
+    light.direction = direction.normalized();
+    light.color = color;
+    light.shineColor = shineColor;
+    light.intensity = static_cast<float>(intensity);
+    return true;
+}
+
+bool applySpotLight(JSContext *ctx, JSValueConst wrapper, Spotlight &light) {
+    Position3d position = light.position;
+    Magnitude3d direction = light.direction;
+    Color color = light.color;
+    Color shineColor = light.shineColor;
+    double range = light.range;
+    double cutOff =
+        glm::degrees(std::acos(std::clamp(static_cast<double>(light.cutOff), -1.0,
+                                          1.0)));
+    double outerCutOff = glm::degrees(std::acos(std::clamp(
+        static_cast<double>(light.outerCutoff), -1.0, 1.0)));
+    double intensity = light.intensity;
+
+    JSValue value = JS_GetPropertyStr(ctx, wrapper, "position");
+    if (!JS_IsException(value) && !JS_IsUndefined(value)) {
+        parsePosition3d(ctx, value, position);
+    }
+    JS_FreeValue(ctx, value);
+
+    value = JS_GetPropertyStr(ctx, wrapper, "direction");
+    if (!JS_IsException(value) && !JS_IsUndefined(value)) {
+        parsePosition3d(ctx, value, direction);
+    }
+    JS_FreeValue(ctx, value);
+
+    value = JS_GetPropertyStr(ctx, wrapper, "color");
+    if (!JS_IsException(value) && !JS_IsUndefined(value)) {
+        parseColor(ctx, value, color);
+    }
+    JS_FreeValue(ctx, value);
+
+    value = JS_GetPropertyStr(ctx, wrapper, "shineColor");
+    if (!JS_IsException(value) && !JS_IsUndefined(value)) {
+        parseColor(ctx, value, shineColor);
+    }
+    JS_FreeValue(ctx, value);
+
+    readNumberProperty(ctx, wrapper, "range", range);
+    readNumberProperty(ctx, wrapper, "cutOff", cutOff);
+    readNumberProperty(ctx, wrapper, "outerCutOff", outerCutOff);
+    readNumberProperty(ctx, wrapper, "intensity", intensity);
+
+    light.position = position;
+    light.direction = direction.normalized();
+    light.setColor(color);
+    light.shineColor = shineColor;
+    light.range = static_cast<float>(range);
+    light.cutOff =
+        glm::cos(glm::radians(static_cast<double>(static_cast<float>(cutOff))));
+    light.outerCutoff = glm::cos(
+        glm::radians(static_cast<double>(static_cast<float>(outerCutOff))));
+    light.intensity = static_cast<float>(intensity);
+    syncSpotLightDebugObject(light);
+    return true;
+}
+
+bool applyAreaLight(JSContext *ctx, JSValueConst wrapper, AreaLight &light) {
+    Position3d position = light.position;
+    Magnitude3d right = light.right;
+    Magnitude3d up = light.up;
+    Size2d size = light.size;
+    Color color = light.color;
+    Color shineColor = light.shineColor;
+    double intensity = light.intensity;
+    double range = light.range;
+    double angle = light.angle;
+    bool castsBothSides = light.castsBothSides;
+    Rotation3d rotation = light.rotation;
+
+    JSValue value = JS_GetPropertyStr(ctx, wrapper, "position");
+    if (!JS_IsException(value) && !JS_IsUndefined(value)) {
+        parsePosition3d(ctx, value, position);
+    }
+    JS_FreeValue(ctx, value);
+
+    value = JS_GetPropertyStr(ctx, wrapper, "right");
+    if (!JS_IsException(value) && !JS_IsUndefined(value)) {
+        parsePosition3d(ctx, value, right);
+    }
+    JS_FreeValue(ctx, value);
+
+    value = JS_GetPropertyStr(ctx, wrapper, "up");
+    if (!JS_IsException(value) && !JS_IsUndefined(value)) {
+        parsePosition3d(ctx, value, up);
+    }
+    JS_FreeValue(ctx, value);
+
+    value = JS_GetPropertyStr(ctx, wrapper, "size");
+    if (!JS_IsException(value) && !JS_IsUndefined(value)) {
+        parseSize2d(ctx, value, size);
+    }
+    JS_FreeValue(ctx, value);
+
+    value = JS_GetPropertyStr(ctx, wrapper, "color");
+    if (!JS_IsException(value) && !JS_IsUndefined(value)) {
+        parseColor(ctx, value, color);
+    }
+    JS_FreeValue(ctx, value);
+
+    value = JS_GetPropertyStr(ctx, wrapper, "shineColor");
+    if (!JS_IsException(value) && !JS_IsUndefined(value)) {
+        parseColor(ctx, value, shineColor);
+    }
+    JS_FreeValue(ctx, value);
+
+    value = JS_GetPropertyStr(ctx, wrapper, "rotation");
+    if (!JS_IsException(value) && !JS_IsUndefined(value)) {
+        parseRotation3d(ctx, value, rotation);
+    }
+    JS_FreeValue(ctx, value);
+
+    readNumberProperty(ctx, wrapper, "intensity", intensity);
+    readNumberProperty(ctx, wrapper, "range", range);
+    readNumberProperty(ctx, wrapper, "angle", angle);
+    readBoolProperty(ctx, wrapper, "castsBothSides", castsBothSides);
+
+    light.position = position;
+    light.right = right.normalized();
+    light.up = up.normalized();
+    light.size = size;
+    light.setColor(color);
+    light.shineColor = shineColor;
+    light.intensity = static_cast<float>(intensity);
+    light.range = static_cast<float>(range);
+    light.angle = static_cast<float>(angle);
+    light.castsBothSides = castsBothSides;
+    light.rotation = rotation;
+    syncAreaLightDebugObject(light);
+    return true;
+}
+
 GameObject *resolveObjectArg(JSContext *ctx, ScriptHost &host,
                              JSValueConst value) {
     if (!ensureCurrentGeneration(ctx, host, value)) {
@@ -2374,6 +2814,88 @@ ScriptRenderTargetState *resolveRenderTarget(JSContext *ctx, ScriptHost &host,
         host, static_cast<std::uint64_t>(renderTargetId));
     if (state == nullptr || !state->renderTarget) {
         JS_ThrowReferenceError(ctx, "Unknown Atlas render target id");
+        return nullptr;
+    }
+    return state;
+}
+
+ScriptPointLightState *resolvePointLight(JSContext *ctx, ScriptHost &host,
+                                         JSValueConst value) {
+    if (!ensureCurrentGeneration(ctx, host, value)) {
+        return nullptr;
+    }
+
+    std::int64_t lightId = 0;
+    if (!readIntProperty(ctx, value, ATLAS_POINT_LIGHT_ID_PROP, lightId)) {
+        JS_ThrowTypeError(ctx, "Expected Atlas point light handle");
+        return nullptr;
+    }
+
+    auto *state = findPointLightState(host, static_cast<std::uint64_t>(lightId));
+    if (state == nullptr || state->light == nullptr) {
+        JS_ThrowReferenceError(ctx, "Unknown Atlas point light id");
+        return nullptr;
+    }
+    return state;
+}
+
+ScriptDirectionalLightState *resolveDirectionalLight(JSContext *ctx,
+                                                     ScriptHost &host,
+                                                     JSValueConst value) {
+    if (!ensureCurrentGeneration(ctx, host, value)) {
+        return nullptr;
+    }
+
+    std::int64_t lightId = 0;
+    if (!readIntProperty(ctx, value, ATLAS_DIRECTIONAL_LIGHT_ID_PROP, lightId)) {
+        JS_ThrowTypeError(ctx, "Expected Atlas directional light handle");
+        return nullptr;
+    }
+
+    auto *state =
+        findDirectionalLightState(host, static_cast<std::uint64_t>(lightId));
+    if (state == nullptr || state->light == nullptr) {
+        JS_ThrowReferenceError(ctx, "Unknown Atlas directional light id");
+        return nullptr;
+    }
+    return state;
+}
+
+ScriptSpotLightState *resolveSpotLight(JSContext *ctx, ScriptHost &host,
+                                       JSValueConst value) {
+    if (!ensureCurrentGeneration(ctx, host, value)) {
+        return nullptr;
+    }
+
+    std::int64_t lightId = 0;
+    if (!readIntProperty(ctx, value, ATLAS_SPOT_LIGHT_ID_PROP, lightId)) {
+        JS_ThrowTypeError(ctx, "Expected Atlas spot light handle");
+        return nullptr;
+    }
+
+    auto *state = findSpotLightState(host, static_cast<std::uint64_t>(lightId));
+    if (state == nullptr || state->light == nullptr) {
+        JS_ThrowReferenceError(ctx, "Unknown Atlas spot light id");
+        return nullptr;
+    }
+    return state;
+}
+
+ScriptAreaLightState *resolveAreaLight(JSContext *ctx, ScriptHost &host,
+                                       JSValueConst value) {
+    if (!ensureCurrentGeneration(ctx, host, value)) {
+        return nullptr;
+    }
+
+    std::int64_t lightId = 0;
+    if (!readIntProperty(ctx, value, ATLAS_AREA_LIGHT_ID_PROP, lightId)) {
+        JS_ThrowTypeError(ctx, "Expected Atlas area light handle");
+        return nullptr;
+    }
+
+    auto *state = findAreaLightState(host, static_cast<std::uint64_t>(lightId));
+    if (state == nullptr || state->light == nullptr) {
+        JS_ThrowReferenceError(ctx, "Unknown Atlas area light id");
         return nullptr;
     }
     return state;
@@ -3028,6 +3550,426 @@ JSValue jsDisplayRenderTarget(JSContext *ctx, JSValueConst, int argc,
     readIntProperty(ctx, argv[0], ATLAS_RENDER_TARGET_ID_PROP, renderTargetId);
     return syncRenderTargetWrapper(ctx, *host,
                                    static_cast<std::uint64_t>(renderTargetId));
+}
+
+JSValue jsCreatePointLight(JSContext *ctx, JSValueConst, int argc,
+                           JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    Scene *scene = host != nullptr ? getScene(*host) : nullptr;
+    if (host == nullptr || host->context == nullptr || scene == nullptr || argc < 1) {
+        return JS_ThrowInternalError(ctx, "Atlas scripting host unavailable");
+    }
+
+    auto light = std::make_unique<Light>();
+    applyPointLight(ctx, argv[0], *light);
+    scene->addLight(light.get());
+
+    const std::uint64_t lightId = host->nextPointLightId++;
+    host->pointLights[lightId] = {.light = light.get(), .value = JS_UNDEFINED};
+    host->context->pointLights.push_back(std::move(light));
+    return syncPointLightWrapper(ctx, *host, lightId);
+}
+
+JSValue jsUpdatePointLight(JSContext *ctx, JSValueConst, int argc,
+                           JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 1) {
+        return JS_ThrowTypeError(ctx, "Expected point light");
+    }
+
+    auto *state = resolvePointLight(ctx, *host, argv[0]);
+    if (state == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    applyPointLight(ctx, argv[0], *state->light);
+    std::int64_t lightId = 0;
+    readIntProperty(ctx, argv[0], ATLAS_POINT_LIGHT_ID_PROP, lightId);
+    return syncPointLightWrapper(ctx, *host, static_cast<std::uint64_t>(lightId));
+}
+
+JSValue jsCreatePointLightDebugObject(JSContext *ctx, JSValueConst, int argc,
+                                      JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || host->context == nullptr || host->context->window == nullptr ||
+        argc < 1) {
+        return JS_ThrowTypeError(ctx, "Expected point light");
+    }
+
+    auto *state = resolvePointLight(ctx, *host, argv[0]);
+    if (state == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    applyPointLight(ctx, argv[0], *state->light);
+    if (state->light->debugObject == nullptr) {
+        state->light->createDebugObject();
+        state->light->addDebugObject(*host->context->window);
+    } else {
+        syncPointLightDebugObject(*state->light);
+    }
+
+    std::int64_t lightId = 0;
+    readIntProperty(ctx, argv[0], ATLAS_POINT_LIGHT_ID_PROP, lightId);
+    return syncPointLightWrapper(ctx, *host, static_cast<std::uint64_t>(lightId));
+}
+
+JSValue jsCastPointLightShadows(JSContext *ctx, JSValueConst, int argc,
+                                JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || host->context == nullptr || host->context->window == nullptr ||
+        argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected point light and resolution");
+    }
+
+    auto *state = resolvePointLight(ctx, *host, argv[0]);
+    if (state == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    std::int64_t resolution = 0;
+    if (!getInt64(ctx, argv[1], resolution)) {
+        return JS_ThrowTypeError(ctx, "Expected resolution");
+    }
+
+    applyPointLight(ctx, argv[0], *state->light);
+    state->light->castShadows(*host->context->window,
+                              static_cast<int>(resolution));
+    std::int64_t lightId = 0;
+    readIntProperty(ctx, argv[0], ATLAS_POINT_LIGHT_ID_PROP, lightId);
+    return syncPointLightWrapper(ctx, *host, static_cast<std::uint64_t>(lightId));
+}
+
+JSValue jsCreateDirectionalLight(JSContext *ctx, JSValueConst, int argc,
+                                 JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    Scene *scene = host != nullptr ? getScene(*host) : nullptr;
+    if (host == nullptr || host->context == nullptr || scene == nullptr || argc < 1) {
+        return JS_ThrowInternalError(ctx, "Atlas scripting host unavailable");
+    }
+
+    auto light = std::make_unique<DirectionalLight>();
+    applyDirectionalLight(ctx, argv[0], *light);
+    scene->addDirectionalLight(light.get());
+
+    const std::uint64_t lightId = host->nextDirectionalLightId++;
+    host->directionalLights[lightId] = {.light = light.get(),
+                                        .value = JS_UNDEFINED};
+    host->context->directionalLights.push_back(std::move(light));
+    return syncDirectionalLightWrapper(ctx, *host, lightId);
+}
+
+JSValue jsUpdateDirectionalLight(JSContext *ctx, JSValueConst, int argc,
+                                 JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 1) {
+        return JS_ThrowTypeError(ctx, "Expected directional light");
+    }
+
+    auto *state = resolveDirectionalLight(ctx, *host, argv[0]);
+    if (state == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    applyDirectionalLight(ctx, argv[0], *state->light);
+    std::int64_t lightId = 0;
+    readIntProperty(ctx, argv[0], ATLAS_DIRECTIONAL_LIGHT_ID_PROP, lightId);
+    return syncDirectionalLightWrapper(ctx, *host,
+                                       static_cast<std::uint64_t>(lightId));
+}
+
+JSValue jsCastDirectionalLightShadows(JSContext *ctx, JSValueConst, int argc,
+                                      JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || host->context == nullptr || host->context->window == nullptr ||
+        argc < 2) {
+        return JS_ThrowTypeError(ctx,
+                                 "Expected directional light and resolution");
+    }
+
+    auto *state = resolveDirectionalLight(ctx, *host, argv[0]);
+    if (state == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    std::int64_t resolution = 0;
+    if (!getInt64(ctx, argv[1], resolution)) {
+        return JS_ThrowTypeError(ctx, "Expected resolution");
+    }
+
+    applyDirectionalLight(ctx, argv[0], *state->light);
+    state->light->castShadows(*host->context->window,
+                              static_cast<int>(resolution));
+    std::int64_t lightId = 0;
+    readIntProperty(ctx, argv[0], ATLAS_DIRECTIONAL_LIGHT_ID_PROP, lightId);
+    return syncDirectionalLightWrapper(ctx, *host,
+                                       static_cast<std::uint64_t>(lightId));
+}
+
+JSValue jsCreateSpotLight(JSContext *ctx, JSValueConst, int argc,
+                          JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    Scene *scene = host != nullptr ? getScene(*host) : nullptr;
+    if (host == nullptr || host->context == nullptr || scene == nullptr || argc < 1) {
+        return JS_ThrowInternalError(ctx, "Atlas scripting host unavailable");
+    }
+
+    auto light = std::make_unique<Spotlight>();
+    applySpotLight(ctx, argv[0], *light);
+    scene->addSpotlight(light.get());
+
+    const std::uint64_t lightId = host->nextSpotLightId++;
+    host->spotLights[lightId] = {.light = light.get(), .value = JS_UNDEFINED};
+    host->context->spotlights.push_back(std::move(light));
+    return syncSpotLightWrapper(ctx, *host, lightId);
+}
+
+JSValue jsUpdateSpotLight(JSContext *ctx, JSValueConst, int argc,
+                          JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 1) {
+        return JS_ThrowTypeError(ctx, "Expected spot light");
+    }
+
+    auto *state = resolveSpotLight(ctx, *host, argv[0]);
+    if (state == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    applySpotLight(ctx, argv[0], *state->light);
+    std::int64_t lightId = 0;
+    readIntProperty(ctx, argv[0], ATLAS_SPOT_LIGHT_ID_PROP, lightId);
+    return syncSpotLightWrapper(ctx, *host, static_cast<std::uint64_t>(lightId));
+}
+
+JSValue jsCreateSpotLightDebugObject(JSContext *ctx, JSValueConst, int argc,
+                                     JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || host->context == nullptr || host->context->window == nullptr ||
+        argc < 1) {
+        return JS_ThrowTypeError(ctx, "Expected spot light");
+    }
+
+    auto *state = resolveSpotLight(ctx, *host, argv[0]);
+    if (state == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    applySpotLight(ctx, argv[0], *state->light);
+    if (state->light->debugObject == nullptr) {
+        state->light->createDebugObject();
+        state->light->addDebugObject(*host->context->window);
+    } else {
+        syncSpotLightDebugObject(*state->light);
+    }
+
+    std::int64_t lightId = 0;
+    readIntProperty(ctx, argv[0], ATLAS_SPOT_LIGHT_ID_PROP, lightId);
+    return syncSpotLightWrapper(ctx, *host, static_cast<std::uint64_t>(lightId));
+}
+
+JSValue jsLookAtSpotLight(JSContext *ctx, JSValueConst, int argc,
+                          JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected spot light and target");
+    }
+
+    auto *state = resolveSpotLight(ctx, *host, argv[0]);
+    if (state == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    applySpotLight(ctx, argv[0], *state->light);
+    Position3d target;
+    if (!parsePosition3d(ctx, argv[1], target)) {
+        return JS_ThrowTypeError(ctx, "Expected target Position3d");
+    }
+
+    state->light->lookAt(target);
+    std::int64_t lightId = 0;
+    readIntProperty(ctx, argv[0], ATLAS_SPOT_LIGHT_ID_PROP, lightId);
+    return syncSpotLightWrapper(ctx, *host, static_cast<std::uint64_t>(lightId));
+}
+
+JSValue jsCastSpotLightShadows(JSContext *ctx, JSValueConst, int argc,
+                               JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || host->context == nullptr || host->context->window == nullptr ||
+        argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected spot light and resolution");
+    }
+
+    auto *state = resolveSpotLight(ctx, *host, argv[0]);
+    if (state == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    std::int64_t resolution = 0;
+    if (!getInt64(ctx, argv[1], resolution)) {
+        return JS_ThrowTypeError(ctx, "Expected resolution");
+    }
+
+    applySpotLight(ctx, argv[0], *state->light);
+    state->light->castShadows(*host->context->window,
+                              static_cast<int>(resolution));
+    std::int64_t lightId = 0;
+    readIntProperty(ctx, argv[0], ATLAS_SPOT_LIGHT_ID_PROP, lightId);
+    return syncSpotLightWrapper(ctx, *host, static_cast<std::uint64_t>(lightId));
+}
+
+JSValue jsCreateAreaLight(JSContext *ctx, JSValueConst, int argc,
+                          JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    Scene *scene = host != nullptr ? getScene(*host) : nullptr;
+    if (host == nullptr || host->context == nullptr || scene == nullptr || argc < 1) {
+        return JS_ThrowInternalError(ctx, "Atlas scripting host unavailable");
+    }
+
+    auto light = std::make_unique<AreaLight>();
+    applyAreaLight(ctx, argv[0], *light);
+    scene->addAreaLight(light.get());
+
+    const std::uint64_t lightId = host->nextAreaLightId++;
+    host->areaLights[lightId] = {.light = light.get(), .value = JS_UNDEFINED};
+    host->context->areaLights.push_back(std::move(light));
+    return syncAreaLightWrapper(ctx, *host, lightId);
+}
+
+JSValue jsUpdateAreaLight(JSContext *ctx, JSValueConst, int argc,
+                          JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 1) {
+        return JS_ThrowTypeError(ctx, "Expected area light");
+    }
+
+    auto *state = resolveAreaLight(ctx, *host, argv[0]);
+    if (state == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    applyAreaLight(ctx, argv[0], *state->light);
+    std::int64_t lightId = 0;
+    readIntProperty(ctx, argv[0], ATLAS_AREA_LIGHT_ID_PROP, lightId);
+    return syncAreaLightWrapper(ctx, *host, static_cast<std::uint64_t>(lightId));
+}
+
+JSValue jsGetAreaLightNormal(JSContext *ctx, JSValueConst, int argc,
+                             JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 1) {
+        return JS_ThrowTypeError(ctx, "Expected area light");
+    }
+
+    auto *state = resolveAreaLight(ctx, *host, argv[0]);
+    if (state == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    applyAreaLight(ctx, argv[0], *state->light);
+    return makePosition3d(ctx, *host, state->light->getNormal());
+}
+
+JSValue jsSetAreaLightRotation(JSContext *ctx, JSValueConst, int argc,
+                               JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected area light and rotation");
+    }
+
+    auto *state = resolveAreaLight(ctx, *host, argv[0]);
+    if (state == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    applyAreaLight(ctx, argv[0], *state->light);
+    Rotation3d rotation;
+    if (!parseRotation3d(ctx, argv[1], rotation)) {
+        return JS_ThrowTypeError(ctx, "Expected Rotation3d");
+    }
+
+    state->light->setRotation(rotation);
+    syncAreaLightDebugObject(*state->light);
+    std::int64_t lightId = 0;
+    readIntProperty(ctx, argv[0], ATLAS_AREA_LIGHT_ID_PROP, lightId);
+    return syncAreaLightWrapper(ctx, *host, static_cast<std::uint64_t>(lightId));
+}
+
+JSValue jsRotateAreaLight(JSContext *ctx, JSValueConst, int argc,
+                          JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected area light and rotation");
+    }
+
+    auto *state = resolveAreaLight(ctx, *host, argv[0]);
+    if (state == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    applyAreaLight(ctx, argv[0], *state->light);
+    Rotation3d rotation;
+    if (!parseRotation3d(ctx, argv[1], rotation)) {
+        return JS_ThrowTypeError(ctx, "Expected Rotation3d");
+    }
+
+    state->light->rotate(rotation);
+    syncAreaLightDebugObject(*state->light);
+    std::int64_t lightId = 0;
+    readIntProperty(ctx, argv[0], ATLAS_AREA_LIGHT_ID_PROP, lightId);
+    return syncAreaLightWrapper(ctx, *host, static_cast<std::uint64_t>(lightId));
+}
+
+JSValue jsCreateAreaLightDebugObject(JSContext *ctx, JSValueConst, int argc,
+                                     JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || host->context == nullptr || host->context->window == nullptr ||
+        argc < 1) {
+        return JS_ThrowTypeError(ctx, "Expected area light");
+    }
+
+    auto *state = resolveAreaLight(ctx, *host, argv[0]);
+    if (state == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    applyAreaLight(ctx, argv[0], *state->light);
+    if (state->light->debugObject == nullptr) {
+        state->light->createDebugObject();
+        state->light->addDebugObject(*host->context->window);
+    } else {
+        syncAreaLightDebugObject(*state->light);
+    }
+
+    std::int64_t lightId = 0;
+    readIntProperty(ctx, argv[0], ATLAS_AREA_LIGHT_ID_PROP, lightId);
+    return syncAreaLightWrapper(ctx, *host, static_cast<std::uint64_t>(lightId));
+}
+
+JSValue jsCastAreaLightShadows(JSContext *ctx, JSValueConst, int argc,
+                               JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || host->context == nullptr || host->context->window == nullptr ||
+        argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected area light and resolution");
+    }
+
+    auto *state = resolveAreaLight(ctx, *host, argv[0]);
+    if (state == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    std::int64_t resolution = 0;
+    if (!getInt64(ctx, argv[1], resolution)) {
+        return JS_ThrowTypeError(ctx, "Expected resolution");
+    }
+
+    applyAreaLight(ctx, argv[0], *state->light);
+    state->light->castShadows(*host->context->window,
+                              static_cast<int>(resolution));
+    std::int64_t lightId = 0;
+    readIntProperty(ctx, argv[0], ATLAS_AREA_LIGHT_ID_PROP, lightId);
+    return syncAreaLightWrapper(ctx, *host, static_cast<std::uint64_t>(lightId));
 }
 
 JSValue jsGetObjectByName(JSContext *ctx, JSValueConst, int argc,
@@ -4334,6 +5276,26 @@ void runtime::scripting::clearSceneBindings(JSContext *ctx, ScriptHost &host) {
     }
     host.renderTargets.clear();
 
+    for (auto &[_, state] : host.pointLights) {
+        JS_FreeValue(ctx, state.value);
+    }
+    host.pointLights.clear();
+
+    for (auto &[_, state] : host.directionalLights) {
+        JS_FreeValue(ctx, state.value);
+    }
+    host.directionalLights.clear();
+
+    for (auto &[_, state] : host.spotLights) {
+        JS_FreeValue(ctx, state.value);
+    }
+    host.spotLights.clear();
+
+    for (auto &[_, state] : host.areaLights) {
+        JS_FreeValue(ctx, state.value);
+    }
+    host.areaLights.clear();
+
     for (JSValue &interactive : host.interactiveValues) {
         JS_FreeValue(ctx, interactive);
     }
@@ -4351,6 +5313,10 @@ void runtime::scripting::clearSceneBindings(JSContext *ctx, ScriptHost &host) {
     host.nextCubemapId = 1;
     host.nextSkyboxId = 1;
     host.nextRenderTargetId = 1;
+    host.nextPointLightId = 1;
+    host.nextDirectionalLightId = 1;
+    host.nextSpotLightId = 1;
+    host.nextAreaLightId = 1;
     host.generation += 1;
 }
 
@@ -4621,6 +5587,63 @@ void runtime::scripting::installGlobals(JSContext *ctx) {
     JS_SetPropertyStr(ctx, global, "__atlasDisplayRenderTarget",
                       JS_NewCFunction(ctx, jsDisplayRenderTarget,
                                       "__atlasDisplayRenderTarget", 1));
+    JS_SetPropertyStr(ctx, global, "__atlasCreatePointLight",
+                      JS_NewCFunction(ctx, jsCreatePointLight,
+                                      "__atlasCreatePointLight", 1));
+    JS_SetPropertyStr(ctx, global, "__atlasUpdatePointLight",
+                      JS_NewCFunction(ctx, jsUpdatePointLight,
+                                      "__atlasUpdatePointLight", 1));
+    JS_SetPropertyStr(ctx, global, "__atlasCreatePointLightDebugObject",
+                      JS_NewCFunction(ctx, jsCreatePointLightDebugObject,
+                                      "__atlasCreatePointLightDebugObject", 1));
+    JS_SetPropertyStr(ctx, global, "__atlasCastPointLightShadows",
+                      JS_NewCFunction(ctx, jsCastPointLightShadows,
+                                      "__atlasCastPointLightShadows", 2));
+    JS_SetPropertyStr(ctx, global, "__atlasCreateDirectionalLight",
+                      JS_NewCFunction(ctx, jsCreateDirectionalLight,
+                                      "__atlasCreateDirectionalLight", 1));
+    JS_SetPropertyStr(ctx, global, "__atlasUpdateDirectionalLight",
+                      JS_NewCFunction(ctx, jsUpdateDirectionalLight,
+                                      "__atlasUpdateDirectionalLight", 1));
+    JS_SetPropertyStr(ctx, global, "__atlasCastDirectionalLightShadows",
+                      JS_NewCFunction(ctx, jsCastDirectionalLightShadows,
+                                      "__atlasCastDirectionalLightShadows", 2));
+    JS_SetPropertyStr(ctx, global, "__atlasCreateSpotLight",
+                      JS_NewCFunction(ctx, jsCreateSpotLight,
+                                      "__atlasCreateSpotLight", 1));
+    JS_SetPropertyStr(ctx, global, "__atlasUpdateSpotLight",
+                      JS_NewCFunction(ctx, jsUpdateSpotLight,
+                                      "__atlasUpdateSpotLight", 1));
+    JS_SetPropertyStr(ctx, global, "__atlasCreateSpotLightDebugObject",
+                      JS_NewCFunction(ctx, jsCreateSpotLightDebugObject,
+                                      "__atlasCreateSpotLightDebugObject", 1));
+    JS_SetPropertyStr(ctx, global, "__atlasLookAtSpotLight",
+                      JS_NewCFunction(ctx, jsLookAtSpotLight,
+                                      "__atlasLookAtSpotLight", 2));
+    JS_SetPropertyStr(ctx, global, "__atlasCastSpotLightShadows",
+                      JS_NewCFunction(ctx, jsCastSpotLightShadows,
+                                      "__atlasCastSpotLightShadows", 2));
+    JS_SetPropertyStr(ctx, global, "__atlasCreateAreaLight",
+                      JS_NewCFunction(ctx, jsCreateAreaLight,
+                                      "__atlasCreateAreaLight", 1));
+    JS_SetPropertyStr(ctx, global, "__atlasUpdateAreaLight",
+                      JS_NewCFunction(ctx, jsUpdateAreaLight,
+                                      "__atlasUpdateAreaLight", 1));
+    JS_SetPropertyStr(ctx, global, "__atlasGetAreaLightNormal",
+                      JS_NewCFunction(ctx, jsGetAreaLightNormal,
+                                      "__atlasGetAreaLightNormal", 1));
+    JS_SetPropertyStr(ctx, global, "__atlasSetAreaLightRotation",
+                      JS_NewCFunction(ctx, jsSetAreaLightRotation,
+                                      "__atlasSetAreaLightRotation", 2));
+    JS_SetPropertyStr(ctx, global, "__atlasRotateAreaLight",
+                      JS_NewCFunction(ctx, jsRotateAreaLight,
+                                      "__atlasRotateAreaLight", 2));
+    JS_SetPropertyStr(ctx, global, "__atlasCreateAreaLightDebugObject",
+                      JS_NewCFunction(ctx, jsCreateAreaLightDebugObject,
+                                      "__atlasCreateAreaLightDebugObject", 1));
+    JS_SetPropertyStr(ctx, global, "__atlasCastAreaLightShadows",
+                      JS_NewCFunction(ctx, jsCastAreaLightShadows,
+                                      "__atlasCastAreaLightShadows", 2));
     JS_SetPropertyStr(ctx, global, "__atlasGetObjectById",
                       JS_NewCFunction(ctx, jsGetObjectById,
                                       "__atlasGetObjectById", 1));

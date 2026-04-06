@@ -384,7 +384,7 @@ class DirectionalLight {
      *
      * @param color The new color for the light.
      */
-    void setColor(Color color);
+    void setColor(Color color) { this->color = color; }
 
     /**
      * @brief Object that holds the render target for shadow mapping.

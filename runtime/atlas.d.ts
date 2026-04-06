@@ -279,7 +279,14 @@ declare module "atlas" {
 
 declare module "atlas/graphics" {
     import { Resource, ResourceGroup } from "atlas";
-    import { Color, Magnitude2d } from "atlas/units";
+    import {
+        Color,
+        Magnitude2d,
+        Position3d,
+        Magnitude3d,
+        Rotation3d,
+        Size2d,
+    } from "atlas/units";
 
     export enum TextureType {
         Color,
@@ -426,6 +433,115 @@ declare module "atlas/graphics" {
         cubemap: Cubemap;
 
         constructor(cubemap: Cubemap);
+    }
+
+    export class AmbientLight {
+        color: Color;
+        intensity: number;
+
+        constructor(color?: Color, intensity?: number);
+    }
+
+    export class Light {
+        position: Position3d;
+        color: Color;
+        shineColor: Color;
+        intensity: number;
+        distance: number;
+
+        constructor(
+            position?: Position3d,
+            color?: Color,
+            distance?: number,
+            shineColor?: Color,
+            intensity?: number,
+        );
+
+        setColor(color: Color): void;
+        // Also calls addDebugObject(Window&);
+        createDebugObject(): void;
+        castShadows(resolution: number): void;
+    }
+
+    export class DirectionalLight {
+        direction: Magnitude3d;
+        color: Color;
+        shineColor: Color;
+        intensity: number;
+
+        constructor(
+            direction?: Magnitude3d,
+            color?: Color,
+            shineColor?: Color,
+            intensity?: number,
+        );
+
+        setColor(color: Color): void;
+        castShadows(resolution: number): void;
+    }
+
+    export class SpotLight {
+        position: Position3d;
+        direction: Magnitude3d;
+        color: Color;
+        shineColor: Color;
+        range: number;
+        cutOff: number;
+        outerCutOff: number;
+        intensity: number;
+
+        constructor(
+            position?: Position3d,
+            direction?: Magnitude3d,
+            color?: Color,
+            cutOff?: number,
+            outerCutOff?: number,
+            shineColor?: Color,
+            intensity?: number,
+            range?: number,
+        );
+
+        setColor(color: Color): void;
+        // Also calls addDebugObject(Window&);
+        createDebugObject(): void;
+        lookAt(target: Position3d): void;
+        castShadows(resolution: number): void;
+    }
+
+    export class AreaLight {
+        position: Position3d;
+        right: Magnitude3d;
+        up: Magnitude3d;
+        size: Size2d;
+        color: Color;
+        shineColor: Color;
+        intensity: number;
+        range: number;
+        angle: number;
+        castsBothSides: boolean;
+        rotation: Rotation3d;
+
+        constructor(
+            position?: Position3d,
+            right?: Magnitude3d,
+            up?: Magnitude3d,
+            size?: Size2d,
+            color?: Color,
+            shineColor?: Color,
+            intensity?: number,
+            range?: number,
+            angle?: number,
+            castsBothSides?: boolean,
+            rotation?: Rotation3d,
+        );
+
+        getNormal(): Magnitude3d;
+        setColor(color: Color): void;
+        setRotation(rotation: Rotation3d): void;
+        rotate(delta: Rotation3d): void;
+        // Also calls addDebugObject(Window&);
+        createDebugObject(): void;
+        castShadows(resolution: number): void;
     }
 }
 
@@ -888,10 +1004,7 @@ declare module "atlas/input" {
             controllerID: number,
             buttonIndex: number,
         ): boolean;
-        getControllerAxisValue(
-            controllerID: number,
-            axisIndex: number,
-        ): number;
+        getControllerAxisValue(controllerID: number, axisIndex: number): number;
         getControllerAxisPairValue(
             controllerID: number,
             axisIndexX: number,

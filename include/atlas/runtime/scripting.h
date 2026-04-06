@@ -22,6 +22,10 @@ class GameObject;
 class Component;
 class AudioPlayer;
 class Window;
+struct Light;
+class DirectionalLight;
+struct Spotlight;
+struct AreaLight;
 struct Texture;
 struct Cubemap;
 class Skybox;
@@ -72,6 +76,26 @@ struct ScriptRenderTargetState {
     std::uint64_t depthTextureId = 0;
 };
 
+struct ScriptPointLightState {
+    Light *light = nullptr;
+    JSValue value = JS_UNDEFINED;
+};
+
+struct ScriptDirectionalLightState {
+    DirectionalLight *light = nullptr;
+    JSValue value = JS_UNDEFINED;
+};
+
+struct ScriptSpotLightState {
+    Spotlight *light = nullptr;
+    JSValue value = JS_UNDEFINED;
+};
+
+struct ScriptAreaLightState {
+    AreaLight *light = nullptr;
+    JSValue value = JS_UNDEFINED;
+};
+
 struct ScriptHost {
     Context *context = nullptr;
     std::unordered_map<std::string, std::string> modules;
@@ -87,6 +111,11 @@ struct ScriptHost {
     std::unordered_map<std::uint64_t, ScriptCubemapState> cubemaps;
     std::unordered_map<std::uint64_t, ScriptSkyboxState> skyboxes;
     std::unordered_map<std::uint64_t, ScriptRenderTargetState> renderTargets;
+    std::unordered_map<std::uint64_t, ScriptPointLightState> pointLights;
+    std::unordered_map<std::uint64_t, ScriptDirectionalLightState>
+        directionalLights;
+    std::unordered_map<std::uint64_t, ScriptSpotLightState> spotLights;
+    std::unordered_map<std::uint64_t, ScriptAreaLightState> areaLights;
     std::vector<JSValue> interactiveValues;
     std::unordered_map<int, bool> interactiveKeyStates;
     bool interactiveFirstMouse = true;
@@ -108,6 +137,10 @@ struct ScriptHost {
     JSValue cubemapPrototype = JS_UNDEFINED;
     JSValue skyboxPrototype = JS_UNDEFINED;
     JSValue renderTargetPrototype = JS_UNDEFINED;
+    JSValue pointLightPrototype = JS_UNDEFINED;
+    JSValue directionalLightPrototype = JS_UNDEFINED;
+    JSValue spotLightPrototype = JS_UNDEFINED;
+    JSValue areaLightPrototype = JS_UNDEFINED;
     JSValue position3dPrototype = JS_UNDEFINED;
     JSValue position2dPrototype = JS_UNDEFINED;
     JSValue colorPrototype = JS_UNDEFINED;
@@ -119,6 +152,10 @@ struct ScriptHost {
     std::uint64_t nextCubemapId = 1;
     std::uint64_t nextSkyboxId = 1;
     std::uint64_t nextRenderTargetId = 1;
+    std::uint64_t nextPointLightId = 1;
+    std::uint64_t nextDirectionalLightId = 1;
+    std::uint64_t nextSpotLightId = 1;
+    std::uint64_t nextAreaLightId = 1;
     std::uint64_t generation = 1;
 };
 

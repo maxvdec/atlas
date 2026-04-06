@@ -1,5 +1,5 @@
 import { Resource, ResourceType } from "atlas";
-import { Color } from "atlas/units";
+import { Color, Position3d, Size2d } from "atlas/units";
 
 export const TextureType = Object.freeze({
     Color: 0,
@@ -187,5 +187,164 @@ export class Skybox {
     constructor(cubemap) {
         this.cubemap = cubemap;
         return globalThis.__atlasCreateSkybox(cubemap);
+    }
+}
+
+export class AmbientLight {
+    constructor(color = Color.white(), intensity = 0.125) {
+        this.color = color;
+        this.intensity = intensity;
+    }
+}
+
+export class Light {
+    constructor(
+        position = Position3d.zero(),
+        color = Color.white(),
+        distance = 50,
+        shineColor = Color.white(),
+        intensity = 1,
+    ) {
+        this.position = position;
+        this.color = color;
+        this.shineColor = shineColor;
+        this.intensity = intensity;
+        this.distance = distance;
+        return globalThis.__atlasCreatePointLight(this);
+    }
+
+    setColor(color) {
+        this.color = color;
+        return globalThis.__atlasUpdatePointLight(this);
+    }
+
+    createDebugObject() {
+        return globalThis.__atlasCreatePointLightDebugObject(this);
+    }
+
+    castShadows(resolution = 2048) {
+        return globalThis.__atlasCastPointLightShadows(this, resolution);
+    }
+}
+
+export class DirectionalLight {
+    constructor(
+        direction = Position3d.down(),
+        color = Color.white(),
+        shineColor = Color.white(),
+        intensity = 1,
+    ) {
+        this.direction = direction;
+        this.color = color;
+        this.shineColor = shineColor;
+        this.intensity = intensity;
+        return globalThis.__atlasCreateDirectionalLight(this);
+    }
+
+    setColor(color) {
+        this.color = color;
+        return globalThis.__atlasUpdateDirectionalLight(this);
+    }
+
+    castShadows(resolution = 4096) {
+        return globalThis.__atlasCastDirectionalLightShadows(
+            this,
+            resolution,
+        );
+    }
+}
+
+export class SpotLight {
+    constructor(
+        position = Position3d.zero(),
+        direction = Position3d.down(),
+        color = Color.white(),
+        cutOff = 35,
+        outerCutOff = 40,
+        shineColor = Color.white(),
+        intensity = 1,
+        range = 50,
+    ) {
+        this.position = position;
+        this.direction = direction;
+        this.color = color;
+        this.shineColor = shineColor;
+        this.range = range;
+        this.cutOff = cutOff;
+        this.outerCutOff = outerCutOff;
+        this.intensity = intensity;
+        return globalThis.__atlasCreateSpotLight(this);
+    }
+
+    setColor(color) {
+        this.color = color;
+        return globalThis.__atlasUpdateSpotLight(this);
+    }
+
+    createDebugObject() {
+        return globalThis.__atlasCreateSpotLightDebugObject(this);
+    }
+
+    lookAt(target) {
+        return globalThis.__atlasLookAtSpotLight(this, target);
+    }
+
+    castShadows(resolution = 2048) {
+        return globalThis.__atlasCastSpotLightShadows(this, resolution);
+    }
+}
+
+export class AreaLight {
+    constructor(
+        position = Position3d.zero(),
+        right = Position3d.right(),
+        up = Position3d.up(),
+        size = new Size2d(1, 1),
+        color = Color.white(),
+        shineColor = Color.white(),
+        intensity = 1,
+        range = 50,
+        angle = 90,
+        castsBothSides = false,
+        rotation = Position3d.zero(),
+    ) {
+        this.position = position;
+        this.right = right;
+        this.up = up;
+        this.size = size;
+        this.color = color;
+        this.shineColor = shineColor;
+        this.intensity = intensity;
+        this.range = range;
+        this.angle = angle;
+        this.castsBothSides = castsBothSides;
+        this.rotation = rotation;
+        return globalThis.__atlasCreateAreaLight(this);
+    }
+
+    getNormal() {
+        return globalThis.__atlasGetAreaLightNormal(this);
+    }
+
+    setColor(color) {
+        this.color = color;
+        return globalThis.__atlasUpdateAreaLight(this);
+    }
+
+    setRotation(rotation) {
+        this.rotation = rotation;
+        return globalThis.__atlasSetAreaLightRotation(this, rotation);
+    }
+
+    rotate(delta) {
+        return globalThis.__atlasRotateAreaLight(this, delta);
+    }
+
+    createDebugObject() {
+        return globalThis.__atlasCreateAreaLightDebugObject(this);
+    }
+
+    castShadows(resolution = 2048) {
+        return globalThis.__atlasCastAreaLightShadows(this, resolution);
     }
 }
