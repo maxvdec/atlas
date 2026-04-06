@@ -22,6 +22,7 @@ class GameObject;
 class Model;
 class Component;
 class AudioPlayer;
+class ParticleEmitter;
 class Window;
 struct Light;
 class DirectionalLight;
@@ -125,6 +126,7 @@ struct ScriptHost {
     JSValue atlasNamespace = JS_UNDEFINED;
     JSValue atlasUnitsNamespace = JS_UNDEFINED;
     JSValue atlasGraphicsNamespace = JS_UNDEFINED;
+    JSValue atlasParticleNamespace = JS_UNDEFINED;
     JSValue componentPrototype = JS_UNDEFINED;
     JSValue gameObjectPrototype = JS_UNDEFINED;
     JSValue coreObjectPrototype = JS_UNDEFINED;
@@ -143,6 +145,7 @@ struct ScriptHost {
     JSValue directionalLightPrototype = JS_UNDEFINED;
     JSValue spotLightPrototype = JS_UNDEFINED;
     JSValue areaLightPrototype = JS_UNDEFINED;
+    JSValue particleEmitterPrototype = JS_UNDEFINED;
     JSValue position3dPrototype = JS_UNDEFINED;
     JSValue position2dPrototype = JS_UNDEFINED;
     JSValue colorPrototype = JS_UNDEFINED;

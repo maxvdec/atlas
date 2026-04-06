@@ -18,15 +18,15 @@ declare module "atlas/log" {
 declare module "atlas" {
     import {
         Position3d,
-        Rotation3d,
-        Scale3d,
         Color,
         Position2d,
         Size2d,
         Quaternion,
-        Normal3d,
         Size3d,
         Point3d,
+        Normal3d,
+        Rotation3d,
+        Scale3d,
     } from "atlas/units";
     import { Texture, Skybox } from "atlas/graphics";
 
@@ -1045,5 +1045,78 @@ declare module "atlas/input" {
         abstract onMouseButtonPress(button: MouseButton, dt: number): void;
         abstract onMouseScroll(packet: MouseScrollPacket, dt: number): void;
         abstract onEachFrame(dt: number): void;
+    }
+}
+
+declare module "atlas/particle" {
+    import {
+        Position3d,
+        Color,
+        Magnitude3d,
+        Rotation3d,
+        Scale3d,
+        Normal3d,
+    } from "atlas/units";
+    import { GameObject } from "atlas";
+    import { Texture } from "atlas/graphics";
+
+    export enum ParticleEmissionType {
+        Fountain,
+        Ambient,
+    }
+
+    export type ParticleSettings = {
+        minLifetime: number;
+        maxLifetime: number;
+        minSize: number;
+        maxSize: number;
+        fadeSpeed: number;
+        gravity: number;
+        spread: number;
+        speedVariation: number;
+    };
+
+    export type Particle = {
+        position: Position3d;
+        velocity: Magnitude3d;
+        color: Color;
+        lifetime: number;
+        maxLifetime: number;
+        size: number;
+        active: boolean;
+    };
+
+    export class ParticleEmitter extends GameObject {
+        settings: ParticleSettings;
+        constructor(maxParticles: number);
+
+        override attachTexture(texture: Texture): void;
+        setColor(color: Color): void;
+        enableTexture(): void;
+        disableTexture(): void;
+        override setPosition(position: Position3d): void;
+        override move(position: Position3d): void;
+        getPosition(): Position3d;
+
+        setEmissionType(type: ParticleEmissionType): void;
+        setDirection(direction: Magnitude3d): void;
+        setSpawnRadius(radius: number): void;
+        setSpawnRate(rate: number): void;
+        setParticleSettings(settings: ParticleSettings): void;
+
+        emitOnce(): void;
+        emitContinuous(): void;
+        startEmission(): void;
+        stopEmission(): void;
+        emitBurst(count: number): void;
+
+        // Disabled
+        override setRotation(rotation: Rotation3d): void;
+        override setScale(scale: Scale3d): void;
+        override lookAt(target: Position3d, up?: Normal3d): void;
+        override rotate(rotation: Rotation3d): void;
+        override scaleBy(scale: Scale3d): void;
+        override show(): void;
+        override hide(): void;
     }
 }

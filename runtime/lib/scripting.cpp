@@ -13,6 +13,7 @@
 #include "atlas/input.h"
 #include "atlas/light.h"
 #include "atlas/object.h"
+#include "atlas/particle.h"
 #include "atlas/runtime/context.h"
 #include "atlas/texture.h"
 #include "atlas/window.h"
@@ -53,6 +54,8 @@ constexpr const char *ATLAS_DIRECTIONAL_LIGHT_ID_PROP =
     "__atlasDirectionalLightId";
 constexpr const char *ATLAS_SPOT_LIGHT_ID_PROP = "__atlasSpotLightId";
 constexpr const char *ATLAS_AREA_LIGHT_ID_PROP = "__atlasAreaLightId";
+constexpr const char *ATLAS_PARTICLE_EMITTER_ID_PROP =
+    "__atlasParticleEmitterId";
 constexpr const char *ATLAS_GENERATION_PROP = "__atlasGeneration";
 constexpr const char *ATLAS_IS_CORE_OBJECT_PROP = "__atlasIsCoreObject";
 constexpr const char *ATLAS_CAMERA_PROP = "__atlasCamera";
@@ -628,6 +631,15 @@ bool ensureBuiltins(JSContext *ctx, ScriptHost &host) {
         }
     }
 
+    if (JS_IsUndefined(host.atlasParticleNamespace)) {
+        host.atlasParticleNamespace =
+            runtime::scripting::importModuleNamespace(ctx, "atlas/particles");
+        if (JS_IsException(host.atlasParticleNamespace)) {
+            runtime::scripting::dumpExecution(ctx);
+            return false;
+        }
+    }
+
     cachePrototype(ctx, host.atlasNamespace, "Component",
                    host.componentPrototype);
     cachePrototype(ctx, host.atlasNamespace, "GameObject",
@@ -661,6 +673,8 @@ bool ensureBuiltins(JSContext *ctx, ScriptHost &host) {
                    host.spotLightPrototype);
     cachePrototype(ctx, host.atlasGraphicsNamespace, "AreaLight",
                    host.areaLightPrototype);
+    cachePrototype(ctx, host.atlasParticleNamespace, "ParticleEmitter",
+                   host.particleEmitterPrototype);
     cachePrototype(ctx, host.atlasUnitsNamespace, "Position3d",
                    host.position3dPrototype);
     cachePrototype(ctx, host.atlasUnitsNamespace, "Position2d",
@@ -882,6 +896,54 @@ bool parseMaterial(JSContext *ctx, JSValueConst value, Material &out) {
     out.useNormalMap = useNormalMap;
     out.transmittance = static_cast<float>(transmittance);
     out.ior = static_cast<float>(ior);
+    return true;
+}
+
+JSValue makeParticleSettings(JSContext *ctx, const ParticleSettings &settings) {
+    JSValue result = JS_NewObject(ctx);
+    setProperty(ctx, result, "minLifetime",
+                JS_NewFloat64(ctx, settings.minLifetime));
+    setProperty(ctx, result, "maxLifetime",
+                JS_NewFloat64(ctx, settings.maxLifetime));
+    setProperty(ctx, result, "minSize", JS_NewFloat64(ctx, settings.minSize));
+    setProperty(ctx, result, "maxSize", JS_NewFloat64(ctx, settings.maxSize));
+    setProperty(ctx, result, "fadeSpeed",
+                JS_NewFloat64(ctx, settings.fadeSpeed));
+    setProperty(ctx, result, "gravity", JS_NewFloat64(ctx, settings.gravity));
+    setProperty(ctx, result, "spread", JS_NewFloat64(ctx, settings.spread));
+    setProperty(ctx, result, "speedVariation",
+                JS_NewFloat64(ctx, settings.speedVariation));
+    return result;
+}
+
+bool parseParticleSettings(JSContext *ctx, JSValueConst value,
+                           ParticleSettings &out) {
+    double minLifetime = out.minLifetime;
+    double maxLifetime = out.maxLifetime;
+    double minSize = out.minSize;
+    double maxSize = out.maxSize;
+    double fadeSpeed = out.fadeSpeed;
+    double gravity = out.gravity;
+    double spread = out.spread;
+    double speedVariation = out.speedVariation;
+
+    readNumberProperty(ctx, value, "minLifetime", minLifetime);
+    readNumberProperty(ctx, value, "maxLifetime", maxLifetime);
+    readNumberProperty(ctx, value, "minSize", minSize);
+    readNumberProperty(ctx, value, "maxSize", maxSize);
+    readNumberProperty(ctx, value, "fadeSpeed", fadeSpeed);
+    readNumberProperty(ctx, value, "gravity", gravity);
+    readNumberProperty(ctx, value, "spread", spread);
+    readNumberProperty(ctx, value, "speedVariation", speedVariation);
+
+    out.minLifetime = static_cast<float>(minLifetime);
+    out.maxLifetime = static_cast<float>(maxLifetime);
+    out.minSize = static_cast<float>(minSize);
+    out.maxSize = static_cast<float>(maxSize);
+    out.fadeSpeed = static_cast<float>(fadeSpeed);
+    out.gravity = static_cast<float>(gravity);
+    out.spread = static_cast<float>(spread);
+    out.speedVariation = static_cast<float>(speedVariation);
     return true;
 }
 
@@ -2266,6 +2328,8 @@ JSValue syncObjectWrapper(JSContext *ctx, ScriptHost &host,
         JSValueConst prototype = host.gameObjectPrototype;
         if (dynamic_cast<CoreObject *>(&object) != nullptr) {
             prototype = host.coreObjectPrototype;
+        } else if (dynamic_cast<ParticleEmitter *>(&object) != nullptr) {
+            prototype = host.particleEmitterPrototype;
         } else if (dynamic_cast<Model *>(&object) != nullptr) {
             prototype = host.modelPrototype;
         }
@@ -2303,6 +2367,16 @@ JSValue syncObjectWrapper(JSContext *ctx, ScriptHost &host,
         }
     }
     setProperty(ctx, wrapper, "name", JS_NewString(ctx, name.c_str()));
+
+    if (auto *emitter = dynamic_cast<ParticleEmitter *>(&object);
+        emitter != nullptr) {
+        setProperty(ctx, wrapper, ATLAS_PARTICLE_EMITTER_ID_PROP,
+                    JS_NewInt32(ctx, objectId));
+        setProperty(ctx, wrapper, "settings",
+                    makeParticleSettings(ctx, emitter->settings));
+        setProperty(ctx, wrapper, "position",
+                    makePosition3d(ctx, host, emitter->getPosition()));
+    }
 
     if (auto *core = dynamic_cast<CoreObject *>(&object); core != nullptr) {
         syncObjectTextureStates(host, *core);
@@ -2715,6 +2789,20 @@ Model *resolveModelArg(JSContext *ctx, ScriptHost &host, JSValueConst value) {
         return nullptr;
     }
     return model;
+}
+
+ParticleEmitter *resolveParticleEmitterArg(JSContext *ctx, ScriptHost &host,
+                                           JSValueConst value) {
+    GameObject *object = resolveObjectArg(ctx, host, value);
+    if (object == nullptr) {
+        return nullptr;
+    }
+    auto *emitter = dynamic_cast<ParticleEmitter *>(object);
+    if (emitter == nullptr) {
+        JS_ThrowTypeError(ctx, "Atlas object is not a ParticleEmitter");
+        return nullptr;
+    }
+    return emitter;
 }
 
 Instance *resolveInstanceArg(JSContext *ctx, ScriptHost &host,
@@ -4896,6 +4984,18 @@ std::shared_ptr<Model> ownModel(ScriptHost &host, std::shared_ptr<Model> model,
     return model;
 }
 
+std::shared_ptr<ParticleEmitter>
+ownParticleEmitter(ScriptHost &host, std::shared_ptr<ParticleEmitter> emitter,
+                   bool attachedToWindow = false) {
+    if (host.context != nullptr) {
+        host.context->objects.push_back(emitter);
+    }
+    host.objectStates[emitter->getId()] = {.object = emitter.get(),
+                                           .attachedToWindow = attachedToWindow,
+                                           .textureIds = {}};
+    return emitter;
+}
+
 JSValue jsCreateCoreObject(JSContext *ctx, JSValueConst, int argc,
                            JSValueConst *argv) {
     auto *host = getHost(ctx);
@@ -5122,6 +5222,348 @@ JSValue jsScaleModelBy(JSContext *ctx, JSValueConst, int argc,
     currentScale.z *= scale.z;
     model->setScale(currentScale);
     return syncObjectWrapper(ctx, *host, *model);
+}
+
+JSValue jsCreateParticleEmitter(JSContext *ctx, JSValueConst, int argc,
+                                JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || host->context == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx,
+                                 "Expected particle emitter and max particles");
+    }
+
+    std::int64_t maxParticles = 0;
+    if (!getInt64(ctx, argv[1], maxParticles)) {
+        return JS_ThrowTypeError(ctx, "Expected max particles");
+    }
+
+    auto emitter =
+        ownParticleEmitter(*host, std::make_shared<ParticleEmitter>(
+                                      static_cast<unsigned int>(maxParticles)));
+
+    JSValue objectValue = JS_DupValue(ctx, argv[0]);
+    setProperty(ctx, objectValue, ATLAS_PARTICLE_EMITTER_ID_PROP,
+                JS_NewInt32(ctx, emitter->getId()));
+    setProperty(ctx, objectValue, "id", JS_NewInt32(ctx, emitter->getId()));
+    setProperty(ctx, objectValue, ATLAS_GENERATION_PROP,
+                JS_NewInt64(ctx, static_cast<int64_t>(host->generation)));
+    JS_FreeValue(ctx, objectValue);
+
+    attachObjectIfReady(*host, *emitter);
+    return syncObjectWrapper(ctx, *host, *emitter);
+}
+
+JSValue jsAttachParticleEmitterTexture(JSContext *ctx, JSValueConst, int argc,
+                                       JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected particle emitter and texture");
+    }
+
+    ParticleEmitter *emitter = resolveParticleEmitterArg(ctx, *host, argv[0]);
+    if (emitter == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    auto *textureState = resolveTexture(ctx, *host, argv[1]);
+    if (textureState == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    emitter->attachTexture(*textureState->texture);
+    return syncObjectWrapper(ctx, *host, *emitter);
+}
+
+JSValue jsSetParticleEmitterColor(JSContext *ctx, JSValueConst, int argc,
+                                  JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected particle emitter and color");
+    }
+
+    ParticleEmitter *emitter = resolveParticleEmitterArg(ctx, *host, argv[0]);
+    if (emitter == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    Color color;
+    if (!parseColor(ctx, argv[1], color)) {
+        return JS_ThrowTypeError(ctx, "Expected Color");
+    }
+
+    emitter->setColor(color);
+    return syncObjectWrapper(ctx, *host, *emitter);
+}
+
+JSValue jsSetParticleEmitterUseTexture(JSContext *ctx, JSValueConst, int argc,
+                                       JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx,
+                                 "Expected particle emitter and enabled flag");
+    }
+
+    ParticleEmitter *emitter = resolveParticleEmitterArg(ctx, *host, argv[0]);
+    if (emitter == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    if (JS_ToBool(ctx, argv[1]) == 1) {
+        emitter->enableTexture();
+    } else {
+        emitter->disableTexture();
+    }
+
+    return syncObjectWrapper(ctx, *host, *emitter);
+}
+
+JSValue jsSetParticleEmitterPosition(JSContext *ctx, JSValueConst, int argc,
+                                     JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected particle emitter and position");
+    }
+
+    ParticleEmitter *emitter = resolveParticleEmitterArg(ctx, *host, argv[0]);
+    if (emitter == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    Position3d position;
+    if (!parsePosition3d(ctx, argv[1], position)) {
+        return JS_ThrowTypeError(ctx, "Expected Position3d");
+    }
+
+    emitter->setPosition(position);
+    return syncObjectWrapper(ctx, *host, *emitter);
+}
+
+JSValue jsMoveParticleEmitter(JSContext *ctx, JSValueConst, int argc,
+                              JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected particle emitter and position");
+    }
+
+    ParticleEmitter *emitter = resolveParticleEmitterArg(ctx, *host, argv[0]);
+    if (emitter == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    Position3d position;
+    if (!parsePosition3d(ctx, argv[1], position)) {
+        return JS_ThrowTypeError(ctx, "Expected Position3d");
+    }
+
+    emitter->move(position);
+    return syncObjectWrapper(ctx, *host, *emitter);
+}
+
+JSValue jsGetParticleEmitterPosition(JSContext *ctx, JSValueConst, int argc,
+                                     JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 1) {
+        return JS_ThrowTypeError(ctx, "Expected particle emitter");
+    }
+
+    ParticleEmitter *emitter = resolveParticleEmitterArg(ctx, *host, argv[0]);
+    if (emitter == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    return makePosition3d(ctx, *host, emitter->getPosition());
+}
+
+JSValue jsSetParticleEmitterEmissionType(JSContext *ctx, JSValueConst, int argc,
+                                         JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx,
+                                 "Expected particle emitter and emission type");
+    }
+
+    ParticleEmitter *emitter = resolveParticleEmitterArg(ctx, *host, argv[0]);
+    if (emitter == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    std::int64_t type = 0;
+    if (!getInt64(ctx, argv[1], type)) {
+        return JS_ThrowTypeError(ctx, "Expected emission type");
+    }
+
+    emitter->setEmissionType(type == 1 ? ParticleEmissionType::Ambient
+                                       : ParticleEmissionType::Fountain);
+    return syncObjectWrapper(ctx, *host, *emitter);
+}
+
+JSValue jsSetParticleEmitterDirection(JSContext *ctx, JSValueConst, int argc,
+                                      JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx,
+                                 "Expected particle emitter and direction");
+    }
+
+    ParticleEmitter *emitter = resolveParticleEmitterArg(ctx, *host, argv[0]);
+    if (emitter == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    Position3d direction;
+    if (!parsePosition3d(ctx, argv[1], direction)) {
+        return JS_ThrowTypeError(ctx, "Expected Position3d");
+    }
+
+    emitter->setDirection(direction);
+    return syncObjectWrapper(ctx, *host, *emitter);
+}
+
+JSValue jsSetParticleEmitterSpawnRadius(JSContext *ctx, JSValueConst, int argc,
+                                        JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx,
+                                 "Expected particle emitter and spawn radius");
+    }
+
+    ParticleEmitter *emitter = resolveParticleEmitterArg(ctx, *host, argv[0]);
+    if (emitter == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    double radius = 0.0;
+    if (!getDouble(ctx, argv[1], radius)) {
+        return JS_ThrowTypeError(ctx, "Expected spawn radius");
+    }
+
+    emitter->setSpawnRadius(static_cast<float>(radius));
+    return syncObjectWrapper(ctx, *host, *emitter);
+}
+
+JSValue jsSetParticleEmitterSpawnRate(JSContext *ctx, JSValueConst, int argc,
+                                      JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx,
+                                 "Expected particle emitter and spawn rate");
+    }
+
+    ParticleEmitter *emitter = resolveParticleEmitterArg(ctx, *host, argv[0]);
+    if (emitter == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    double rate = 0.0;
+    if (!getDouble(ctx, argv[1], rate)) {
+        return JS_ThrowTypeError(ctx, "Expected spawn rate");
+    }
+
+    emitter->setSpawnRate(static_cast<float>(rate));
+    return syncObjectWrapper(ctx, *host, *emitter);
+}
+
+JSValue jsSetParticleEmitterSettings(JSContext *ctx, JSValueConst, int argc,
+                                     JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected particle emitter and settings");
+    }
+
+    ParticleEmitter *emitter = resolveParticleEmitterArg(ctx, *host, argv[0]);
+    if (emitter == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    ParticleSettings settings = emitter->settings;
+    parseParticleSettings(ctx, argv[1], settings);
+    emitter->setParticleSettings(settings);
+    return syncObjectWrapper(ctx, *host, *emitter);
+}
+
+JSValue jsParticleEmitterEmitOnce(JSContext *ctx, JSValueConst, int argc,
+                                  JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 1) {
+        return JS_ThrowTypeError(ctx, "Expected particle emitter");
+    }
+
+    ParticleEmitter *emitter = resolveParticleEmitterArg(ctx, *host, argv[0]);
+    if (emitter == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    emitter->emitOnce();
+    return syncObjectWrapper(ctx, *host, *emitter);
+}
+
+JSValue jsParticleEmitterEmitContinuous(JSContext *ctx, JSValueConst, int argc,
+                                        JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 1) {
+        return JS_ThrowTypeError(ctx, "Expected particle emitter");
+    }
+
+    ParticleEmitter *emitter = resolveParticleEmitterArg(ctx, *host, argv[0]);
+    if (emitter == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    emitter->emitContinuously();
+    return syncObjectWrapper(ctx, *host, *emitter);
+}
+
+JSValue jsParticleEmitterStartEmission(JSContext *ctx, JSValueConst, int argc,
+                                       JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 1) {
+        return JS_ThrowTypeError(ctx, "Expected particle emitter");
+    }
+
+    ParticleEmitter *emitter = resolveParticleEmitterArg(ctx, *host, argv[0]);
+    if (emitter == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    emitter->startEmission();
+    return syncObjectWrapper(ctx, *host, *emitter);
+}
+
+JSValue jsParticleEmitterStopEmission(JSContext *ctx, JSValueConst, int argc,
+                                      JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 1) {
+        return JS_ThrowTypeError(ctx, "Expected particle emitter");
+    }
+
+    ParticleEmitter *emitter = resolveParticleEmitterArg(ctx, *host, argv[0]);
+    if (emitter == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    emitter->stopEmission();
+    return syncObjectWrapper(ctx, *host, *emitter);
+}
+
+JSValue jsParticleEmitterEmitBurst(JSContext *ctx, JSValueConst, int argc,
+                                   JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected particle emitter and count");
+    }
+
+    ParticleEmitter *emitter = resolveParticleEmitterArg(ctx, *host, argv[0]);
+    if (emitter == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    std::int64_t count = 0;
+    if (!getInt64(ctx, argv[1], count)) {
+        return JS_ThrowTypeError(ctx, "Expected burst count");
+    }
+
+    emitter->emitBurst(static_cast<int>(count));
+    return syncObjectWrapper(ctx, *host, *emitter);
 }
 
 JSValue jsUpdateObject(JSContext *ctx, JSValueConst, int argc,
@@ -5601,6 +6043,16 @@ void runtime::scripting::clearSceneBindings(JSContext *ctx, ScriptHost &host) {
     }
     host.areaLights.clear();
 
+    if (!JS_IsUndefined(host.atlasParticleNamespace)) {
+        JS_FreeValue(ctx, host.atlasParticleNamespace);
+        host.atlasParticleNamespace = JS_UNDEFINED;
+    }
+
+    if (!JS_IsUndefined(host.particleEmitterPrototype)) {
+        JS_FreeValue(ctx, host.particleEmitterPrototype);
+        host.particleEmitterPrototype = JS_UNDEFINED;
+    }
+
     for (JSValue &interactive : host.interactiveValues) {
         JS_FreeValue(ctx, interactive);
     }
@@ -6038,6 +6490,63 @@ void runtime::scripting::installGlobals(JSContext *ctx) {
     JS_SetPropertyStr(
         ctx, global, "__atlasHideModel",
         JS_NewCFunction(ctx, jsHideObject, "__atlasHideModel", 1));
+    JS_SetPropertyStr(ctx, global, "__atlasCreateParticleEmitter",
+                      JS_NewCFunction(ctx, jsCreateParticleEmitter,
+                                      "__atlasCreateParticleEmitter", 2));
+    JS_SetPropertyStr(ctx, global, "__atlasAttachParticleEmitterTexture",
+                      JS_NewCFunction(ctx, jsAttachParticleEmitterTexture,
+                                      "__atlasAttachParticleEmitterTexture",
+                                      2));
+    JS_SetPropertyStr(ctx, global, "__atlasSetParticleEmitterColor",
+                      JS_NewCFunction(ctx, jsSetParticleEmitterColor,
+                                      "__atlasSetParticleEmitterColor", 2));
+    JS_SetPropertyStr(ctx, global, "__atlasSetParticleEmitterUseTexture",
+                      JS_NewCFunction(ctx, jsSetParticleEmitterUseTexture,
+                                      "__atlasSetParticleEmitterUseTexture",
+                                      2));
+    JS_SetPropertyStr(ctx, global, "__atlasSetParticleEmitterPosition",
+                      JS_NewCFunction(ctx, jsSetParticleEmitterPosition,
+                                      "__atlasSetParticleEmitterPosition", 2));
+    JS_SetPropertyStr(ctx, global, "__atlasMoveParticleEmitter",
+                      JS_NewCFunction(ctx, jsMoveParticleEmitter,
+                                      "__atlasMoveParticleEmitter", 2));
+    JS_SetPropertyStr(ctx, global, "__atlasGetParticleEmitterPosition",
+                      JS_NewCFunction(ctx, jsGetParticleEmitterPosition,
+                                      "__atlasGetParticleEmitterPosition", 1));
+    JS_SetPropertyStr(ctx, global, "__atlasSetParticleEmitterEmissionType",
+                      JS_NewCFunction(ctx, jsSetParticleEmitterEmissionType,
+                                      "__atlasSetParticleEmitterEmissionType",
+                                      2));
+    JS_SetPropertyStr(ctx, global, "__atlasSetParticleEmitterDirection",
+                      JS_NewCFunction(ctx, jsSetParticleEmitterDirection,
+                                      "__atlasSetParticleEmitterDirection", 2));
+    JS_SetPropertyStr(ctx, global, "__atlasSetParticleEmitterSpawnRadius",
+                      JS_NewCFunction(ctx, jsSetParticleEmitterSpawnRadius,
+                                      "__atlasSetParticleEmitterSpawnRadius",
+                                      2));
+    JS_SetPropertyStr(ctx, global, "__atlasSetParticleEmitterSpawnRate",
+                      JS_NewCFunction(ctx, jsSetParticleEmitterSpawnRate,
+                                      "__atlasSetParticleEmitterSpawnRate", 2));
+    JS_SetPropertyStr(ctx, global, "__atlasSetParticleEmitterSettings",
+                      JS_NewCFunction(ctx, jsSetParticleEmitterSettings,
+                                      "__atlasSetParticleEmitterSettings", 2));
+    JS_SetPropertyStr(ctx, global, "__atlasParticleEmitterEmitOnce",
+                      JS_NewCFunction(ctx, jsParticleEmitterEmitOnce,
+                                      "__atlasParticleEmitterEmitOnce", 1));
+    JS_SetPropertyStr(ctx, global, "__atlasParticleEmitterEmitContinuous",
+                      JS_NewCFunction(ctx, jsParticleEmitterEmitContinuous,
+                                      "__atlasParticleEmitterEmitContinuous",
+                                      1));
+    JS_SetPropertyStr(ctx, global, "__atlasParticleEmitterStartEmission",
+                      JS_NewCFunction(ctx, jsParticleEmitterStartEmission,
+                                      "__atlasParticleEmitterStartEmission",
+                                      1));
+    JS_SetPropertyStr(ctx, global, "__atlasParticleEmitterStopEmission",
+                      JS_NewCFunction(ctx, jsParticleEmitterStopEmission,
+                                      "__atlasParticleEmitterStopEmission", 1));
+    JS_SetPropertyStr(ctx, global, "__atlasParticleEmitterEmitBurst",
+                      JS_NewCFunction(ctx, jsParticleEmitterEmitBurst,
+                                      "__atlasParticleEmitterEmitBurst", 2));
     JS_SetPropertyStr(
         ctx, global, "__atlasUpdateObject",
         JS_NewCFunction(ctx, jsUpdateObject, "__atlasUpdateObject", 1));
@@ -6077,6 +6586,12 @@ void runtime::scripting::installGlobals(JSContext *ctx) {
     JS_SetPropertyStr(
         ctx, global, "__atlasHideCoreObject",
         JS_NewCFunction(ctx, jsHideObject, "__atlasHideCoreObject", 1));
+    JS_SetPropertyStr(
+        ctx, global, "__atlasShowParticleEmitter",
+        JS_NewCFunction(ctx, jsShowObject, "__atlasShowParticleEmitter", 1));
+    JS_SetPropertyStr(
+        ctx, global, "__atlasHideParticleEmitter",
+        JS_NewCFunction(ctx, jsHideObject, "__atlasHideParticleEmitter", 1));
     JS_SetPropertyStr(ctx, global, "__atlasEnableDeferredRendering",
                       JS_NewCFunction(ctx, jsEnableDeferred,
                                       "__atlasEnableDeferredRendering", 1));
