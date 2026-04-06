@@ -216,6 +216,24 @@ declare module "atlas" {
         ): CoreObject;
     }
 
+    export class Model extends GameObject {
+        static fromResource(path: string): Model;
+
+        getObjects(): CoreObject[];
+
+        override move(position: Position3d): void;
+        override setPosition(position: Position3d): void;
+        override setRotation(rotation: Rotation3d): void;
+        override lookAt(target: Position3d, up?: Normal3d): void;
+        override rotate(rotation: Rotation3d): void;
+        override setScale(scale: Scale3d): void;
+        override scaleBy(scale: Scale3d): void;
+
+        override show(): void;
+        override hide(): void;
+        override attachTexture(texture: Texture): void;
+    }
+
     export enum ResourceType {
         File,
         Texture,

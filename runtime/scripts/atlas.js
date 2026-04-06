@@ -315,6 +315,68 @@ export class CoreObject extends GameObject {
     }
 }
 
+export class Model extends GameObject {
+    static fromResource(path) {
+        return globalThis.__atlasCreateModel(path);
+    }
+
+    getObjects() {
+        return globalThis.__atlasGetModelObjects(this);
+    }
+
+    move(position) {
+        this.position.x += position.x;
+        this.position.y += position.y;
+        this.position.z += position.z;
+        return globalThis.__atlasMoveModel(this, position);
+    }
+
+    setPosition(position) {
+        this.position = position;
+        return globalThis.__atlasSetModelPosition(this, position);
+    }
+
+    setRotation(rotation) {
+        this.rotation = rotation;
+        return globalThis.__atlasSetModelRotation(this, rotation);
+    }
+
+    lookAt(target, up = Position3d.up()) {
+        return globalThis.__atlasLookAtModel(this, target, up);
+    }
+
+    rotate(rotation) {
+        this.rotation.x += rotation.x;
+        this.rotation.y += rotation.y;
+        this.rotation.z += rotation.z;
+        return globalThis.__atlasRotateModel(this, rotation);
+    }
+
+    setScale(scale) {
+        this.scale = scale;
+        return globalThis.__atlasSetModelScale(this, scale);
+    }
+
+    scaleBy(scale) {
+        this.scale.x *= scale.x;
+        this.scale.y *= scale.y;
+        this.scale.z *= scale.z;
+        return globalThis.__atlasScaleModelBy(this, scale);
+    }
+
+    show() {
+        return globalThis.__atlasShowModel(this.id);
+    }
+
+    hide() {
+        return globalThis.__atlasHideModel(this.id);
+    }
+
+    attachTexture(texture) {
+        return globalThis.__atlasAttachTexture(this, texture);
+    }
+}
+
 export const ResourceType = Object.freeze({
     File: 0,
     Texture: 1,

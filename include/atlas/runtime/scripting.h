@@ -19,6 +19,7 @@
 
 class Context;
 class GameObject;
+class Model;
 class Component;
 class AudioPlayer;
 class Window;
@@ -127,6 +128,7 @@ struct ScriptHost {
     JSValue componentPrototype = JS_UNDEFINED;
     JSValue gameObjectPrototype = JS_UNDEFINED;
     JSValue coreObjectPrototype = JS_UNDEFINED;
+    JSValue modelPrototype = JS_UNDEFINED;
     JSValue materialPrototype = JS_UNDEFINED;
     JSValue instancePrototype = JS_UNDEFINED;
     JSValue coreVertexPrototype = JS_UNDEFINED;
@@ -189,7 +191,8 @@ void dispatchInteractiveMouseScroll(JSContext *ctx, ScriptHost &host,
 char *normalizeModuleName(JSContext *ctx, const char *baseName,
                           const char *name, void *host);
 JSModuleDef *loadModule(JSContext *ctx, const char *name, void *opaque);
-bool evalModule(JSContext *ctx, const std::string &name, const std::string &src);
+bool evalModule(JSContext *ctx, const std::string &name,
+                const std::string &src);
 JSValue importModuleNamespace(JSContext *ctx, const std::string &name);
 
 ScriptInstance *createScriptInstance(JSContext *ctx,

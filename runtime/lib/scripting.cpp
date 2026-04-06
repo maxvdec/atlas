@@ -184,21 +184,21 @@ const auto ATLAS_KEY_ENTRIES = std::to_array<std::pair<const char *, Key>>({
 
 const auto ATLAS_MOUSE_BUTTON_ENTRIES =
     std::to_array<std::pair<const char *, MouseButton>>({
-    {"Left", MouseButton::Left},
-    {"Right", MouseButton::Right},
-    {"Middle", MouseButton::Middle},
-    {"X1", MouseButton::Button4},
-    {"X2", MouseButton::Button5},
-    {"Button4", MouseButton::Button4},
-    {"Button5", MouseButton::Button5},
-    {"Button6", MouseButton::Button6},
-    {"Button7", MouseButton::Button7},
-    {"Button8", MouseButton::Button8},
-    {"Last", MouseButton::Last},
+        {"Left", MouseButton::Left},
+        {"Right", MouseButton::Right},
+        {"Middle", MouseButton::Middle},
+        {"X1", MouseButton::Button4},
+        {"X2", MouseButton::Button5},
+        {"Button4", MouseButton::Button4},
+        {"Button5", MouseButton::Button5},
+        {"Button6", MouseButton::Button6},
+        {"Button7", MouseButton::Button7},
+        {"Button8", MouseButton::Button8},
+        {"Last", MouseButton::Last},
     });
 
 const std::array<MouseButton, 8> ATLAS_MOUSE_BUTTONS = {
-    MouseButton::Left, MouseButton::Right, MouseButton::Middle,
+    MouseButton::Left,    MouseButton::Right,   MouseButton::Middle,
     MouseButton::Button4, MouseButton::Button5, MouseButton::Button6,
     MouseButton::Button7, MouseButton::Button8};
 
@@ -634,6 +634,7 @@ bool ensureBuiltins(JSContext *ctx, ScriptHost &host) {
                    host.gameObjectPrototype);
     cachePrototype(ctx, host.atlasNamespace, "CoreObject",
                    host.coreObjectPrototype);
+    cachePrototype(ctx, host.atlasNamespace, "Model", host.modelPrototype);
     cachePrototype(ctx, host.atlasNamespace, "Material",
                    host.materialPrototype);
     cachePrototype(ctx, host.atlasNamespace, "Instance",
@@ -712,7 +713,8 @@ JSValue makeColor(JSContext *ctx, ScriptHost &host, const Color &value) {
     return result;
 }
 
-JSValue makeResource(JSContext *ctx, ScriptHost &host, const Resource &resource) {
+JSValue makeResource(JSContext *ctx, ScriptHost &host,
+                     const Resource &resource) {
     JSValue result = newObjectFromPrototype(ctx, host.resourcePrototype);
     setProperty(ctx, result, "type",
                 JS_NewInt32(ctx, toScriptResourceType(resource.type)));
@@ -828,9 +830,9 @@ bool parseQuaternion(JSContext *ctx, JSValueConst value, glm::quat &out) {
         !readNumberProperty(ctx, value, "w", w)) {
         return false;
     }
-    out = glm::normalize(
-        glm::quat(static_cast<float>(w), static_cast<float>(x),
-                  static_cast<float>(y), static_cast<float>(z)));
+    out =
+        glm::normalize(glm::quat(static_cast<float>(w), static_cast<float>(x),
+                                 static_cast<float>(y), static_cast<float>(z)));
     return true;
 }
 
@@ -1026,17 +1028,19 @@ bool parseTrigger(JSContext *ctx, JSValueConst value, Trigger &out) {
         return true;
     }
     case TriggerType::ControllerButton: {
-        JSValue controllerButton = JS_GetPropertyStr(ctx, value, "controllerButton");
-        if (JS_IsException(controllerButton) || JS_IsUndefined(controllerButton)) {
+        JSValue controllerButton =
+            JS_GetPropertyStr(ctx, value, "controllerButton");
+        if (JS_IsException(controllerButton) ||
+            JS_IsUndefined(controllerButton)) {
             JS_FreeValue(ctx, controllerButton);
             return false;
         }
         std::int64_t controllerID = 0;
         std::int64_t buttonIndex = 0;
-        const bool ok = readIntProperty(ctx, controllerButton, "controllerID",
-                                        controllerID) &&
-                        readIntProperty(ctx, controllerButton, "buttonIndex",
-                                        buttonIndex);
+        const bool ok =
+            readIntProperty(ctx, controllerButton, "controllerID",
+                            controllerID) &&
+            readIntProperty(ctx, controllerButton, "buttonIndex", buttonIndex);
         JS_FreeValue(ctx, controllerButton);
         if (!ok) {
             return false;
@@ -1152,7 +1156,8 @@ bool parseInputAction(JSContext *ctx, JSValueConst value, InputAction &out) {
             out.axisTriggers.clear();
             out.axisTriggers.reserve(length);
             for (std::uint32_t i = 0; i < length; ++i) {
-                JSValue axisTriggerValue = JS_GetPropertyUint32(ctx, axisTriggers, i);
+                JSValue axisTriggerValue =
+                    JS_GetPropertyUint32(ctx, axisTriggers, i);
                 AxisTrigger axisTrigger;
                 const bool ok =
                     !JS_IsException(axisTriggerValue) &&
@@ -1204,8 +1209,8 @@ bool parseInputAction(JSContext *ctx, JSValueConst value, InputAction &out) {
     return true;
 }
 
-bool callObjectMethod(JSContext *ctx, JSValueConst object, const char *methodName,
-                      int argc, JSValueConst *argv) {
+bool callObjectMethod(JSContext *ctx, JSValueConst object,
+                      const char *methodName, int argc, JSValueConst *argv) {
     JSValue fn = JS_GetPropertyStr(ctx, object, methodName);
     if (JS_IsException(fn)) {
         runtime::scripting::dumpExecution(ctx);
@@ -1227,7 +1232,8 @@ bool callObjectMethod(JSContext *ctx, JSValueConst object, const char *methodNam
     return true;
 }
 
-ScriptTextureState *findTextureState(ScriptHost &host, std::uint64_t textureId) {
+ScriptTextureState *findTextureState(ScriptHost &host,
+                                     std::uint64_t textureId) {
     auto it = host.textures.find(textureId);
     if (it == host.textures.end()) {
         return nullptr;
@@ -1235,7 +1241,8 @@ ScriptTextureState *findTextureState(ScriptHost &host, std::uint64_t textureId) 
     return &it->second;
 }
 
-ScriptCubemapState *findCubemapState(ScriptHost &host, std::uint64_t cubemapId) {
+ScriptCubemapState *findCubemapState(ScriptHost &host,
+                                     std::uint64_t cubemapId) {
     auto it = host.cubemaps.find(cubemapId);
     if (it == host.cubemaps.end()) {
         return nullptr;
@@ -1369,8 +1376,9 @@ JSValue syncCubemapWrapper(JSContext *ctx, ScriptHost &host,
 
     JSValue resources = JS_NewArray(ctx);
     for (std::uint32_t i = 0; i < state->cubemap->resources.size(); ++i) {
-        JS_SetPropertyUint32(ctx, resources, i,
-                             makeResource(ctx, host, state->cubemap->resources[i]));
+        JS_SetPropertyUint32(
+            ctx, resources, i,
+            makeResource(ctx, host, state->cubemap->resources[i]));
     }
 
     setProperty(ctx, wrapper, ATLAS_CUBEMAP_ID_PROP,
@@ -1412,7 +1420,8 @@ JSValue syncSkyboxWrapper(JSContext *ctx, ScriptHost &host,
     return wrapper;
 }
 
-void syncRenderTargetTextureStates(ScriptHost &host, std::uint64_t renderTargetId) {
+void syncRenderTargetTextureStates(ScriptHost &host,
+                                   std::uint64_t renderTargetId) {
     auto *state = findRenderTargetState(host, renderTargetId);
     if (state == nullptr || !state->renderTarget) {
         return;
@@ -1503,17 +1512,18 @@ JSValue syncRenderTargetWrapper(JSContext *ctx, ScriptHost &host,
 
     JSValue outTextures = JS_NewArray(ctx);
     for (std::uint32_t i = 0; i < state->outTextureIds.size(); ++i) {
-        JS_SetPropertyUint32(ctx, outTextures, i,
-                             syncTextureWrapper(ctx, host, state->outTextureIds[i]));
+        JS_SetPropertyUint32(
+            ctx, outTextures, i,
+            syncTextureWrapper(ctx, host, state->outTextureIds[i]));
     }
 
     setProperty(ctx, wrapper, ATLAS_RENDER_TARGET_ID_PROP,
                 JS_NewInt64(ctx, static_cast<int64_t>(renderTargetId)));
     setProperty(ctx, wrapper, ATLAS_GENERATION_PROP,
                 JS_NewInt64(ctx, static_cast<int64_t>(host.generation)));
-    setProperty(ctx, wrapper, "type",
-                JS_NewInt32(ctx,
-                            toScriptRenderTargetType(state->renderTarget->type)));
+    setProperty(
+        ctx, wrapper, "type",
+        JS_NewInt32(ctx, toScriptRenderTargetType(state->renderTarget->type)));
     setProperty(ctx, wrapper, "resolution",
                 JS_NewInt32(ctx, state->renderTarget->getWidth()));
     setProperty(ctx, wrapper, "outTextures", outTextures);
@@ -1579,7 +1589,8 @@ JSValue syncPointLightWrapper(JSContext *ctx, ScriptHost &host,
                 JS_NewInt64(ctx, static_cast<int64_t>(host.generation)));
     setProperty(ctx, wrapper, "position",
                 makePosition3d(ctx, host, state->light->position));
-    setProperty(ctx, wrapper, "color", makeColor(ctx, host, state->light->color));
+    setProperty(ctx, wrapper, "color",
+                makeColor(ctx, host, state->light->color));
     setProperty(ctx, wrapper, "shineColor",
                 makeColor(ctx, host, state->light->shineColor));
     setProperty(ctx, wrapper, "intensity",
@@ -1613,7 +1624,8 @@ JSValue syncDirectionalLightWrapper(JSContext *ctx, ScriptHost &host,
                 JS_NewInt64(ctx, static_cast<int64_t>(host.generation)));
     setProperty(ctx, wrapper, "direction",
                 makePosition3d(ctx, host, state->light->direction));
-    setProperty(ctx, wrapper, "color", makeColor(ctx, host, state->light->color));
+    setProperty(ctx, wrapper, "color",
+                makeColor(ctx, host, state->light->color));
     setProperty(ctx, wrapper, "shineColor",
                 makeColor(ctx, host, state->light->shineColor));
     setProperty(ctx, wrapper, "intensity",
@@ -1639,12 +1651,10 @@ JSValue syncSpotLightWrapper(JSContext *ctx, ScriptHost &host,
         state->value = JS_DupValue(ctx, wrapper);
     }
 
-    const double cutOff =
-        glm::degrees(std::acos(std::clamp(static_cast<double>(state->light->cutOff),
-                                          -1.0, 1.0)));
-    const double outerCutOff =
-        glm::degrees(std::acos(std::clamp(
-            static_cast<double>(state->light->outerCutoff), -1.0, 1.0)));
+    const double cutOff = glm::degrees(std::acos(
+        std::clamp(static_cast<double>(state->light->cutOff), -1.0, 1.0)));
+    const double outerCutOff = glm::degrees(std::acos(
+        std::clamp(static_cast<double>(state->light->outerCutoff), -1.0, 1.0)));
 
     setProperty(ctx, wrapper, ATLAS_SPOT_LIGHT_ID_PROP,
                 JS_NewInt64(ctx, static_cast<int64_t>(lightId)));
@@ -1654,7 +1664,8 @@ JSValue syncSpotLightWrapper(JSContext *ctx, ScriptHost &host,
                 makePosition3d(ctx, host, state->light->position));
     setProperty(ctx, wrapper, "direction",
                 makePosition3d(ctx, host, state->light->direction));
-    setProperty(ctx, wrapper, "color", makeColor(ctx, host, state->light->color));
+    setProperty(ctx, wrapper, "color",
+                makeColor(ctx, host, state->light->color));
     setProperty(ctx, wrapper, "shineColor",
                 makeColor(ctx, host, state->light->shineColor));
     setProperty(ctx, wrapper, "range", JS_NewFloat64(ctx, state->light->range));
@@ -1691,9 +1702,12 @@ JSValue syncAreaLightWrapper(JSContext *ctx, ScriptHost &host,
                 makePosition3d(ctx, host, state->light->position));
     setProperty(ctx, wrapper, "right",
                 makePosition3d(ctx, host, state->light->right));
-    setProperty(ctx, wrapper, "up", makePosition3d(ctx, host, state->light->up));
-    setProperty(ctx, wrapper, "size", makeSize2d(ctx, host, state->light->size));
-    setProperty(ctx, wrapper, "color", makeColor(ctx, host, state->light->color));
+    setProperty(ctx, wrapper, "up",
+                makePosition3d(ctx, host, state->light->up));
+    setProperty(ctx, wrapper, "size",
+                makeSize2d(ctx, host, state->light->size));
+    setProperty(ctx, wrapper, "color",
+                makeColor(ctx, host, state->light->color));
     setProperty(ctx, wrapper, "shineColor",
                 makeColor(ctx, host, state->light->shineColor));
     setProperty(ctx, wrapper, "intensity",
@@ -1763,7 +1777,8 @@ Texture createEmptyTexture(int width, int height, TextureType type,
                            borderColor);
 }
 
-Texture createSolidTexture(Color color, TextureType type, int width, int height) {
+Texture createSolidTexture(Color color, TextureType type, int width,
+                           int height) {
     const int checkSize = std::max(width, height);
     Texture texture =
         Texture::createCheckerboard(width, height, checkSize, color, color);
@@ -1934,8 +1949,10 @@ JSValue syncCameraWrapper(JSContext *ctx, ScriptHost &host, Camera &camera) {
     setProperty(ctx, wrapper, ATLAS_CAMERA_PROP, JS_NewBool(ctx, true));
     setProperty(ctx, wrapper, ATLAS_GENERATION_PROP,
                 JS_NewInt64(ctx, static_cast<int64_t>(host.generation)));
-    setProperty(ctx, wrapper, "position", makePosition3d(ctx, host, camera.position));
-    setProperty(ctx, wrapper, "target", makePosition3d(ctx, host, camera.target));
+    setProperty(ctx, wrapper, "position",
+                makePosition3d(ctx, host, camera.position));
+    setProperty(ctx, wrapper, "target",
+                makePosition3d(ctx, host, camera.target));
     setProperty(ctx, wrapper, "fov", JS_NewFloat64(ctx, camera.fov));
     setProperty(ctx, wrapper, "nearClip", JS_NewFloat64(ctx, camera.nearClip));
     setProperty(ctx, wrapper, "farClip", JS_NewFloat64(ctx, camera.farClip));
@@ -2109,8 +2126,8 @@ void attachObjectIfReady(ScriptHost &host, GameObject &object) {
         return;
     }
 
-    if (auto *core = dynamic_cast<CoreObject *>(&object); core != nullptr &&
-        core->vertices.empty()) {
+    if (auto *core = dynamic_cast<CoreObject *>(&object);
+        core != nullptr && core->vertices.empty()) {
         return;
     }
 
@@ -2155,8 +2172,8 @@ void syncObjectTextureStates(ScriptHost &host, CoreObject &object) {
 
 JSValue syncObjectWrapper(JSContext *ctx, ScriptHost &host, GameObject &object);
 
-JSValue syncInstanceWrapper(JSContext *ctx, ScriptHost &host, CoreObject &object,
-                            std::uint32_t index) {
+JSValue syncInstanceWrapper(JSContext *ctx, ScriptHost &host,
+                            CoreObject &object, std::uint32_t index) {
     if (!ensureBuiltins(ctx, host)) {
         return JS_EXCEPTION;
     }
@@ -2182,13 +2199,17 @@ JSValue syncInstanceWrapper(JSContext *ctx, ScriptHost &host, CoreObject &object
                 JS_NewInt32(ctx, static_cast<int>(index)));
     setProperty(ctx, wrapper, ATLAS_GENERATION_PROP,
                 JS_NewInt64(ctx, static_cast<int64_t>(host.generation)));
-    setProperty(ctx, wrapper, "position", makePosition3d(ctx, host, instance.position));
-    setProperty(ctx, wrapper, "rotation", makeRotation3d(ctx, host, instance.rotation));
-    setProperty(ctx, wrapper, "scale", makePosition3d(ctx, host, instance.scale));
+    setProperty(ctx, wrapper, "position",
+                makePosition3d(ctx, host, instance.position));
+    setProperty(ctx, wrapper, "rotation",
+                makeRotation3d(ctx, host, instance.rotation));
+    setProperty(ctx, wrapper, "scale",
+                makePosition3d(ctx, host, instance.scale));
     return wrapper;
 }
 
-JSValue makeMaterial(JSContext *ctx, ScriptHost &host, const Material &material) {
+JSValue makeMaterial(JSContext *ctx, ScriptHost &host,
+                     const Material &material) {
     JSValue result = newObjectFromPrototype(ctx, host.materialPrototype);
     setProperty(ctx, result, "albedo", makeColor(ctx, host, material.albedo));
     setProperty(ctx, result, "metallic", JS_NewFloat64(ctx, material.metallic));
@@ -2211,21 +2232,27 @@ JSValue makeMaterial(JSContext *ctx, ScriptHost &host, const Material &material)
     return result;
 }
 
-JSValue makeCoreVertex(JSContext *ctx, ScriptHost &host, const CoreVertex &vertex) {
+JSValue makeCoreVertex(JSContext *ctx, ScriptHost &host,
+                       const CoreVertex &vertex) {
     JSValue result = newObjectFromPrototype(ctx, host.coreVertexPrototype);
-    setProperty(ctx, result, "position", makePosition3d(ctx, host, vertex.position));
+    setProperty(ctx, result, "position",
+                makePosition3d(ctx, host, vertex.position));
     setProperty(ctx, result, "color", makeColor(ctx, host, vertex.color));
     setProperty(ctx, result, "textureCoord",
-                makePosition2d(ctx, host, Position2d(vertex.textureCoordinate[0],
-                                                     vertex.textureCoordinate[1])));
-    setProperty(ctx, result, "normal", makePosition3d(ctx, host, vertex.normal));
-    setProperty(ctx, result, "tangent", makePosition3d(ctx, host, vertex.tangent));
+                makePosition2d(ctx, host,
+                               Position2d(vertex.textureCoordinate[0],
+                                          vertex.textureCoordinate[1])));
+    setProperty(ctx, result, "normal",
+                makePosition3d(ctx, host, vertex.normal));
+    setProperty(ctx, result, "tangent",
+                makePosition3d(ctx, host, vertex.tangent));
     setProperty(ctx, result, "bitangent",
                 makePosition3d(ctx, host, vertex.bitangent));
     return result;
 }
 
-JSValue syncObjectWrapper(JSContext *ctx, ScriptHost &host, GameObject &object) {
+JSValue syncObjectWrapper(JSContext *ctx, ScriptHost &host,
+                          GameObject &object) {
     if (!ensureBuiltins(ctx, host)) {
         return JS_EXCEPTION;
     }
@@ -2236,10 +2263,12 @@ JSValue syncObjectWrapper(JSContext *ctx, ScriptHost &host, GameObject &object) 
     if (cacheIt != host.objectCache.end()) {
         wrapper = JS_DupValue(ctx, cacheIt->second);
     } else {
-        JSValueConst prototype =
-            dynamic_cast<CoreObject *>(&object) != nullptr
-                ? host.coreObjectPrototype
-                : host.gameObjectPrototype;
+        JSValueConst prototype = host.gameObjectPrototype;
+        if (dynamic_cast<CoreObject *>(&object) != nullptr) {
+            prototype = host.coreObjectPrototype;
+        } else if (dynamic_cast<Model *>(&object) != nullptr) {
+            prototype = host.modelPrototype;
+        }
         wrapper = newObjectFromPrototype(ctx, prototype);
         host.objectCache[objectId] = JS_DupValue(ctx, wrapper);
     }
@@ -2253,10 +2282,12 @@ JSValue syncObjectWrapper(JSContext *ctx, ScriptHost &host, GameObject &object) 
     setProperty(ctx, wrapper, ATLAS_OBJECT_ID_PROP, JS_NewInt32(ctx, objectId));
     setProperty(ctx, wrapper, ATLAS_GENERATION_PROP,
                 JS_NewInt64(ctx, static_cast<int64_t>(host.generation)));
-    setProperty(ctx, wrapper, ATLAS_IS_CORE_OBJECT_PROP,
-                JS_NewBool(ctx, dynamic_cast<CoreObject *>(&object) != nullptr));
+    setProperty(
+        ctx, wrapper, ATLAS_IS_CORE_OBJECT_PROP,
+        JS_NewBool(ctx, dynamic_cast<CoreObject *>(&object) != nullptr));
     setProperty(ctx, wrapper, "id", JS_NewInt32(ctx, objectId));
-    setProperty(ctx, wrapper, "components", buildComponentsArray(ctx, host, objectId));
+    setProperty(ctx, wrapper, "components",
+                buildComponentsArray(ctx, host, objectId));
     setProperty(ctx, wrapper, "position",
                 makePosition3d(ctx, host, object.getPosition()));
     setProperty(ctx, wrapper, "rotation",
@@ -2284,8 +2315,9 @@ JSValue syncObjectWrapper(JSContext *ctx, ScriptHost &host, GameObject &object) 
 
         JSValue indices = JS_NewArray(ctx);
         for (std::uint32_t i = 0; i < core->indices.size(); ++i) {
-            JS_SetPropertyUint32(ctx, indices, i,
-                                 JS_NewInt32(ctx, static_cast<int>(core->indices[i])));
+            JS_SetPropertyUint32(
+                ctx, indices, i,
+                JS_NewInt32(ctx, static_cast<int>(core->indices[i])));
         }
 
         JSValue instances = JS_NewArray(ctx);
@@ -2297,17 +2329,20 @@ JSValue syncObjectWrapper(JSContext *ctx, ScriptHost &host, GameObject &object) 
         JSValue textures = JS_NewArray(ctx);
         auto stateIt = host.objectStates.find(objectId);
         if (stateIt != host.objectStates.end()) {
-            for (std::uint32_t i = 0; i < stateIt->second.textureIds.size(); ++i) {
+            for (std::uint32_t i = 0; i < stateIt->second.textureIds.size();
+                 ++i) {
                 JS_SetPropertyUint32(
                     ctx, textures, i,
-                    syncTextureWrapper(ctx, host, stateIt->second.textureIds[i]));
+                    syncTextureWrapper(ctx, host,
+                                       stateIt->second.textureIds[i]));
             }
         }
 
         setProperty(ctx, wrapper, "vertices", vertices);
         setProperty(ctx, wrapper, "indices", indices);
         setProperty(ctx, wrapper, "textures", textures);
-        setProperty(ctx, wrapper, "material", makeMaterial(ctx, host, core->material));
+        setProperty(ctx, wrapper, "material",
+                    makeMaterial(ctx, host, core->material));
         setProperty(ctx, wrapper, "instances", instances);
         setProperty(ctx, wrapper, "castsShadows",
                     JS_NewBool(ctx, core->castsShadows));
@@ -2510,11 +2545,10 @@ bool applySpotLight(JSContext *ctx, JSValueConst wrapper, Spotlight &light) {
     Color color = light.color;
     Color shineColor = light.shineColor;
     double range = light.range;
-    double cutOff =
-        glm::degrees(std::acos(std::clamp(static_cast<double>(light.cutOff), -1.0,
-                                          1.0)));
-    double outerCutOff = glm::degrees(std::acos(std::clamp(
-        static_cast<double>(light.outerCutoff), -1.0, 1.0)));
+    double cutOff = glm::degrees(
+        std::acos(std::clamp(static_cast<double>(light.cutOff), -1.0, 1.0)));
+    double outerCutOff = glm::degrees(std::acos(
+        std::clamp(static_cast<double>(light.outerCutoff), -1.0, 1.0)));
     double intensity = light.intensity;
 
     JSValue value = JS_GetPropertyStr(ctx, wrapper, "position");
@@ -2670,6 +2704,19 @@ CoreObject *resolveCoreObjectArg(JSContext *ctx, ScriptHost &host,
     return core;
 }
 
+Model *resolveModelArg(JSContext *ctx, ScriptHost &host, JSValueConst value) {
+    GameObject *object = resolveObjectArg(ctx, host, value);
+    if (object == nullptr) {
+        return nullptr;
+    }
+    auto *model = dynamic_cast<Model *>(object);
+    if (model == nullptr) {
+        JS_ThrowTypeError(ctx, "Atlas object is not a Model");
+        return nullptr;
+    }
+    return model;
+}
+
 Instance *resolveInstanceArg(JSContext *ctx, ScriptHost &host,
                              JSValueConst value) {
     if (!ensureCurrentGeneration(ctx, host, value)) {
@@ -2707,7 +2754,8 @@ Camera *resolveCameraArg(JSContext *ctx, ScriptHost &host, JSValueConst value) {
     }
 
     bool isCamera = false;
-    if (!readBoolProperty(ctx, value, ATLAS_CAMERA_PROP, isCamera) || !isCamera) {
+    if (!readBoolProperty(ctx, value, ATLAS_CAMERA_PROP, isCamera) ||
+        !isCamera) {
         JS_ThrowTypeError(ctx, "Expected Atlas camera handle");
         return nullptr;
     }
@@ -2810,8 +2858,8 @@ ScriptRenderTargetState *resolveRenderTarget(JSContext *ctx, ScriptHost &host,
         return nullptr;
     }
 
-    auto *state = findRenderTargetState(
-        host, static_cast<std::uint64_t>(renderTargetId));
+    auto *state =
+        findRenderTargetState(host, static_cast<std::uint64_t>(renderTargetId));
     if (state == nullptr || !state->renderTarget) {
         JS_ThrowReferenceError(ctx, "Unknown Atlas render target id");
         return nullptr;
@@ -2831,7 +2879,8 @@ ScriptPointLightState *resolvePointLight(JSContext *ctx, ScriptHost &host,
         return nullptr;
     }
 
-    auto *state = findPointLightState(host, static_cast<std::uint64_t>(lightId));
+    auto *state =
+        findPointLightState(host, static_cast<std::uint64_t>(lightId));
     if (state == nullptr || state->light == nullptr) {
         JS_ThrowReferenceError(ctx, "Unknown Atlas point light id");
         return nullptr;
@@ -2839,15 +2888,15 @@ ScriptPointLightState *resolvePointLight(JSContext *ctx, ScriptHost &host,
     return state;
 }
 
-ScriptDirectionalLightState *resolveDirectionalLight(JSContext *ctx,
-                                                     ScriptHost &host,
-                                                     JSValueConst value) {
+ScriptDirectionalLightState *
+resolveDirectionalLight(JSContext *ctx, ScriptHost &host, JSValueConst value) {
     if (!ensureCurrentGeneration(ctx, host, value)) {
         return nullptr;
     }
 
     std::int64_t lightId = 0;
-    if (!readIntProperty(ctx, value, ATLAS_DIRECTIONAL_LIGHT_ID_PROP, lightId)) {
+    if (!readIntProperty(ctx, value, ATLAS_DIRECTIONAL_LIGHT_ID_PROP,
+                         lightId)) {
         JS_ThrowTypeError(ctx, "Expected Atlas directional light handle");
         return nullptr;
     }
@@ -3038,10 +3087,9 @@ JSValue jsMoveCameraTo(JSContext *ctx, JSValueConst, int argc,
     }
 
     const double factor = speed / distance;
-    camera->setPositionKeepingOrientation(
-        Position3d(camera->position.x + dx * factor,
-                   camera->position.y + dy * factor,
-                   camera->position.z + dz * factor));
+    camera->setPositionKeepingOrientation(Position3d(
+        camera->position.x + dx * factor, camera->position.y + dy * factor,
+        camera->position.z + dz * factor));
     return syncCameraWrapper(ctx, *host, *camera);
 }
 
@@ -3186,8 +3234,8 @@ JSValue jsCreateTextureFromResource(JSContext *ctx, JSValueConst, int argc,
     }
 
     const std::uint64_t textureId = registerTextureState(
-        *host, Texture::fromResource(resource,
-                                     toNativeTextureType(static_cast<int>(type))));
+        *host, Texture::fromResource(
+                   resource, toNativeTextureType(static_cast<int>(type))));
     return syncTextureWrapper(ctx, *host, textureId);
 }
 
@@ -3195,7 +3243,8 @@ JSValue jsCreateEmptyTexture(JSContext *ctx, JSValueConst, int argc,
                              JSValueConst *argv) {
     auto *host = getHost(ctx);
     if (host == nullptr || argc < 3) {
-        return JS_ThrowTypeError(ctx, "Expected width, height, and texture type");
+        return JS_ThrowTypeError(ctx,
+                                 "Expected width, height, and texture type");
     }
 
     std::int64_t width = 0;
@@ -3203,7 +3252,8 @@ JSValue jsCreateEmptyTexture(JSContext *ctx, JSValueConst, int argc,
     std::int64_t type = 0;
     if (!getInt64(ctx, argv[0], width) || !getInt64(ctx, argv[1], height) ||
         !getInt64(ctx, argv[2], type)) {
-        return JS_ThrowTypeError(ctx, "Expected width, height, and texture type");
+        return JS_ThrowTypeError(ctx,
+                                 "Expected width, height, and texture type");
     }
 
     Color borderColor(0.0f, 0.0f, 0.0f, 0.0f);
@@ -3213,13 +3263,10 @@ JSValue jsCreateEmptyTexture(JSContext *ctx, JSValueConst, int argc,
         }
     }
 
-    const std::uint64_t textureId =
-        registerTextureState(*host,
-                             createEmptyTexture(static_cast<int>(width),
-                                                static_cast<int>(height),
-                                                toNativeTextureType(
-                                                    static_cast<int>(type)),
-                                                borderColor));
+    const std::uint64_t textureId = registerTextureState(
+        *host, createEmptyTexture(
+                   static_cast<int>(width), static_cast<int>(height),
+                   toNativeTextureType(static_cast<int>(type)), borderColor));
     return syncTextureWrapper(ctx, *host, textureId);
 }
 
@@ -3227,8 +3274,8 @@ JSValue jsCreateColorTexture(JSContext *ctx, JSValueConst, int argc,
                              JSValueConst *argv) {
     auto *host = getHost(ctx);
     if (host == nullptr || argc < 4) {
-        return JS_ThrowTypeError(ctx,
-                                 "Expected color, texture type, width, and height");
+        return JS_ThrowTypeError(
+            ctx, "Expected color, texture type, width, and height");
     }
 
     Color color;
@@ -3237,15 +3284,14 @@ JSValue jsCreateColorTexture(JSContext *ctx, JSValueConst, int argc,
     std::int64_t height = 0;
     if (!parseColor(ctx, argv[0], color) || !getInt64(ctx, argv[1], type) ||
         !getInt64(ctx, argv[2], width) || !getInt64(ctx, argv[3], height)) {
-        return JS_ThrowTypeError(ctx,
-                                 "Expected color, texture type, width, and height");
+        return JS_ThrowTypeError(
+            ctx, "Expected color, texture type, width, and height");
     }
 
     const std::uint64_t textureId = registerTextureState(
-        *host, createSolidTexture(color,
-                                  toNativeTextureType(static_cast<int>(type)),
-                                  static_cast<int>(width),
-                                  static_cast<int>(height)));
+        *host,
+        createSolidTexture(color, toNativeTextureType(static_cast<int>(type)),
+                           static_cast<int>(width), static_cast<int>(height)));
     return syncTextureWrapper(ctx, *host, textureId);
 }
 
@@ -3254,8 +3300,7 @@ JSValue jsCreateCheckerboardTexture(JSContext *ctx, JSValueConst, int argc,
     auto *host = getHost(ctx);
     if (host == nullptr || argc < 6) {
         return JS_ThrowTypeError(
-            ctx,
-            "Expected texture, width, height, check size, and two colors");
+            ctx, "Expected texture, width, height, check size, and two colors");
     }
 
     auto *state = resolveTexture(ctx, *host, argv[0]);
@@ -3272,26 +3317,26 @@ JSValue jsCreateCheckerboardTexture(JSContext *ctx, JSValueConst, int argc,
     Color color1;
     Color color2;
     if (!getInt64(ctx, argv[1], width) || !getInt64(ctx, argv[2], height) ||
-        !getInt64(ctx, argv[3], checkSize) || !parseColor(ctx, argv[4], color1) ||
+        !getInt64(ctx, argv[3], checkSize) ||
+        !parseColor(ctx, argv[4], color1) ||
         !parseColor(ctx, argv[5], color2)) {
         return JS_ThrowTypeError(
-            ctx,
-            "Expected texture, width, height, check size, and two colors");
+            ctx, "Expected texture, width, height, check size, and two colors");
     }
 
     *state->texture = Texture::createCheckerboard(
         static_cast<int>(width), static_cast<int>(height),
         static_cast<int>(checkSize), color1, color2);
-    return syncTextureWrapper(ctx, *host, static_cast<std::uint64_t>(textureId));
+    return syncTextureWrapper(ctx, *host,
+                              static_cast<std::uint64_t>(textureId));
 }
 
-JSValue jsCreateDoubleCheckerboardTexture(JSContext *ctx, JSValueConst, int argc,
-                                          JSValueConst *argv) {
+JSValue jsCreateDoubleCheckerboardTexture(JSContext *ctx, JSValueConst,
+                                          int argc, JSValueConst *argv) {
     auto *host = getHost(ctx);
     if (host == nullptr || argc < 8) {
-        return JS_ThrowTypeError(
-            ctx,
-            "Expected texture, width, height, two check sizes, and three colors");
+        return JS_ThrowTypeError(ctx, "Expected texture, width, height, two "
+                                      "check sizes, and three colors");
     }
 
     auto *state = resolveTexture(ctx, *host, argv[0]);
@@ -3312,25 +3357,26 @@ JSValue jsCreateDoubleCheckerboardTexture(JSContext *ctx, JSValueConst, int argc
     if (!getInt64(ctx, argv[1], width) || !getInt64(ctx, argv[2], height) ||
         !getInt64(ctx, argv[3], checkSizeBig) ||
         !getInt64(ctx, argv[4], checkSizeSmall) ||
-        !parseColor(ctx, argv[5], color1) || !parseColor(ctx, argv[6], color2) ||
+        !parseColor(ctx, argv[5], color1) ||
+        !parseColor(ctx, argv[6], color2) ||
         !parseColor(ctx, argv[7], color3)) {
-        return JS_ThrowTypeError(
-            ctx,
-            "Expected texture, width, height, two check sizes, and three colors");
+        return JS_ThrowTypeError(ctx, "Expected texture, width, height, two "
+                                      "check sizes, and three colors");
     }
 
     *state->texture = Texture::createDoubleCheckerboard(
         static_cast<int>(width), static_cast<int>(height),
-        static_cast<int>(checkSizeBig), static_cast<int>(checkSizeSmall), color1,
-        color2, color3);
-    return syncTextureWrapper(ctx, *host, static_cast<std::uint64_t>(textureId));
+        static_cast<int>(checkSizeBig), static_cast<int>(checkSizeSmall),
+        color1, color2, color3);
+    return syncTextureWrapper(ctx, *host,
+                              static_cast<std::uint64_t>(textureId));
 }
 
 JSValue jsDisplayTexture(JSContext *ctx, JSValueConst, int argc,
                          JSValueConst *argv) {
     auto *host = getHost(ctx);
-    if (host == nullptr || host->context == nullptr || host->context->window == nullptr ||
-        argc < 1) {
+    if (host == nullptr || host->context == nullptr ||
+        host->context->window == nullptr || argc < 1) {
         return JS_ThrowTypeError(ctx, "Expected texture");
     }
 
@@ -3342,7 +3388,8 @@ JSValue jsDisplayTexture(JSContext *ctx, JSValueConst, int argc,
     state->texture->display(*host->context->window);
     std::int64_t textureId = 0;
     readIntProperty(ctx, argv[0], ATLAS_TEXTURE_ID_PROP, textureId);
-    return syncTextureWrapper(ctx, *host, static_cast<std::uint64_t>(textureId));
+    return syncTextureWrapper(ctx, *host,
+                              static_cast<std::uint64_t>(textureId));
 }
 
 JSValue jsCreateCubemap(JSContext *ctx, JSValueConst, int argc,
@@ -3353,7 +3400,8 @@ JSValue jsCreateCubemap(JSContext *ctx, JSValueConst, int argc,
     }
 
     std::vector<Resource> resources;
-    if (!parseResourceVector(ctx, argv[0], resources) || resources.size() != 6) {
+    if (!parseResourceVector(ctx, argv[0], resources) ||
+        resources.size() != 6) {
         return JS_ThrowTypeError(ctx, "Expected six cubemap resources");
     }
 
@@ -3405,14 +3453,15 @@ JSValue jsUpdateCubemapWithColors(JSContext *ctx, JSValueConst, int argc,
     state->cubemap->updateWithColors(colors);
     std::int64_t cubemapId = 0;
     readIntProperty(ctx, argv[0], ATLAS_CUBEMAP_ID_PROP, cubemapId);
-    return syncCubemapWrapper(ctx, *host, static_cast<std::uint64_t>(cubemapId));
+    return syncCubemapWrapper(ctx, *host,
+                              static_cast<std::uint64_t>(cubemapId));
 }
 
 JSValue jsCreateSkybox(JSContext *ctx, JSValueConst, int argc,
                        JSValueConst *argv) {
     auto *host = getHost(ctx);
-    if (host == nullptr || host->context == nullptr || host->context->window == nullptr ||
-        argc < 1) {
+    if (host == nullptr || host->context == nullptr ||
+        host->context->window == nullptr || argc < 1) {
         return JS_ThrowTypeError(ctx, "Expected cubemap");
     }
 
@@ -3426,17 +3475,18 @@ JSValue jsCreateSkybox(JSContext *ctx, JSValueConst, int argc,
 
     const std::uint64_t skyboxId = host->nextSkyboxId++;
     host->skyboxes[skyboxId] = {
-        .skybox = Skybox::create(*cubemapState->cubemap, *host->context->window),
+        .skybox =
+            Skybox::create(*cubemapState->cubemap, *host->context->window),
         .value = JS_UNDEFINED,
-        .cubemapId = static_cast<std::uint64_t>(cubemapId)
-    };
+        .cubemapId = static_cast<std::uint64_t>(cubemapId)};
     return syncSkyboxWrapper(ctx, *host, skyboxId);
 }
 
 JSValue jsCreateRenderTarget(JSContext *ctx, JSValueConst, int argc,
                              JSValueConst *argv) {
     auto *host = getHost(ctx);
-    if (host == nullptr || host->context == nullptr || host->context->window == nullptr) {
+    if (host == nullptr || host->context == nullptr ||
+        host->context->window == nullptr) {
         return JS_ThrowInternalError(ctx, "Atlas scripting host unavailable");
     }
 
@@ -3453,21 +3503,21 @@ JSValue jsCreateRenderTarget(JSContext *ctx, JSValueConst, int argc,
     const std::uint64_t renderTargetId = host->nextRenderTargetId++;
     host->renderTargets[renderTargetId] = {
         .renderTarget = std::make_shared<RenderTarget>(
-            *host->context->window, toNativeRenderTargetType(static_cast<int>(type)),
+            *host->context->window,
+            toNativeRenderTargetType(static_cast<int>(type)),
             static_cast<int>(resolution)),
         .value = JS_UNDEFINED,
         .attached = false,
         .outTextureIds = {},
-        .depthTextureId = 0
-    };
+        .depthTextureId = 0};
     return syncRenderTargetWrapper(ctx, *host, renderTargetId);
 }
 
 JSValue jsAddRenderTargetToPassQueue(JSContext *ctx, JSValueConst, int argc,
                                      JSValueConst *argv) {
     auto *host = getHost(ctx);
-    if (host == nullptr || host->context == nullptr || host->context->window == nullptr ||
-        argc < 2) {
+    if (host == nullptr || host->context == nullptr ||
+        host->context->window == nullptr || argc < 2) {
         return JS_ThrowTypeError(ctx, "Expected render target and pass type");
     }
 
@@ -3535,8 +3585,8 @@ JSValue jsAddRenderTargetEffect(JSContext *ctx, JSValueConst, int argc,
 JSValue jsDisplayRenderTarget(JSContext *ctx, JSValueConst, int argc,
                               JSValueConst *argv) {
     auto *host = getHost(ctx);
-    if (host == nullptr || host->context == nullptr || host->context->window == nullptr ||
-        argc < 1) {
+    if (host == nullptr || host->context == nullptr ||
+        host->context->window == nullptr || argc < 1) {
         return JS_ThrowTypeError(ctx, "Expected render target");
     }
 
@@ -3556,7 +3606,8 @@ JSValue jsCreatePointLight(JSContext *ctx, JSValueConst, int argc,
                            JSValueConst *argv) {
     auto *host = getHost(ctx);
     Scene *scene = host != nullptr ? getScene(*host) : nullptr;
-    if (host == nullptr || host->context == nullptr || scene == nullptr || argc < 1) {
+    if (host == nullptr || host->context == nullptr || scene == nullptr ||
+        argc < 1) {
         return JS_ThrowInternalError(ctx, "Atlas scripting host unavailable");
     }
 
@@ -3585,14 +3636,15 @@ JSValue jsUpdatePointLight(JSContext *ctx, JSValueConst, int argc,
     applyPointLight(ctx, argv[0], *state->light);
     std::int64_t lightId = 0;
     readIntProperty(ctx, argv[0], ATLAS_POINT_LIGHT_ID_PROP, lightId);
-    return syncPointLightWrapper(ctx, *host, static_cast<std::uint64_t>(lightId));
+    return syncPointLightWrapper(ctx, *host,
+                                 static_cast<std::uint64_t>(lightId));
 }
 
 JSValue jsCreatePointLightDebugObject(JSContext *ctx, JSValueConst, int argc,
                                       JSValueConst *argv) {
     auto *host = getHost(ctx);
-    if (host == nullptr || host->context == nullptr || host->context->window == nullptr ||
-        argc < 1) {
+    if (host == nullptr || host->context == nullptr ||
+        host->context->window == nullptr || argc < 1) {
         return JS_ThrowTypeError(ctx, "Expected point light");
     }
 
@@ -3611,14 +3663,15 @@ JSValue jsCreatePointLightDebugObject(JSContext *ctx, JSValueConst, int argc,
 
     std::int64_t lightId = 0;
     readIntProperty(ctx, argv[0], ATLAS_POINT_LIGHT_ID_PROP, lightId);
-    return syncPointLightWrapper(ctx, *host, static_cast<std::uint64_t>(lightId));
+    return syncPointLightWrapper(ctx, *host,
+                                 static_cast<std::uint64_t>(lightId));
 }
 
 JSValue jsCastPointLightShadows(JSContext *ctx, JSValueConst, int argc,
                                 JSValueConst *argv) {
     auto *host = getHost(ctx);
-    if (host == nullptr || host->context == nullptr || host->context->window == nullptr ||
-        argc < 2) {
+    if (host == nullptr || host->context == nullptr ||
+        host->context->window == nullptr || argc < 2) {
         return JS_ThrowTypeError(ctx, "Expected point light and resolution");
     }
 
@@ -3637,14 +3690,16 @@ JSValue jsCastPointLightShadows(JSContext *ctx, JSValueConst, int argc,
                               static_cast<int>(resolution));
     std::int64_t lightId = 0;
     readIntProperty(ctx, argv[0], ATLAS_POINT_LIGHT_ID_PROP, lightId);
-    return syncPointLightWrapper(ctx, *host, static_cast<std::uint64_t>(lightId));
+    return syncPointLightWrapper(ctx, *host,
+                                 static_cast<std::uint64_t>(lightId));
 }
 
 JSValue jsCreateDirectionalLight(JSContext *ctx, JSValueConst, int argc,
                                  JSValueConst *argv) {
     auto *host = getHost(ctx);
     Scene *scene = host != nullptr ? getScene(*host) : nullptr;
-    if (host == nullptr || host->context == nullptr || scene == nullptr || argc < 1) {
+    if (host == nullptr || host->context == nullptr || scene == nullptr ||
+        argc < 1) {
         return JS_ThrowInternalError(ctx, "Atlas scripting host unavailable");
     }
 
@@ -3681,8 +3736,8 @@ JSValue jsUpdateDirectionalLight(JSContext *ctx, JSValueConst, int argc,
 JSValue jsCastDirectionalLightShadows(JSContext *ctx, JSValueConst, int argc,
                                       JSValueConst *argv) {
     auto *host = getHost(ctx);
-    if (host == nullptr || host->context == nullptr || host->context->window == nullptr ||
-        argc < 2) {
+    if (host == nullptr || host->context == nullptr ||
+        host->context->window == nullptr || argc < 2) {
         return JS_ThrowTypeError(ctx,
                                  "Expected directional light and resolution");
     }
@@ -3710,7 +3765,8 @@ JSValue jsCreateSpotLight(JSContext *ctx, JSValueConst, int argc,
                           JSValueConst *argv) {
     auto *host = getHost(ctx);
     Scene *scene = host != nullptr ? getScene(*host) : nullptr;
-    if (host == nullptr || host->context == nullptr || scene == nullptr || argc < 1) {
+    if (host == nullptr || host->context == nullptr || scene == nullptr ||
+        argc < 1) {
         return JS_ThrowInternalError(ctx, "Atlas scripting host unavailable");
     }
 
@@ -3739,14 +3795,15 @@ JSValue jsUpdateSpotLight(JSContext *ctx, JSValueConst, int argc,
     applySpotLight(ctx, argv[0], *state->light);
     std::int64_t lightId = 0;
     readIntProperty(ctx, argv[0], ATLAS_SPOT_LIGHT_ID_PROP, lightId);
-    return syncSpotLightWrapper(ctx, *host, static_cast<std::uint64_t>(lightId));
+    return syncSpotLightWrapper(ctx, *host,
+                                static_cast<std::uint64_t>(lightId));
 }
 
 JSValue jsCreateSpotLightDebugObject(JSContext *ctx, JSValueConst, int argc,
                                      JSValueConst *argv) {
     auto *host = getHost(ctx);
-    if (host == nullptr || host->context == nullptr || host->context->window == nullptr ||
-        argc < 1) {
+    if (host == nullptr || host->context == nullptr ||
+        host->context->window == nullptr || argc < 1) {
         return JS_ThrowTypeError(ctx, "Expected spot light");
     }
 
@@ -3765,7 +3822,8 @@ JSValue jsCreateSpotLightDebugObject(JSContext *ctx, JSValueConst, int argc,
 
     std::int64_t lightId = 0;
     readIntProperty(ctx, argv[0], ATLAS_SPOT_LIGHT_ID_PROP, lightId);
-    return syncSpotLightWrapper(ctx, *host, static_cast<std::uint64_t>(lightId));
+    return syncSpotLightWrapper(ctx, *host,
+                                static_cast<std::uint64_t>(lightId));
 }
 
 JSValue jsLookAtSpotLight(JSContext *ctx, JSValueConst, int argc,
@@ -3789,14 +3847,15 @@ JSValue jsLookAtSpotLight(JSContext *ctx, JSValueConst, int argc,
     state->light->lookAt(target);
     std::int64_t lightId = 0;
     readIntProperty(ctx, argv[0], ATLAS_SPOT_LIGHT_ID_PROP, lightId);
-    return syncSpotLightWrapper(ctx, *host, static_cast<std::uint64_t>(lightId));
+    return syncSpotLightWrapper(ctx, *host,
+                                static_cast<std::uint64_t>(lightId));
 }
 
 JSValue jsCastSpotLightShadows(JSContext *ctx, JSValueConst, int argc,
                                JSValueConst *argv) {
     auto *host = getHost(ctx);
-    if (host == nullptr || host->context == nullptr || host->context->window == nullptr ||
-        argc < 2) {
+    if (host == nullptr || host->context == nullptr ||
+        host->context->window == nullptr || argc < 2) {
         return JS_ThrowTypeError(ctx, "Expected spot light and resolution");
     }
 
@@ -3815,14 +3874,16 @@ JSValue jsCastSpotLightShadows(JSContext *ctx, JSValueConst, int argc,
                               static_cast<int>(resolution));
     std::int64_t lightId = 0;
     readIntProperty(ctx, argv[0], ATLAS_SPOT_LIGHT_ID_PROP, lightId);
-    return syncSpotLightWrapper(ctx, *host, static_cast<std::uint64_t>(lightId));
+    return syncSpotLightWrapper(ctx, *host,
+                                static_cast<std::uint64_t>(lightId));
 }
 
 JSValue jsCreateAreaLight(JSContext *ctx, JSValueConst, int argc,
                           JSValueConst *argv) {
     auto *host = getHost(ctx);
     Scene *scene = host != nullptr ? getScene(*host) : nullptr;
-    if (host == nullptr || host->context == nullptr || scene == nullptr || argc < 1) {
+    if (host == nullptr || host->context == nullptr || scene == nullptr ||
+        argc < 1) {
         return JS_ThrowInternalError(ctx, "Atlas scripting host unavailable");
     }
 
@@ -3851,7 +3912,8 @@ JSValue jsUpdateAreaLight(JSContext *ctx, JSValueConst, int argc,
     applyAreaLight(ctx, argv[0], *state->light);
     std::int64_t lightId = 0;
     readIntProperty(ctx, argv[0], ATLAS_AREA_LIGHT_ID_PROP, lightId);
-    return syncAreaLightWrapper(ctx, *host, static_cast<std::uint64_t>(lightId));
+    return syncAreaLightWrapper(ctx, *host,
+                                static_cast<std::uint64_t>(lightId));
 }
 
 JSValue jsGetAreaLightNormal(JSContext *ctx, JSValueConst, int argc,
@@ -3892,7 +3954,8 @@ JSValue jsSetAreaLightRotation(JSContext *ctx, JSValueConst, int argc,
     syncAreaLightDebugObject(*state->light);
     std::int64_t lightId = 0;
     readIntProperty(ctx, argv[0], ATLAS_AREA_LIGHT_ID_PROP, lightId);
-    return syncAreaLightWrapper(ctx, *host, static_cast<std::uint64_t>(lightId));
+    return syncAreaLightWrapper(ctx, *host,
+                                static_cast<std::uint64_t>(lightId));
 }
 
 JSValue jsRotateAreaLight(JSContext *ctx, JSValueConst, int argc,
@@ -3917,14 +3980,15 @@ JSValue jsRotateAreaLight(JSContext *ctx, JSValueConst, int argc,
     syncAreaLightDebugObject(*state->light);
     std::int64_t lightId = 0;
     readIntProperty(ctx, argv[0], ATLAS_AREA_LIGHT_ID_PROP, lightId);
-    return syncAreaLightWrapper(ctx, *host, static_cast<std::uint64_t>(lightId));
+    return syncAreaLightWrapper(ctx, *host,
+                                static_cast<std::uint64_t>(lightId));
 }
 
 JSValue jsCreateAreaLightDebugObject(JSContext *ctx, JSValueConst, int argc,
                                      JSValueConst *argv) {
     auto *host = getHost(ctx);
-    if (host == nullptr || host->context == nullptr || host->context->window == nullptr ||
-        argc < 1) {
+    if (host == nullptr || host->context == nullptr ||
+        host->context->window == nullptr || argc < 1) {
         return JS_ThrowTypeError(ctx, "Expected area light");
     }
 
@@ -3943,14 +4007,15 @@ JSValue jsCreateAreaLightDebugObject(JSContext *ctx, JSValueConst, int argc,
 
     std::int64_t lightId = 0;
     readIntProperty(ctx, argv[0], ATLAS_AREA_LIGHT_ID_PROP, lightId);
-    return syncAreaLightWrapper(ctx, *host, static_cast<std::uint64_t>(lightId));
+    return syncAreaLightWrapper(ctx, *host,
+                                static_cast<std::uint64_t>(lightId));
 }
 
 JSValue jsCastAreaLightShadows(JSContext *ctx, JSValueConst, int argc,
                                JSValueConst *argv) {
     auto *host = getHost(ctx);
-    if (host == nullptr || host->context == nullptr || host->context->window == nullptr ||
-        argc < 2) {
+    if (host == nullptr || host->context == nullptr ||
+        host->context->window == nullptr || argc < 2) {
         return JS_ThrowTypeError(ctx, "Expected area light and resolution");
     }
 
@@ -3969,7 +4034,8 @@ JSValue jsCastAreaLightShadows(JSContext *ctx, JSValueConst, int argc,
                               static_cast<int>(resolution));
     std::int64_t lightId = 0;
     readIntProperty(ctx, argv[0], ATLAS_AREA_LIGHT_ID_PROP, lightId);
-    return syncAreaLightWrapper(ctx, *host, static_cast<std::uint64_t>(lightId));
+    return syncAreaLightWrapper(ctx, *host,
+                                static_cast<std::uint64_t>(lightId));
 }
 
 JSValue jsGetObjectByName(JSContext *ctx, JSValueConst, int argc,
@@ -4095,7 +4161,8 @@ JSValue jsGetResourceByName(JSContext *ctx, JSValueConst, int argc,
     if (argc > 1 && !JS_IsUndefined(argv[1])) {
         std::int64_t expectedType = 0;
         if (getInt64(ctx, argv[1], expectedType) &&
-            resource.type != toNativeResourceType(static_cast<int>(expectedType))) {
+            resource.type !=
+                toNativeResourceType(static_cast<int>(expectedType))) {
             return JS_NULL;
         }
     }
@@ -4275,7 +4342,8 @@ JSValue jsUpdateAudioPlayer(JSContext *ctx, JSValueConst, int argc,
                             JSValueConst *argv) {
     auto *host = getHost(ctx);
     if (host == nullptr || argc < 2) {
-        return JS_ThrowTypeError(ctx, "Expected audio player id and delta time");
+        return JS_ThrowTypeError(ctx,
+                                 "Expected audio player id and delta time");
     }
 
     auto *state = resolveAudioPlayer(ctx, *host, argv[0]);
@@ -4354,18 +4422,18 @@ JSValue jsGetInputConstants(JSContext *ctx, JSValueConst, int, JSValueConst *) {
                 JS_NewInt32(ctx, static_cast<int>(TriggerType::MouseButton)));
     setProperty(ctx, triggerTypeObject, "Key",
                 JS_NewInt32(ctx, static_cast<int>(TriggerType::Key)));
-    setProperty(ctx, triggerTypeObject, "ControllerButton",
-                JS_NewInt32(ctx,
-                            static_cast<int>(TriggerType::ControllerButton)));
+    setProperty(
+        ctx, triggerTypeObject, "ControllerButton",
+        JS_NewInt32(ctx, static_cast<int>(TriggerType::ControllerButton)));
 
     JSValue axisTriggerTypeObject = JS_NewObject(ctx);
     setProperty(ctx, axisTriggerTypeObject, "MouseAxis",
                 JS_NewInt32(ctx, static_cast<int>(AxisTriggerType::MouseAxis)));
     setProperty(ctx, axisTriggerTypeObject, "KeyCustom",
                 JS_NewInt32(ctx, static_cast<int>(AxisTriggerType::KeyCustom)));
-    setProperty(ctx, axisTriggerTypeObject, "ControllerAxis",
-                JS_NewInt32(ctx,
-                            static_cast<int>(AxisTriggerType::ControllerAxis)));
+    setProperty(
+        ctx, axisTriggerTypeObject, "ControllerAxis",
+        JS_NewInt32(ctx, static_cast<int>(AxisTriggerType::ControllerAxis)));
 
     setProperty(ctx, result, "Key", keyObject);
     setProperty(ctx, result, "MouseButton", mouseButtonObject);
@@ -4377,8 +4445,8 @@ JSValue jsGetInputConstants(JSContext *ctx, JSValueConst, int, JSValueConst *) {
 JSValue jsRegisterInputAction(JSContext *ctx, JSValueConst, int argc,
                               JSValueConst *argv) {
     auto *host = getHost(ctx);
-    if (host == nullptr || host->context == nullptr || host->context->window == nullptr ||
-        argc < 1) {
+    if (host == nullptr || host->context == nullptr ||
+        host->context->window == nullptr || argc < 1) {
         return JS_ThrowTypeError(ctx, "Expected input action");
     }
 
@@ -4391,7 +4459,8 @@ JSValue jsRegisterInputAction(JSContext *ctx, JSValueConst, int argc,
     if (existing != nullptr) {
         *existing = action;
     } else {
-        host->context->window->addInputAction(std::make_shared<InputAction>(action));
+        host->context->window->addInputAction(
+            std::make_shared<InputAction>(action));
     }
 
     return JS_DupValue(ctx, argv[0]);
@@ -4406,10 +4475,11 @@ JSValue jsResetInputActions(JSContext *ctx, JSValueConst, int, JSValueConst *) {
     return JS_UNDEFINED;
 }
 
-JSValue jsIsKeyActive(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv) {
+JSValue jsIsKeyActive(JSContext *ctx, JSValueConst, int argc,
+                      JSValueConst *argv) {
     auto *host = getHost(ctx);
-    if (host == nullptr || host->context == nullptr || host->context->window == nullptr ||
-        argc < 1) {
+    if (host == nullptr || host->context == nullptr ||
+        host->context->window == nullptr || argc < 1) {
         return JS_FALSE;
     }
 
@@ -4417,14 +4487,15 @@ JSValue jsIsKeyActive(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv
     if (!getInt64(ctx, argv[0], key)) {
         return JS_ThrowTypeError(ctx, "Expected key");
     }
-    return JS_NewBool(ctx,
-                      host->context->window->isKeyActive(static_cast<Key>(key)));
+    return JS_NewBool(
+        ctx, host->context->window->isKeyActive(static_cast<Key>(key)));
 }
 
-JSValue jsIsKeyPressed(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv) {
+JSValue jsIsKeyPressed(JSContext *ctx, JSValueConst, int argc,
+                       JSValueConst *argv) {
     auto *host = getHost(ctx);
-    if (host == nullptr || host->context == nullptr || host->context->window == nullptr ||
-        argc < 1) {
+    if (host == nullptr || host->context == nullptr ||
+        host->context->window == nullptr || argc < 1) {
         return JS_FALSE;
     }
 
@@ -4439,8 +4510,8 @@ JSValue jsIsKeyPressed(JSContext *ctx, JSValueConst, int argc, JSValueConst *arg
 JSValue jsIsMouseButtonActive(JSContext *ctx, JSValueConst, int argc,
                               JSValueConst *argv) {
     auto *host = getHost(ctx);
-    if (host == nullptr || host->context == nullptr || host->context->window == nullptr ||
-        argc < 1) {
+    if (host == nullptr || host->context == nullptr ||
+        host->context->window == nullptr || argc < 1) {
         return JS_FALSE;
     }
 
@@ -4455,8 +4526,8 @@ JSValue jsIsMouseButtonActive(JSContext *ctx, JSValueConst, int argc,
 JSValue jsIsMouseButtonPressed(JSContext *ctx, JSValueConst, int argc,
                                JSValueConst *argv) {
     auto *host = getHost(ctx);
-    if (host == nullptr || host->context == nullptr || host->context->window == nullptr ||
-        argc < 1) {
+    if (host == nullptr || host->context == nullptr ||
+        host->context->window == nullptr || argc < 1) {
         return JS_FALSE;
     }
 
@@ -4470,7 +4541,8 @@ JSValue jsIsMouseButtonPressed(JSContext *ctx, JSValueConst, int argc,
 
 JSValue jsGetTextInput(JSContext *ctx, JSValueConst, int, JSValueConst *) {
     auto *host = getHost(ctx);
-    if (host == nullptr || host->context == nullptr || host->context->window == nullptr) {
+    if (host == nullptr || host->context == nullptr ||
+        host->context->window == nullptr) {
         return JS_NewString(ctx, "");
     }
     return JS_NewString(ctx, host->context->window->getTextInput().c_str());
@@ -4496,7 +4568,8 @@ JSValue jsStopTextInput(JSContext *ctx, JSValueConst, int, JSValueConst *) {
 
 JSValue jsIsTextInputActive(JSContext *ctx, JSValueConst, int, JSValueConst *) {
     auto *host = getHost(ctx);
-    if (host == nullptr || host->context == nullptr || host->context->window == nullptr) {
+    if (host == nullptr || host->context == nullptr ||
+        host->context->window == nullptr) {
         return JS_FALSE;
     }
     return JS_NewBool(ctx, host->context->window->isTextInputActive());
@@ -4505,8 +4578,8 @@ JSValue jsIsTextInputActive(JSContext *ctx, JSValueConst, int, JSValueConst *) {
 JSValue jsIsControllerButtonPressed(JSContext *ctx, JSValueConst, int argc,
                                     JSValueConst *argv) {
     auto *host = getHost(ctx);
-    if (host == nullptr || host->context == nullptr || host->context->window == nullptr ||
-        argc < 2) {
+    if (host == nullptr || host->context == nullptr ||
+        host->context->window == nullptr || argc < 2) {
         return JS_FALSE;
     }
 
@@ -4526,8 +4599,8 @@ JSValue jsIsControllerButtonPressed(JSContext *ctx, JSValueConst, int argc,
 JSValue jsGetControllerAxisValue(JSContext *ctx, JSValueConst, int argc,
                                  JSValueConst *argv) {
     auto *host = getHost(ctx);
-    if (host == nullptr || host->context == nullptr || host->context->window == nullptr ||
-        argc < 2) {
+    if (host == nullptr || host->context == nullptr ||
+        host->context->window == nullptr || argc < 2) {
         return JS_NewFloat64(ctx, 0.0);
     }
 
@@ -4538,16 +4611,16 @@ JSValue jsGetControllerAxisValue(JSContext *ctx, JSValueConst, int argc,
         return JS_ThrowTypeError(ctx, "Expected controller id and axis index");
     }
 
-    return JS_NewFloat64(ctx, host->context->window->getControllerAxisValue(
-                                  static_cast<int>(controllerID),
-                                  static_cast<int>(axisIndex)));
+    return JS_NewFloat64(
+        ctx, host->context->window->getControllerAxisValue(
+                 static_cast<int>(controllerID), static_cast<int>(axisIndex)));
 }
 
 JSValue jsGetControllerAxisPairValue(JSContext *ctx, JSValueConst, int argc,
                                      JSValueConst *argv) {
     auto *host = getHost(ctx);
-    if (host == nullptr || host->context == nullptr || host->context->window == nullptr ||
-        argc < 3) {
+    if (host == nullptr || host->context == nullptr ||
+        host->context->window == nullptr || argc < 3) {
         return makePlainPosition2d(ctx, Position2d(0.0, 0.0));
     }
 
@@ -4557,8 +4630,8 @@ JSValue jsGetControllerAxisPairValue(JSContext *ctx, JSValueConst, int argc,
     if (!getInt64(ctx, argv[0], controllerID) ||
         !getInt64(ctx, argv[1], axisIndexX) ||
         !getInt64(ctx, argv[2], axisIndexY)) {
-        return JS_ThrowTypeError(
-            ctx, "Expected controller id and axis indices");
+        return JS_ThrowTypeError(ctx,
+                                 "Expected controller id and axis indices");
     }
 
     const auto value = host->context->window->getControllerAxisPairValue(
@@ -4587,7 +4660,8 @@ JSValue jsReleaseMouse(JSContext *ctx, JSValueConst, int, JSValueConst *) {
 
 JSValue jsGetMousePosition(JSContext *ctx, JSValueConst, int, JSValueConst *) {
     auto *host = getHost(ctx);
-    if (host == nullptr || host->context == nullptr || host->context->window == nullptr) {
+    if (host == nullptr || host->context == nullptr ||
+        host->context->window == nullptr) {
         return makePlainPosition2d(ctx, Position2d(0.0, 0.0));
     }
 
@@ -4598,8 +4672,8 @@ JSValue jsGetMousePosition(JSContext *ctx, JSValueConst, int, JSValueConst *) {
 JSValue jsIsActionTriggered(JSContext *ctx, JSValueConst, int argc,
                             JSValueConst *argv) {
     auto *host = getHost(ctx);
-    if (host == nullptr || host->context == nullptr || host->context->window == nullptr ||
-        argc < 1) {
+    if (host == nullptr || host->context == nullptr ||
+        host->context->window == nullptr || argc < 1) {
         return JS_FALSE;
     }
 
@@ -4615,8 +4689,8 @@ JSValue jsIsActionTriggered(JSContext *ctx, JSValueConst, int argc,
 JSValue jsIsActionCurrentlyActive(JSContext *ctx, JSValueConst, int argc,
                                   JSValueConst *argv) {
     auto *host = getHost(ctx);
-    if (host == nullptr || host->context == nullptr || host->context->window == nullptr ||
-        argc < 1) {
+    if (host == nullptr || host->context == nullptr ||
+        host->context->window == nullptr || argc < 1) {
         return JS_FALSE;
     }
 
@@ -4632,8 +4706,8 @@ JSValue jsIsActionCurrentlyActive(JSContext *ctx, JSValueConst, int argc,
 JSValue jsGetAxisActionValue(JSContext *ctx, JSValueConst, int argc,
                              JSValueConst *argv) {
     auto *host = getHost(ctx);
-    if (host == nullptr || host->context == nullptr || host->context->window == nullptr ||
-        argc < 1) {
+    if (host == nullptr || host->context == nullptr ||
+        host->context->window == nullptr || argc < 1) {
         return makeAxisPacketValue(ctx, {});
     }
 
@@ -4751,7 +4825,8 @@ JSValue jsAddComponent(JSContext *ctx, JSValueConst, int argc,
         std::int64_t audioPlayerId = 0;
         if (!readIntProperty(ctx, argv[1], ATLAS_AUDIO_PLAYER_ID_PROP,
                              audioPlayerId)) {
-            return JS_ThrowReferenceError(ctx, "AudioPlayer wrapper is invalid");
+            return JS_ThrowReferenceError(ctx,
+                                          "AudioPlayer wrapper is invalid");
         }
 
         auto *audioState = findAudioPlayerState(
@@ -4761,14 +4836,14 @@ JSValue jsAddComponent(JSContext *ctx, JSValueConst, int argc,
         }
 
         if (audioState->attached) {
-            return JS_ThrowTypeError(ctx,
-                                     "AudioPlayer is already attached to an object");
+            return JS_ThrowTypeError(
+                ctx, "AudioPlayer is already attached to an object");
         }
 
         object->addComponent(audioState->component);
         runtime::scripting::registerComponentInstance(
-            ctx, *host, audioState->component.get(),
-            static_cast<int>(ownerId), "AudioPlayer", argv[1]);
+            ctx, *host, audioState->component.get(), static_cast<int>(ownerId),
+            "AudioPlayer", argv[1]);
         audioState->attached = true;
 
         auto objectIt = host->objectCache.find(static_cast<int>(ownerId));
@@ -4786,8 +4861,8 @@ JSValue jsAddComponent(JSContext *ctx, JSValueConst, int argc,
     }
     JS_FreeValue(ctx, ctor);
 
-    auto component = std::make_shared<HostedScriptComponent>(
-        ctx, host, argv[1], componentName);
+    auto component = std::make_shared<HostedScriptComponent>(ctx, host, argv[1],
+                                                             componentName);
     object->addComponent(component);
 
     auto objectIt = host->objectCache.find(static_cast<int>(ownerId));
@@ -4810,6 +4885,17 @@ std::shared_ptr<CoreObject> ownCoreObject(ScriptHost &host,
     return object;
 }
 
+std::shared_ptr<Model> ownModel(ScriptHost &host, std::shared_ptr<Model> model,
+                                bool attachedToWindow = false) {
+    if (host.context != nullptr) {
+        host.context->objects.push_back(model);
+    }
+    host.objectStates[model->getId()] = {.object = model.get(),
+                                         .attachedToWindow = attachedToWindow,
+                                         .textureIds = {}};
+    return model;
+}
+
 JSValue jsCreateCoreObject(JSContext *ctx, JSValueConst, int argc,
                            JSValueConst *argv) {
     auto *host = getHost(ctx);
@@ -4820,6 +4906,222 @@ JSValue jsCreateCoreObject(JSContext *ctx, JSValueConst, int argc,
     auto object = ownCoreObject(*host, std::make_shared<CoreObject>());
     applyCoreObject(ctx, *host, argv[0], *object);
     return syncObjectWrapper(ctx, *host, *object);
+}
+
+JSValue jsCreateModel(JSContext *ctx, JSValueConst, int argc,
+                      JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || host->context == nullptr || argc < 1) {
+        return JS_ThrowTypeError(ctx, "Expected model resource path");
+    }
+
+    const char *path = JS_ToCString(ctx, argv[0]);
+    if (path == nullptr) {
+        return JS_ThrowTypeError(ctx, "Expected model resource path");
+    }
+
+    std::filesystem::path resourcePath(path);
+    JS_FreeCString(ctx, path);
+
+    std::string name = resourcePath.stem().string();
+    if (name.empty()) {
+        name = resourcePath.filename().string();
+    }
+
+    Resource resource = Workspace::get().createResource(resourcePath, name,
+                                                        ResourceType::Model);
+    auto object = ownModel(*host, std::make_shared<Model>());
+    object->fromResource(resource);
+    attachObjectIfReady(*host, *object);
+    return syncObjectWrapper(ctx, *host, *object);
+}
+
+JSValue jsGetModelObjects(JSContext *ctx, JSValueConst, int argc,
+                          JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 1) {
+        return JS_ThrowTypeError(ctx, "Expected model");
+    }
+
+    Model *model = resolveModelArg(ctx, *host, argv[0]);
+    if (model == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    JSValue result = JS_NewArray(ctx);
+    const auto &objects = model->getObjects();
+    for (std::uint32_t i = 0; i < objects.size(); ++i) {
+        const auto &object = objects[i];
+        if (object == nullptr) {
+            JS_SetPropertyUint32(ctx, result, i, JS_NULL);
+            continue;
+        }
+
+        auto &state = host->objectStates[object->getId()];
+        state.object = object.get();
+        state.attachedToWindow = true;
+
+        JS_SetPropertyUint32(ctx, result, i,
+                             syncObjectWrapper(ctx, *host, *object));
+    }
+
+    return result;
+}
+
+JSValue jsMoveModel(JSContext *ctx, JSValueConst, int argc,
+                    JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected model and position");
+    }
+
+    Model *model = resolveModelArg(ctx, *host, argv[0]);
+    if (model == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    Position3d position;
+    if (!parsePosition3d(ctx, argv[1], position)) {
+        return JS_ThrowTypeError(ctx, "Expected Position3d");
+    }
+
+    model->move(position);
+    return syncObjectWrapper(ctx, *host, *model);
+}
+
+JSValue jsSetModelPosition(JSContext *ctx, JSValueConst, int argc,
+                           JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected model and position");
+    }
+
+    Model *model = resolveModelArg(ctx, *host, argv[0]);
+    if (model == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    Position3d position;
+    if (!parsePosition3d(ctx, argv[1], position)) {
+        return JS_ThrowTypeError(ctx, "Expected Position3d");
+    }
+
+    model->setPosition(position);
+    return syncObjectWrapper(ctx, *host, *model);
+}
+
+JSValue jsSetModelRotation(JSContext *ctx, JSValueConst, int argc,
+                           JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected model and rotation");
+    }
+
+    Model *model = resolveModelArg(ctx, *host, argv[0]);
+    if (model == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    Rotation3d rotation;
+    if (!parseRotation3d(ctx, argv[1], rotation)) {
+        return JS_ThrowTypeError(ctx, "Expected Rotation3d");
+    }
+
+    model->setRotation(rotation);
+    return syncObjectWrapper(ctx, *host, *model);
+}
+
+JSValue jsLookAtModel(JSContext *ctx, JSValueConst, int argc,
+                      JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected model and target");
+    }
+
+    Model *model = resolveModelArg(ctx, *host, argv[0]);
+    if (model == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    Position3d target;
+    if (!parsePosition3d(ctx, argv[1], target)) {
+        return JS_ThrowTypeError(ctx, "Expected target Position3d");
+    }
+
+    Position3d up(0.0, 1.0, 0.0);
+    if (argc > 2) {
+        parsePosition3d(ctx, argv[2], up);
+    }
+
+    model->lookAt(target, up);
+    return syncObjectWrapper(ctx, *host, *model);
+}
+
+JSValue jsRotateModel(JSContext *ctx, JSValueConst, int argc,
+                      JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected model and rotation");
+    }
+
+    Model *model = resolveModelArg(ctx, *host, argv[0]);
+    if (model == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    Rotation3d rotation;
+    if (!parseRotation3d(ctx, argv[1], rotation)) {
+        return JS_ThrowTypeError(ctx, "Expected Rotation3d");
+    }
+
+    model->rotate(rotation);
+    return syncObjectWrapper(ctx, *host, *model);
+}
+
+JSValue jsSetModelScale(JSContext *ctx, JSValueConst, int argc,
+                        JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected model and scale");
+    }
+
+    Model *model = resolveModelArg(ctx, *host, argv[0]);
+    if (model == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    Scale3d scale;
+    if (!parsePosition3d(ctx, argv[1], scale)) {
+        return JS_ThrowTypeError(ctx, "Expected Scale3d");
+    }
+
+    model->setScale(scale);
+    return syncObjectWrapper(ctx, *host, *model);
+}
+
+JSValue jsScaleModelBy(JSContext *ctx, JSValueConst, int argc,
+                       JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected model and scale");
+    }
+
+    Model *model = resolveModelArg(ctx, *host, argv[0]);
+    if (model == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    Scale3d scale;
+    if (!parsePosition3d(ctx, argv[1], scale)) {
+        return JS_ThrowTypeError(ctx, "Expected Scale3d");
+    }
+
+    Scale3d currentScale = model->getScale();
+    currentScale.x *= scale.x;
+    currentScale.y *= scale.y;
+    currentScale.z *= scale.z;
+    model->setScale(currentScale);
+    return syncObjectWrapper(ctx, *host, *model);
 }
 
 JSValue jsUpdateObject(JSContext *ctx, JSValueConst, int argc,
@@ -4894,8 +5196,8 @@ JSValue jsCreatePrimitivePyramid(JSContext *ctx, JSValueConst, int argc,
         return JS_ThrowTypeError(ctx, "Expected Size3d");
     }
 
-    auto object = ownCoreObject(*host,
-                                std::make_shared<CoreObject>(createPyramid(size)));
+    auto object =
+        ownCoreObject(*host, std::make_shared<CoreObject>(createPyramid(size)));
     attachObjectIfReady(*host, *object);
     return syncObjectWrapper(ctx, *host, *object);
 }
@@ -4904,23 +5206,24 @@ JSValue jsCreatePrimitiveSphere(JSContext *ctx, JSValueConst, int argc,
                                 JSValueConst *argv) {
     auto *host = getHost(ctx);
     if (host == nullptr || host->context == nullptr || argc < 3) {
-        return JS_ThrowTypeError(ctx,
-                                 "Expected radius, sectorCount, and stackCount");
+        return JS_ThrowTypeError(
+            ctx, "Expected radius, sectorCount, and stackCount");
     }
 
     double radius = 0.0;
     std::int64_t sectorCount = 0;
     std::int64_t stackCount = 0;
-    if (!getDouble(ctx, argv[0], radius) || !getInt64(ctx, argv[1], sectorCount) ||
+    if (!getDouble(ctx, argv[0], radius) ||
+        !getInt64(ctx, argv[1], sectorCount) ||
         !getInt64(ctx, argv[2], stackCount)) {
-        return JS_ThrowTypeError(ctx,
-                                 "Expected radius, sectorCount, and stackCount");
+        return JS_ThrowTypeError(
+            ctx, "Expected radius, sectorCount, and stackCount");
     }
 
-    auto object = ownCoreObject(
-        *host, std::make_shared<CoreObject>(createSphere(
-                   radius, static_cast<unsigned int>(sectorCount),
-                   static_cast<unsigned int>(stackCount))));
+    auto object =
+        ownCoreObject(*host, std::make_shared<CoreObject>(createSphere(
+                                 radius, static_cast<unsigned int>(sectorCount),
+                                 static_cast<unsigned int>(stackCount))));
     attachObjectIfReady(*host, *object);
     return syncObjectWrapper(ctx, *host, *object);
 }
@@ -4952,7 +5255,8 @@ JSValue jsMakeEmissive(JSContext *ctx, JSValueConst, int argc,
 
     std::int64_t objectId = 0;
     double intensity = 0.0;
-    if (!getInt64(ctx, argv[0], objectId) || !getDouble(ctx, argv[2], intensity)) {
+    if (!getInt64(ctx, argv[0], objectId) ||
+        !getDouble(ctx, argv[2], intensity)) {
         return JS_ThrowTypeError(ctx, "Expected id, color, intensity");
     }
 
@@ -5094,8 +5398,9 @@ JSValue jsCreateInstance(JSContext *ctx, JSValueConst, int argc,
     }
 
     object->createInstance();
-    return syncInstanceWrapper(ctx, *host, *object,
-                               static_cast<std::uint32_t>(object->instances.size() - 1));
+    return syncInstanceWrapper(
+        ctx, *host, *object,
+        static_cast<std::uint32_t>(object->instances.size() - 1));
 }
 
 JSValue jsCommitInstance(JSContext *ctx, JSValueConst, int argc,
@@ -5320,7 +5625,8 @@ void runtime::scripting::clearSceneBindings(JSContext *ctx, ScriptHost &host) {
     host.generation += 1;
 }
 
-void runtime::scripting::dispatchInteractiveFrame(JSContext *ctx, ScriptHost &host,
+void runtime::scripting::dispatchInteractiveFrame(JSContext *ctx,
+                                                  ScriptHost &host,
                                                   Window &window,
                                                   float deltaTime) {
     if (host.interactiveValues.empty()) {
@@ -5456,26 +5762,27 @@ void runtime::scripting::installGlobals(JSContext *ctx) {
     JS_SetPropertyStr(ctx, global, "__atlasSetSceneAutomaticAmbient",
                       JS_NewCFunction(ctx, jsSetSceneAutomaticAmbient,
                                       "__atlasSetSceneAutomaticAmbient", 2));
-    JS_SetPropertyStr(ctx, global, "__atlasSetSceneSkybox",
-                      JS_NewCFunction(ctx, jsSetSceneSkybox,
-                                      "__atlasSetSceneSkybox", 2));
+    JS_SetPropertyStr(
+        ctx, global, "__atlasSetSceneSkybox",
+        JS_NewCFunction(ctx, jsSetSceneSkybox, "__atlasSetSceneSkybox", 2));
     JS_SetPropertyStr(ctx, global, "__atlasUseAtmosphereSkybox",
                       JS_NewCFunction(ctx, jsUseAtmosphereSkybox,
                                       "__atlasUseAtmosphereSkybox", 2));
     JS_SetPropertyStr(ctx, global, "__atlasGetCamera",
                       JS_NewCFunction(ctx, jsGetCamera, "__atlasGetCamera", 0));
-    JS_SetPropertyStr(ctx, global, "__atlasUpdateCamera",
-                      JS_NewCFunction(ctx, jsUpdateCamera,
-                                      "__atlasUpdateCamera", 1));
+    JS_SetPropertyStr(
+        ctx, global, "__atlasUpdateCamera",
+        JS_NewCFunction(ctx, jsUpdateCamera, "__atlasUpdateCamera", 1));
     JS_SetPropertyStr(ctx, global, "__atlasSetPositionKeepingOrientation",
                       JS_NewCFunction(ctx, jsSetPositionKeepingOrientation,
-                                      "__atlasSetPositionKeepingOrientation", 2));
-    JS_SetPropertyStr(ctx, global, "__atlasLookAtCamera",
-                      JS_NewCFunction(ctx, jsLookAtCamera,
-                                      "__atlasLookAtCamera", 3));
-    JS_SetPropertyStr(ctx, global, "__atlasMoveCameraTo",
-                      JS_NewCFunction(ctx, jsMoveCameraTo,
-                                      "__atlasMoveCameraTo", 3));
+                                      "__atlasSetPositionKeepingOrientation",
+                                      2));
+    JS_SetPropertyStr(
+        ctx, global, "__atlasLookAtCamera",
+        JS_NewCFunction(ctx, jsLookAtCamera, "__atlasLookAtCamera", 3));
+    JS_SetPropertyStr(
+        ctx, global, "__atlasMoveCameraTo",
+        JS_NewCFunction(ctx, jsMoveCameraTo, "__atlasMoveCameraTo", 3));
     JS_SetPropertyStr(ctx, global, "__atlasGetCameraDirection",
                       JS_NewCFunction(ctx, jsGetCameraDirection,
                                       "__atlasGetCameraDirection", 1));
@@ -5488,27 +5795,27 @@ void runtime::scripting::installGlobals(JSContext *ctx) {
     JS_SetPropertyStr(ctx, global, "__atlasResetInputActions",
                       JS_NewCFunction(ctx, jsResetInputActions,
                                       "__atlasResetInputActions", 0));
-    JS_SetPropertyStr(ctx, global, "__atlasIsKeyActive",
-                      JS_NewCFunction(ctx, jsIsKeyActive,
-                                      "__atlasIsKeyActive", 1));
-    JS_SetPropertyStr(ctx, global, "__atlasIsKeyPressed",
-                      JS_NewCFunction(ctx, jsIsKeyPressed,
-                                      "__atlasIsKeyPressed", 1));
+    JS_SetPropertyStr(
+        ctx, global, "__atlasIsKeyActive",
+        JS_NewCFunction(ctx, jsIsKeyActive, "__atlasIsKeyActive", 1));
+    JS_SetPropertyStr(
+        ctx, global, "__atlasIsKeyPressed",
+        JS_NewCFunction(ctx, jsIsKeyPressed, "__atlasIsKeyPressed", 1));
     JS_SetPropertyStr(ctx, global, "__atlasIsMouseButtonActive",
                       JS_NewCFunction(ctx, jsIsMouseButtonActive,
                                       "__atlasIsMouseButtonActive", 1));
     JS_SetPropertyStr(ctx, global, "__atlasIsMouseButtonPressed",
                       JS_NewCFunction(ctx, jsIsMouseButtonPressed,
                                       "__atlasIsMouseButtonPressed", 1));
-    JS_SetPropertyStr(ctx, global, "__atlasGetTextInput",
-                      JS_NewCFunction(ctx, jsGetTextInput,
-                                      "__atlasGetTextInput", 0));
-    JS_SetPropertyStr(ctx, global, "__atlasStartTextInput",
-                      JS_NewCFunction(ctx, jsStartTextInput,
-                                      "__atlasStartTextInput", 0));
-    JS_SetPropertyStr(ctx, global, "__atlasStopTextInput",
-                      JS_NewCFunction(ctx, jsStopTextInput,
-                                      "__atlasStopTextInput", 0));
+    JS_SetPropertyStr(
+        ctx, global, "__atlasGetTextInput",
+        JS_NewCFunction(ctx, jsGetTextInput, "__atlasGetTextInput", 0));
+    JS_SetPropertyStr(
+        ctx, global, "__atlasStartTextInput",
+        JS_NewCFunction(ctx, jsStartTextInput, "__atlasStartTextInput", 0));
+    JS_SetPropertyStr(
+        ctx, global, "__atlasStopTextInput",
+        JS_NewCFunction(ctx, jsStopTextInput, "__atlasStopTextInput", 0));
     JS_SetPropertyStr(ctx, global, "__atlasIsTextInputActive",
                       JS_NewCFunction(ctx, jsIsTextInputActive,
                                       "__atlasIsTextInputActive", 0));
@@ -5521,15 +5828,15 @@ void runtime::scripting::installGlobals(JSContext *ctx) {
     JS_SetPropertyStr(ctx, global, "__atlasGetControllerAxisPairValue",
                       JS_NewCFunction(ctx, jsGetControllerAxisPairValue,
                                       "__atlasGetControllerAxisPairValue", 3));
-    JS_SetPropertyStr(ctx, global, "__atlasCaptureMouse",
-                      JS_NewCFunction(ctx, jsCaptureMouse,
-                                      "__atlasCaptureMouse", 0));
-    JS_SetPropertyStr(ctx, global, "__atlasReleaseMouse",
-                      JS_NewCFunction(ctx, jsReleaseMouse,
-                                      "__atlasReleaseMouse", 0));
-    JS_SetPropertyStr(ctx, global, "__atlasGetMousePosition",
-                      JS_NewCFunction(ctx, jsGetMousePosition,
-                                      "__atlasGetMousePosition", 0));
+    JS_SetPropertyStr(
+        ctx, global, "__atlasCaptureMouse",
+        JS_NewCFunction(ctx, jsCaptureMouse, "__atlasCaptureMouse", 0));
+    JS_SetPropertyStr(
+        ctx, global, "__atlasReleaseMouse",
+        JS_NewCFunction(ctx, jsReleaseMouse, "__atlasReleaseMouse", 0));
+    JS_SetPropertyStr(
+        ctx, global, "__atlasGetMousePosition",
+        JS_NewCFunction(ctx, jsGetMousePosition, "__atlasGetMousePosition", 0));
     JS_SetPropertyStr(ctx, global, "__atlasIsActionTriggered",
                       JS_NewCFunction(ctx, jsIsActionTriggered,
                                       "__atlasIsActionTriggered", 1));
@@ -5556,13 +5863,14 @@ void runtime::scripting::installGlobals(JSContext *ctx) {
                                       "__atlasCreateCheckerboardTexture", 6));
     JS_SetPropertyStr(ctx, global, "__atlasCreateDoubleCheckerboardTexture",
                       JS_NewCFunction(ctx, jsCreateDoubleCheckerboardTexture,
-                                      "__atlasCreateDoubleCheckerboardTexture", 8));
-    JS_SetPropertyStr(ctx, global, "__atlasDisplayTexture",
-                      JS_NewCFunction(ctx, jsDisplayTexture,
-                                      "__atlasDisplayTexture", 1));
-    JS_SetPropertyStr(ctx, global, "__atlasCreateCubemap",
-                      JS_NewCFunction(ctx, jsCreateCubemap,
-                                      "__atlasCreateCubemap", 1));
+                                      "__atlasCreateDoubleCheckerboardTexture",
+                                      8));
+    JS_SetPropertyStr(
+        ctx, global, "__atlasDisplayTexture",
+        JS_NewCFunction(ctx, jsDisplayTexture, "__atlasDisplayTexture", 1));
+    JS_SetPropertyStr(
+        ctx, global, "__atlasCreateCubemap",
+        JS_NewCFunction(ctx, jsCreateCubemap, "__atlasCreateCubemap", 1));
     JS_SetPropertyStr(ctx, global, "__atlasCreateCubemapFromGroup",
                       JS_NewCFunction(ctx, jsCreateCubemapFromGroup,
                                       "__atlasCreateCubemapFromGroup", 1));
@@ -5572,9 +5880,9 @@ void runtime::scripting::installGlobals(JSContext *ctx) {
     JS_SetPropertyStr(ctx, global, "__atlasUpdateCubemapWithColors",
                       JS_NewCFunction(ctx, jsUpdateCubemapWithColors,
                                       "__atlasUpdateCubemapWithColors", 2));
-    JS_SetPropertyStr(ctx, global, "__atlasCreateSkybox",
-                      JS_NewCFunction(ctx, jsCreateSkybox,
-                                      "__atlasCreateSkybox", 1));
+    JS_SetPropertyStr(
+        ctx, global, "__atlasCreateSkybox",
+        JS_NewCFunction(ctx, jsCreateSkybox, "__atlasCreateSkybox", 1));
     JS_SetPropertyStr(ctx, global, "__atlasCreateRenderTarget",
                       JS_NewCFunction(ctx, jsCreateRenderTarget,
                                       "__atlasCreateRenderTarget", 2));
@@ -5587,12 +5895,12 @@ void runtime::scripting::installGlobals(JSContext *ctx) {
     JS_SetPropertyStr(ctx, global, "__atlasDisplayRenderTarget",
                       JS_NewCFunction(ctx, jsDisplayRenderTarget,
                                       "__atlasDisplayRenderTarget", 1));
-    JS_SetPropertyStr(ctx, global, "__atlasCreatePointLight",
-                      JS_NewCFunction(ctx, jsCreatePointLight,
-                                      "__atlasCreatePointLight", 1));
-    JS_SetPropertyStr(ctx, global, "__atlasUpdatePointLight",
-                      JS_NewCFunction(ctx, jsUpdatePointLight,
-                                      "__atlasUpdatePointLight", 1));
+    JS_SetPropertyStr(
+        ctx, global, "__atlasCreatePointLight",
+        JS_NewCFunction(ctx, jsCreatePointLight, "__atlasCreatePointLight", 1));
+    JS_SetPropertyStr(
+        ctx, global, "__atlasUpdatePointLight",
+        JS_NewCFunction(ctx, jsUpdatePointLight, "__atlasUpdatePointLight", 1));
     JS_SetPropertyStr(ctx, global, "__atlasCreatePointLightDebugObject",
                       JS_NewCFunction(ctx, jsCreatePointLightDebugObject,
                                       "__atlasCreatePointLightDebugObject", 1));
@@ -5608,75 +5916,75 @@ void runtime::scripting::installGlobals(JSContext *ctx) {
     JS_SetPropertyStr(ctx, global, "__atlasCastDirectionalLightShadows",
                       JS_NewCFunction(ctx, jsCastDirectionalLightShadows,
                                       "__atlasCastDirectionalLightShadows", 2));
-    JS_SetPropertyStr(ctx, global, "__atlasCreateSpotLight",
-                      JS_NewCFunction(ctx, jsCreateSpotLight,
-                                      "__atlasCreateSpotLight", 1));
-    JS_SetPropertyStr(ctx, global, "__atlasUpdateSpotLight",
-                      JS_NewCFunction(ctx, jsUpdateSpotLight,
-                                      "__atlasUpdateSpotLight", 1));
+    JS_SetPropertyStr(
+        ctx, global, "__atlasCreateSpotLight",
+        JS_NewCFunction(ctx, jsCreateSpotLight, "__atlasCreateSpotLight", 1));
+    JS_SetPropertyStr(
+        ctx, global, "__atlasUpdateSpotLight",
+        JS_NewCFunction(ctx, jsUpdateSpotLight, "__atlasUpdateSpotLight", 1));
     JS_SetPropertyStr(ctx, global, "__atlasCreateSpotLightDebugObject",
                       JS_NewCFunction(ctx, jsCreateSpotLightDebugObject,
                                       "__atlasCreateSpotLightDebugObject", 1));
-    JS_SetPropertyStr(ctx, global, "__atlasLookAtSpotLight",
-                      JS_NewCFunction(ctx, jsLookAtSpotLight,
-                                      "__atlasLookAtSpotLight", 2));
+    JS_SetPropertyStr(
+        ctx, global, "__atlasLookAtSpotLight",
+        JS_NewCFunction(ctx, jsLookAtSpotLight, "__atlasLookAtSpotLight", 2));
     JS_SetPropertyStr(ctx, global, "__atlasCastSpotLightShadows",
                       JS_NewCFunction(ctx, jsCastSpotLightShadows,
                                       "__atlasCastSpotLightShadows", 2));
-    JS_SetPropertyStr(ctx, global, "__atlasCreateAreaLight",
-                      JS_NewCFunction(ctx, jsCreateAreaLight,
-                                      "__atlasCreateAreaLight", 1));
-    JS_SetPropertyStr(ctx, global, "__atlasUpdateAreaLight",
-                      JS_NewCFunction(ctx, jsUpdateAreaLight,
-                                      "__atlasUpdateAreaLight", 1));
+    JS_SetPropertyStr(
+        ctx, global, "__atlasCreateAreaLight",
+        JS_NewCFunction(ctx, jsCreateAreaLight, "__atlasCreateAreaLight", 1));
+    JS_SetPropertyStr(
+        ctx, global, "__atlasUpdateAreaLight",
+        JS_NewCFunction(ctx, jsUpdateAreaLight, "__atlasUpdateAreaLight", 1));
     JS_SetPropertyStr(ctx, global, "__atlasGetAreaLightNormal",
                       JS_NewCFunction(ctx, jsGetAreaLightNormal,
                                       "__atlasGetAreaLightNormal", 1));
     JS_SetPropertyStr(ctx, global, "__atlasSetAreaLightRotation",
                       JS_NewCFunction(ctx, jsSetAreaLightRotation,
                                       "__atlasSetAreaLightRotation", 2));
-    JS_SetPropertyStr(ctx, global, "__atlasRotateAreaLight",
-                      JS_NewCFunction(ctx, jsRotateAreaLight,
-                                      "__atlasRotateAreaLight", 2));
+    JS_SetPropertyStr(
+        ctx, global, "__atlasRotateAreaLight",
+        JS_NewCFunction(ctx, jsRotateAreaLight, "__atlasRotateAreaLight", 2));
     JS_SetPropertyStr(ctx, global, "__atlasCreateAreaLightDebugObject",
                       JS_NewCFunction(ctx, jsCreateAreaLightDebugObject,
                                       "__atlasCreateAreaLightDebugObject", 1));
     JS_SetPropertyStr(ctx, global, "__atlasCastAreaLightShadows",
                       JS_NewCFunction(ctx, jsCastAreaLightShadows,
                                       "__atlasCastAreaLightShadows", 2));
-    JS_SetPropertyStr(ctx, global, "__atlasGetObjectById",
-                      JS_NewCFunction(ctx, jsGetObjectById,
-                                      "__atlasGetObjectById", 1));
-    JS_SetPropertyStr(ctx, global, "__atlasGetObjectByName",
-                      JS_NewCFunction(ctx, jsGetObjectByName,
-                                      "__atlasGetObjectByName", 1));
+    JS_SetPropertyStr(
+        ctx, global, "__atlasGetObjectById",
+        JS_NewCFunction(ctx, jsGetObjectById, "__atlasGetObjectById", 1));
+    JS_SetPropertyStr(
+        ctx, global, "__atlasGetObjectByName",
+        JS_NewCFunction(ctx, jsGetObjectByName, "__atlasGetObjectByName", 1));
     JS_SetPropertyStr(ctx, global, "__atlasGetComponentByName",
                       JS_NewCFunction(ctx, jsGetComponentByName,
                                       "__atlasGetComponentByName", 2));
-    JS_SetPropertyStr(ctx, global, "__atlasLoadResource",
-                      JS_NewCFunction(ctx, jsLoadResource, "__atlasLoadResource",
-                                      3));
+    JS_SetPropertyStr(
+        ctx, global, "__atlasLoadResource",
+        JS_NewCFunction(ctx, jsLoadResource, "__atlasLoadResource", 3));
     JS_SetPropertyStr(ctx, global, "__atlasGetResourceByName",
                       JS_NewCFunction(ctx, jsGetResourceByName,
                                       "__atlasGetResourceByName", 2));
-    JS_SetPropertyStr(ctx, global, "__atlasAddComponent",
-                      JS_NewCFunction(ctx, jsAddComponent, "__atlasAddComponent",
-                                      2));
+    JS_SetPropertyStr(
+        ctx, global, "__atlasAddComponent",
+        JS_NewCFunction(ctx, jsAddComponent, "__atlasAddComponent", 2));
     JS_SetPropertyStr(ctx, global, "__atlasCreateAudioPlayer",
                       JS_NewCFunction(ctx, jsCreateAudioPlayer,
                                       "__atlasCreateAudioPlayer", 1));
-    JS_SetPropertyStr(ctx, global, "__atlasInitAudioPlayer",
-                      JS_NewCFunction(ctx, jsInitAudioPlayer,
-                                      "__atlasInitAudioPlayer", 1));
-    JS_SetPropertyStr(ctx, global, "__atlasPlayAudioPlayer",
-                      JS_NewCFunction(ctx, jsPlayAudioPlayer,
-                                      "__atlasPlayAudioPlayer", 1));
-    JS_SetPropertyStr(ctx, global, "__atlasPauseAudioPlayer",
-                      JS_NewCFunction(ctx, jsPauseAudioPlayer,
-                                      "__atlasPauseAudioPlayer", 1));
-    JS_SetPropertyStr(ctx, global, "__atlasStopAudioPlayer",
-                      JS_NewCFunction(ctx, jsStopAudioPlayer,
-                                      "__atlasStopAudioPlayer", 1));
+    JS_SetPropertyStr(
+        ctx, global, "__atlasInitAudioPlayer",
+        JS_NewCFunction(ctx, jsInitAudioPlayer, "__atlasInitAudioPlayer", 1));
+    JS_SetPropertyStr(
+        ctx, global, "__atlasPlayAudioPlayer",
+        JS_NewCFunction(ctx, jsPlayAudioPlayer, "__atlasPlayAudioPlayer", 1));
+    JS_SetPropertyStr(
+        ctx, global, "__atlasPauseAudioPlayer",
+        JS_NewCFunction(ctx, jsPauseAudioPlayer, "__atlasPauseAudioPlayer", 1));
+    JS_SetPropertyStr(
+        ctx, global, "__atlasStopAudioPlayer",
+        JS_NewCFunction(ctx, jsStopAudioPlayer, "__atlasStopAudioPlayer", 1));
     JS_SetPropertyStr(ctx, global, "__atlasSetAudioPlayerVolume",
                       JS_NewCFunction(ctx, jsSetAudioPlayerVolume,
                                       "__atlasSetAudioPlayerVolume", 2));
@@ -5692,66 +6000,98 @@ void runtime::scripting::installGlobals(JSContext *ctx) {
     JS_SetPropertyStr(ctx, global, "__atlasSetAudioPlayerPosition",
                       JS_NewCFunction(ctx, jsSetAudioPlayerPosition,
                                       "__atlasSetAudioPlayerPosition", 2));
-    JS_SetPropertyStr(ctx, global, "__atlasUseSpatialAudio",
-                      JS_NewCFunction(ctx, jsUseSpatialAudio,
-                                      "__atlasUseSpatialAudio", 2));
-    JS_SetPropertyStr(ctx, global, "__atlasCreateCoreObject",
-                      JS_NewCFunction(ctx, jsCreateCoreObject,
-                                      "__atlasCreateCoreObject", 1));
-    JS_SetPropertyStr(ctx, global, "__atlasUpdateObject",
-                      JS_NewCFunction(ctx, jsUpdateObject, "__atlasUpdateObject",
-                                      1));
-    JS_SetPropertyStr(ctx, global, "__atlasUpdateCoreObject",
-                      JS_NewCFunction(ctx, jsUpdateObject,
-                                      "__atlasUpdateCoreObject", 2));
-    JS_SetPropertyStr(ctx, global, "__atlasCreateBox",
-                      JS_NewCFunction(ctx, jsCreatePrimitiveBox,
-                                      "__atlasCreateBox", 1));
-    JS_SetPropertyStr(ctx, global, "__atlasCreatePlane",
-                      JS_NewCFunction(ctx, jsCreatePrimitivePlane,
-                                      "__atlasCreatePlane", 1));
+    JS_SetPropertyStr(
+        ctx, global, "__atlasUseSpatialAudio",
+        JS_NewCFunction(ctx, jsUseSpatialAudio, "__atlasUseSpatialAudio", 2));
+    JS_SetPropertyStr(
+        ctx, global, "__atlasCreateCoreObject",
+        JS_NewCFunction(ctx, jsCreateCoreObject, "__atlasCreateCoreObject", 1));
+    JS_SetPropertyStr(
+        ctx, global, "__atlasCreateModel",
+        JS_NewCFunction(ctx, jsCreateModel, "__atlasCreateModel", 1));
+    JS_SetPropertyStr(
+        ctx, global, "__atlasGetModelObjects",
+        JS_NewCFunction(ctx, jsGetModelObjects, "__atlasGetModelObjects", 1));
+    JS_SetPropertyStr(ctx, global, "__atlasMoveModel",
+                      JS_NewCFunction(ctx, jsMoveModel, "__atlasMoveModel", 2));
+    JS_SetPropertyStr(
+        ctx, global, "__atlasSetModelPosition",
+        JS_NewCFunction(ctx, jsSetModelPosition, "__atlasSetModelPosition", 2));
+    JS_SetPropertyStr(
+        ctx, global, "__atlasSetModelRotation",
+        JS_NewCFunction(ctx, jsSetModelRotation, "__atlasSetModelRotation", 2));
+    JS_SetPropertyStr(
+        ctx, global, "__atlasLookAtModel",
+        JS_NewCFunction(ctx, jsLookAtModel, "__atlasLookAtModel", 3));
+    JS_SetPropertyStr(
+        ctx, global, "__atlasRotateModel",
+        JS_NewCFunction(ctx, jsRotateModel, "__atlasRotateModel", 2));
+    JS_SetPropertyStr(
+        ctx, global, "__atlasSetModelScale",
+        JS_NewCFunction(ctx, jsSetModelScale, "__atlasSetModelScale", 2));
+    JS_SetPropertyStr(
+        ctx, global, "__atlasScaleModelBy",
+        JS_NewCFunction(ctx, jsScaleModelBy, "__atlasScaleModelBy", 2));
+    JS_SetPropertyStr(
+        ctx, global, "__atlasShowModel",
+        JS_NewCFunction(ctx, jsShowObject, "__atlasShowModel", 1));
+    JS_SetPropertyStr(
+        ctx, global, "__atlasHideModel",
+        JS_NewCFunction(ctx, jsHideObject, "__atlasHideModel", 1));
+    JS_SetPropertyStr(
+        ctx, global, "__atlasUpdateObject",
+        JS_NewCFunction(ctx, jsUpdateObject, "__atlasUpdateObject", 1));
+    JS_SetPropertyStr(
+        ctx, global, "__atlasUpdateCoreObject",
+        JS_NewCFunction(ctx, jsUpdateObject, "__atlasUpdateCoreObject", 2));
+    JS_SetPropertyStr(
+        ctx, global, "__atlasCreateBox",
+        JS_NewCFunction(ctx, jsCreatePrimitiveBox, "__atlasCreateBox", 1));
+    JS_SetPropertyStr(
+        ctx, global, "__atlasCreatePlane",
+        JS_NewCFunction(ctx, jsCreatePrimitivePlane, "__atlasCreatePlane", 1));
     JS_SetPropertyStr(ctx, global, "__atlasCreatePyramid",
                       JS_NewCFunction(ctx, jsCreatePrimitivePyramid,
                                       "__atlasCreatePyramid", 1));
     JS_SetPropertyStr(ctx, global, "__atlasCreateSphere",
                       JS_NewCFunction(ctx, jsCreatePrimitiveSphere,
                                       "__atlasCreateSphere", 3));
-    JS_SetPropertyStr(ctx, global, "__atlasCloneCoreObject",
-                      JS_NewCFunction(ctx, jsCloneCoreObject,
-                                      "__atlasCloneCoreObject", 1));
-    JS_SetPropertyStr(ctx, global, "__atlasMakeEmissive",
-                      JS_NewCFunction(ctx, jsMakeEmissive,
-                                      "__atlasMakeEmissive", 3));
-    JS_SetPropertyStr(ctx, global, "__atlasAttachTexture",
-                      JS_NewCFunction(ctx, jsAttachTexture,
-                                      "__atlasAttachTexture", 2));
-    JS_SetPropertyStr(ctx, global, "__atlasShowObject",
-                      JS_NewCFunction(ctx, jsShowObject, "__atlasShowObject",
-                                      1));
-    JS_SetPropertyStr(ctx, global, "__atlasHideObject",
-                      JS_NewCFunction(ctx, jsHideObject, "__atlasHideObject",
-                                      1));
-    JS_SetPropertyStr(ctx, global, "__atlasShowCoreObject",
-                      JS_NewCFunction(ctx, jsShowObject,
-                                      "__atlasShowCoreObject", 1));
-    JS_SetPropertyStr(ctx, global, "__atlasHideCoreObject",
-                      JS_NewCFunction(ctx, jsHideObject,
-                                      "__atlasHideCoreObject", 1));
+    JS_SetPropertyStr(
+        ctx, global, "__atlasCloneCoreObject",
+        JS_NewCFunction(ctx, jsCloneCoreObject, "__atlasCloneCoreObject", 1));
+    JS_SetPropertyStr(
+        ctx, global, "__atlasMakeEmissive",
+        JS_NewCFunction(ctx, jsMakeEmissive, "__atlasMakeEmissive", 3));
+    JS_SetPropertyStr(
+        ctx, global, "__atlasAttachTexture",
+        JS_NewCFunction(ctx, jsAttachTexture, "__atlasAttachTexture", 2));
+    JS_SetPropertyStr(
+        ctx, global, "__atlasShowObject",
+        JS_NewCFunction(ctx, jsShowObject, "__atlasShowObject", 1));
+    JS_SetPropertyStr(
+        ctx, global, "__atlasHideObject",
+        JS_NewCFunction(ctx, jsHideObject, "__atlasHideObject", 1));
+    JS_SetPropertyStr(
+        ctx, global, "__atlasShowCoreObject",
+        JS_NewCFunction(ctx, jsShowObject, "__atlasShowCoreObject", 1));
+    JS_SetPropertyStr(
+        ctx, global, "__atlasHideCoreObject",
+        JS_NewCFunction(ctx, jsHideObject, "__atlasHideCoreObject", 1));
     JS_SetPropertyStr(ctx, global, "__atlasEnableDeferredRendering",
                       JS_NewCFunction(ctx, jsEnableDeferred,
                                       "__atlasEnableDeferredRendering", 1));
     JS_SetPropertyStr(ctx, global, "__atlasDisableDeferredRendering",
                       JS_NewCFunction(ctx, jsDisableDeferred,
                                       "__atlasDisableDeferredRendering", 1));
-    JS_SetPropertyStr(ctx, global, "__atlasCreateInstance",
-                      JS_NewCFunction(ctx, jsCreateInstance,
-                                      "__atlasCreateInstance", 1));
-    JS_SetPropertyStr(ctx, global, "__atlasCommitInstance",
-                      JS_NewCFunction(ctx, jsCommitInstance,
-                                      "__atlasCommitInstance", 1));
-    JS_SetPropertyStr(ctx, global, "__atlasLookAtObject",
-                      JS_NewCFunction(ctx, jsLookAtObject,
-                                      "__atlasLookAtObject", 3));
+    JS_SetPropertyStr(
+        ctx, global, "__atlasCreateInstance",
+        JS_NewCFunction(ctx, jsCreateInstance, "__atlasCreateInstance", 1));
+    JS_SetPropertyStr(
+        ctx, global, "__atlasCommitInstance",
+        JS_NewCFunction(ctx, jsCommitInstance, "__atlasCommitInstance", 1));
+    JS_SetPropertyStr(
+        ctx, global, "__atlasLookAtObject",
+        JS_NewCFunction(ctx, jsLookAtObject, "__atlasLookAtObject", 3));
     JS_SetPropertyStr(ctx, global, "__atlasSetRotationQuaternion",
                       JS_NewCFunction(ctx, jsSetRotationQuaternion,
                                       "__atlasSetRotationQuaternion", 2));
@@ -5760,8 +6100,7 @@ void runtime::scripting::installGlobals(JSContext *ctx) {
 
 char *runtime::scripting::normalizeModuleName(JSContext *ctx,
                                               const char *baseName,
-                                              const char *name,
-                                              void *opaque) {
+                                              const char *name, void *opaque) {
     auto *host = static_cast<ScriptHost *>(opaque);
     const std::string base = baseName == nullptr ? "" : baseName;
     const std::string module = name == nullptr ? "" : name;
@@ -5853,8 +6192,9 @@ bool runtime::scripting::evalModule(JSContext *ctx, const std::string &name,
     return true;
 }
 
-JSValue runtime::scripting::importModuleNamespace(JSContext *ctx,
-                                                  const std::string &module_name) {
+JSValue
+runtime::scripting::importModuleNamespace(JSContext *ctx,
+                                          const std::string &module_name) {
     std::string src = "import * as ns from '" + module_name +
                       "';\n"
                       "globalThis.__atlas_tmp_ns = ns;\n";
