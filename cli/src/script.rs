@@ -426,7 +426,9 @@ fn run_esbuild(project_dir: &Path, entry_points: &[PathBuf]) -> Result<(), Strin
         .arg(format!("--outfile={SCRIPT_BUNDLE_FILE}"))
         .arg("--tsconfig=tsconfig.json")
         .arg("--external:atlas")
-        .arg("--external:atlas/*");
+        .arg("--external:atlas/*")
+        .arg("--external:bezel")
+        .arg("--external:bezel/*");
 
     let output = command
         .output()

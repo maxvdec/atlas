@@ -29,7 +29,16 @@ export class Scene {
 
 export class Component {
     init() {}
+    beforePhysics() {}
+    atAttach() {}
     update(deltaTime) {}
+    onCollisionEnter(other) {}
+    onCollisionStay(other) {}
+    onCollisionExit(other) {}
+    onSignalRecieve(signal, sender) {}
+    onSignalEnd(signal, sender) {}
+    onQueryRecieve(query, sender) {}
+    onQueryReceive(query, sender) {}
 
     getParent(type) {
         const parent = globalThis.__atlasGetObjectById(this.parentId);
@@ -198,6 +207,14 @@ export class GameObject {
 
     hide() {
         globalThis.__atlasHideObject(this.id);
+    }
+
+    as(type) {
+        if (type == null) {
+            return null;
+        }
+        const object = globalThis.__atlasGetObjectById(this.id) ?? this;
+        return object instanceof type ? object : null;
     }
 
     addComponent(component) {

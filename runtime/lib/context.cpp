@@ -116,6 +116,7 @@ class RuntimeScriptComponent final : public Component {
             throw std::runtime_error("Failed to create script instance: " +
                                      className);
         }
+        instance->callMethod("atAttach", 0, nullptr);
     }
 
     void init() override {
@@ -135,6 +136,13 @@ class RuntimeScriptComponent final : public Component {
         JSValueConst args[] = {delta};
         instance->callMethod("update", 1, args);
         JS_FreeValue(host->context, delta);
+    }
+
+    void beforePhysics() override {
+        if (!ensureInstance()) {
+            return;
+        }
+        instance->callMethod("beforePhysics", 0, nullptr);
     }
 
   private:

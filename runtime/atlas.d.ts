@@ -29,6 +29,7 @@ declare module "atlas" {
         Scale3d,
     } from "atlas/units";
     import { Texture, Skybox } from "atlas/graphics";
+    import { QueryResult } from "bezel";
 
     export type Fog = {
         color: Color;
@@ -80,6 +81,15 @@ declare module "atlas" {
 
         abstract init(): void;
         abstract update(deltaTime: number): void;
+        beforePhysics(): void;
+        atAttach(): void;
+
+        onCollisionEnter(other: GameObject): void;
+        onCollisionStay(other: GameObject): void;
+        onCollisionExit(other: GameObject): void;
+        onSignalReceive(signal: string, sender: GameObject): void;
+        onSignalEnd(signal: string, sender: GameObject): void;
+        onQueryReceive(query: QueryResult, sender: GameObject): void;
 
         getParent(): GameObject;
         getParent<T extends Component>(
@@ -158,6 +168,8 @@ declare module "atlas" {
         abstract scaleBy(scale: Scale3d): void;
         abstract show(): void;
         abstract hide(): void;
+
+        as<T extends GameObject>(type: new (...args: any[]) => T): T | null;
 
         addComponent<T extends Component>(component: T): void;
     }
@@ -1118,5 +1130,377 @@ declare module "atlas/particle" {
         override scaleBy(scale: Scale3d): void;
         override show(): void;
         override hide(): void;
+    }
+}
+
+declare module "bezel" {
+    import {
+        Position3d,
+        Normal3d,
+        Point3d,
+        Size3d,
+        Force3d,
+        Impulse3d,
+        Velocity3d,
+    } from "atlas/units";
+    import { GameObject, Component } from "atlas";
+
+    export type RaycastHit = {
+        position: Position3d;
+        normal: Normal3d;
+        distance: number;
+        object: GameObject;
+        didHit: boolean;
+    };
+
+    export type RaycastResult = {
+        hits: RaycastHit[];
+        hit: RaycastHit | null;
+        closestDistance: number;
+    };
+
+    export type OverlapHit = {
+        contactPoint: Position3d;
+        penerationAxis: Point3d;
+        penetrationDepth: number;
+        object: GameObject;
+    };
+
+    export type OverlapResult = {
+        hits: OverlapHit[];
+        hitAny: boolean;
+    };
+
+    export type SweepHit = {
+        position: Position3d;
+        normal: Normal3d;
+        distance: number;
+        percentage: number;
+        object: GameObject;
+    };
+
+    export type SweepResult = {
+        hits: SweepHit[];
+        closest: SweepHit | null;
+        hitAny: boolean;
+        endPosition: Position3d;
+    };
+
+    export enum QueryOperation {
+        RaycastAll,
+        Raycast,
+        RasycastWorld,
+        RaycastWorldAll,
+        RaycastTagged,
+        RaycastTaggedAll,
+        Movement,
+        Overlap,
+        MovementAll,
+    }
+
+    export type QueryResult = {
+        operation: QueryOperation;
+        raycastResult?: RaycastResult;
+        overlapResult?: OverlapResult;
+        sweepResult?: SweepResult;
+    };
+
+    export type WorldBody = {};
+
+    export type JointMember = GameObject | WorldBody;
+
+    export enum SpringMode {
+        FrequencyAndDamping,
+        StiffnessAndDamping,
+    }
+
+    export enum Space {
+        Local,
+        Global,
+    }
+
+    export type Spring = {
+        enabled: boolean;
+        mode: SpringMode;
+        frequency: number;
+        dampingRatio: number;
+        stiffness: number;
+        damping: number;
+    };
+
+    export type AngleLimits = {
+        enabled: boolean;
+        minAngle: number;
+        maxAngle: number;
+    };
+
+    export type Motor = {
+        enabled: boolean;
+        maxForce: number;
+        maxTorque: number;
+    };
+
+    export abstract class Joint extends Component {
+        parent: JointMember;
+        child: JointMember;
+        space: Space;
+        anchor: Position3d;
+        breakForce: number;
+        breakTorque: number;
+
+        override init(): void;
+        override update(deltaTime: number): void;
+
+        abstract override beforePhysics(): void;
+        abstract breakJoint(): void;
+    }
+
+    export class FixedJoint extends Joint {
+        override beforePhysics(): void;
+        override breakJoint(): void;
+    }
+
+    export class HingeJoint extends Joint {
+        axis1: Normal3d;
+        axis2: Normal3d;
+        angleLimits: AngleLimits;
+        motor: Motor;
+
+        override beforePhysics(): void;
+        override breakJoint(): void;
+    }
+
+    export class SpringJoint extends Joint {
+        anchorB: Position3d;
+        restLength: number;
+        useLimits: boolean;
+        minLength: number;
+        maxLength: number;
+
+        spring: Spring;
+
+        override beforePhysics(): void;
+        override breakJoint(): void;
+    }
+
+    export type VehicleWheelSettings = {
+        position: Position3d;
+        enableSuspensionForcePoint: boolean;
+        suspensionForcePoint: Position3d;
+
+        suspensionDirection: Normal3d;
+        steeringAxis: Normal3d;
+        wheelUp: Normal3d;
+        wheelForward: Normal3d;
+
+        suspensionMinLength: number;
+        suspensionMaxLength: number;
+        suspensionPreloadLength: number;
+        suspensionFrequencyHz: number;
+        suspensionDampingRatio: number;
+
+        radius: number;
+        width: number;
+
+        inertia: number;
+        angularDamping: number;
+        maxSteerAngleDegrees: number;
+        maxBrakeTorque: number;
+        maxHandBrakeTorque: number;
+    };
+
+    export type VehicleDifferential = {
+        leftWheel: number;
+        rightWheel: number;
+        differentialRatio: number;
+        leftRightSplit: number;
+        limitedSlipRatio: number;
+        engineTorqueRatio: number;
+    };
+
+    export type VehicleEngine = {
+        maxTorque: number;
+        minRPM: number;
+        maxRPM: number;
+        inertia: number;
+        angularDamping: number;
+    };
+
+    export enum VehicleTransmissionMode {
+        Auto,
+        Manual,
+    }
+
+    export type VehicleTransmission = {
+        mode: VehicleTransmissionMode;
+        gearRatios: number[];
+        reverseGearRatios: number[];
+        switchTime: number;
+        clutchReleaseTime: number;
+        switchLatency: number;
+        shiftUpRPM: number;
+        shiftDownRPM: number;
+        clutchStrength: number;
+    };
+
+    export type VehicleControllerSettings = {
+        engine: VehicleEngine;
+        transmission: VehicleTransmission;
+        differentials: VehicleDifferential[];
+        differentialLimitedSlipRatio: number;
+    };
+
+    export type VehicleSettings = {
+        up: Normal3d;
+        forward: Normal3d;
+
+        maxPitchRollAngleDeg: number;
+
+        wheels: VehicleWheelSettings[];
+        controller: VehicleControllerSettings;
+
+        maxSlopAngleDeg: number;
+    };
+
+    export class Vehicle extends Component {
+        settings: VehicleSettings;
+        forward: number;
+        right: number;
+        brake: number;
+        handBrake: number;
+
+        override atAttach(): void;
+        override beforePhysics(): void;
+
+        requestRecreate(): void;
+
+        override init(): void;
+        override update(deltaTime: number): void;
+    }
+
+    export type CapsuleCollider = {
+        radius: number;
+        height: number;
+    };
+
+    export type BoxCollider = {
+        size: Size3d;
+    };
+
+    export type SphereCollider = {
+        radius: number;
+    };
+
+    export type MeshCollider = {};
+
+    export type Collider =
+        | CapsuleCollider
+        | BoxCollider
+        | SphereCollider
+        | MeshCollider;
+
+    export class Rigidbody extends Component {
+        sendSignal: string;
+        isSensor: boolean;
+
+        override atAttach(): void;
+        override init(): void;
+        override beforePhysics(): void;
+        override update(deltaTime: number): void;
+
+        clone(): Rigidbody;
+
+        addCollider(collider: Collider): void;
+
+        setFriction(friction: number): void;
+        applyForce(force: Force3d): void;
+        applyForceAtPoint(force: Force3d, point: Position3d): void;
+        applyImpulse(impulse: Impulse3d): void;
+
+        setLinearVelocity(velocity: Velocity3d): void;
+        addLinearVelocity(velocity: Velocity3d): void;
+        setAngularVelocity(velocity: Velocity3d): void;
+        addAngularVelocity(velocity: Velocity3d): void;
+
+        setMaxLinearVelocity(velocity: number): void;
+        setMaxAngularVelocity(velocity: number): void;
+
+        getLinearVelocity(): Velocity3d;
+        getAngularVelocity(): Velocity3d;
+        getVelocity(): Velocity3d;
+
+        raycast(direction: Normal3d, maxDistance: number): RaycastResult;
+        raycastAll(direction: Normal3d, maxDistance: number): RaycastResult;
+        raycastWorld(
+            origin: Position3d,
+            direction: Normal3d,
+            maxDistance: number,
+        ): RaycastResult;
+        raycastWorldAll(
+            origin: Position3d,
+            direction: Normal3d,
+            maxDistance: number,
+        ): RaycastResult;
+        raycastTagged(
+            tags: string[],
+            direction: Normal3d,
+            maxDistance: number,
+        ): RaycastResult;
+        raycastTaggedAll(
+            tags: string[],
+            direction: Normal3d,
+            maxDistance: number,
+        ): RaycastResult;
+
+        overlap(): OverlapResult;
+        overlapWithCollider(collider: Collider): OverlapResult;
+        overlapWithColliderWorld(
+            collider: Collider,
+            position: Position3d,
+        ): OverlapResult;
+
+        predictMovementWithCollider(
+            endPosition: Position3d,
+            collider: Collider,
+        ): SweepResult;
+        predictMovement(endPosition: Position3d): SweepResult;
+        predictMovementWithColliderWorld(
+            startPosition: Position3d,
+            endPosition: Position3d,
+            collider: Collider,
+        ): SweepResult;
+        predictMovementWorld(
+            startPosition: Position3d,
+            endPosition: Position3d,
+        ): SweepResult;
+        predictMovementWithColliderAll(
+            endPosition: Position3d,
+            collider: Collider,
+        ): SweepResult;
+        predictMovementAll(endPosition: Position3d): SweepResult;
+        predictMovementWithColliderAllWorld(
+            startPosition: Position3d,
+            endPosition: Position3d,
+            collider: Collider,
+        ): SweepResult;
+        predictMovementAllWorld(
+            startPosition: Position3d,
+            endPosition: Position3d,
+        ): SweepResult;
+
+        hasTag(tag: string): boolean;
+        addTag(tag: string): void;
+        removeTag(tag: string): void;
+
+        setDamping(linearDamping: number, angularDamping: number): void;
+        setMass(mass: number): void;
+        setRestituition(restitution: number): void;
+        setMotionType(motionType: "Static" | "Dynamic" | "Kinematic"): void;
+    }
+
+    export class Sensor extends Rigidbody {
+        constructor(); // sets isSensor to true
+
+        setSignal(signal: string): void;
     }
 }

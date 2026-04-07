@@ -23,6 +23,12 @@ class Model;
 class Component;
 class AudioPlayer;
 class ParticleEmitter;
+class Joint;
+class FixedJoint;
+class HingeJoint;
+class SpringJoint;
+class Vehicle;
+class Rigidbody;
 class Window;
 struct Light;
 class DirectionalLight;
@@ -50,6 +56,41 @@ struct ScriptComponentState {
 
 struct ScriptAudioPlayerState {
     std::shared_ptr<AudioPlayer> component;
+    JSValue value = JS_UNDEFINED;
+    bool attached = false;
+};
+
+struct ScriptRigidbodyState {
+    std::shared_ptr<Rigidbody> ownedComponent;
+    Rigidbody *component = nullptr;
+    JSValue value = JS_UNDEFINED;
+    bool attached = false;
+};
+
+struct ScriptVehicleState {
+    std::shared_ptr<Component> ownedComponent;
+    Vehicle *component = nullptr;
+    JSValue value = JS_UNDEFINED;
+    bool attached = false;
+};
+
+struct ScriptFixedJointState {
+    std::shared_ptr<Component> ownedComponent;
+    FixedJoint *component = nullptr;
+    JSValue value = JS_UNDEFINED;
+    bool attached = false;
+};
+
+struct ScriptHingeJointState {
+    std::shared_ptr<Component> ownedComponent;
+    HingeJoint *component = nullptr;
+    JSValue value = JS_UNDEFINED;
+    bool attached = false;
+};
+
+struct ScriptSpringJointState {
+    std::shared_ptr<Component> ownedComponent;
+    SpringJoint *component = nullptr;
     JSValue value = JS_UNDEFINED;
     bool attached = false;
 };
@@ -109,6 +150,11 @@ struct ScriptHost {
     std::unordered_map<int, std::vector<std::uint64_t>> componentOrder;
     std::unordered_map<std::string, std::uint64_t> componentLookup;
     std::unordered_map<std::uint64_t, ScriptAudioPlayerState> audioPlayers;
+    std::unordered_map<std::uint64_t, ScriptRigidbodyState> rigidbodies;
+    std::unordered_map<std::uint64_t, ScriptVehicleState> vehicles;
+    std::unordered_map<std::uint64_t, ScriptFixedJointState> fixedJoints;
+    std::unordered_map<std::uint64_t, ScriptHingeJointState> hingeJoints;
+    std::unordered_map<std::uint64_t, ScriptSpringJointState> springJoints;
     std::unordered_map<std::uint64_t, ScriptTextureState> textures;
     std::unordered_map<std::uint64_t, ScriptCubemapState> cubemaps;
     std::unordered_map<std::uint64_t, ScriptSkyboxState> skyboxes;
@@ -127,6 +173,7 @@ struct ScriptHost {
     JSValue atlasUnitsNamespace = JS_UNDEFINED;
     JSValue atlasGraphicsNamespace = JS_UNDEFINED;
     JSValue atlasParticleNamespace = JS_UNDEFINED;
+    JSValue atlasBezelNamespace = JS_UNDEFINED;
     JSValue componentPrototype = JS_UNDEFINED;
     JSValue gameObjectPrototype = JS_UNDEFINED;
     JSValue coreObjectPrototype = JS_UNDEFINED;
@@ -146,6 +193,12 @@ struct ScriptHost {
     JSValue spotLightPrototype = JS_UNDEFINED;
     JSValue areaLightPrototype = JS_UNDEFINED;
     JSValue particleEmitterPrototype = JS_UNDEFINED;
+    JSValue rigidbodyPrototype = JS_UNDEFINED;
+    JSValue sensorPrototype = JS_UNDEFINED;
+    JSValue vehiclePrototype = JS_UNDEFINED;
+    JSValue fixedJointPrototype = JS_UNDEFINED;
+    JSValue hingeJointPrototype = JS_UNDEFINED;
+    JSValue springJointPrototype = JS_UNDEFINED;
     JSValue position3dPrototype = JS_UNDEFINED;
     JSValue position2dPrototype = JS_UNDEFINED;
     JSValue colorPrototype = JS_UNDEFINED;
@@ -153,6 +206,11 @@ struct ScriptHost {
     JSValue quaternionPrototype = JS_UNDEFINED;
     std::uint64_t nextComponentId = 1;
     std::uint64_t nextAudioPlayerId = 1;
+    std::uint64_t nextRigidbodyId = 1;
+    std::uint64_t nextVehicleId = 1;
+    std::uint64_t nextFixedJointId = 1;
+    std::uint64_t nextHingeJointId = 1;
+    std::uint64_t nextSpringJointId = 1;
     std::uint64_t nextTextureId = 1;
     std::uint64_t nextCubemapId = 1;
     std::uint64_t nextSkyboxId = 1;

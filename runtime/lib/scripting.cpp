@@ -14,6 +14,7 @@
 #include "atlas/light.h"
 #include "atlas/object.h"
 #include "atlas/particle.h"
+#include "atlas/physics.h"
 #include "atlas/runtime/context.h"
 #include "atlas/texture.h"
 #include "atlas/window.h"
@@ -43,6 +44,11 @@ namespace {
 constexpr const char *ATLAS_OBJECT_ID_PROP = "__atlasObjectId";
 constexpr const char *ATLAS_COMPONENT_ID_PROP = "__atlasComponentId";
 constexpr const char *ATLAS_AUDIO_PLAYER_ID_PROP = "__atlasAudioPlayerId";
+constexpr const char *ATLAS_RIGIDBODY_ID_PROP = "__atlasRigidbodyId";
+constexpr const char *ATLAS_VEHICLE_ID_PROP = "__atlasVehicleId";
+constexpr const char *ATLAS_FIXED_JOINT_ID_PROP = "__atlasFixedJointId";
+constexpr const char *ATLAS_HINGE_JOINT_ID_PROP = "__atlasHingeJointId";
+constexpr const char *ATLAS_SPRING_JOINT_ID_PROP = "__atlasSpringJointId";
 constexpr const char *ATLAS_INSTANCE_OWNER_ID_PROP = "__atlasInstanceOwnerId";
 constexpr const char *ATLAS_INSTANCE_INDEX_PROP = "__atlasInstanceIndex";
 constexpr const char *ATLAS_TEXTURE_ID_PROP = "__atlasTextureId";
@@ -640,6 +646,15 @@ bool ensureBuiltins(JSContext *ctx, ScriptHost &host) {
         }
     }
 
+    if (JS_IsUndefined(host.atlasBezelNamespace)) {
+        host.atlasBezelNamespace =
+            runtime::scripting::importModuleNamespace(ctx, "bezel");
+        if (JS_IsException(host.atlasBezelNamespace)) {
+            runtime::scripting::dumpExecution(ctx);
+            return false;
+        }
+    }
+
     cachePrototype(ctx, host.atlasNamespace, "Component",
                    host.componentPrototype);
     cachePrototype(ctx, host.atlasNamespace, "GameObject",
@@ -675,6 +690,18 @@ bool ensureBuiltins(JSContext *ctx, ScriptHost &host) {
                    host.areaLightPrototype);
     cachePrototype(ctx, host.atlasParticleNamespace, "ParticleEmitter",
                    host.particleEmitterPrototype);
+    cachePrototype(ctx, host.atlasBezelNamespace, "Rigidbody",
+                   host.rigidbodyPrototype);
+    cachePrototype(ctx, host.atlasBezelNamespace, "Sensor",
+                   host.sensorPrototype);
+    cachePrototype(ctx, host.atlasBezelNamespace, "Vehicle",
+                   host.vehiclePrototype);
+    cachePrototype(ctx, host.atlasBezelNamespace, "FixedJoint",
+                   host.fixedJointPrototype);
+    cachePrototype(ctx, host.atlasBezelNamespace, "HingeJoint",
+                   host.hingeJointPrototype);
+    cachePrototype(ctx, host.atlasBezelNamespace, "SpringJoint",
+                   host.springJointPrototype);
     cachePrototype(ctx, host.atlasUnitsNamespace, "Position3d",
                    host.position3dPrototype);
     cachePrototype(ctx, host.atlasUnitsNamespace, "Position2d",
@@ -1294,10 +1321,68 @@ bool callObjectMethod(JSContext *ctx, JSValueConst object,
     return true;
 }
 
+bool callObjectMethodEither(JSContext *ctx, JSValueConst object,
+                            const char *primaryMethodName,
+                            const char *secondaryMethodName, int argc,
+                            JSValueConst *argv) {
+    if (callObjectMethod(ctx, object, primaryMethodName, argc, argv)) {
+        return true;
+    }
+    if (secondaryMethodName == nullptr) {
+        return false;
+    }
+    return callObjectMethod(ctx, object, secondaryMethodName, argc, argv);
+}
+
 ScriptTextureState *findTextureState(ScriptHost &host,
                                      std::uint64_t textureId) {
     auto it = host.textures.find(textureId);
     if (it == host.textures.end()) {
+        return nullptr;
+    }
+    return &it->second;
+}
+
+ScriptRigidbodyState *findRigidbodyState(ScriptHost &host,
+                                         std::uint64_t rigidbodyId) {
+    auto it = host.rigidbodies.find(rigidbodyId);
+    if (it == host.rigidbodies.end()) {
+        return nullptr;
+    }
+    return &it->second;
+}
+
+ScriptVehicleState *findVehicleState(ScriptHost &host,
+                                     std::uint64_t vehicleId) {
+    auto it = host.vehicles.find(vehicleId);
+    if (it == host.vehicles.end()) {
+        return nullptr;
+    }
+    return &it->second;
+}
+
+ScriptFixedJointState *findFixedJointState(ScriptHost &host,
+                                           std::uint64_t jointId) {
+    auto it = host.fixedJoints.find(jointId);
+    if (it == host.fixedJoints.end()) {
+        return nullptr;
+    }
+    return &it->second;
+}
+
+ScriptHingeJointState *findHingeJointState(ScriptHost &host,
+                                           std::uint64_t jointId) {
+    auto it = host.hingeJoints.find(jointId);
+    if (it == host.hingeJoints.end()) {
+        return nullptr;
+    }
+    return &it->second;
+}
+
+ScriptSpringJointState *findSpringJointState(ScriptHost &host,
+                                             std::uint64_t jointId) {
+    auto it = host.springJoints.find(jointId);
+    if (it == host.springJoints.end()) {
         return nullptr;
     }
     return &it->second;
@@ -2743,6 +2828,1355 @@ bool applyAreaLight(JSContext *ctx, JSValueConst wrapper, AreaLight &light) {
     return true;
 }
 
+bool parseStringArray(JSContext *ctx, JSValueConst value,
+                      std::vector<std::string> &out) {
+    if (!JS_IsArray(value)) {
+        return false;
+    }
+
+    std::uint32_t length = 0;
+    JSValue lengthValue = JS_GetPropertyStr(ctx, value, "length");
+    if (JS_IsException(lengthValue) || !getUint32(ctx, lengthValue, length)) {
+        JS_FreeValue(ctx, lengthValue);
+        return false;
+    }
+    JS_FreeValue(ctx, lengthValue);
+
+    out.clear();
+    out.reserve(length);
+    for (std::uint32_t i = 0; i < length; ++i) {
+        JSValue item = JS_GetPropertyUint32(ctx, value, i);
+        if (JS_IsException(item)) {
+            return false;
+        }
+        const char *text = JS_ToCString(ctx, item);
+        if (text == nullptr) {
+            JS_FreeValue(ctx, item);
+            return false;
+        }
+        out.emplace_back(text);
+        JS_FreeCString(ctx, text);
+        JS_FreeValue(ctx, item);
+    }
+    return true;
+}
+
+int toScriptQueryOperation(QueryOperation operation) {
+    switch (operation) {
+    case QueryOperation::RaycastAll:
+        return 0;
+    case QueryOperation::Raycast:
+        return 1;
+    case QueryOperation::RaycastWorld:
+        return 2;
+    case QueryOperation::RaycastWorldAll:
+        return 3;
+    case QueryOperation::RaycastTagged:
+        return 4;
+    case QueryOperation::RaycastTaggedAll:
+        return 5;
+    case QueryOperation::Movement:
+        return 6;
+    case QueryOperation::Overlap:
+        return 7;
+    case QueryOperation::MovementAll:
+        return 8;
+    default:
+        return 1;
+    }
+}
+
+MotionType parseMotionTypeValue(const std::string &value) {
+    const std::string normalized = normalizeToken(value);
+    if (normalized == "static") {
+        return MotionType::Static;
+    }
+    if (normalized == "kinematic") {
+        return MotionType::Kinematic;
+    }
+    return MotionType::Dynamic;
+}
+
+std::shared_ptr<bezel::Collider>
+makeColliderFromScript(JSContext *ctx, JSValueConst value, GameObject *owner) {
+    if (!JS_IsObject(value) || JS_IsNull(value)) {
+        return nullptr;
+    }
+
+    double radius = 0.0;
+    double height = 0.0;
+    if (readNumberProperty(ctx, value, "radius", radius) &&
+        readNumberProperty(ctx, value, "height", height)) {
+        return std::make_shared<bezel::CapsuleCollider>(
+            static_cast<float>(radius), static_cast<float>(height));
+    }
+
+    JSValue sizeValue = JS_GetPropertyStr(ctx, value, "size");
+    if (!JS_IsException(sizeValue) && !JS_IsUndefined(sizeValue)) {
+        Size3d size;
+        if (parsePosition3d(ctx, sizeValue, size)) {
+            JS_FreeValue(ctx, sizeValue);
+            return std::make_shared<bezel::BoxCollider>(size / 2.0);
+        }
+    }
+    JS_FreeValue(ctx, sizeValue);
+
+    if (readNumberProperty(ctx, value, "radius", radius)) {
+        return std::make_shared<bezel::SphereCollider>(
+            static_cast<float>(radius));
+    }
+
+    auto *coreObject = dynamic_cast<CoreObject *>(owner);
+    if (coreObject == nullptr) {
+        return nullptr;
+    }
+
+    std::vector<Position3d> vertices;
+    vertices.reserve(coreObject->getVertices().size());
+    for (const auto &vertex : coreObject->getVertices()) {
+        vertices.push_back(vertex.position);
+    }
+    return std::make_shared<bezel::MeshCollider>(vertices, coreObject->indices);
+}
+
+bool parseSpringValue(JSContext *ctx, JSValueConst value, Spring &out) {
+    if (!JS_IsObject(value) || JS_IsNull(value)) {
+        return false;
+    }
+
+    readBoolProperty(ctx, value, "enabled", out.enabled);
+
+    std::int64_t mode = static_cast<std::int64_t>(out.mode);
+    readIntProperty(ctx, value, "mode", mode);
+    out.mode = static_cast<SpringMode>(static_cast<int>(mode));
+
+    double frequency = out.frequencyHz;
+    readNumberProperty(ctx, value, "frequency", frequency);
+    out.frequencyHz = static_cast<float>(frequency);
+
+    double dampingRatio = out.dampingRatio;
+    readNumberProperty(ctx, value, "dampingRatio", dampingRatio);
+    out.dampingRatio = static_cast<float>(dampingRatio);
+
+    double stiffness = out.stiffness;
+    readNumberProperty(ctx, value, "stiffness", stiffness);
+    out.stiffness = static_cast<float>(stiffness);
+
+    double damping = out.damping;
+    readNumberProperty(ctx, value, "damping", damping);
+    out.damping = static_cast<float>(damping);
+    return true;
+}
+
+bool parseAngleLimitsValue(JSContext *ctx, JSValueConst value,
+                           AngleLimits &out) {
+    if (!JS_IsObject(value) || JS_IsNull(value)) {
+        return false;
+    }
+
+    readBoolProperty(ctx, value, "enabled", out.enabled);
+
+    double minAngle = out.minAngle;
+    readNumberProperty(ctx, value, "minAngle", minAngle);
+    out.minAngle = static_cast<float>(minAngle);
+
+    double maxAngle = out.maxAngle;
+    readNumberProperty(ctx, value, "maxAngle", maxAngle);
+    out.maxAngle = static_cast<float>(maxAngle);
+    return true;
+}
+
+bool parseMotorValue(JSContext *ctx, JSValueConst value, Motor &out) {
+    if (!JS_IsObject(value) || JS_IsNull(value)) {
+        return false;
+    }
+
+    readBoolProperty(ctx, value, "enabled", out.enabled);
+
+    double maxForce = out.maxForce;
+    readNumberProperty(ctx, value, "maxForce", maxForce);
+    out.maxForce = static_cast<float>(maxForce);
+
+    double maxTorque = out.maxTorque;
+    readNumberProperty(ctx, value, "maxTorque", maxTorque);
+    out.maxTorque = static_cast<float>(maxTorque);
+    return true;
+}
+
+bool parseVehicleWheelSettingsValue(JSContext *ctx, JSValueConst value,
+                                    bezel::VehicleWheelSettings &out) {
+    if (!JS_IsObject(value) || JS_IsNull(value)) {
+        return false;
+    }
+
+    JSValue field = JS_GetPropertyStr(ctx, value, "position");
+    if (!JS_IsException(field) && !JS_IsUndefined(field)) {
+        parsePosition3d(ctx, field, out.position);
+    }
+    JS_FreeValue(ctx, field);
+
+    readBoolProperty(ctx, value, "enableSuspensionForcePoint",
+                     out.enableSuspensionForcePoint);
+
+    field = JS_GetPropertyStr(ctx, value, "suspensionForcePoint");
+    if (!JS_IsException(field) && !JS_IsUndefined(field)) {
+        parsePosition3d(ctx, field, out.suspensionForcePoint);
+    }
+    JS_FreeValue(ctx, field);
+
+    field = JS_GetPropertyStr(ctx, value, "suspensionDirection");
+    if (!JS_IsException(field) && !JS_IsUndefined(field)) {
+        parsePosition3d(ctx, field, out.suspensionDirection);
+    }
+    JS_FreeValue(ctx, field);
+
+    field = JS_GetPropertyStr(ctx, value, "steeringAxis");
+    if (!JS_IsException(field) && !JS_IsUndefined(field)) {
+        parsePosition3d(ctx, field, out.steeringAxis);
+    }
+    JS_FreeValue(ctx, field);
+
+    field = JS_GetPropertyStr(ctx, value, "wheelUp");
+    if (!JS_IsException(field) && !JS_IsUndefined(field)) {
+        parsePosition3d(ctx, field, out.wheelUp);
+    }
+    JS_FreeValue(ctx, field);
+
+    field = JS_GetPropertyStr(ctx, value, "wheelForward");
+    if (!JS_IsException(field) && !JS_IsUndefined(field)) {
+        parsePosition3d(ctx, field, out.wheelForward);
+    }
+    JS_FreeValue(ctx, field);
+
+    double number = 0.0;
+    number = out.suspensionMinLength;
+    readNumberProperty(ctx, value, "suspensionMinLength", number);
+    out.suspensionMinLength = static_cast<float>(number);
+    number = out.suspensionMaxLength;
+    readNumberProperty(ctx, value, "suspensionMaxLength", number);
+    out.suspensionMaxLength = static_cast<float>(number);
+    number = out.suspensionPreloadLength;
+    readNumberProperty(ctx, value, "suspensionPreloadLength", number);
+    out.suspensionPreloadLength = static_cast<float>(number);
+    number = out.suspensionFrequencyHz;
+    readNumberProperty(ctx, value, "suspensionFrequencyHz", number);
+    out.suspensionFrequencyHz = static_cast<float>(number);
+    number = out.suspensionDampingRatio;
+    readNumberProperty(ctx, value, "suspensionDampingRatio", number);
+    out.suspensionDampingRatio = static_cast<float>(number);
+    number = out.radius;
+    readNumberProperty(ctx, value, "radius", number);
+    out.radius = static_cast<float>(number);
+    number = out.width;
+    readNumberProperty(ctx, value, "width", number);
+    out.width = static_cast<float>(number);
+    number = out.inertia;
+    readNumberProperty(ctx, value, "inertia", number);
+    out.inertia = static_cast<float>(number);
+    number = out.angularDamping;
+    readNumberProperty(ctx, value, "angularDamping", number);
+    out.angularDamping = static_cast<float>(number);
+    number = out.maxSteerAngleDeg;
+    if (!readNumberProperty(ctx, value, "maxSteerAngleDeg", number)) {
+        readNumberProperty(ctx, value, "maxSteerAngleDegrees", number);
+    }
+    out.maxSteerAngleDeg = static_cast<float>(number);
+    number = out.maxBrakeTorque;
+    readNumberProperty(ctx, value, "maxBrakeTorque", number);
+    out.maxBrakeTorque = static_cast<float>(number);
+    number = out.maxHandBrakeTorque;
+    readNumberProperty(ctx, value, "maxHandBrakeTorque", number);
+    out.maxHandBrakeTorque = static_cast<float>(number);
+    return true;
+}
+
+bool parseVehicleDifferentialValue(JSContext *ctx, JSValueConst value,
+                                   bezel::VehicleDifferential &out) {
+    if (!JS_IsObject(value) || JS_IsNull(value)) {
+        return false;
+    }
+
+    std::int64_t intValue = out.leftWheel;
+    readIntProperty(ctx, value, "leftWheel", intValue);
+    out.leftWheel = static_cast<int>(intValue);
+    intValue = out.rightWheel;
+    readIntProperty(ctx, value, "rightWheel", intValue);
+    out.rightWheel = static_cast<int>(intValue);
+
+    double number = out.differentialRatio;
+    readNumberProperty(ctx, value, "differentialRatio", number);
+    out.differentialRatio = static_cast<float>(number);
+    number = out.leftRightSplit;
+    readNumberProperty(ctx, value, "leftRightSplit", number);
+    out.leftRightSplit = static_cast<float>(number);
+    number = out.limitedSlipRatio;
+    readNumberProperty(ctx, value, "limitedSlipRatio", number);
+    out.limitedSlipRatio = static_cast<float>(number);
+    number = out.engineTorqueRatio;
+    readNumberProperty(ctx, value, "engineTorqueRatio", number);
+    out.engineTorqueRatio = static_cast<float>(number);
+    return true;
+}
+
+bool parseVehicleEngineValue(JSContext *ctx, JSValueConst value,
+                             bezel::VehicleEngine &out) {
+    if (!JS_IsObject(value) || JS_IsNull(value)) {
+        return false;
+    }
+
+    double number = out.maxTorque;
+    readNumberProperty(ctx, value, "maxTorque", number);
+    out.maxTorque = static_cast<float>(number);
+    number = out.minRPM;
+    readNumberProperty(ctx, value, "minRPM", number);
+    out.minRPM = static_cast<float>(number);
+    number = out.maxRPM;
+    readNumberProperty(ctx, value, "maxRPM", number);
+    out.maxRPM = static_cast<float>(number);
+    number = out.inertia;
+    readNumberProperty(ctx, value, "inertia", number);
+    out.inertia = static_cast<float>(number);
+    number = out.angularDamping;
+    readNumberProperty(ctx, value, "angularDamping", number);
+    out.angularDamping = static_cast<float>(number);
+    return true;
+}
+
+bool parseFloatVector(JSContext *ctx, JSValueConst value, std::vector<float> &out) {
+    if (!JS_IsArray(value)) {
+        return false;
+    }
+
+    std::uint32_t length = 0;
+    JSValue lengthValue = JS_GetPropertyStr(ctx, value, "length");
+    if (JS_IsException(lengthValue) || !getUint32(ctx, lengthValue, length)) {
+        JS_FreeValue(ctx, lengthValue);
+        return false;
+    }
+    JS_FreeValue(ctx, lengthValue);
+
+    out.clear();
+    out.reserve(length);
+    for (std::uint32_t i = 0; i < length; ++i) {
+        JSValue item = JS_GetPropertyUint32(ctx, value, i);
+        if (JS_IsException(item)) {
+            return false;
+        }
+        double number = 0.0;
+        const bool ok = getDouble(ctx, item, number);
+        JS_FreeValue(ctx, item);
+        if (!ok) {
+            return false;
+        }
+        out.push_back(static_cast<float>(number));
+    }
+    return true;
+}
+
+bool parseVehicleTransmissionValue(JSContext *ctx, JSValueConst value,
+                                   bezel::VehicleTransmission &out) {
+    if (!JS_IsObject(value) || JS_IsNull(value)) {
+        return false;
+    }
+
+    std::int64_t mode = static_cast<std::int64_t>(out.mode);
+    readIntProperty(ctx, value, "mode", mode);
+    out.mode = static_cast<bezel::VehicleTransmissionMode>(static_cast<int>(mode));
+
+    JSValue field = JS_GetPropertyStr(ctx, value, "gearRatios");
+    if (!JS_IsException(field) && !JS_IsUndefined(field)) {
+        parseFloatVector(ctx, field, out.gearRatios);
+    }
+    JS_FreeValue(ctx, field);
+
+    field = JS_GetPropertyStr(ctx, value, "reverseGearRatios");
+    if (!JS_IsException(field) && !JS_IsUndefined(field)) {
+        parseFloatVector(ctx, field, out.reverseGearRatios);
+    }
+    JS_FreeValue(ctx, field);
+
+    double number = out.switchTime;
+    readNumberProperty(ctx, value, "switchTime", number);
+    out.switchTime = static_cast<float>(number);
+    number = out.clutchReleaseTime;
+    readNumberProperty(ctx, value, "clutchReleaseTime", number);
+    out.clutchReleaseTime = static_cast<float>(number);
+    number = out.switchLatency;
+    readNumberProperty(ctx, value, "switchLatency", number);
+    out.switchLatency = static_cast<float>(number);
+    number = out.shiftUpRPM;
+    readNumberProperty(ctx, value, "shiftUpRPM", number);
+    out.shiftUpRPM = static_cast<float>(number);
+    number = out.shiftDownRPM;
+    readNumberProperty(ctx, value, "shiftDownRPM", number);
+    out.shiftDownRPM = static_cast<float>(number);
+    number = out.clutchStrength;
+    readNumberProperty(ctx, value, "clutchStrength", number);
+    out.clutchStrength = static_cast<float>(number);
+    return true;
+}
+
+bool parseVehicleControllerSettingsValue(
+    JSContext *ctx, JSValueConst value, bezel::VehicleControllerSettings &out) {
+    if (!JS_IsObject(value) || JS_IsNull(value)) {
+        return false;
+    }
+
+    JSValue field = JS_GetPropertyStr(ctx, value, "engine");
+    if (!JS_IsException(field) && !JS_IsUndefined(field)) {
+        parseVehicleEngineValue(ctx, field, out.engine);
+    }
+    JS_FreeValue(ctx, field);
+
+    field = JS_GetPropertyStr(ctx, value, "transmission");
+    if (!JS_IsException(field) && !JS_IsUndefined(field)) {
+        parseVehicleTransmissionValue(ctx, field, out.transmission);
+    }
+    JS_FreeValue(ctx, field);
+
+    field = JS_GetPropertyStr(ctx, value, "differentials");
+    if (!JS_IsException(field) && JS_IsArray(field)) {
+        std::uint32_t length = 0;
+        JSValue lengthValue = JS_GetPropertyStr(ctx, field, "length");
+        if (!JS_IsException(lengthValue) && getUint32(ctx, lengthValue, length)) {
+            out.differentials.clear();
+            out.differentials.reserve(length);
+            for (std::uint32_t i = 0; i < length; ++i) {
+                JSValue item = JS_GetPropertyUint32(ctx, field, i);
+                if (!JS_IsException(item)) {
+                    bezel::VehicleDifferential differential;
+                    if (parseVehicleDifferentialValue(ctx, item, differential)) {
+                        out.differentials.push_back(differential);
+                    }
+                }
+                JS_FreeValue(ctx, item);
+            }
+        }
+        JS_FreeValue(ctx, lengthValue);
+    }
+    JS_FreeValue(ctx, field);
+
+    double number = out.differentialLimitedSlipRatio;
+    readNumberProperty(ctx, value, "differentialLimitedSlipRatio", number);
+    out.differentialLimitedSlipRatio = static_cast<float>(number);
+    return true;
+}
+
+bool parseVehicleSettingsValue(JSContext *ctx, JSValueConst value,
+                               bezel::VehicleSettings &out) {
+    if (!JS_IsObject(value) || JS_IsNull(value)) {
+        return false;
+    }
+
+    JSValue field = JS_GetPropertyStr(ctx, value, "up");
+    if (!JS_IsException(field) && !JS_IsUndefined(field)) {
+        parsePosition3d(ctx, field, out.up);
+    }
+    JS_FreeValue(ctx, field);
+
+    field = JS_GetPropertyStr(ctx, value, "forward");
+    if (!JS_IsException(field) && !JS_IsUndefined(field)) {
+        parsePosition3d(ctx, field, out.forward);
+    }
+    JS_FreeValue(ctx, field);
+
+    double number = out.maxPitchRollAngleDeg;
+    readNumberProperty(ctx, value, "maxPitchRollAngleDeg", number);
+    out.maxPitchRollAngleDeg = static_cast<float>(number);
+
+    field = JS_GetPropertyStr(ctx, value, "wheels");
+    if (!JS_IsException(field) && JS_IsArray(field)) {
+        std::uint32_t length = 0;
+        JSValue lengthValue = JS_GetPropertyStr(ctx, field, "length");
+        if (!JS_IsException(lengthValue) && getUint32(ctx, lengthValue, length)) {
+            out.wheels.clear();
+            out.wheels.reserve(length);
+            for (std::uint32_t i = 0; i < length; ++i) {
+                JSValue item = JS_GetPropertyUint32(ctx, field, i);
+                if (!JS_IsException(item)) {
+                    bezel::VehicleWheelSettings wheel;
+                    if (parseVehicleWheelSettingsValue(ctx, item, wheel)) {
+                        out.wheels.push_back(wheel);
+                    }
+                }
+                JS_FreeValue(ctx, item);
+            }
+        }
+        JS_FreeValue(ctx, lengthValue);
+    }
+    JS_FreeValue(ctx, field);
+
+    field = JS_GetPropertyStr(ctx, value, "controller");
+    if (!JS_IsException(field) && !JS_IsUndefined(field)) {
+        parseVehicleControllerSettingsValue(ctx, field, out.controller);
+    }
+    JS_FreeValue(ctx, field);
+
+    number = out.maxSlopeAngleDeg;
+    if (!readNumberProperty(ctx, value, "maxSlopeAngleDeg", number)) {
+        readNumberProperty(ctx, value, "maxSlopAngleDeg", number);
+    }
+    out.maxSlopeAngleDeg = static_cast<float>(number);
+    return true;
+}
+
+bool parseJointMember(JSContext *ctx, ScriptHost &host, JSValueConst value,
+                      JointChild &out) {
+    if (JS_IsNull(value) || JS_IsUndefined(value)) {
+        out = WorldBody{};
+        return true;
+    }
+
+    std::int64_t objectId = 0;
+    if (readIntProperty(ctx, value, ATLAS_OBJECT_ID_PROP, objectId) ||
+        readIntProperty(ctx, value, "id", objectId)) {
+        GameObject *object = findObjectById(host, static_cast<int>(objectId));
+        if (object != nullptr) {
+            out = object;
+            return true;
+        }
+        return false;
+    }
+
+    out = WorldBody{};
+    return true;
+}
+
+bezel::RaycastResult convertToTaggedRaycastResult(
+    const bezel::RaycastResult &input, const std::vector<std::string> &tags) {
+    if (tags.empty()) {
+        return input;
+    }
+
+    bezel::RaycastResult result;
+    result.closestDistance = -1.0f;
+    for (const auto &hit : input.hits) {
+        if (hit.rigidbody == nullptr) {
+            continue;
+        }
+        if (std::find_first_of(hit.rigidbody->tags.begin(),
+                               hit.rigidbody->tags.end(), tags.begin(),
+                               tags.end()) == hit.rigidbody->tags.end()) {
+            continue;
+        }
+        result.hits.push_back(hit);
+    }
+
+    if (!result.hits.empty()) {
+        result.hit = result.hits.front();
+        result.closestDistance = result.hit.distance;
+    }
+    return result;
+}
+
+RaycastResult convertRaycastResult(const bezel::RaycastResult &input) {
+    RaycastResult result;
+    result.closestDistance = input.closestDistance;
+    result.hits.reserve(input.hits.size());
+    for (const auto &hit : input.hits) {
+        RaycastHit converted;
+        converted.position = hit.position;
+        converted.normal = hit.normal;
+        converted.distance = hit.distance;
+        converted.rigidbody = hit.rigidbody;
+        converted.didHit = hit.didHit;
+        if (hit.rigidbody != nullptr) {
+            auto it = atlas::gameObjects.find(static_cast<int>(hit.rigidbody->id.atlasId));
+            if (it != atlas::gameObjects.end()) {
+                converted.object = it->second;
+            }
+        }
+        result.hits.push_back(converted);
+    }
+    if (!result.hits.empty()) {
+        result.hit = result.hits.front();
+    }
+    return result;
+}
+
+OverlapResult convertOverlapResultToAtlas(const bezel::OverlapResult &input) {
+    OverlapResult result;
+    result.hitAny = input.hitAny;
+    result.hits.reserve(input.hits.size());
+    for (const auto &hit : input.hits) {
+        OverlapHit converted;
+        converted.contactPoint = hit.contactPoint;
+        converted.penetrationAxis = hit.penetrationAxis;
+        converted.penetrationDepth = hit.penetrationDepth;
+        converted.rigidbody = hit.rigidbody;
+        if (hit.rigidbody != nullptr) {
+            auto it = atlas::gameObjects.find(static_cast<int>(hit.rigidbody->id.atlasId));
+            if (it != atlas::gameObjects.end()) {
+                converted.object = it->second;
+            }
+        }
+        result.hits.push_back(converted);
+    }
+    return result;
+}
+
+SweepResult convertSweepResultToAtlas(const bezel::SweepResult &input,
+                                      const Position3d &endPosition) {
+    SweepResult result;
+    result.hitAny = input.hitAny;
+    result.endPosition = endPosition;
+    result.hits.reserve(input.hits.size());
+    for (const auto &hit : input.hits) {
+        SweepHit converted;
+        converted.position = hit.position;
+        converted.normal = hit.normal;
+        converted.distance = hit.distance;
+        converted.percentage = hit.percentage;
+        converted.rigidbody = hit.rigidbody;
+        if (hit.rigidbody != nullptr) {
+            auto it = atlas::gameObjects.find(static_cast<int>(hit.rigidbody->id.atlasId));
+            if (it != atlas::gameObjects.end()) {
+                converted.object = it->second;
+            }
+        }
+        result.hits.push_back(converted);
+    }
+    if (input.hitAny) {
+        result.closest = result.hits.empty() ? SweepHit{} : result.hits.front();
+    }
+    return result;
+}
+
+JSValue makeRaycastHitValue(JSContext *ctx, ScriptHost &host,
+                            const RaycastHit &hit) {
+    JSValue value = JS_NewObject(ctx);
+    setProperty(ctx, value, "position", makePosition3d(ctx, host, hit.position));
+    setProperty(ctx, value, "normal", makePosition3d(ctx, host, hit.normal));
+    setProperty(ctx, value, "distance", JS_NewFloat64(ctx, hit.distance));
+    setProperty(ctx, value, "object",
+                hit.object != nullptr ? syncObjectWrapper(ctx, host, *hit.object)
+                                      : JS_NULL);
+    setProperty(ctx, value, "didHit", JS_NewBool(ctx, hit.didHit));
+    return value;
+}
+
+JSValue makeRaycastResultValue(JSContext *ctx, ScriptHost &host,
+                               const RaycastResult &result) {
+    JSValue value = JS_NewObject(ctx);
+    JSValue hits = JS_NewArray(ctx);
+    for (std::uint32_t i = 0; i < result.hits.size(); ++i) {
+        JS_SetPropertyUint32(ctx, hits, i,
+                             makeRaycastHitValue(ctx, host, result.hits[i]));
+    }
+    setProperty(ctx, value, "hits", hits);
+    setProperty(ctx, value, "hit",
+                result.hits.empty() ? JS_NULL
+                                    : makeRaycastHitValue(ctx, host, result.hit));
+    setProperty(ctx, value, "closestDistance",
+                JS_NewFloat64(ctx, result.closestDistance));
+    return value;
+}
+
+JSValue makeOverlapHitValue(JSContext *ctx, ScriptHost &host,
+                            const OverlapHit &hit) {
+    JSValue value = JS_NewObject(ctx);
+    setProperty(ctx, value, "contactPoint",
+                makePosition3d(ctx, host, hit.contactPoint));
+    JSValue axis = makePosition3d(ctx, host, hit.penetrationAxis);
+    setProperty(ctx, value, "penerationAxis", JS_DupValue(ctx, axis));
+    setProperty(ctx, value, "penetrationAxis", axis);
+    setProperty(ctx, value, "penetrationDepth",
+                JS_NewFloat64(ctx, hit.penetrationDepth));
+    setProperty(ctx, value, "object",
+                hit.object != nullptr ? syncObjectWrapper(ctx, host, *hit.object)
+                                      : JS_NULL);
+    return value;
+}
+
+JSValue makeOverlapResultValue(JSContext *ctx, ScriptHost &host,
+                               const OverlapResult &result) {
+    JSValue value = JS_NewObject(ctx);
+    JSValue hits = JS_NewArray(ctx);
+    for (std::uint32_t i = 0; i < result.hits.size(); ++i) {
+        JS_SetPropertyUint32(ctx, hits, i,
+                             makeOverlapHitValue(ctx, host, result.hits[i]));
+    }
+    setProperty(ctx, value, "hits", hits);
+    setProperty(ctx, value, "hitAny", JS_NewBool(ctx, result.hitAny));
+    return value;
+}
+
+JSValue makeSweepHitValue(JSContext *ctx, ScriptHost &host,
+                          const SweepHit &hit) {
+    JSValue value = JS_NewObject(ctx);
+    setProperty(ctx, value, "position", makePosition3d(ctx, host, hit.position));
+    setProperty(ctx, value, "normal", makePosition3d(ctx, host, hit.normal));
+    setProperty(ctx, value, "distance", JS_NewFloat64(ctx, hit.distance));
+    setProperty(ctx, value, "percentage", JS_NewFloat64(ctx, hit.percentage));
+    setProperty(ctx, value, "object",
+                hit.object != nullptr ? syncObjectWrapper(ctx, host, *hit.object)
+                                      : JS_NULL);
+    return value;
+}
+
+JSValue makeSweepResultValue(JSContext *ctx, ScriptHost &host,
+                             const SweepResult &result) {
+    JSValue value = JS_NewObject(ctx);
+    JSValue hits = JS_NewArray(ctx);
+    for (std::uint32_t i = 0; i < result.hits.size(); ++i) {
+        JS_SetPropertyUint32(ctx, hits, i,
+                             makeSweepHitValue(ctx, host, result.hits[i]));
+    }
+    setProperty(ctx, value, "hits", hits);
+    setProperty(ctx, value, "closest",
+                result.hitAny ? makeSweepHitValue(ctx, host, result.closest)
+                              : JS_NULL);
+    setProperty(ctx, value, "hitAny", JS_NewBool(ctx, result.hitAny));
+    setProperty(ctx, value, "endPosition",
+                makePosition3d(ctx, host, result.endPosition));
+    return value;
+}
+
+JSValue makeQueryResultValue(JSContext *ctx, ScriptHost &host,
+                             const QueryResult &result) {
+    JSValue value = JS_NewObject(ctx);
+    setProperty(ctx, value, "operation",
+                JS_NewInt32(ctx, toScriptQueryOperation(result.operation)));
+
+    switch (result.operation) {
+    case QueryOperation::Raycast:
+    case QueryOperation::RaycastAll:
+    case QueryOperation::RaycastWorld:
+    case QueryOperation::RaycastWorldAll:
+    case QueryOperation::RaycastTagged:
+    case QueryOperation::RaycastTaggedAll:
+        setProperty(ctx, value, "raycastResult",
+                    makeRaycastResultValue(ctx, host, result.raycastResult));
+        break;
+    case QueryOperation::Overlap:
+        setProperty(ctx, value, "overlapResult",
+                    makeOverlapResultValue(ctx, host, result.overlapResult));
+        break;
+    case QueryOperation::Movement:
+    case QueryOperation::MovementAll:
+        setProperty(ctx, value, "sweepResult",
+                    makeSweepResultValue(ctx, host, result.sweepResult));
+        break;
+    default:
+        break;
+    }
+
+    return value;
+}
+
+void dispatchQueryResultToObject(JSContext *ctx, ScriptHost &host,
+                                 Rigidbody &component,
+                                 const QueryResult &result) {
+    if (component.object == nullptr) {
+        return;
+    }
+    component.object->onQueryReceive(const_cast<QueryResult &>(result));
+    auto objectValue = syncObjectWrapper(ctx, host, *component.object);
+    JS_FreeValue(ctx, objectValue);
+}
+
+bool applyRigidbody(JSContext *ctx, JSValueConst wrapper, Rigidbody &component) {
+    std::string sendSignal = component.sendSignal;
+    readStringProperty(ctx, wrapper, "sendSignal", sendSignal);
+    component.sendSignal = sendSignal;
+
+    bool isSensor = component.isSensor;
+    readBoolProperty(ctx, wrapper, "isSensor", isSensor);
+    component.isSensor = isSensor;
+
+    if (component.body != nullptr) {
+        component.body->sensorSignal = component.sendSignal;
+        component.body->isSensor = component.isSensor;
+        if (component.object != nullptr) {
+            component.body->id.atlasId = component.object->getId();
+        }
+    }
+    return true;
+}
+
+std::shared_ptr<bezel::Rigidbody> ensureBezelBody(Rigidbody &component) {
+    if (!component.body) {
+        component.body = std::make_shared<bezel::Rigidbody>();
+    }
+    if (component.object != nullptr) {
+        component.body->id.atlasId = component.object->getId();
+    }
+    component.body->isSensor = component.isSensor;
+    component.body->sensorSignal = component.sendSignal;
+    return component.body;
+}
+
+bool applyVehicle(JSContext *ctx, JSValueConst wrapper, Vehicle &component) {
+    JSValue settingsValue = JS_GetPropertyStr(ctx, wrapper, "settings");
+    if (!JS_IsException(settingsValue) && !JS_IsUndefined(settingsValue)) {
+        parseVehicleSettingsValue(ctx, settingsValue, component.settings);
+    }
+    JS_FreeValue(ctx, settingsValue);
+
+    double forward = component.forward;
+    readNumberProperty(ctx, wrapper, "forward", forward);
+    component.forward = static_cast<float>(forward);
+
+    double right = component.right;
+    readNumberProperty(ctx, wrapper, "right", right);
+    component.right = static_cast<float>(right);
+
+    double brake = component.brake;
+    readNumberProperty(ctx, wrapper, "brake", brake);
+    component.brake = static_cast<float>(brake);
+
+    double handBrake = component.handBrake;
+    readNumberProperty(ctx, wrapper, "handBrake", handBrake);
+    component.handBrake = static_cast<float>(handBrake);
+    return true;
+}
+
+bool applyJointBase(JSContext *ctx, ScriptHost &host, JSValueConst wrapper,
+                    Joint &component) {
+    JSValue parentValue = JS_GetPropertyStr(ctx, wrapper, "parent");
+    if (!JS_IsException(parentValue) && !JS_IsUndefined(parentValue)) {
+        parseJointMember(ctx, host, parentValue, component.parent);
+    }
+    JS_FreeValue(ctx, parentValue);
+
+    JSValue childValue = JS_GetPropertyStr(ctx, wrapper, "child");
+    if (!JS_IsException(childValue) && !JS_IsUndefined(childValue)) {
+        parseJointMember(ctx, host, childValue, component.child);
+    }
+    JS_FreeValue(ctx, childValue);
+
+    std::int64_t space = static_cast<std::int64_t>(component.space);
+    readIntProperty(ctx, wrapper, "space", space);
+    component.space = static_cast<Space>(static_cast<int>(space));
+
+    JSValue anchorValue = JS_GetPropertyStr(ctx, wrapper, "anchor");
+    if (!JS_IsException(anchorValue) && !JS_IsUndefined(anchorValue)) {
+        parsePosition3d(ctx, anchorValue, component.anchor);
+    }
+    JS_FreeValue(ctx, anchorValue);
+
+    double breakForce = component.breakForce;
+    readNumberProperty(ctx, wrapper, "breakForce", breakForce);
+    component.breakForce = static_cast<float>(breakForce);
+
+    double breakTorque = component.breakTorque;
+    readNumberProperty(ctx, wrapper, "breakTorque", breakTorque);
+    component.breakTorque = static_cast<float>(breakTorque);
+    return true;
+}
+
+bool applyFixedJoint(JSContext *ctx, ScriptHost &host, JSValueConst wrapper,
+                     FixedJoint &component) {
+    return applyJointBase(ctx, host, wrapper, component);
+}
+
+bool applyHingeJoint(JSContext *ctx, ScriptHost &host, JSValueConst wrapper,
+                     HingeJoint &component) {
+    applyJointBase(ctx, host, wrapper, component);
+
+    JSValue value = JS_GetPropertyStr(ctx, wrapper, "axis1");
+    if (!JS_IsException(value) && !JS_IsUndefined(value)) {
+        parsePosition3d(ctx, value, component.axis1);
+    }
+    JS_FreeValue(ctx, value);
+
+    value = JS_GetPropertyStr(ctx, wrapper, "axis2");
+    if (!JS_IsException(value) && !JS_IsUndefined(value)) {
+        parsePosition3d(ctx, value, component.axis2);
+    }
+    JS_FreeValue(ctx, value);
+
+    value = JS_GetPropertyStr(ctx, wrapper, "angleLimits");
+    if (!JS_IsException(value) && !JS_IsUndefined(value)) {
+        parseAngleLimitsValue(ctx, value, component.limits);
+    }
+    JS_FreeValue(ctx, value);
+
+    value = JS_GetPropertyStr(ctx, wrapper, "motor");
+    if (!JS_IsException(value) && !JS_IsUndefined(value)) {
+        parseMotorValue(ctx, value, component.motor);
+    }
+    JS_FreeValue(ctx, value);
+    return true;
+}
+
+bool applySpringJoint(JSContext *ctx, ScriptHost &host, JSValueConst wrapper,
+                      SpringJoint &component) {
+    applyJointBase(ctx, host, wrapper, component);
+
+    JSValue value = JS_GetPropertyStr(ctx, wrapper, "anchorB");
+    if (!JS_IsException(value) && !JS_IsUndefined(value)) {
+        parsePosition3d(ctx, value, component.anchorB);
+    }
+    JS_FreeValue(ctx, value);
+
+    double number = component.restLength;
+    readNumberProperty(ctx, wrapper, "restLength", number);
+    component.restLength = static_cast<float>(number);
+    readBoolProperty(ctx, wrapper, "useLimits", component.useLimits);
+    number = component.minLength;
+    readNumberProperty(ctx, wrapper, "minLength", number);
+    component.minLength = static_cast<float>(number);
+    number = component.maxLength;
+    readNumberProperty(ctx, wrapper, "maxLength", number);
+    component.maxLength = static_cast<float>(number);
+
+    value = JS_GetPropertyStr(ctx, wrapper, "spring");
+    if (!JS_IsException(value) && !JS_IsUndefined(value)) {
+        parseSpringValue(ctx, value, component.spring);
+    }
+    JS_FreeValue(ctx, value);
+    return true;
+}
+
+class HostedRigidbodyComponent final : public Rigidbody {
+  public:
+    JSContext *ctx = nullptr;
+    ScriptHost *host = nullptr;
+    std::uint64_t scriptId = 0;
+
+    void atAttach() override {
+        Rigidbody::atAttach();
+        syncFromWrapper();
+    }
+
+    void init() override {
+        syncFromWrapper();
+        Rigidbody::init();
+    }
+
+    void beforePhysics() override {
+        syncFromWrapper();
+        Rigidbody::beforePhysics();
+    }
+
+    void update(float dt) override { Rigidbody::update(dt); }
+
+  private:
+    void syncFromWrapper() {
+        if (host == nullptr) {
+            return;
+        }
+        auto *state = findRigidbodyState(*host, scriptId);
+        if (state == nullptr || JS_IsUndefined(state->value)) {
+            return;
+        }
+        applyRigidbody(ctx, state->value, *this);
+    }
+};
+
+class HostedVehicleComponent final : public Component {
+  public:
+    JSContext *ctx = nullptr;
+    ScriptHost *host = nullptr;
+    std::uint64_t scriptId = 0;
+    Vehicle vehicle;
+
+    void atAttach() override {
+        vehicle.object = object;
+        syncFromWrapper();
+        vehicle.atAttach();
+    }
+
+    void beforePhysics() override {
+        vehicle.object = object;
+        syncFromWrapper();
+        vehicle.beforePhysics();
+    }
+
+  private:
+    void syncFromWrapper() {
+        if (host == nullptr) {
+            return;
+        }
+        auto *state = findVehicleState(*host, scriptId);
+        if (state == nullptr || JS_IsUndefined(state->value)) {
+            return;
+        }
+        applyVehicle(ctx, state->value, vehicle);
+    }
+};
+
+class HostedFixedJointComponent final : public Component {
+  public:
+    JSContext *ctx = nullptr;
+    ScriptHost *host = nullptr;
+    std::uint64_t scriptId = 0;
+    FixedJoint joint;
+
+    void atAttach() override {
+        joint.object = object;
+        syncFromWrapper();
+    }
+
+    void beforePhysics() override {
+        joint.object = object;
+        syncFromWrapper();
+        joint.beforePhysics();
+    }
+
+    void breakJoint() { joint.breakJoint(); }
+
+    FixedJoint *nativeComponent() { return &joint; }
+
+  private:
+    void syncFromWrapper() {
+        if (host == nullptr) {
+            return;
+        }
+        auto *state = findFixedJointState(*host, scriptId);
+        if (state == nullptr || JS_IsUndefined(state->value)) {
+            return;
+        }
+        applyFixedJoint(ctx, *host, state->value, joint);
+    }
+};
+
+class HostedHingeJointComponent final : public Component {
+  public:
+    JSContext *ctx = nullptr;
+    ScriptHost *host = nullptr;
+    std::uint64_t scriptId = 0;
+    HingeJoint joint;
+
+    void atAttach() override {
+        joint.object = object;
+        syncFromWrapper();
+    }
+
+    void beforePhysics() override {
+        joint.object = object;
+        syncFromWrapper();
+        joint.beforePhysics();
+    }
+
+    void breakJoint() { joint.breakJoint(); }
+
+    HingeJoint *nativeComponent() { return &joint; }
+
+  private:
+    void syncFromWrapper() {
+        if (host == nullptr) {
+            return;
+        }
+        auto *state = findHingeJointState(*host, scriptId);
+        if (state == nullptr || JS_IsUndefined(state->value)) {
+            return;
+        }
+        applyHingeJoint(ctx, *host, state->value, joint);
+    }
+};
+
+class HostedSpringJointComponent final : public Component {
+  public:
+    JSContext *ctx = nullptr;
+    ScriptHost *host = nullptr;
+    std::uint64_t scriptId = 0;
+    SpringJoint joint;
+
+    void atAttach() override {
+        joint.object = object;
+        syncFromWrapper();
+    }
+
+    void beforePhysics() override {
+        joint.object = object;
+        syncFromWrapper();
+        joint.beforePhysics();
+    }
+
+    void breakJoint() { joint.breakJoint(); }
+
+    SpringJoint *nativeComponent() { return &joint; }
+
+  private:
+    void syncFromWrapper() {
+        if (host == nullptr) {
+            return;
+        }
+        auto *state = findSpringJointState(*host, scriptId);
+        if (state == nullptr || JS_IsUndefined(state->value)) {
+            return;
+        }
+        applySpringJoint(ctx, *host, state->value, joint);
+    }
+};
+
+std::uint64_t registerRigidbodyState(ScriptHost &host,
+                                     const std::shared_ptr<Rigidbody> &component,
+                                     JSContext *ctx, JSValueConst wrapper,
+                                     bool attached = false) {
+    const std::uint64_t id = host.nextRigidbodyId++;
+    host.rigidbodies[id] = {.ownedComponent = component,
+                            .component = component.get(),
+                            .value = JS_DupValue(ctx, wrapper),
+                            .attached = attached};
+    if (auto *hosted = dynamic_cast<HostedRigidbodyComponent *>(component.get())) {
+        hosted->scriptId = id;
+    }
+    return id;
+}
+
+std::uint64_t registerVehicleState(ScriptHost &host,
+                                   const std::shared_ptr<Component> &component,
+                                   Vehicle *nativeComponent, JSContext *ctx,
+                                   JSValueConst wrapper,
+                                   bool attached = false) {
+    const std::uint64_t id = host.nextVehicleId++;
+    host.vehicles[id] = {.ownedComponent = component,
+                         .component = nativeComponent,
+                         .value = JS_DupValue(ctx, wrapper),
+                         .attached = attached};
+    if (auto *hosted = dynamic_cast<HostedVehicleComponent *>(component.get())) {
+        hosted->scriptId = id;
+    }
+    return id;
+}
+
+std::uint64_t registerFixedJointState(
+    ScriptHost &host, const std::shared_ptr<Component> &component,
+    FixedJoint *nativeComponent, JSContext *ctx, JSValueConst wrapper,
+    bool attached = false) {
+    const std::uint64_t id = host.nextFixedJointId++;
+    host.fixedJoints[id] = {.ownedComponent = component,
+                            .component = nativeComponent,
+                            .value = JS_DupValue(ctx, wrapper),
+                            .attached = attached};
+    if (auto *hosted =
+            dynamic_cast<HostedFixedJointComponent *>(component.get())) {
+        hosted->scriptId = id;
+    }
+    return id;
+}
+
+std::uint64_t registerHingeJointState(
+    ScriptHost &host, const std::shared_ptr<Component> &component,
+    HingeJoint *nativeComponent, JSContext *ctx, JSValueConst wrapper,
+    bool attached = false) {
+    const std::uint64_t id = host.nextHingeJointId++;
+    host.hingeJoints[id] = {.ownedComponent = component,
+                            .component = nativeComponent,
+                            .value = JS_DupValue(ctx, wrapper),
+                            .attached = attached};
+    if (auto *hosted =
+            dynamic_cast<HostedHingeJointComponent *>(component.get())) {
+        hosted->scriptId = id;
+    }
+    return id;
+}
+
+std::uint64_t registerSpringJointState(
+    ScriptHost &host, const std::shared_ptr<Component> &component,
+    SpringJoint *nativeComponent, JSContext *ctx, JSValueConst wrapper,
+    bool attached = false) {
+    const std::uint64_t id = host.nextSpringJointId++;
+    host.springJoints[id] = {.ownedComponent = component,
+                             .component = nativeComponent,
+                             .value = JS_DupValue(ctx, wrapper),
+                             .attached = attached};
+    if (auto *hosted =
+            dynamic_cast<HostedSpringJointComponent *>(component.get())) {
+        hosted->scriptId = id;
+    }
+    return id;
+}
+
+JSValue syncRigidbodyWrapper(JSContext *ctx, ScriptHost &host,
+                             std::uint64_t rigidbodyId) {
+    auto *state = findRigidbodyState(host, rigidbodyId);
+    if (state == nullptr || state->component == nullptr) {
+        return JS_NULL;
+    }
+    if (!ensureBuiltins(ctx, host)) {
+        return JS_EXCEPTION;
+    }
+
+    JSValue wrapper = JS_IsUndefined(state->value)
+                          ? newObjectFromPrototype(
+                                ctx, state->component->isSensor
+                                         ? host.sensorPrototype
+                                         : host.rigidbodyPrototype)
+                          : JS_DupValue(ctx, state->value);
+    if (JS_IsUndefined(state->value)) {
+        state->value = JS_DupValue(ctx, wrapper);
+    }
+
+    setProperty(ctx, wrapper, ATLAS_RIGIDBODY_ID_PROP,
+                JS_NewInt64(ctx, static_cast<int64_t>(rigidbodyId)));
+    setProperty(ctx, wrapper, ATLAS_GENERATION_PROP,
+                JS_NewInt64(ctx, static_cast<int64_t>(host.generation)));
+    setProperty(ctx, wrapper, ATLAS_NATIVE_COMPONENT_KIND_PROP,
+                JS_NewString(ctx, "rigidbody"));
+    setProperty(ctx, wrapper, "sendSignal",
+                JS_NewString(ctx, state->component->sendSignal.c_str()));
+    setProperty(ctx, wrapper, "isSensor",
+                JS_NewBool(ctx, state->component->isSensor));
+    return wrapper;
+}
+
+JSValue syncVehicleWrapper(JSContext *ctx, ScriptHost &host,
+                           std::uint64_t vehicleId) {
+    auto *state = findVehicleState(host, vehicleId);
+    if (state == nullptr || state->component == nullptr) {
+        return JS_NULL;
+    }
+    if (!ensureBuiltins(ctx, host)) {
+        return JS_EXCEPTION;
+    }
+
+    JSValue wrapper = JS_IsUndefined(state->value)
+                          ? newObjectFromPrototype(ctx, host.vehiclePrototype)
+                          : JS_DupValue(ctx, state->value);
+    if (JS_IsUndefined(state->value)) {
+        state->value = JS_DupValue(ctx, wrapper);
+    }
+
+    setProperty(ctx, wrapper, ATLAS_VEHICLE_ID_PROP,
+                JS_NewInt64(ctx, static_cast<int64_t>(vehicleId)));
+    setProperty(ctx, wrapper, ATLAS_GENERATION_PROP,
+                JS_NewInt64(ctx, static_cast<int64_t>(host.generation)));
+    setProperty(ctx, wrapper, ATLAS_NATIVE_COMPONENT_KIND_PROP,
+                JS_NewString(ctx, "vehicle"));
+    setProperty(ctx, wrapper, "forward",
+                JS_NewFloat64(ctx, state->component->forward));
+    setProperty(ctx, wrapper, "right",
+                JS_NewFloat64(ctx, state->component->right));
+    setProperty(ctx, wrapper, "brake",
+                JS_NewFloat64(ctx, state->component->brake));
+    setProperty(ctx, wrapper, "handBrake",
+                JS_NewFloat64(ctx, state->component->handBrake));
+    return wrapper;
+}
+
+template <typename JointState>
+JSValue syncJointWrapperBase(JSContext *ctx, ScriptHost &host,
+                             JointState &state, std::uint64_t jointId,
+                             JSValueConst prototype, const char *idProp,
+                             const char *kind) {
+    if (!ensureBuiltins(ctx, host)) {
+        return JS_EXCEPTION;
+    }
+
+    JSValue wrapper = JS_IsUndefined(state.value)
+                          ? newObjectFromPrototype(ctx, prototype)
+                          : JS_DupValue(ctx, state.value);
+    if (JS_IsUndefined(state.value)) {
+        state.value = JS_DupValue(ctx, wrapper);
+    }
+
+    setProperty(ctx, wrapper, idProp,
+                JS_NewInt64(ctx, static_cast<int64_t>(jointId)));
+    setProperty(ctx, wrapper, ATLAS_GENERATION_PROP,
+                JS_NewInt64(ctx, static_cast<int64_t>(host.generation)));
+    setProperty(ctx, wrapper, ATLAS_NATIVE_COMPONENT_KIND_PROP,
+                JS_NewString(ctx, kind));
+    return wrapper;
+}
+
+JSValue syncFixedJointWrapper(JSContext *ctx, ScriptHost &host,
+                              std::uint64_t jointId) {
+    auto *state = findFixedJointState(host, jointId);
+    if (state == nullptr || state->component == nullptr) {
+        return JS_NULL;
+    }
+    JSValue wrapper =
+        syncJointWrapperBase(ctx, host, *state, jointId, host.fixedJointPrototype,
+                             ATLAS_FIXED_JOINT_ID_PROP, "fixed-joint");
+    setProperty(ctx, wrapper, "anchor",
+                makePosition3d(ctx, host, state->component->anchor));
+    setProperty(ctx, wrapper, "breakForce",
+                JS_NewFloat64(ctx, state->component->breakForce));
+    setProperty(ctx, wrapper, "breakTorque",
+                JS_NewFloat64(ctx, state->component->breakTorque));
+    setProperty(ctx, wrapper, "space",
+                JS_NewInt32(ctx, static_cast<int>(state->component->space)));
+    return wrapper;
+}
+
+JSValue syncHingeJointWrapper(JSContext *ctx, ScriptHost &host,
+                              std::uint64_t jointId) {
+    auto *state = findHingeJointState(host, jointId);
+    if (state == nullptr || state->component == nullptr) {
+        return JS_NULL;
+    }
+    JSValue wrapper =
+        syncJointWrapperBase(ctx, host, *state, jointId, host.hingeJointPrototype,
+                             ATLAS_HINGE_JOINT_ID_PROP, "hinge-joint");
+    setProperty(ctx, wrapper, "anchor",
+                makePosition3d(ctx, host, state->component->anchor));
+    setProperty(ctx, wrapper, "breakForce",
+                JS_NewFloat64(ctx, state->component->breakForce));
+    setProperty(ctx, wrapper, "breakTorque",
+                JS_NewFloat64(ctx, state->component->breakTorque));
+    setProperty(ctx, wrapper, "space",
+                JS_NewInt32(ctx, static_cast<int>(state->component->space)));
+    setProperty(ctx, wrapper, "axis1",
+                makePosition3d(ctx, host, state->component->axis1));
+    setProperty(ctx, wrapper, "axis2",
+                makePosition3d(ctx, host, state->component->axis2));
+    JSValue limits = JS_NewObject(ctx);
+    setProperty(ctx, limits, "enabled",
+                JS_NewBool(ctx, state->component->limits.enabled));
+    setProperty(ctx, limits, "minAngle",
+                JS_NewFloat64(ctx, state->component->limits.minAngle));
+    setProperty(ctx, limits, "maxAngle",
+                JS_NewFloat64(ctx, state->component->limits.maxAngle));
+    setProperty(ctx, wrapper, "angleLimits", limits);
+    JSValue motor = JS_NewObject(ctx);
+    setProperty(ctx, motor, "enabled",
+                JS_NewBool(ctx, state->component->motor.enabled));
+    setProperty(ctx, motor, "maxForce",
+                JS_NewFloat64(ctx, state->component->motor.maxForce));
+    setProperty(ctx, motor, "maxTorque",
+                JS_NewFloat64(ctx, state->component->motor.maxTorque));
+    setProperty(ctx, wrapper, "motor", motor);
+    return wrapper;
+}
+
+JSValue syncSpringJointWrapper(JSContext *ctx, ScriptHost &host,
+                               std::uint64_t jointId) {
+    auto *state = findSpringJointState(host, jointId);
+    if (state == nullptr || state->component == nullptr) {
+        return JS_NULL;
+    }
+    JSValue wrapper =
+        syncJointWrapperBase(ctx, host, *state, jointId, host.springJointPrototype,
+                             ATLAS_SPRING_JOINT_ID_PROP, "spring-joint");
+    setProperty(ctx, wrapper, "anchor",
+                makePosition3d(ctx, host, state->component->anchor));
+    setProperty(ctx, wrapper, "breakForce",
+                JS_NewFloat64(ctx, state->component->breakForce));
+    setProperty(ctx, wrapper, "breakTorque",
+                JS_NewFloat64(ctx, state->component->breakTorque));
+    setProperty(ctx, wrapper, "space",
+                JS_NewInt32(ctx, static_cast<int>(state->component->space)));
+    setProperty(ctx, wrapper, "anchorB",
+                makePosition3d(ctx, host, state->component->anchorB));
+    setProperty(ctx, wrapper, "restLength",
+                JS_NewFloat64(ctx, state->component->restLength));
+    setProperty(ctx, wrapper, "useLimits",
+                JS_NewBool(ctx, state->component->useLimits));
+    setProperty(ctx, wrapper, "minLength",
+                JS_NewFloat64(ctx, state->component->minLength));
+    setProperty(ctx, wrapper, "maxLength",
+                JS_NewFloat64(ctx, state->component->maxLength));
+    JSValue spring = JS_NewObject(ctx);
+    setProperty(ctx, spring, "enabled",
+                JS_NewBool(ctx, state->component->spring.enabled));
+    setProperty(ctx, spring, "mode",
+                JS_NewInt32(ctx, static_cast<int>(state->component->spring.mode)));
+    setProperty(ctx, spring, "frequency",
+                JS_NewFloat64(ctx, state->component->spring.frequencyHz));
+    setProperty(ctx, spring, "dampingRatio",
+                JS_NewFloat64(ctx, state->component->spring.dampingRatio));
+    setProperty(ctx, spring, "stiffness",
+                JS_NewFloat64(ctx, state->component->spring.stiffness));
+    setProperty(ctx, spring, "damping",
+                JS_NewFloat64(ctx, state->component->spring.damping));
+    setProperty(ctx, wrapper, "spring", spring);
+    return wrapper;
+}
+
 GameObject *resolveObjectArg(JSContext *ctx, ScriptHost &host,
                              JSValueConst value) {
     if (!ensureCurrentGeneration(ctx, host, value)) {
@@ -3033,6 +4467,107 @@ ScriptAreaLightState *resolveAreaLight(JSContext *ctx, ScriptHost &host,
     auto *state = findAreaLightState(host, static_cast<std::uint64_t>(lightId));
     if (state == nullptr || state->light == nullptr) {
         JS_ThrowReferenceError(ctx, "Unknown Atlas area light id");
+        return nullptr;
+    }
+    return state;
+}
+
+ScriptRigidbodyState *resolveRigidbody(JSContext *ctx, ScriptHost &host,
+                                       JSValueConst value) {
+    if (!ensureCurrentGeneration(ctx, host, value)) {
+        return nullptr;
+    }
+
+    std::int64_t rigidbodyId = 0;
+    if (!readIntProperty(ctx, value, ATLAS_RIGIDBODY_ID_PROP, rigidbodyId)) {
+        JS_ThrowTypeError(ctx, "Expected Atlas rigidbody handle");
+        return nullptr;
+    }
+
+    auto *state = findRigidbodyState(host, static_cast<std::uint64_t>(rigidbodyId));
+    if (state == nullptr || state->component == nullptr) {
+        JS_ThrowReferenceError(ctx, "Unknown Atlas rigidbody id");
+        return nullptr;
+    }
+    return state;
+}
+
+ScriptVehicleState *resolveVehicle(JSContext *ctx, ScriptHost &host,
+                                   JSValueConst value) {
+    if (!ensureCurrentGeneration(ctx, host, value)) {
+        return nullptr;
+    }
+
+    std::int64_t vehicleId = 0;
+    if (!readIntProperty(ctx, value, ATLAS_VEHICLE_ID_PROP, vehicleId)) {
+        JS_ThrowTypeError(ctx, "Expected Atlas vehicle handle");
+        return nullptr;
+    }
+
+    auto *state = findVehicleState(host, static_cast<std::uint64_t>(vehicleId));
+    if (state == nullptr || state->component == nullptr) {
+        JS_ThrowReferenceError(ctx, "Unknown Atlas vehicle id");
+        return nullptr;
+    }
+    return state;
+}
+
+ScriptFixedJointState *resolveFixedJoint(JSContext *ctx, ScriptHost &host,
+                                         JSValueConst value) {
+    if (!ensureCurrentGeneration(ctx, host, value)) {
+        return nullptr;
+    }
+
+    std::int64_t jointId = 0;
+    if (!readIntProperty(ctx, value, ATLAS_FIXED_JOINT_ID_PROP, jointId)) {
+        JS_ThrowTypeError(ctx, "Expected Atlas fixed joint handle");
+        return nullptr;
+    }
+
+    auto *state = findFixedJointState(host, static_cast<std::uint64_t>(jointId));
+    if (state == nullptr || state->component == nullptr) {
+        JS_ThrowReferenceError(ctx, "Unknown Atlas fixed joint id");
+        return nullptr;
+    }
+    return state;
+}
+
+ScriptHingeJointState *resolveHingeJoint(JSContext *ctx, ScriptHost &host,
+                                         JSValueConst value) {
+    if (!ensureCurrentGeneration(ctx, host, value)) {
+        return nullptr;
+    }
+
+    std::int64_t jointId = 0;
+    if (!readIntProperty(ctx, value, ATLAS_HINGE_JOINT_ID_PROP, jointId)) {
+        JS_ThrowTypeError(ctx, "Expected Atlas hinge joint handle");
+        return nullptr;
+    }
+
+    auto *state = findHingeJointState(host, static_cast<std::uint64_t>(jointId));
+    if (state == nullptr || state->component == nullptr) {
+        JS_ThrowReferenceError(ctx, "Unknown Atlas hinge joint id");
+        return nullptr;
+    }
+    return state;
+}
+
+ScriptSpringJointState *resolveSpringJoint(JSContext *ctx, ScriptHost &host,
+                                           JSValueConst value) {
+    if (!ensureCurrentGeneration(ctx, host, value)) {
+        return nullptr;
+    }
+
+    std::int64_t jointId = 0;
+    if (!readIntProperty(ctx, value, ATLAS_SPRING_JOINT_ID_PROP, jointId)) {
+        JS_ThrowTypeError(ctx, "Expected Atlas spring joint handle");
+        return nullptr;
+    }
+
+    auto *state =
+        findSpringJointState(host, static_cast<std::uint64_t>(jointId));
+    if (state == nullptr || state->component == nullptr) {
+        JS_ThrowReferenceError(ctx, "Unknown Atlas spring joint id");
         return nullptr;
     }
     return state;
@@ -4491,6 +6026,1312 @@ JSValue jsUseSpatialAudio(JSContext *ctx, JSValueConst, int argc,
     return JS_UNDEFINED;
 }
 
+JSValue jsCreateRigidbody(JSContext *ctx, JSValueConst, int argc,
+                          JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 1) {
+        return JS_ThrowTypeError(ctx, "Expected rigidbody wrapper");
+    }
+
+    auto component = std::make_shared<HostedRigidbodyComponent>();
+    component->ctx = ctx;
+    component->host = host;
+    applyRigidbody(ctx, argv[0], *component);
+    const std::uint64_t rigidbodyId =
+        registerRigidbodyState(*host, component, ctx, argv[0], false);
+    JSValue wrapper = syncRigidbodyWrapper(ctx, *host, rigidbodyId);
+    JS_FreeValue(ctx, wrapper);
+    return JS_UNDEFINED;
+}
+
+JSValue jsCloneRigidbody(JSContext *ctx, JSValueConst, int argc,
+                         JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 1) {
+        return JS_ThrowTypeError(ctx, "Expected rigidbody");
+    }
+
+    auto *state = resolveRigidbody(ctx, *host, argv[0]);
+    if (state == nullptr || state->component == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    auto component = std::make_shared<HostedRigidbodyComponent>();
+    component->ctx = ctx;
+    component->host = host;
+    component->sendSignal = state->component->sendSignal;
+    component->isSensor = state->component->isSensor;
+    if (state->component->body != nullptr) {
+        component->body = std::make_shared<bezel::Rigidbody>(
+            *state->component->body);
+        component->body->id.joltId = bezel::INVALID_JOLT_ID;
+        component->body->id.atlasId = 0;
+    }
+
+    JSValue prototype = JS_GetPrototype(ctx, argv[0]);
+    JSValue wrapper =
+        JS_IsException(prototype) ? JS_NewObject(ctx) : JS_NewObjectProto(ctx, prototype);
+    JS_FreeValue(ctx, prototype);
+
+    const std::uint64_t rigidbodyId =
+        registerRigidbodyState(*host, component, ctx, wrapper, false);
+    JS_FreeValue(ctx, wrapper);
+    return syncRigidbodyWrapper(ctx, *host, rigidbodyId);
+}
+
+JSValue jsInitRigidbody(JSContext *ctx, JSValueConst, int argc,
+                        JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 1) {
+        return JS_ThrowTypeError(ctx, "Expected rigidbody");
+    }
+
+    auto *state = resolveRigidbody(ctx, *host, argv[0]);
+    if (state == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    applyRigidbody(ctx, argv[0], *state->component);
+    state->component->init();
+    std::int64_t rigidbodyId = 0;
+    readIntProperty(ctx, argv[0], ATLAS_RIGIDBODY_ID_PROP, rigidbodyId);
+    return syncRigidbodyWrapper(ctx, *host, static_cast<std::uint64_t>(rigidbodyId));
+}
+
+JSValue jsBeforePhysicsRigidbody(JSContext *ctx, JSValueConst, int argc,
+                                 JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 1) {
+        return JS_ThrowTypeError(ctx, "Expected rigidbody");
+    }
+
+    auto *state = resolveRigidbody(ctx, *host, argv[0]);
+    if (state == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    applyRigidbody(ctx, argv[0], *state->component);
+    state->component->beforePhysics();
+    std::int64_t rigidbodyId = 0;
+    readIntProperty(ctx, argv[0], ATLAS_RIGIDBODY_ID_PROP, rigidbodyId);
+    return syncRigidbodyWrapper(ctx, *host, static_cast<std::uint64_t>(rigidbodyId));
+}
+
+JSValue jsUpdateRigidbody(JSContext *ctx, JSValueConst, int argc,
+                          JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected rigidbody and delta time");
+    }
+
+    auto *state = resolveRigidbody(ctx, *host, argv[0]);
+    if (state == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    double deltaTime = 0.0;
+    if (!getDouble(ctx, argv[1], deltaTime)) {
+        return JS_ThrowTypeError(ctx, "Expected delta time");
+    }
+
+    state->component->update(static_cast<float>(deltaTime));
+    std::int64_t rigidbodyId = 0;
+    readIntProperty(ctx, argv[0], ATLAS_RIGIDBODY_ID_PROP, rigidbodyId);
+    return syncRigidbodyWrapper(ctx, *host, static_cast<std::uint64_t>(rigidbodyId));
+}
+
+JSValue jsRigidbodyAddCollider(JSContext *ctx, JSValueConst, int argc,
+                               JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected rigidbody and collider");
+    }
+
+    auto *state = resolveRigidbody(ctx, *host, argv[0]);
+    if (state == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    double radius = 0.0;
+    double height = 0.0;
+    if (readNumberProperty(ctx, argv[1], "radius", radius) &&
+        readNumberProperty(ctx, argv[1], "height", height)) {
+        state->component->addCapsuleCollider(static_cast<float>(radius),
+                                            static_cast<float>(height));
+    } else {
+        JSValue sizeValue = JS_GetPropertyStr(ctx, argv[1], "size");
+        if (!JS_IsException(sizeValue) && !JS_IsUndefined(sizeValue)) {
+            Size3d size;
+            const bool ok = parsePosition3d(ctx, sizeValue, size);
+            JS_FreeValue(ctx, sizeValue);
+            if (!ok) {
+                return JS_ThrowTypeError(ctx, "Expected collider size");
+            }
+            state->component->addBoxCollider(size);
+        } else {
+            JS_FreeValue(ctx, sizeValue);
+            if (readNumberProperty(ctx, argv[1], "radius", radius)) {
+                state->component->addSphereCollider(static_cast<float>(radius));
+            } else {
+                state->component->addMeshCollider();
+            }
+        }
+    }
+
+    return JS_UNDEFINED;
+}
+
+JSValue jsRigidbodySetFriction(JSContext *ctx, JSValueConst, int argc,
+                               JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected rigidbody and friction");
+    }
+    auto *state = resolveRigidbody(ctx, *host, argv[0]);
+    if (state == nullptr) {
+        return JS_EXCEPTION;
+    }
+    double value = 0.0;
+    if (!getDouble(ctx, argv[1], value)) {
+        return JS_ThrowTypeError(ctx, "Expected friction");
+    }
+    state->component->setFriction(static_cast<float>(value));
+    return JS_UNDEFINED;
+}
+
+JSValue jsRigidbodyApplyForce(JSContext *ctx, JSValueConst, int argc,
+                              JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected rigidbody and force");
+    }
+    auto *state = resolveRigidbody(ctx, *host, argv[0]);
+    if (state == nullptr) {
+        return JS_EXCEPTION;
+    }
+    Force3d force;
+    if (!parsePosition3d(ctx, argv[1], force)) {
+        return JS_ThrowTypeError(ctx, "Expected force");
+    }
+    state->component->applyForce(force);
+    return JS_UNDEFINED;
+}
+
+JSValue jsRigidbodyApplyForceAtPoint(JSContext *ctx, JSValueConst, int argc,
+                                     JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 3) {
+        return JS_ThrowTypeError(ctx, "Expected rigidbody, force, and point");
+    }
+    auto *state = resolveRigidbody(ctx, *host, argv[0]);
+    if (state == nullptr) {
+        return JS_EXCEPTION;
+    }
+    Force3d force;
+    Position3d point;
+    if (!parsePosition3d(ctx, argv[1], force) ||
+        !parsePosition3d(ctx, argv[2], point)) {
+        return JS_ThrowTypeError(ctx, "Expected force and point");
+    }
+    state->component->applyForceAtPoint(force, point);
+    return JS_UNDEFINED;
+}
+
+JSValue jsRigidbodyApplyImpulse(JSContext *ctx, JSValueConst, int argc,
+                                JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected rigidbody and impulse");
+    }
+    auto *state = resolveRigidbody(ctx, *host, argv[0]);
+    if (state == nullptr) {
+        return JS_EXCEPTION;
+    }
+    Impulse3d impulse;
+    if (!parsePosition3d(ctx, argv[1], impulse)) {
+        return JS_ThrowTypeError(ctx, "Expected impulse");
+    }
+    state->component->applyImpulse(impulse);
+    return JS_UNDEFINED;
+}
+
+JSValue jsRigidbodySetLinearVelocity(JSContext *ctx, JSValueConst, int argc,
+                                     JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected rigidbody and velocity");
+    }
+    auto *state = resolveRigidbody(ctx, *host, argv[0]);
+    if (state == nullptr) {
+        return JS_EXCEPTION;
+    }
+    Velocity3d velocity;
+    if (!parsePosition3d(ctx, argv[1], velocity)) {
+        return JS_ThrowTypeError(ctx, "Expected velocity");
+    }
+    state->component->setLinearVelocity(velocity);
+    return JS_UNDEFINED;
+}
+
+JSValue jsRigidbodyAddLinearVelocity(JSContext *ctx, JSValueConst, int argc,
+                                     JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected rigidbody and velocity");
+    }
+    auto *state = resolveRigidbody(ctx, *host, argv[0]);
+    if (state == nullptr) {
+        return JS_EXCEPTION;
+    }
+    Velocity3d velocity;
+    if (!parsePosition3d(ctx, argv[1], velocity)) {
+        return JS_ThrowTypeError(ctx, "Expected velocity");
+    }
+    state->component->addLinearVelocity(velocity);
+    return JS_UNDEFINED;
+}
+
+JSValue jsRigidbodySetAngularVelocity(JSContext *ctx, JSValueConst, int argc,
+                                      JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected rigidbody and velocity");
+    }
+    auto *state = resolveRigidbody(ctx, *host, argv[0]);
+    if (state == nullptr) {
+        return JS_EXCEPTION;
+    }
+    Velocity3d velocity;
+    if (!parsePosition3d(ctx, argv[1], velocity)) {
+        return JS_ThrowTypeError(ctx, "Expected velocity");
+    }
+    state->component->setAngularVelocity(velocity);
+    return JS_UNDEFINED;
+}
+
+JSValue jsRigidbodyAddAngularVelocity(JSContext *ctx, JSValueConst, int argc,
+                                      JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected rigidbody and velocity");
+    }
+    auto *state = resolveRigidbody(ctx, *host, argv[0]);
+    if (state == nullptr) {
+        return JS_EXCEPTION;
+    }
+    Velocity3d velocity;
+    if (!parsePosition3d(ctx, argv[1], velocity)) {
+        return JS_ThrowTypeError(ctx, "Expected velocity");
+    }
+    state->component->addAngularVelocity(velocity);
+    return JS_UNDEFINED;
+}
+
+JSValue jsRigidbodySetMaxLinearVelocity(JSContext *ctx, JSValueConst, int argc,
+                                        JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected rigidbody and velocity");
+    }
+    auto *state = resolveRigidbody(ctx, *host, argv[0]);
+    if (state == nullptr) {
+        return JS_EXCEPTION;
+    }
+    double value = 0.0;
+    if (!getDouble(ctx, argv[1], value)) {
+        return JS_ThrowTypeError(ctx, "Expected velocity");
+    }
+    state->component->setMaxLinearVelocity(static_cast<float>(value));
+    return JS_UNDEFINED;
+}
+
+JSValue jsRigidbodySetMaxAngularVelocity(JSContext *ctx, JSValueConst, int argc,
+                                         JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected rigidbody and velocity");
+    }
+    auto *state = resolveRigidbody(ctx, *host, argv[0]);
+    if (state == nullptr) {
+        return JS_EXCEPTION;
+    }
+    double value = 0.0;
+    if (!getDouble(ctx, argv[1], value)) {
+        return JS_ThrowTypeError(ctx, "Expected velocity");
+    }
+    state->component->setMaxAngularVelocity(static_cast<float>(value));
+    return JS_UNDEFINED;
+}
+
+JSValue jsRigidbodyGetLinearVelocity(JSContext *ctx, JSValueConst, int argc,
+                                     JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 1) {
+        return JS_ThrowTypeError(ctx, "Expected rigidbody");
+    }
+    auto *state = resolveRigidbody(ctx, *host, argv[0]);
+    if (state == nullptr) {
+        return JS_EXCEPTION;
+    }
+    return makePosition3d(ctx, *host, state->component->getLinearVelocity());
+}
+
+JSValue jsRigidbodyGetAngularVelocity(JSContext *ctx, JSValueConst, int argc,
+                                      JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 1) {
+        return JS_ThrowTypeError(ctx, "Expected rigidbody");
+    }
+    auto *state = resolveRigidbody(ctx, *host, argv[0]);
+    if (state == nullptr) {
+        return JS_EXCEPTION;
+    }
+    return makePosition3d(ctx, *host, state->component->getAngularVelocity());
+}
+
+JSValue jsRigidbodyGetVelocity(JSContext *ctx, JSValueConst, int argc,
+                               JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 1) {
+        return JS_ThrowTypeError(ctx, "Expected rigidbody");
+    }
+    auto *state = resolveRigidbody(ctx, *host, argv[0]);
+    if (state == nullptr) {
+        return JS_EXCEPTION;
+    }
+    return makePosition3d(ctx, *host, state->component->getVelocity());
+}
+
+JSValue jsRigidbodyHasTag(JSContext *ctx, JSValueConst, int argc,
+                          JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected rigidbody and tag");
+    }
+    auto *state = resolveRigidbody(ctx, *host, argv[0]);
+    if (state == nullptr) {
+        return JS_EXCEPTION;
+    }
+    const char *tag = JS_ToCString(ctx, argv[1]);
+    if (tag == nullptr) {
+        return JS_ThrowTypeError(ctx, "Expected tag");
+    }
+    const bool result = state->component->hasTag(tag);
+    JS_FreeCString(ctx, tag);
+    return JS_NewBool(ctx, result);
+}
+
+JSValue jsRigidbodyAddTag(JSContext *ctx, JSValueConst, int argc,
+                          JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected rigidbody and tag");
+    }
+    auto *state = resolveRigidbody(ctx, *host, argv[0]);
+    if (state == nullptr) {
+        return JS_EXCEPTION;
+    }
+    const char *tag = JS_ToCString(ctx, argv[1]);
+    if (tag == nullptr) {
+        return JS_ThrowTypeError(ctx, "Expected tag");
+    }
+    state->component->addTag(tag);
+    JS_FreeCString(ctx, tag);
+    return JS_UNDEFINED;
+}
+
+JSValue jsRigidbodyRemoveTag(JSContext *ctx, JSValueConst, int argc,
+                             JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected rigidbody and tag");
+    }
+    auto *state = resolveRigidbody(ctx, *host, argv[0]);
+    if (state == nullptr) {
+        return JS_EXCEPTION;
+    }
+    const char *tag = JS_ToCString(ctx, argv[1]);
+    if (tag == nullptr) {
+        return JS_ThrowTypeError(ctx, "Expected tag");
+    }
+    state->component->removeTag(tag);
+    JS_FreeCString(ctx, tag);
+    return JS_UNDEFINED;
+}
+
+JSValue jsRigidbodySetDamping(JSContext *ctx, JSValueConst, int argc,
+                              JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 3) {
+        return JS_ThrowTypeError(ctx,
+                                 "Expected rigidbody and damping values");
+    }
+    auto *state = resolveRigidbody(ctx, *host, argv[0]);
+    if (state == nullptr) {
+        return JS_EXCEPTION;
+    }
+    double linear = 0.0;
+    double angular = 0.0;
+    if (!getDouble(ctx, argv[1], linear) || !getDouble(ctx, argv[2], angular)) {
+        return JS_ThrowTypeError(ctx, "Expected damping values");
+    }
+    state->component->setDamping(static_cast<float>(linear),
+                                 static_cast<float>(angular));
+    return JS_UNDEFINED;
+}
+
+JSValue jsRigidbodySetMass(JSContext *ctx, JSValueConst, int argc,
+                           JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected rigidbody and mass");
+    }
+    auto *state = resolveRigidbody(ctx, *host, argv[0]);
+    if (state == nullptr) {
+        return JS_EXCEPTION;
+    }
+    double mass = 0.0;
+    if (!getDouble(ctx, argv[1], mass)) {
+        return JS_ThrowTypeError(ctx, "Expected mass");
+    }
+    state->component->setMass(static_cast<float>(mass));
+    return JS_UNDEFINED;
+}
+
+JSValue jsRigidbodySetRestitution(JSContext *ctx, JSValueConst, int argc,
+                                  JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected rigidbody and restitution");
+    }
+    auto *state = resolveRigidbody(ctx, *host, argv[0]);
+    if (state == nullptr) {
+        return JS_EXCEPTION;
+    }
+    double restitution = 0.0;
+    if (!getDouble(ctx, argv[1], restitution)) {
+        return JS_ThrowTypeError(ctx, "Expected restitution");
+    }
+    state->component->setRestitution(static_cast<float>(restitution));
+    return JS_UNDEFINED;
+}
+
+JSValue jsRigidbodySetMotionType(JSContext *ctx, JSValueConst, int argc,
+                                 JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected rigidbody and motion type");
+    }
+    auto *state = resolveRigidbody(ctx, *host, argv[0]);
+    if (state == nullptr) {
+        return JS_EXCEPTION;
+    }
+    const char *motionType = JS_ToCString(ctx, argv[1]);
+    if (motionType == nullptr) {
+        return JS_ThrowTypeError(ctx, "Expected motion type");
+    }
+    state->component->setMotionType(parseMotionTypeValue(motionType));
+    JS_FreeCString(ctx, motionType);
+    return JS_UNDEFINED;
+}
+
+JSValue jsSensorSetSignal(JSContext *ctx, JSValueConst, int argc,
+                          JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected rigidbody and signal");
+    }
+    auto *state = resolveRigidbody(ctx, *host, argv[0]);
+    if (state == nullptr) {
+        return JS_EXCEPTION;
+    }
+    const char *signal = JS_ToCString(ctx, argv[1]);
+    if (signal == nullptr) {
+        return JS_ThrowTypeError(ctx, "Expected signal");
+    }
+    state->component->sendSignal = signal;
+    ensureBezelBody(*state->component)->sensorSignal = signal;
+    JS_FreeCString(ctx, signal);
+    return JS_UNDEFINED;
+}
+
+JSValue jsCreateVehicle(JSContext *ctx, JSValueConst, int argc,
+                        JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 1) {
+        return JS_ThrowTypeError(ctx, "Expected vehicle wrapper");
+    }
+    auto component = std::make_shared<HostedVehicleComponent>();
+    component->ctx = ctx;
+    component->host = host;
+    applyVehicle(ctx, argv[0], component->vehicle);
+    const std::uint64_t vehicleId = registerVehicleState(
+        *host, component, &component->vehicle, ctx, argv[0], false);
+    JSValue wrapper = syncVehicleWrapper(ctx, *host, vehicleId);
+    JS_FreeValue(ctx, wrapper);
+    return JS_UNDEFINED;
+}
+
+JSValue jsVehicleRequestRecreate(JSContext *ctx, JSValueConst, int argc,
+                                 JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 1) {
+        return JS_ThrowTypeError(ctx, "Expected vehicle");
+    }
+    auto *state = resolveVehicle(ctx, *host, argv[0]);
+    if (state == nullptr) {
+        return JS_EXCEPTION;
+    }
+    applyVehicle(ctx, argv[0], *state->component);
+    if (state->ownedComponent) {
+        state->component->object = state->ownedComponent->object;
+    }
+    state->component->requestRecreate();
+    std::int64_t vehicleId = 0;
+    readIntProperty(ctx, argv[0], ATLAS_VEHICLE_ID_PROP, vehicleId);
+    return syncVehicleWrapper(ctx, *host, static_cast<std::uint64_t>(vehicleId));
+}
+
+JSValue jsVehicleBeforePhysics(JSContext *ctx, JSValueConst, int argc,
+                               JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 1) {
+        return JS_ThrowTypeError(ctx, "Expected vehicle");
+    }
+    auto *state = resolveVehicle(ctx, *host, argv[0]);
+    if (state == nullptr) {
+        return JS_EXCEPTION;
+    }
+    applyVehicle(ctx, argv[0], *state->component);
+    if (state->ownedComponent) {
+        state->component->object = state->ownedComponent->object;
+    }
+    state->component->beforePhysics();
+    std::int64_t vehicleId = 0;
+    readIntProperty(ctx, argv[0], ATLAS_VEHICLE_ID_PROP, vehicleId);
+    return syncVehicleWrapper(ctx, *host, static_cast<std::uint64_t>(vehicleId));
+}
+
+JSValue jsCreateFixedJoint(JSContext *ctx, JSValueConst, int argc,
+                           JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 1) {
+        return JS_ThrowTypeError(ctx, "Expected fixed joint wrapper");
+    }
+    auto component = std::make_shared<HostedFixedJointComponent>();
+    component->ctx = ctx;
+    component->host = host;
+    applyFixedJoint(ctx, *host, argv[0], component->joint);
+    const std::uint64_t jointId = registerFixedJointState(
+        *host, component, &component->joint, ctx, argv[0], false);
+    JSValue wrapper = syncFixedJointWrapper(ctx, *host, jointId);
+    JS_FreeValue(ctx, wrapper);
+    return JS_UNDEFINED;
+}
+
+JSValue jsFixedJointBeforePhysics(JSContext *ctx, JSValueConst, int argc,
+                                  JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 1) {
+        return JS_ThrowTypeError(ctx, "Expected fixed joint");
+    }
+    auto *state = resolveFixedJoint(ctx, *host, argv[0]);
+    if (state == nullptr) {
+        return JS_EXCEPTION;
+    }
+    applyFixedJoint(ctx, *host, argv[0], *state->component);
+    if (state->ownedComponent) {
+        state->component->object = state->ownedComponent->object;
+    }
+    state->component->beforePhysics();
+    std::int64_t jointId = 0;
+    readIntProperty(ctx, argv[0], ATLAS_FIXED_JOINT_ID_PROP, jointId);
+    return syncFixedJointWrapper(ctx, *host, static_cast<std::uint64_t>(jointId));
+}
+
+JSValue jsFixedJointBreak(JSContext *ctx, JSValueConst, int argc,
+                          JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 1) {
+        return JS_ThrowTypeError(ctx, "Expected fixed joint");
+    }
+    auto *state = resolveFixedJoint(ctx, *host, argv[0]);
+    if (state == nullptr) {
+        return JS_EXCEPTION;
+    }
+    state->component->breakJoint();
+    return JS_UNDEFINED;
+}
+
+JSValue jsCreateHingeJoint(JSContext *ctx, JSValueConst, int argc,
+                           JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 1) {
+        return JS_ThrowTypeError(ctx, "Expected hinge joint wrapper");
+    }
+    auto component = std::make_shared<HostedHingeJointComponent>();
+    component->ctx = ctx;
+    component->host = host;
+    applyHingeJoint(ctx, *host, argv[0], component->joint);
+    const std::uint64_t jointId = registerHingeJointState(
+        *host, component, &component->joint, ctx, argv[0], false);
+    JSValue wrapper = syncHingeJointWrapper(ctx, *host, jointId);
+    JS_FreeValue(ctx, wrapper);
+    return JS_UNDEFINED;
+}
+
+JSValue jsHingeJointBeforePhysics(JSContext *ctx, JSValueConst, int argc,
+                                  JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 1) {
+        return JS_ThrowTypeError(ctx, "Expected hinge joint");
+    }
+    auto *state = resolveHingeJoint(ctx, *host, argv[0]);
+    if (state == nullptr) {
+        return JS_EXCEPTION;
+    }
+    applyHingeJoint(ctx, *host, argv[0], *state->component);
+    if (state->ownedComponent) {
+        state->component->object = state->ownedComponent->object;
+    }
+    state->component->beforePhysics();
+    std::int64_t jointId = 0;
+    readIntProperty(ctx, argv[0], ATLAS_HINGE_JOINT_ID_PROP, jointId);
+    return syncHingeJointWrapper(ctx, *host, static_cast<std::uint64_t>(jointId));
+}
+
+JSValue jsHingeJointBreak(JSContext *ctx, JSValueConst, int argc,
+                          JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 1) {
+        return JS_ThrowTypeError(ctx, "Expected hinge joint");
+    }
+    auto *state = resolveHingeJoint(ctx, *host, argv[0]);
+    if (state == nullptr) {
+        return JS_EXCEPTION;
+    }
+    state->component->breakJoint();
+    return JS_UNDEFINED;
+}
+
+JSValue jsCreateSpringJoint(JSContext *ctx, JSValueConst, int argc,
+                            JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 1) {
+        return JS_ThrowTypeError(ctx, "Expected spring joint wrapper");
+    }
+    auto component = std::make_shared<HostedSpringJointComponent>();
+    component->ctx = ctx;
+    component->host = host;
+    applySpringJoint(ctx, *host, argv[0], component->joint);
+    const std::uint64_t jointId = registerSpringJointState(
+        *host, component, &component->joint, ctx, argv[0], false);
+    JSValue wrapper = syncSpringJointWrapper(ctx, *host, jointId);
+    JS_FreeValue(ctx, wrapper);
+    return JS_UNDEFINED;
+}
+
+JSValue jsSpringJointBeforePhysics(JSContext *ctx, JSValueConst, int argc,
+                                   JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 1) {
+        return JS_ThrowTypeError(ctx, "Expected spring joint");
+    }
+    auto *state = resolveSpringJoint(ctx, *host, argv[0]);
+    if (state == nullptr) {
+        return JS_EXCEPTION;
+    }
+    applySpringJoint(ctx, *host, argv[0], *state->component);
+    if (state->ownedComponent) {
+        state->component->object = state->ownedComponent->object;
+    }
+    state->component->beforePhysics();
+    std::int64_t jointId = 0;
+    readIntProperty(ctx, argv[0], ATLAS_SPRING_JOINT_ID_PROP, jointId);
+    return syncSpringJointWrapper(ctx, *host,
+                                  static_cast<std::uint64_t>(jointId));
+}
+
+JSValue jsSpringJointBreak(JSContext *ctx, JSValueConst, int argc,
+                           JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 1) {
+        return JS_ThrowTypeError(ctx, "Expected spring joint");
+    }
+    auto *state = resolveSpringJoint(ctx, *host, argv[0]);
+    if (state == nullptr) {
+        return JS_EXCEPTION;
+    }
+    state->component->breakJoint();
+    return JS_UNDEFINED;
+}
+
+JSValue runRigidbodyRaycastQuery(JSContext *ctx, ScriptHost &host,
+                                 Rigidbody &component, QueryOperation operation,
+                                 const bezel::RaycastResult &nativeResult) {
+    QueryResult result;
+    result.operation = operation;
+    result.raycastResult = convertRaycastResult(nativeResult);
+    dispatchQueryResultToObject(ctx, host, component, result);
+    return makeQueryResultValue(ctx, host, result);
+}
+
+JSValue jsRigidbodyRaycast(JSContext *ctx, JSValueConst, int argc,
+                           JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || host->context == nullptr ||
+        host->context->window == nullptr || argc < 3) {
+        return JS_ThrowTypeError(ctx,
+                                 "Expected rigidbody, direction, and distance");
+    }
+    auto *state = resolveRigidbody(ctx, *host, argv[0]);
+    if (state == nullptr) {
+        return JS_EXCEPTION;
+    }
+    Normal3d direction;
+    double maxDistance = 0.0;
+    if (!parsePosition3d(ctx, argv[1], direction) ||
+        !getDouble(ctx, argv[2], maxDistance)) {
+        return JS_ThrowTypeError(ctx, "Expected direction and distance");
+    }
+    auto body = ensureBezelBody(*state->component);
+    return runRigidbodyRaycastQuery(
+        ctx, *host, *state->component, QueryOperation::Raycast,
+        body->raycast(direction, static_cast<float>(maxDistance),
+                      host->context->window->physicsWorld));
+}
+
+JSValue jsRigidbodyRaycastAll(JSContext *ctx, JSValueConst, int argc,
+                              JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || host->context == nullptr ||
+        host->context->window == nullptr || argc < 3) {
+        return JS_ThrowTypeError(ctx,
+                                 "Expected rigidbody, direction, and distance");
+    }
+    auto *state = resolveRigidbody(ctx, *host, argv[0]);
+    if (state == nullptr) {
+        return JS_EXCEPTION;
+    }
+    Normal3d direction;
+    double maxDistance = 0.0;
+    if (!parsePosition3d(ctx, argv[1], direction) ||
+        !getDouble(ctx, argv[2], maxDistance)) {
+        return JS_ThrowTypeError(ctx, "Expected direction and distance");
+    }
+    auto body = ensureBezelBody(*state->component);
+    return runRigidbodyRaycastQuery(
+        ctx, *host, *state->component, QueryOperation::RaycastAll,
+        body->raycastAll(direction, static_cast<float>(maxDistance),
+                         host->context->window->physicsWorld));
+}
+
+JSValue jsRigidbodyRaycastWorld(JSContext *ctx, JSValueConst, int argc,
+                                JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || host->context == nullptr ||
+        host->context->window == nullptr || argc < 4) {
+        return JS_ThrowTypeError(
+            ctx, "Expected rigidbody, origin, direction, and distance");
+    }
+    auto *state = resolveRigidbody(ctx, *host, argv[0]);
+    if (state == nullptr) {
+        return JS_EXCEPTION;
+    }
+    Position3d origin;
+    Normal3d direction;
+    double maxDistance = 0.0;
+    if (!parsePosition3d(ctx, argv[1], origin) ||
+        !parsePosition3d(ctx, argv[2], direction) ||
+        !getDouble(ctx, argv[3], maxDistance)) {
+        return JS_ThrowTypeError(ctx,
+                                 "Expected origin, direction, and distance");
+    }
+    QueryResult result;
+    result.operation = QueryOperation::RaycastWorld;
+    result.raycastResult = convertRaycastResult(
+        host->context->window->physicsWorld->raycast(
+            origin, direction, static_cast<float>(maxDistance)));
+    dispatchQueryResultToObject(ctx, *host, *state->component, result);
+    return makeQueryResultValue(ctx, *host, result);
+}
+
+JSValue jsRigidbodyRaycastWorldAll(JSContext *ctx, JSValueConst, int argc,
+                                   JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || host->context == nullptr ||
+        host->context->window == nullptr || argc < 4) {
+        return JS_ThrowTypeError(
+            ctx, "Expected rigidbody, origin, direction, and distance");
+    }
+    auto *state = resolveRigidbody(ctx, *host, argv[0]);
+    if (state == nullptr) {
+        return JS_EXCEPTION;
+    }
+    Position3d origin;
+    Normal3d direction;
+    double maxDistance = 0.0;
+    if (!parsePosition3d(ctx, argv[1], origin) ||
+        !parsePosition3d(ctx, argv[2], direction) ||
+        !getDouble(ctx, argv[3], maxDistance)) {
+        return JS_ThrowTypeError(ctx,
+                                 "Expected origin, direction, and distance");
+    }
+    QueryResult result;
+    result.operation = QueryOperation::RaycastWorldAll;
+    result.raycastResult = convertRaycastResult(
+        host->context->window->physicsWorld->raycastAll(
+            origin, direction, static_cast<float>(maxDistance)));
+    dispatchQueryResultToObject(ctx, *host, *state->component, result);
+    return makeQueryResultValue(ctx, *host, result);
+}
+
+JSValue jsRigidbodyRaycastTagged(JSContext *ctx, JSValueConst, int argc,
+                                 JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || host->context == nullptr ||
+        host->context->window == nullptr || argc < 4) {
+        return JS_ThrowTypeError(
+            ctx, "Expected rigidbody, tags, direction, and distance");
+    }
+    auto *state = resolveRigidbody(ctx, *host, argv[0]);
+    if (state == nullptr) {
+        return JS_EXCEPTION;
+    }
+    std::vector<std::string> tags;
+    Normal3d direction;
+    double maxDistance = 0.0;
+    if (!parseStringArray(ctx, argv[1], tags) ||
+        !parsePosition3d(ctx, argv[2], direction) ||
+        !getDouble(ctx, argv[3], maxDistance)) {
+        return JS_ThrowTypeError(ctx,
+                                 "Expected tags, direction, and distance");
+    }
+    auto body = ensureBezelBody(*state->component);
+    return runRigidbodyRaycastQuery(
+        ctx, *host, *state->component, QueryOperation::RaycastTagged,
+        convertToTaggedRaycastResult(
+            body->raycast(direction, static_cast<float>(maxDistance),
+                          host->context->window->physicsWorld),
+            tags));
+}
+
+JSValue jsRigidbodyRaycastTaggedAll(JSContext *ctx, JSValueConst, int argc,
+                                    JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || host->context == nullptr ||
+        host->context->window == nullptr || argc < 4) {
+        return JS_ThrowTypeError(
+            ctx, "Expected rigidbody, tags, direction, and distance");
+    }
+    auto *state = resolveRigidbody(ctx, *host, argv[0]);
+    if (state == nullptr) {
+        return JS_EXCEPTION;
+    }
+    std::vector<std::string> tags;
+    Normal3d direction;
+    double maxDistance = 0.0;
+    if (!parseStringArray(ctx, argv[1], tags) ||
+        !parsePosition3d(ctx, argv[2], direction) ||
+        !getDouble(ctx, argv[3], maxDistance)) {
+        return JS_ThrowTypeError(ctx,
+                                 "Expected tags, direction, and distance");
+    }
+    auto body = ensureBezelBody(*state->component);
+    return runRigidbodyRaycastQuery(
+        ctx, *host, *state->component, QueryOperation::RaycastTaggedAll,
+        convertToTaggedRaycastResult(
+            body->raycastAll(direction, static_cast<float>(maxDistance),
+                             host->context->window->physicsWorld),
+            tags));
+}
+
+JSValue jsRigidbodyOverlap(JSContext *ctx, JSValueConst, int argc,
+                           JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || host->context == nullptr ||
+        host->context->window == nullptr || argc < 1) {
+        return JS_ThrowTypeError(ctx, "Expected rigidbody");
+    }
+    auto *state = resolveRigidbody(ctx, *host, argv[0]);
+    if (state == nullptr) {
+        return JS_EXCEPTION;
+    }
+    auto body = ensureBezelBody(*state->component);
+    QueryResult result;
+    result.operation = QueryOperation::Overlap;
+    if (body->collider != nullptr && state->component->object != nullptr) {
+        result.overlapResult = convertOverlapResultToAtlas(body->overlap(
+            host->context->window->physicsWorld, body->collider,
+            state->component->object->getPosition(),
+            state->component->object->getRotation()));
+    }
+    dispatchQueryResultToObject(ctx, *host, *state->component, result);
+    return makeQueryResultValue(ctx, *host, result);
+}
+
+JSValue jsRigidbodyOverlapWithCollider(JSContext *ctx, JSValueConst, int argc,
+                                       JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || host->context == nullptr ||
+        host->context->window == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected rigidbody and collider");
+    }
+    auto *state = resolveRigidbody(ctx, *host, argv[0]);
+    if (state == nullptr) {
+        return JS_EXCEPTION;
+    }
+    auto collider =
+        makeColliderFromScript(ctx, argv[1], state->component->object);
+    if (collider == nullptr || state->component->object == nullptr) {
+        QueryResult result;
+        result.operation = QueryOperation::Overlap;
+        return makeQueryResultValue(ctx, *host, result);
+    }
+    auto body = ensureBezelBody(*state->component);
+    QueryResult result;
+    result.operation = QueryOperation::Overlap;
+    result.overlapResult = convertOverlapResultToAtlas(body->overlap(
+        host->context->window->physicsWorld, collider,
+        state->component->object->getPosition(),
+        state->component->object->getRotation()));
+    dispatchQueryResultToObject(ctx, *host, *state->component, result);
+    return makeQueryResultValue(ctx, *host, result);
+}
+
+JSValue jsRigidbodyOverlapWithColliderWorld(JSContext *ctx, JSValueConst,
+                                            int argc, JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || host->context == nullptr ||
+        host->context->window == nullptr || argc < 3) {
+        return JS_ThrowTypeError(
+            ctx, "Expected rigidbody, collider, and position");
+    }
+    auto *state = resolveRigidbody(ctx, *host, argv[0]);
+    if (state == nullptr) {
+        return JS_EXCEPTION;
+    }
+    Position3d position;
+    if (!parsePosition3d(ctx, argv[2], position)) {
+        return JS_ThrowTypeError(ctx, "Expected position");
+    }
+    auto collider =
+        makeColliderFromScript(ctx, argv[1], state->component->object);
+    QueryResult result;
+    result.operation = QueryOperation::Overlap;
+    if (collider != nullptr) {
+        auto body = ensureBezelBody(*state->component);
+        result.overlapResult = convertOverlapResultToAtlas(body->overlap(
+            host->context->window->physicsWorld, collider, position,
+            state->component->object != nullptr
+                ? state->component->object->getRotation()
+                : Rotation3d{}));
+    }
+    dispatchQueryResultToObject(ctx, *host, *state->component, result);
+    return makeQueryResultValue(ctx, *host, result);
+}
+
+JSValue runRigidbodySweepQuery(JSContext *ctx, ScriptHost &host,
+                               Rigidbody &component, QueryOperation operation,
+                               const bezel::SweepResult &nativeResult,
+                               const Position3d &endPosition) {
+    QueryResult result;
+    result.operation = operation;
+    result.sweepResult = convertSweepResultToAtlas(nativeResult, endPosition);
+    dispatchQueryResultToObject(ctx, host, component, result);
+    return makeQueryResultValue(ctx, host, result);
+}
+
+JSValue jsRigidbodyPredictMovementWithCollider(JSContext *ctx, JSValueConst,
+                                               int argc, JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || host->context == nullptr ||
+        host->context->window == nullptr || argc < 3) {
+        return JS_ThrowTypeError(
+            ctx, "Expected rigidbody, end position, and collider");
+    }
+    auto *state = resolveRigidbody(ctx, *host, argv[0]);
+    if (state == nullptr) {
+        return JS_EXCEPTION;
+    }
+    Position3d endPosition;
+    if (!parsePosition3d(ctx, argv[1], endPosition)) {
+        return JS_ThrowTypeError(ctx, "Expected end position");
+    }
+    auto collider =
+        makeColliderFromScript(ctx, argv[2], state->component->object);
+    if (collider == nullptr || state->component->object == nullptr) {
+        QueryResult result;
+        result.operation = QueryOperation::Movement;
+        result.sweepResult.endPosition = endPosition;
+        return makeQueryResultValue(ctx, *host, result);
+    }
+    auto body = ensureBezelBody(*state->component);
+    Position3d actualEnd = endPosition;
+    const Position3d direction = endPosition - state->component->object->getPosition();
+    return runRigidbodySweepQuery(
+        ctx, *host, *state->component, QueryOperation::Movement,
+        body->sweep(host->context->window->physicsWorld, collider, direction,
+                    actualEnd),
+        actualEnd);
+}
+
+JSValue jsRigidbodyPredictMovement(JSContext *ctx, JSValueConst, int argc,
+                                   JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || host->context == nullptr ||
+        host->context->window == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected rigidbody and end position");
+    }
+    auto *state = resolveRigidbody(ctx, *host, argv[0]);
+    if (state == nullptr) {
+        return JS_EXCEPTION;
+    }
+    Position3d endPosition;
+    if (!parsePosition3d(ctx, argv[1], endPosition)) {
+        return JS_ThrowTypeError(ctx, "Expected end position");
+    }
+    auto body = ensureBezelBody(*state->component);
+    if (body->collider == nullptr || state->component->object == nullptr) {
+        QueryResult result;
+        result.operation = QueryOperation::Movement;
+        result.sweepResult.endPosition = endPosition;
+        return makeQueryResultValue(ctx, *host, result);
+    }
+    Position3d actualEnd = endPosition;
+    const Position3d direction = endPosition - state->component->object->getPosition();
+    return runRigidbodySweepQuery(
+        ctx, *host, *state->component, QueryOperation::Movement,
+        body->sweep(host->context->window->physicsWorld, body->collider,
+                    direction, actualEnd),
+        actualEnd);
+}
+
+JSValue jsRigidbodyPredictMovementWithColliderWorld(JSContext *ctx, JSValueConst,
+                                                    int argc,
+                                                    JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || host->context == nullptr ||
+        host->context->window == nullptr || argc < 4) {
+        return JS_ThrowTypeError(
+            ctx,
+            "Expected rigidbody, start position, end position, and collider");
+    }
+    auto *state = resolveRigidbody(ctx, *host, argv[0]);
+    if (state == nullptr) {
+        return JS_EXCEPTION;
+    }
+    Position3d startPosition;
+    Position3d endPosition;
+    if (!parsePosition3d(ctx, argv[1], startPosition) ||
+        !parsePosition3d(ctx, argv[2], endPosition)) {
+        return JS_ThrowTypeError(ctx, "Expected start and end positions");
+    }
+    auto collider =
+        makeColliderFromScript(ctx, argv[3], state->component->object);
+    QueryResult result;
+    result.operation = QueryOperation::Movement;
+    result.sweepResult.endPosition = endPosition;
+    if (collider == nullptr) {
+        return makeQueryResultValue(ctx, *host, result);
+    }
+    auto body = ensureBezelBody(*state->component);
+    Position3d actualEnd = endPosition;
+    const Position3d direction = endPosition - startPosition;
+    return runRigidbodySweepQuery(
+        ctx, *host, *state->component, QueryOperation::Movement,
+        host->context->window->physicsWorld->sweep(
+            host->context->window->physicsWorld, collider, startPosition,
+            state->component->object != nullptr
+                ? state->component->object->getRotation()
+                : Rotation3d{},
+            direction, actualEnd, body->id.joltId),
+        actualEnd);
+}
+
+JSValue jsRigidbodyPredictMovementWorld(JSContext *ctx, JSValueConst, int argc,
+                                        JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || host->context == nullptr ||
+        host->context->window == nullptr || argc < 3) {
+        return JS_ThrowTypeError(
+            ctx, "Expected rigidbody, start position, and end position");
+    }
+    auto *state = resolveRigidbody(ctx, *host, argv[0]);
+    if (state == nullptr) {
+        return JS_EXCEPTION;
+    }
+    Position3d startPosition;
+    Position3d endPosition;
+    if (!parsePosition3d(ctx, argv[1], startPosition) ||
+        !parsePosition3d(ctx, argv[2], endPosition)) {
+        return JS_ThrowTypeError(ctx, "Expected start and end positions");
+    }
+    auto body = ensureBezelBody(*state->component);
+    QueryResult result;
+    result.operation = QueryOperation::Movement;
+    result.sweepResult.endPosition = endPosition;
+    if (body->collider == nullptr) {
+        return makeQueryResultValue(ctx, *host, result);
+    }
+    Position3d actualEnd = endPosition;
+    const Position3d direction = endPosition - startPosition;
+    return runRigidbodySweepQuery(
+        ctx, *host, *state->component, QueryOperation::Movement,
+        host->context->window->physicsWorld->sweep(
+            host->context->window->physicsWorld, body->collider, startPosition,
+            state->component->object != nullptr
+                ? state->component->object->getRotation()
+                : Rotation3d{},
+            direction, actualEnd, body->id.joltId),
+        actualEnd);
+}
+
+JSValue jsRigidbodyPredictMovementWithColliderAll(JSContext *ctx, JSValueConst,
+                                                  int argc,
+                                                  JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || host->context == nullptr ||
+        host->context->window == nullptr || argc < 3) {
+        return JS_ThrowTypeError(
+            ctx, "Expected rigidbody, end position, and collider");
+    }
+    auto *state = resolveRigidbody(ctx, *host, argv[0]);
+    if (state == nullptr) {
+        return JS_EXCEPTION;
+    }
+    Position3d endPosition;
+    if (!parsePosition3d(ctx, argv[1], endPosition)) {
+        return JS_ThrowTypeError(ctx, "Expected end position");
+    }
+    auto collider =
+        makeColliderFromScript(ctx, argv[2], state->component->object);
+    if (collider == nullptr || state->component->object == nullptr) {
+        QueryResult result;
+        result.operation = QueryOperation::MovementAll;
+        result.sweepResult.endPosition = endPosition;
+        return makeQueryResultValue(ctx, *host, result);
+    }
+    auto body = ensureBezelBody(*state->component);
+    Position3d actualEnd = endPosition;
+    const Position3d direction = endPosition - state->component->object->getPosition();
+    return runRigidbodySweepQuery(
+        ctx, *host, *state->component, QueryOperation::MovementAll,
+        body->sweepAll(host->context->window->physicsWorld, collider, direction,
+                       actualEnd),
+        actualEnd);
+}
+
+JSValue jsRigidbodyPredictMovementAll(JSContext *ctx, JSValueConst, int argc,
+                                      JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || host->context == nullptr ||
+        host->context->window == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected rigidbody and end position");
+    }
+    auto *state = resolveRigidbody(ctx, *host, argv[0]);
+    if (state == nullptr) {
+        return JS_EXCEPTION;
+    }
+    Position3d endPosition;
+    if (!parsePosition3d(ctx, argv[1], endPosition)) {
+        return JS_ThrowTypeError(ctx, "Expected end position");
+    }
+    auto body = ensureBezelBody(*state->component);
+    QueryResult result;
+    result.operation = QueryOperation::MovementAll;
+    result.sweepResult.endPosition = endPosition;
+    if (body->collider == nullptr || state->component->object == nullptr) {
+        return makeQueryResultValue(ctx, *host, result);
+    }
+    Position3d actualEnd = endPosition;
+    const Position3d direction = endPosition - state->component->object->getPosition();
+    return runRigidbodySweepQuery(
+        ctx, *host, *state->component, QueryOperation::MovementAll,
+        body->sweepAll(host->context->window->physicsWorld, body->collider,
+                       direction, actualEnd),
+        actualEnd);
+}
+
+JSValue jsRigidbodyPredictMovementWithColliderAllWorld(
+    JSContext *ctx, JSValueConst, int argc, JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || host->context == nullptr ||
+        host->context->window == nullptr || argc < 4) {
+        return JS_ThrowTypeError(
+            ctx,
+            "Expected rigidbody, start position, end position, and collider");
+    }
+    auto *state = resolveRigidbody(ctx, *host, argv[0]);
+    if (state == nullptr) {
+        return JS_EXCEPTION;
+    }
+    Position3d startPosition;
+    Position3d endPosition;
+    if (!parsePosition3d(ctx, argv[1], startPosition) ||
+        !parsePosition3d(ctx, argv[2], endPosition)) {
+        return JS_ThrowTypeError(ctx, "Expected start and end positions");
+    }
+    auto collider =
+        makeColliderFromScript(ctx, argv[3], state->component->object);
+    QueryResult result;
+    result.operation = QueryOperation::MovementAll;
+    result.sweepResult.endPosition = endPosition;
+    if (collider == nullptr) {
+        return makeQueryResultValue(ctx, *host, result);
+    }
+    auto body = ensureBezelBody(*state->component);
+    Position3d actualEnd = endPosition;
+    const Position3d direction = endPosition - startPosition;
+    return runRigidbodySweepQuery(
+        ctx, *host, *state->component, QueryOperation::MovementAll,
+        host->context->window->physicsWorld->sweepAll(
+            host->context->window->physicsWorld, collider, startPosition,
+            state->component->object != nullptr
+                ? state->component->object->getRotation()
+                : Rotation3d{},
+            direction, actualEnd, body->id.joltId),
+        actualEnd);
+}
+
+JSValue jsRigidbodyPredictMovementAllWorld(JSContext *ctx, JSValueConst,
+                                           int argc, JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || host->context == nullptr ||
+        host->context->window == nullptr || argc < 3) {
+        return JS_ThrowTypeError(
+            ctx, "Expected rigidbody, start position, and end position");
+    }
+    auto *state = resolveRigidbody(ctx, *host, argv[0]);
+    if (state == nullptr) {
+        return JS_EXCEPTION;
+    }
+    Position3d startPosition;
+    Position3d endPosition;
+    if (!parsePosition3d(ctx, argv[1], startPosition) ||
+        !parsePosition3d(ctx, argv[2], endPosition)) {
+        return JS_ThrowTypeError(ctx, "Expected start and end positions");
+    }
+    auto body = ensureBezelBody(*state->component);
+    QueryResult result;
+    result.operation = QueryOperation::MovementAll;
+    result.sweepResult.endPosition = endPosition;
+    if (body->collider == nullptr) {
+        return makeQueryResultValue(ctx, *host, result);
+    }
+    Position3d actualEnd = endPosition;
+    const Position3d direction = endPosition - startPosition;
+    return runRigidbodySweepQuery(
+        ctx, *host, *state->component, QueryOperation::MovementAll,
+        host->context->window->physicsWorld->sweepAll(
+            host->context->window->physicsWorld, body->collider, startPosition,
+            state->component->object != nullptr
+                ? state->component->object->getRotation()
+                : Rotation3d{},
+            direction, actualEnd, body->id.joltId),
+        actualEnd);
+}
+
 JSValue jsGetInputConstants(JSContext *ctx, JSValueConst, int, JSValueConst *) {
     JSValue result = JS_NewObject(ctx);
     JSValue keyObject = JS_NewObject(ctx);
@@ -4844,6 +7685,7 @@ class HostedScriptComponent final : public Component {
         }
         runtime::scripting::registerComponentInstance(
             ctx, *host, this, object->getId(), name, instance);
+        call("atAttach", 0, nullptr);
     }
 
     void init() override {
@@ -4853,6 +7695,8 @@ class HostedScriptComponent final : public Component {
         }
     }
 
+    void beforePhysics() override { call("beforePhysics", 0, nullptr); }
+
     void update(float deltaTime) override {
         JSValue delta = JS_NewFloat64(ctx, deltaTime);
         JSValueConst args[] = {delta};
@@ -4860,25 +7704,63 @@ class HostedScriptComponent final : public Component {
         JS_FreeValue(ctx, delta);
     }
 
+    void onCollisionEnter(GameObject *other) override {
+        JSValue args[] = {other != nullptr ? syncObjectWrapper(ctx, *host, *other)
+                                           : JS_NULL};
+        call("onCollisionEnter", 1, args);
+        JS_FreeValue(ctx, args[0]);
+    }
+
+    void onCollisionStay(GameObject *other) override {
+        JSValue args[] = {other != nullptr ? syncObjectWrapper(ctx, *host, *other)
+                                           : JS_NULL};
+        call("onCollisionStay", 1, args);
+        JS_FreeValue(ctx, args[0]);
+    }
+
+    void onCollisionExit(GameObject *other) override {
+        JSValue args[] = {other != nullptr ? syncObjectWrapper(ctx, *host, *other)
+                                           : JS_NULL};
+        call("onCollisionExit", 1, args);
+        JS_FreeValue(ctx, args[0]);
+    }
+
+    void onSignalRecieve(const std::string &signal, GameObject *sender) override {
+        JSValue args[] = {JS_NewString(ctx, signal.c_str()),
+                          sender != nullptr ? syncObjectWrapper(ctx, *host, *sender)
+                                            : JS_NULL};
+        call("onSignalRecieve", 2, args);
+        JS_FreeValue(ctx, args[0]);
+        JS_FreeValue(ctx, args[1]);
+    }
+
+    void onSignalEnd(const std::string &signal, GameObject *sender) override {
+        JSValue args[] = {JS_NewString(ctx, signal.c_str()),
+                          sender != nullptr ? syncObjectWrapper(ctx, *host, *sender)
+                                            : JS_NULL};
+        call("onSignalEnd", 2, args);
+        JS_FreeValue(ctx, args[0]);
+        JS_FreeValue(ctx, args[1]);
+    }
+
+    void onQueryReceive(QueryResult &result) override {
+        JSValue args[] = {
+            makeQueryResultValue(ctx, *host, result),
+            object != nullptr ? syncObjectWrapper(ctx, *host, *object) : JS_NULL};
+        callAlias("onQueryRecieve", "onQueryReceive", 2, args);
+        JS_FreeValue(ctx, args[0]);
+        JS_FreeValue(ctx, args[1]);
+    }
+
   private:
     bool call(const char *method, int argc, JSValueConst *argv) {
-        JSValue fn = JS_GetPropertyStr(ctx, instance, method);
-        if (JS_IsException(fn)) {
-            runtime::scripting::dumpExecution(ctx);
-            return false;
-        }
-        if (JS_IsUndefined(fn) || !JS_IsFunction(ctx, fn)) {
-            JS_FreeValue(ctx, fn);
-            return false;
-        }
-        JSValue result = JS_Call(ctx, fn, instance, argc, argv);
-        JS_FreeValue(ctx, fn);
-        if (JS_IsException(result)) {
-            runtime::scripting::dumpExecution(ctx);
-            return false;
-        }
-        JS_FreeValue(ctx, result);
-        return true;
+        return callObjectMethod(ctx, instance, method, argc, argv);
+    }
+
+    bool callAlias(const char *primary, const char *secondary, int argc,
+                   JSValueConst *argv) {
+        return callObjectMethodEither(ctx, instance, primary, secondary, argc,
+                                      argv);
     }
 
     JSContext *ctx = nullptr;
@@ -4939,6 +7821,160 @@ JSValue jsAddComponent(JSContext *ctx, JSValueConst, int argc,
             syncObjectWrapper(ctx, *host, *object);
         }
 
+        return JS_DupValue(ctx, argv[1]);
+    }
+
+    if (nativeKind == "rigidbody") {
+        std::int64_t rigidbodyId = 0;
+        if (!readIntProperty(ctx, argv[1], ATLAS_RIGIDBODY_ID_PROP, rigidbodyId)) {
+            return JS_ThrowReferenceError(ctx, "Rigidbody wrapper is invalid");
+        }
+        auto *rigidbodyState =
+            findRigidbodyState(*host, static_cast<std::uint64_t>(rigidbodyId));
+        if (rigidbodyState == nullptr || rigidbodyState->component == nullptr) {
+            return JS_ThrowReferenceError(ctx, "Unknown rigidbody id");
+        }
+        if (rigidbodyState->attached) {
+            return JS_ThrowTypeError(ctx,
+                                     "Rigidbody is already attached to an object");
+        }
+
+        applyRigidbody(ctx, argv[1], *rigidbodyState->component);
+        object->addComponent(rigidbodyState->ownedComponent);
+
+        std::string componentName = "Rigidbody";
+        JSValue ctor = JS_GetPropertyStr(ctx, argv[1], "constructor");
+        if (!JS_IsException(ctor) && !JS_IsUndefined(ctor)) {
+            readStringProperty(ctx, ctor, "name", componentName);
+        }
+        JS_FreeValue(ctx, ctor);
+
+        const std::uint64_t componentId = runtime::scripting::registerComponentInstance(
+            ctx, *host, rigidbodyState->component, static_cast<int>(ownerId),
+            componentName, argv[1]);
+        if (componentName == "Sensor") {
+            host->componentLookup[makeComponentLookupKey(static_cast<int>(ownerId),
+                                                         "Rigidbody")] = componentId;
+        }
+        rigidbodyState->attached = true;
+
+        auto objectIt = host->objectCache.find(static_cast<int>(ownerId));
+        if (objectIt != host->objectCache.end()) {
+            syncObjectWrapper(ctx, *host, *object);
+        }
+
+        return JS_DupValue(ctx, argv[1]);
+    }
+
+    if (nativeKind == "vehicle") {
+        std::int64_t vehicleId = 0;
+        if (!readIntProperty(ctx, argv[1], ATLAS_VEHICLE_ID_PROP, vehicleId)) {
+            return JS_ThrowReferenceError(ctx, "Vehicle wrapper is invalid");
+        }
+        auto *vehicleState =
+            findVehicleState(*host, static_cast<std::uint64_t>(vehicleId));
+        if (vehicleState == nullptr || vehicleState->component == nullptr) {
+            return JS_ThrowReferenceError(ctx, "Unknown vehicle id");
+        }
+        if (vehicleState->attached) {
+            return JS_ThrowTypeError(ctx,
+                                     "Vehicle is already attached to an object");
+        }
+
+        applyVehicle(ctx, argv[1], *vehicleState->component);
+        object->addComponent(vehicleState->ownedComponent);
+        runtime::scripting::registerComponentInstance(
+            ctx, *host, vehicleState->ownedComponent.get(),
+            static_cast<int>(ownerId),
+            "Vehicle", argv[1]);
+        vehicleState->attached = true;
+
+        auto objectIt = host->objectCache.find(static_cast<int>(ownerId));
+        if (objectIt != host->objectCache.end()) {
+            syncObjectWrapper(ctx, *host, *object);
+        }
+
+        return JS_DupValue(ctx, argv[1]);
+    }
+
+    if (nativeKind == "fixed-joint") {
+        std::int64_t jointId = 0;
+        if (!readIntProperty(ctx, argv[1], ATLAS_FIXED_JOINT_ID_PROP, jointId)) {
+            return JS_ThrowReferenceError(ctx, "FixedJoint wrapper is invalid");
+        }
+        auto *jointState =
+            findFixedJointState(*host, static_cast<std::uint64_t>(jointId));
+        if (jointState == nullptr || jointState->component == nullptr) {
+            return JS_ThrowReferenceError(ctx, "Unknown fixed joint id");
+        }
+        if (jointState->attached) {
+            return JS_ThrowTypeError(ctx,
+                                     "FixedJoint is already attached to an object");
+        }
+
+        applyFixedJoint(ctx, *host, argv[1], *jointState->component);
+        object->addComponent(jointState->ownedComponent);
+        const std::uint64_t componentId = runtime::scripting::registerComponentInstance(
+            ctx, *host, jointState->ownedComponent.get(),
+            static_cast<int>(ownerId),
+            "FixedJoint", argv[1]);
+        host->componentLookup[makeComponentLookupKey(static_cast<int>(ownerId),
+                                                     "Joint")] = componentId;
+        jointState->attached = true;
+        return JS_DupValue(ctx, argv[1]);
+    }
+
+    if (nativeKind == "hinge-joint") {
+        std::int64_t jointId = 0;
+        if (!readIntProperty(ctx, argv[1], ATLAS_HINGE_JOINT_ID_PROP, jointId)) {
+            return JS_ThrowReferenceError(ctx, "HingeJoint wrapper is invalid");
+        }
+        auto *jointState =
+            findHingeJointState(*host, static_cast<std::uint64_t>(jointId));
+        if (jointState == nullptr || jointState->component == nullptr) {
+            return JS_ThrowReferenceError(ctx, "Unknown hinge joint id");
+        }
+        if (jointState->attached) {
+            return JS_ThrowTypeError(ctx,
+                                     "HingeJoint is already attached to an object");
+        }
+
+        applyHingeJoint(ctx, *host, argv[1], *jointState->component);
+        object->addComponent(jointState->ownedComponent);
+        const std::uint64_t componentId = runtime::scripting::registerComponentInstance(
+            ctx, *host, jointState->ownedComponent.get(),
+            static_cast<int>(ownerId),
+            "HingeJoint", argv[1]);
+        host->componentLookup[makeComponentLookupKey(static_cast<int>(ownerId),
+                                                     "Joint")] = componentId;
+        jointState->attached = true;
+        return JS_DupValue(ctx, argv[1]);
+    }
+
+    if (nativeKind == "spring-joint") {
+        std::int64_t jointId = 0;
+        if (!readIntProperty(ctx, argv[1], ATLAS_SPRING_JOINT_ID_PROP, jointId)) {
+            return JS_ThrowReferenceError(ctx, "SpringJoint wrapper is invalid");
+        }
+        auto *jointState =
+            findSpringJointState(*host, static_cast<std::uint64_t>(jointId));
+        if (jointState == nullptr || jointState->component == nullptr) {
+            return JS_ThrowReferenceError(ctx, "Unknown spring joint id");
+        }
+        if (jointState->attached) {
+            return JS_ThrowTypeError(ctx,
+                                     "SpringJoint is already attached to an object");
+        }
+
+        applySpringJoint(ctx, *host, argv[1], *jointState->component);
+        object->addComponent(jointState->ownedComponent);
+        const std::uint64_t componentId = runtime::scripting::registerComponentInstance(
+            ctx, *host, jointState->ownedComponent.get(),
+            static_cast<int>(ownerId),
+            "SpringJoint", argv[1]);
+        host->componentLookup[makeComponentLookupKey(static_cast<int>(ownerId),
+                                                     "Joint")] = componentId;
+        jointState->attached = true;
         return JS_DupValue(ctx, argv[1]);
     }
 
@@ -6003,6 +9039,31 @@ void runtime::scripting::clearSceneBindings(JSContext *ctx, ScriptHost &host) {
     }
     host.audioPlayers.clear();
 
+    for (auto &[_, state] : host.rigidbodies) {
+        JS_FreeValue(ctx, state.value);
+    }
+    host.rigidbodies.clear();
+
+    for (auto &[_, state] : host.vehicles) {
+        JS_FreeValue(ctx, state.value);
+    }
+    host.vehicles.clear();
+
+    for (auto &[_, state] : host.fixedJoints) {
+        JS_FreeValue(ctx, state.value);
+    }
+    host.fixedJoints.clear();
+
+    for (auto &[_, state] : host.hingeJoints) {
+        JS_FreeValue(ctx, state.value);
+    }
+    host.hingeJoints.clear();
+
+    for (auto &[_, state] : host.springJoints) {
+        JS_FreeValue(ctx, state.value);
+    }
+    host.springJoints.clear();
+
     for (auto &[_, state] : host.textures) {
         JS_FreeValue(ctx, state.value);
     }
@@ -6048,9 +9109,39 @@ void runtime::scripting::clearSceneBindings(JSContext *ctx, ScriptHost &host) {
         host.atlasParticleNamespace = JS_UNDEFINED;
     }
 
+    if (!JS_IsUndefined(host.atlasBezelNamespace)) {
+        JS_FreeValue(ctx, host.atlasBezelNamespace);
+        host.atlasBezelNamespace = JS_UNDEFINED;
+    }
+
     if (!JS_IsUndefined(host.particleEmitterPrototype)) {
         JS_FreeValue(ctx, host.particleEmitterPrototype);
         host.particleEmitterPrototype = JS_UNDEFINED;
+    }
+
+    if (!JS_IsUndefined(host.rigidbodyPrototype)) {
+        JS_FreeValue(ctx, host.rigidbodyPrototype);
+        host.rigidbodyPrototype = JS_UNDEFINED;
+    }
+    if (!JS_IsUndefined(host.sensorPrototype)) {
+        JS_FreeValue(ctx, host.sensorPrototype);
+        host.sensorPrototype = JS_UNDEFINED;
+    }
+    if (!JS_IsUndefined(host.vehiclePrototype)) {
+        JS_FreeValue(ctx, host.vehiclePrototype);
+        host.vehiclePrototype = JS_UNDEFINED;
+    }
+    if (!JS_IsUndefined(host.fixedJointPrototype)) {
+        JS_FreeValue(ctx, host.fixedJointPrototype);
+        host.fixedJointPrototype = JS_UNDEFINED;
+    }
+    if (!JS_IsUndefined(host.hingeJointPrototype)) {
+        JS_FreeValue(ctx, host.hingeJointPrototype);
+        host.hingeJointPrototype = JS_UNDEFINED;
+    }
+    if (!JS_IsUndefined(host.springJointPrototype)) {
+        JS_FreeValue(ctx, host.springJointPrototype);
+        host.springJointPrototype = JS_UNDEFINED;
     }
 
     for (JSValue &interactive : host.interactiveValues) {
@@ -6066,6 +9157,11 @@ void runtime::scripting::clearSceneBindings(JSContext *ctx, ScriptHost &host) {
     host.objectStates.clear();
     host.nextComponentId = 1;
     host.nextAudioPlayerId = 1;
+    host.nextRigidbodyId = 1;
+    host.nextVehicleId = 1;
+    host.nextFixedJointId = 1;
+    host.nextHingeJointId = 1;
+    host.nextSpringJointId = 1;
     host.nextTextureId = 1;
     host.nextCubemapId = 1;
     host.nextSkyboxId = 1;
@@ -6455,6 +9551,198 @@ void runtime::scripting::installGlobals(JSContext *ctx) {
     JS_SetPropertyStr(
         ctx, global, "__atlasUseSpatialAudio",
         JS_NewCFunction(ctx, jsUseSpatialAudio, "__atlasUseSpatialAudio", 2));
+    JS_SetPropertyStr(ctx, global, "__atlasCreateRigidbody",
+                      JS_NewCFunction(ctx, jsCreateRigidbody,
+                                      "__atlasCreateRigidbody", 1));
+    JS_SetPropertyStr(ctx, global, "__atlasCloneRigidbody",
+                      JS_NewCFunction(ctx, jsCloneRigidbody,
+                                      "__atlasCloneRigidbody", 1));
+    JS_SetPropertyStr(ctx, global, "__atlasInitRigidbody",
+                      JS_NewCFunction(ctx, jsInitRigidbody,
+                                      "__atlasInitRigidbody", 1));
+    JS_SetPropertyStr(
+        ctx, global, "__atlasBeforePhysicsRigidbody",
+        JS_NewCFunction(ctx, jsBeforePhysicsRigidbody,
+                        "__atlasBeforePhysicsRigidbody", 1));
+    JS_SetPropertyStr(ctx, global, "__atlasUpdateRigidbody",
+                      JS_NewCFunction(ctx, jsUpdateRigidbody,
+                                      "__atlasUpdateRigidbody", 2));
+    JS_SetPropertyStr(ctx, global, "__atlasRigidbodyAddCollider",
+                      JS_NewCFunction(ctx, jsRigidbodyAddCollider,
+                                      "__atlasRigidbodyAddCollider", 2));
+    JS_SetPropertyStr(ctx, global, "__atlasRigidbodySetFriction",
+                      JS_NewCFunction(ctx, jsRigidbodySetFriction,
+                                      "__atlasRigidbodySetFriction", 2));
+    JS_SetPropertyStr(ctx, global, "__atlasRigidbodyApplyForce",
+                      JS_NewCFunction(ctx, jsRigidbodyApplyForce,
+                                      "__atlasRigidbodyApplyForce", 2));
+    JS_SetPropertyStr(ctx, global, "__atlasRigidbodyApplyForceAtPoint",
+                      JS_NewCFunction(ctx, jsRigidbodyApplyForceAtPoint,
+                                      "__atlasRigidbodyApplyForceAtPoint", 3));
+    JS_SetPropertyStr(ctx, global, "__atlasRigidbodyApplyImpulse",
+                      JS_NewCFunction(ctx, jsRigidbodyApplyImpulse,
+                                      "__atlasRigidbodyApplyImpulse", 2));
+    JS_SetPropertyStr(
+        ctx, global, "__atlasRigidbodySetLinearVelocity",
+        JS_NewCFunction(ctx, jsRigidbodySetLinearVelocity,
+                        "__atlasRigidbodySetLinearVelocity", 2));
+    JS_SetPropertyStr(
+        ctx, global, "__atlasRigidbodyAddLinearVelocity",
+        JS_NewCFunction(ctx, jsRigidbodyAddLinearVelocity,
+                        "__atlasRigidbodyAddLinearVelocity", 2));
+    JS_SetPropertyStr(
+        ctx, global, "__atlasRigidbodySetAngularVelocity",
+        JS_NewCFunction(ctx, jsRigidbodySetAngularVelocity,
+                        "__atlasRigidbodySetAngularVelocity", 2));
+    JS_SetPropertyStr(
+        ctx, global, "__atlasRigidbodyAddAngularVelocity",
+        JS_NewCFunction(ctx, jsRigidbodyAddAngularVelocity,
+                        "__atlasRigidbodyAddAngularVelocity", 2));
+    JS_SetPropertyStr(
+        ctx, global, "__atlasRigidbodySetMaxLinearVelocity",
+        JS_NewCFunction(ctx, jsRigidbodySetMaxLinearVelocity,
+                        "__atlasRigidbodySetMaxLinearVelocity", 2));
+    JS_SetPropertyStr(
+        ctx, global, "__atlasRigidbodySetMaxAngularVelocity",
+        JS_NewCFunction(ctx, jsRigidbodySetMaxAngularVelocity,
+                        "__atlasRigidbodySetMaxAngularVelocity", 2));
+    JS_SetPropertyStr(
+        ctx, global, "__atlasRigidbodyGetLinearVelocity",
+        JS_NewCFunction(ctx, jsRigidbodyGetLinearVelocity,
+                        "__atlasRigidbodyGetLinearVelocity", 1));
+    JS_SetPropertyStr(
+        ctx, global, "__atlasRigidbodyGetAngularVelocity",
+        JS_NewCFunction(ctx, jsRigidbodyGetAngularVelocity,
+                        "__atlasRigidbodyGetAngularVelocity", 1));
+    JS_SetPropertyStr(
+        ctx, global, "__atlasRigidbodyGetVelocity",
+        JS_NewCFunction(ctx, jsRigidbodyGetVelocity,
+                        "__atlasRigidbodyGetVelocity", 1));
+    JS_SetPropertyStr(ctx, global, "__atlasRigidbodyRaycast",
+                      JS_NewCFunction(ctx, jsRigidbodyRaycast,
+                                      "__atlasRigidbodyRaycast", 3));
+    JS_SetPropertyStr(ctx, global, "__atlasRigidbodyRaycastAll",
+                      JS_NewCFunction(ctx, jsRigidbodyRaycastAll,
+                                      "__atlasRigidbodyRaycastAll", 3));
+    JS_SetPropertyStr(ctx, global, "__atlasRigidbodyRaycastWorld",
+                      JS_NewCFunction(ctx, jsRigidbodyRaycastWorld,
+                                      "__atlasRigidbodyRaycastWorld", 4));
+    JS_SetPropertyStr(ctx, global, "__atlasRigidbodyRaycastWorldAll",
+                      JS_NewCFunction(ctx, jsRigidbodyRaycastWorldAll,
+                                      "__atlasRigidbodyRaycastWorldAll", 4));
+    JS_SetPropertyStr(ctx, global, "__atlasRigidbodyRaycastTagged",
+                      JS_NewCFunction(ctx, jsRigidbodyRaycastTagged,
+                                      "__atlasRigidbodyRaycastTagged", 4));
+    JS_SetPropertyStr(ctx, global, "__atlasRigidbodyRaycastTaggedAll",
+                      JS_NewCFunction(ctx, jsRigidbodyRaycastTaggedAll,
+                                      "__atlasRigidbodyRaycastTaggedAll", 4));
+    JS_SetPropertyStr(ctx, global, "__atlasRigidbodyOverlap",
+                      JS_NewCFunction(ctx, jsRigidbodyOverlap,
+                                      "__atlasRigidbodyOverlap", 1));
+    JS_SetPropertyStr(ctx, global, "__atlasRigidbodyOverlapWithCollider",
+                      JS_NewCFunction(ctx, jsRigidbodyOverlapWithCollider,
+                                      "__atlasRigidbodyOverlapWithCollider", 2));
+    JS_SetPropertyStr(
+        ctx, global, "__atlasRigidbodyOverlapWithColliderWorld",
+        JS_NewCFunction(ctx, jsRigidbodyOverlapWithColliderWorld,
+                        "__atlasRigidbodyOverlapWithColliderWorld", 3));
+    JS_SetPropertyStr(
+        ctx, global, "__atlasRigidbodyPredictMovementWithCollider",
+        JS_NewCFunction(ctx, jsRigidbodyPredictMovementWithCollider,
+                        "__atlasRigidbodyPredictMovementWithCollider", 3));
+    JS_SetPropertyStr(
+        ctx, global, "__atlasRigidbodyPredictMovement",
+        JS_NewCFunction(ctx, jsRigidbodyPredictMovement,
+                        "__atlasRigidbodyPredictMovement", 2));
+    JS_SetPropertyStr(
+        ctx, global, "__atlasRigidbodyPredictMovementWithColliderWorld",
+        JS_NewCFunction(ctx, jsRigidbodyPredictMovementWithColliderWorld,
+                        "__atlasRigidbodyPredictMovementWithColliderWorld", 4));
+    JS_SetPropertyStr(
+        ctx, global, "__atlasRigidbodyPredictMovementWorld",
+        JS_NewCFunction(ctx, jsRigidbodyPredictMovementWorld,
+                        "__atlasRigidbodyPredictMovementWorld", 3));
+    JS_SetPropertyStr(
+        ctx, global, "__atlasRigidbodyPredictMovementWithColliderAll",
+        JS_NewCFunction(ctx, jsRigidbodyPredictMovementWithColliderAll,
+                        "__atlasRigidbodyPredictMovementWithColliderAll", 3));
+    JS_SetPropertyStr(
+        ctx, global, "__atlasRigidbodyPredictMovementAll",
+        JS_NewCFunction(ctx, jsRigidbodyPredictMovementAll,
+                        "__atlasRigidbodyPredictMovementAll", 2));
+    JS_SetPropertyStr(
+        ctx, global, "__atlasRigidbodyPredictMovementWithColliderAllWorld",
+        JS_NewCFunction(ctx, jsRigidbodyPredictMovementWithColliderAllWorld,
+                        "__atlasRigidbodyPredictMovementWithColliderAllWorld",
+                        4));
+    JS_SetPropertyStr(
+        ctx, global, "__atlasRigidbodyPredictMovementAllWorld",
+        JS_NewCFunction(ctx, jsRigidbodyPredictMovementAllWorld,
+                        "__atlasRigidbodyPredictMovementAllWorld", 3));
+    JS_SetPropertyStr(ctx, global, "__atlasRigidbodyHasTag",
+                      JS_NewCFunction(ctx, jsRigidbodyHasTag,
+                                      "__atlasRigidbodyHasTag", 2));
+    JS_SetPropertyStr(ctx, global, "__atlasRigidbodyAddTag",
+                      JS_NewCFunction(ctx, jsRigidbodyAddTag,
+                                      "__atlasRigidbodyAddTag", 2));
+    JS_SetPropertyStr(ctx, global, "__atlasRigidbodyRemoveTag",
+                      JS_NewCFunction(ctx, jsRigidbodyRemoveTag,
+                                      "__atlasRigidbodyRemoveTag", 2));
+    JS_SetPropertyStr(ctx, global, "__atlasRigidbodySetDamping",
+                      JS_NewCFunction(ctx, jsRigidbodySetDamping,
+                                      "__atlasRigidbodySetDamping", 3));
+    JS_SetPropertyStr(ctx, global, "__atlasRigidbodySetMass",
+                      JS_NewCFunction(ctx, jsRigidbodySetMass,
+                                      "__atlasRigidbodySetMass", 2));
+    JS_SetPropertyStr(ctx, global, "__atlasRigidbodySetRestitution",
+                      JS_NewCFunction(ctx, jsRigidbodySetRestitution,
+                                      "__atlasRigidbodySetRestitution", 2));
+    JS_SetPropertyStr(ctx, global, "__atlasRigidbodySetMotionType",
+                      JS_NewCFunction(ctx, jsRigidbodySetMotionType,
+                                      "__atlasRigidbodySetMotionType", 2));
+    JS_SetPropertyStr(ctx, global, "__atlasSensorSetSignal",
+                      JS_NewCFunction(ctx, jsSensorSetSignal,
+                                      "__atlasSensorSetSignal", 2));
+    JS_SetPropertyStr(ctx, global, "__atlasCreateVehicle",
+                      JS_NewCFunction(ctx, jsCreateVehicle,
+                                      "__atlasCreateVehicle", 1));
+    JS_SetPropertyStr(
+        ctx, global, "__atlasVehicleRequestRecreate",
+        JS_NewCFunction(ctx, jsVehicleRequestRecreate,
+                        "__atlasVehicleRequestRecreate", 1));
+    JS_SetPropertyStr(ctx, global, "__atlasVehicleBeforePhysics",
+                      JS_NewCFunction(ctx, jsVehicleBeforePhysics,
+                                      "__atlasVehicleBeforePhysics", 1));
+    JS_SetPropertyStr(ctx, global, "__atlasCreateFixedJoint",
+                      JS_NewCFunction(ctx, jsCreateFixedJoint,
+                                      "__atlasCreateFixedJoint", 1));
+    JS_SetPropertyStr(
+        ctx, global, "__atlasFixedJointBeforePhysics",
+        JS_NewCFunction(ctx, jsFixedJointBeforePhysics,
+                        "__atlasFixedJointBeforePhysics", 1));
+    JS_SetPropertyStr(ctx, global, "__atlasFixedJointBreak",
+                      JS_NewCFunction(ctx, jsFixedJointBreak,
+                                      "__atlasFixedJointBreak", 1));
+    JS_SetPropertyStr(ctx, global, "__atlasCreateHingeJoint",
+                      JS_NewCFunction(ctx, jsCreateHingeJoint,
+                                      "__atlasCreateHingeJoint", 1));
+    JS_SetPropertyStr(
+        ctx, global, "__atlasHingeJointBeforePhysics",
+        JS_NewCFunction(ctx, jsHingeJointBeforePhysics,
+                        "__atlasHingeJointBeforePhysics", 1));
+    JS_SetPropertyStr(ctx, global, "__atlasHingeJointBreak",
+                      JS_NewCFunction(ctx, jsHingeJointBreak,
+                                      "__atlasHingeJointBreak", 1));
+    JS_SetPropertyStr(ctx, global, "__atlasCreateSpringJoint",
+                      JS_NewCFunction(ctx, jsCreateSpringJoint,
+                                      "__atlasCreateSpringJoint", 1));
+    JS_SetPropertyStr(
+        ctx, global, "__atlasSpringJointBeforePhysics",
+        JS_NewCFunction(ctx, jsSpringJointBeforePhysics,
+                        "__atlasSpringJointBeforePhysics", 1));
+    JS_SetPropertyStr(ctx, global, "__atlasSpringJointBreak",
+                      JS_NewCFunction(ctx, jsSpringJointBreak,
+                                      "__atlasSpringJointBreak", 1));
     JS_SetPropertyStr(
         ctx, global, "__atlasCreateCoreObject",
         JS_NewCFunction(ctx, jsCreateCoreObject, "__atlasCreateCoreObject", 1));
@@ -6743,29 +10031,7 @@ ScriptInstance::~ScriptInstance() {
 
 bool ScriptInstance::callMethod(const char *method_name, int argc,
                                 JSValueConst *argv) {
-    JSValue fn = JS_GetPropertyStr(ctx, instance, method_name);
-    if (JS_IsException(fn)) {
-        runtime::scripting::dumpExecution(ctx);
-        return false;
-    }
-
-    if (JS_IsUndefined(fn) || !JS_IsFunction(ctx, fn)) {
-        JS_FreeValue(ctx, fn);
-        std::cerr << "Method not found or not a function: " << method_name
-                  << "\n";
-        return false;
-    }
-
-    JSValue ret = JS_Call(ctx, fn, instance, argc, argv);
-    JS_FreeValue(ctx, fn);
-
-    if (JS_IsException(ret)) {
-        runtime::scripting::dumpExecution(ctx);
-        return false;
-    }
-
-    JS_FreeValue(ctx, ret);
-    return true;
+    return callObjectMethod(ctx, instance, method_name, argc, argv);
 }
 
 ScriptInstance *runtime::scripting::createScriptInstance(
