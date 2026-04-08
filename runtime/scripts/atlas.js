@@ -1,4 +1,47 @@
+import { AxisTrigger, InputAction, Key, MouseButton, Trigger } from "atlas/input";
 import { Color, Position2d, Position3d } from "atlas/units";
+
+const windowConstants = globalThis.__atlasGetWindowConstants?.() ?? {};
+
+export const ControllerAxis = Object.freeze(windowConstants.ControllerAxis ?? {});
+export const ControllerButton = Object.freeze(
+    windowConstants.ControllerButton ?? {},
+);
+export const NintendoControllerButton = Object.freeze(
+    windowConstants.NintendoControllerButton ?? {},
+);
+export const SonyControllerButton = Object.freeze(
+    windowConstants.SonyControllerButton ?? {},
+);
+export const CONTROLLER_UNDEFINED =
+    windowConstants.CONTROLLER_UNDEFINED ?? -2;
+
+function makeControllerAxisTrigger(controllerId, axis) {
+    switch (axis) {
+        case ControllerAxis.LeftStick:
+            return AxisTrigger.fromControllerAxis(controllerId, 0, false, 1);
+        case ControllerAxis.LeftStickX:
+            return AxisTrigger.fromControllerAxis(controllerId, 0, true);
+        case ControllerAxis.LeftStickY:
+            return AxisTrigger.fromControllerAxis(controllerId, 1, true);
+        case ControllerAxis.RightStick:
+            return AxisTrigger.fromControllerAxis(controllerId, 2, false, 3);
+        case ControllerAxis.RightStickX:
+            return AxisTrigger.fromControllerAxis(controllerId, 2, true);
+        case ControllerAxis.RightStickY:
+            return AxisTrigger.fromControllerAxis(controllerId, 3, true);
+        case ControllerAxis.Trigger:
+            return AxisTrigger.fromControllerAxis(controllerId, 4, false, 5);
+        case ControllerAxis.TriggerLeft:
+        case ControllerAxis.LeftTrigger:
+            return AxisTrigger.fromControllerAxis(controllerId, 4, true);
+        case ControllerAxis.TriggerRight:
+        case ControllerAxis.RightTrigger:
+            return AxisTrigger.fromControllerAxis(controllerId, 5, true);
+        default:
+            return new AxisTrigger();
+    }
+}
 
 export class Scene {
     constructor() {
@@ -49,6 +92,10 @@ export class Scene {
     getCamera() {
         return globalThis.__atlasGetCamera();
     }
+
+    getWindow() {
+        return globalThis.__atlasGetWindow();
+    }
 }
 
 export class Component {
@@ -84,6 +131,10 @@ export class Component {
 
     getScene() {
         return globalThis.__atlasGetScene();
+    }
+
+    getWindow() {
+        return globalThis.__atlasGetWindow();
     }
 
     getCamera() {
@@ -455,6 +506,381 @@ export class ResourceGroup {
 
     getResourceByName(name) {
         return this.resources.find((r) => r.name === name) || null;
+    }
+}
+
+export class Monitor {
+    constructor() {
+        this.monitorId = -1;
+        this.primary = false;
+    }
+
+    queryVideoModes() {
+        return globalThis.__atlasMonitorQueryVideoModes(this);
+    }
+
+    getCurrentVideoMode() {
+        return globalThis.__atlasMonitorGetCurrentVideoMode(this);
+    }
+
+    getPhysicalSize() {
+        return globalThis.__atlasMonitorGetPhysicalSize(this);
+    }
+
+    getPosition() {
+        return globalThis.__atlasMonitorGetPosition(this);
+    }
+
+    getContentScale() {
+        return globalThis.__atlasMonitorGetContentScale(this);
+    }
+
+    getName() {
+        return globalThis.__atlasMonitorGetName(this);
+    }
+}
+
+export class Gamepad {
+    constructor() {
+        this.controllerId = CONTROLLER_UNDEFINED;
+        this.name = "";
+        this.connected = false;
+    }
+
+    getAxisTrigger(axis) {
+        return makeControllerAxisTrigger(this.controllerId, axis);
+    }
+
+    static getGlobalAxisTrigger(axis) {
+        return makeControllerAxisTrigger(CONTROLLER_UNDEFINED, axis);
+    }
+
+    getButtonTrigger(button) {
+        return Trigger.fromControllerButton(this.controllerId, button);
+    }
+
+    static getGlobalButtonTrigger(button) {
+        return Trigger.fromControllerButton(CONTROLLER_UNDEFINED, button);
+    }
+
+    runble(strength, duration) {
+        globalThis.__atlasGamepadRumble(this, strength, duration);
+    }
+
+    rumble(strength, duration) {
+        this.runble(strength, duration);
+    }
+}
+
+export class Joystick {
+    constructor() {
+        this.joystickId = -1;
+        this.name = "";
+        this.connected = false;
+    }
+
+    getSingleAxisTrigger(axisIndex) {
+        return AxisTrigger.fromControllerAxis(this.joystickId, axisIndex, true);
+    }
+
+    getDualAxisTrigger(axisIndexX, axisIndexY) {
+        return AxisTrigger.fromControllerAxis(
+            this.joystickId,
+            axisIndexX,
+            false,
+            axisIndexY,
+        );
+    }
+
+    getButtonTrigger(buttonIndex) {
+        return Trigger.fromControllerButton(this.joystickId, buttonIndex);
+    }
+
+    getAxisCount() {
+        return globalThis.__atlasJoystickGetAxisCount(this);
+    }
+
+    getButtonCount() {
+        return globalThis.__atlasJoystickGetButtonCount(this);
+    }
+}
+
+export class Window {
+    constructor() {
+        this._title = "";
+        this._width = 0;
+        this._height = 0;
+        this._currentFrame = 0;
+        this._gravity = 9.81;
+        this._usesDeferred = false;
+        return globalThis.__atlasGetWindow() ?? this;
+    }
+
+    get title() {
+        return this._title;
+    }
+
+    set title(value) {
+        this._title = value;
+    }
+
+    get width() {
+        return this._width;
+    }
+
+    set width(value) {
+        this._width = value;
+    }
+
+    get height() {
+        return this._height;
+    }
+
+    set height(value) {
+        this._height = value;
+    }
+
+    get currentFrame() {
+        return this._currentFrame;
+    }
+
+    set currentFrame(value) {
+        this._currentFrame = value;
+    }
+
+    get main() {
+        return globalThis.__atlasGetWindow() ?? this;
+    }
+
+    get gravity() {
+        return this._gravity;
+    }
+
+    set gravity(value) {
+        this._gravity = value;
+        globalThis.__atlasSetWindowGravity?.(this, value);
+    }
+
+    get usesDeferred() {
+        return this._usesDeferred;
+    }
+
+    set usesDeferred(value) {
+        this._usesDeferred = value;
+    }
+
+    setClearColor(color) {
+        globalThis.__atlasSetWindowClearColor(this, color);
+    }
+
+    close() {
+        globalThis.__atlasCloseWindow(this);
+    }
+
+    setFullscreen(value = true) {
+        if (value != null && typeof value === "object") {
+            globalThis.__atlasSetWindowFullscreenMonitor(this, value);
+            return;
+        }
+        globalThis.__atlasSetWindowFullscreen(this, value !== false);
+    }
+
+    setWindowed(config) {
+        globalThis.__atlasSetWindowed(this, config);
+    }
+
+    enumerateMonitors() {
+        return globalThis.__atlasEnumerateMonitors(this);
+    }
+
+    getControllers() {
+        return globalThis.__atlasGetControllers(this);
+    }
+
+    getController(id) {
+        return globalThis.__atlasGetController(this, id);
+    }
+
+    getJoystick(id) {
+        return globalThis.__atlasGetJoystick(this, id);
+    }
+
+    instantiate(object) {
+        globalThis.__atlasInstantiateObject(this, object);
+    }
+
+    destroy(object) {
+        globalThis.__atlasDestroyObject(this, object);
+    }
+
+    addUIObject(object) {
+        globalThis.__atlasAddUIObject(this, object);
+    }
+
+    setCamera(camera) {
+        globalThis.__atlasSetWindowCamera(this, camera);
+    }
+
+    setScene(scene) {
+        globalThis.__atlasSetWindowScene(this, scene);
+    }
+
+    getTime() {
+        return globalThis.__atlasGetWindowTime(this);
+    }
+
+    isKeyActive(key) {
+        return globalThis.__atlasIsKeyActive(key);
+    }
+
+    isMouseButtonActive(button) {
+        return globalThis.__atlasIsMouseButtonActive(button);
+    }
+
+    isMouseButtonPressed(button) {
+        return globalThis.__atlasIsMouseButtonPressed(button);
+    }
+
+    getTextInput() {
+        return globalThis.__atlasGetTextInput();
+    }
+
+    startTextInput() {
+        globalThis.__atlasStartTextInput();
+    }
+
+    stopTextInput() {
+        globalThis.__atlasStopTextInput();
+    }
+
+    isTextInputActive() {
+        return globalThis.__atlasIsTextInputActive();
+    }
+
+    isControllerButtonPressed(controllerID, buttonIndex) {
+        return globalThis.__atlasIsControllerButtonPressed(
+            controllerID,
+            buttonIndex,
+        );
+    }
+
+    getControllerAxisValue(controllerID, axisIndex) {
+        return globalThis.__atlasGetControllerAxisValue(controllerID, axisIndex);
+    }
+
+    getControllerAxisPairValue(controllerID, axisIndexX, axisIndexY) {
+        return globalThis.__atlasGetControllerAxisPairValue(
+            controllerID,
+            axisIndexX,
+            axisIndexY,
+        );
+    }
+
+    releaseMouse() {
+        globalThis.__atlasReleaseMouse();
+    }
+
+    captureMouse() {
+        globalThis.__atlasCaptureMouse();
+    }
+
+    getCursorPosition() {
+        return globalThis.__atlasGetMousePosition();
+    }
+
+    getCurrentScene() {
+        return globalThis.__atlasGetScene();
+    }
+
+    getCamera() {
+        return globalThis.__atlasGetCamera();
+    }
+
+    addRenderTarget(target) {
+        const renderTarget =
+            target ?? globalThis.__atlasCreateRenderTarget(1, 1024);
+        return globalThis.__atlasAddWindowRenderTarget(this, renderTarget);
+    }
+
+    getSize() {
+        return globalThis.__atlasGetWindowSize(this);
+    }
+
+    activateDebug() {
+        globalThis.__atlasActivateWindowDebug(this);
+    }
+
+    desactivateDebug() {
+        globalThis.__atlasDeactivateWindowDebug(this);
+    }
+
+    deactivateDebug() {
+        this.desactivateDebug();
+    }
+
+    getDeltaTime() {
+        return globalThis.__atlasGetWindowDeltaTime(this);
+    }
+
+    getFramesPerSecond() {
+        return globalThis.__atlasGetWindowFramesPerSecond(this);
+    }
+
+    useAtlasTracer(enabled) {
+        globalThis.__atlasUseWindowTracer(this, enabled);
+    }
+
+    setLogOutput(showLogs, showWarnings, showErrors) {
+        globalThis.__atlasSetWindowLogOutput(
+            this,
+            showLogs,
+            showWarnings,
+            showErrors,
+        );
+    }
+
+    getRenderScale() {
+        return globalThis.__atlasGetWindowRenderScale(this);
+    }
+
+    useMetalUpscaling(ratio) {
+        globalThis.__atlasUseWindowMetalUpscaling(this, ratio);
+    }
+
+    isMetalUpscalingEnabled() {
+        return globalThis.__atlasIsWindowMetalUpscalingEnabled(this);
+    }
+
+    getMetalUpscalingRatio() {
+        return globalThis.__atlasGetWindowMetalUpscalingRatio(this);
+    }
+
+    getSSAORenderScale() {
+        return globalThis.__atlasGetWindowSSAORenderScale(this);
+    }
+
+    addInputAction(action) {
+        return globalThis.__atlasRegisterInputAction(action);
+    }
+
+    resetInputActions() {
+        globalThis.__atlasResetInputActions();
+    }
+
+    getInputAction(name) {
+        return globalThis.__atlasGetWindowInputAction(this, name);
+    }
+
+    isActionTriggered(name) {
+        return globalThis.__atlasIsActionTriggered(name);
+    }
+
+    isActionCurrentlyActive(name) {
+        return globalThis.__atlasIsActionCurrentlyActive(name);
+    }
+
+    getActionAxisValue(name) {
+        return globalThis.__atlasGetAxisActionValue(name);
     }
 }
 

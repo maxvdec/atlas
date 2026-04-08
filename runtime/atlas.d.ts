@@ -35,7 +35,16 @@ declare module "atlas" {
         SpotLight,
         DirectionalLight,
         AreaLight,
+        RenderTarget,
     } from "atlas/graphics";
+    import {
+        AxisTrigger,
+        Trigger,
+        Key,
+        MouseButton,
+        InputAction,
+        AxisPacket,
+    } from "atlas/input";
     import { QueryResult } from "bezel";
 
     export type Fog = {
@@ -88,6 +97,7 @@ declare module "atlas" {
         addAreaLight(light: AreaLight): void;
 
         getCamera(): Camera;
+        getWindow(): Window;
 
         //atmosphere: Atmosphere;
     }
@@ -113,6 +123,7 @@ declare module "atlas" {
         ): T | null;
         getObject(identifier: number | string): CoreObject;
         getScene(): Scene;
+        getWindow(): Window;
     }
 
     export class Material {
@@ -320,6 +331,236 @@ declare module "atlas" {
         lookAt(target: Point3d, up?: Normal3d): void;
         moveTo(target: Point3d, speed: number): void;
         getDirection(): Normal3d;
+    }
+
+    export type WindowConfiguration = {
+        title: string;
+        width: number;
+        height: number;
+        renderScale: number;
+        mouseCaptured: boolean;
+        posX: number;
+        posY: number;
+        multisampling: boolean;
+        decorations: boolean;
+        resizable: boolean;
+        transparent: boolean;
+        alwaysOnTop: boolean;
+        opacity: number;
+        aspectRatioX: number;
+        aspectRatioY: number;
+        ssaoScale: number;
+    };
+
+    export type VideoMode = {
+        width: number;
+        height: number;
+        refreshRate: number;
+    };
+
+    export class Monitor {
+        monitorId: number;
+        primary: boolean;
+
+        queryVideoModes(): VideoMode[];
+        getCurrentVideoMode(): VideoMode;
+        getPhysicalSize(): Size2d;
+        getPosition(): Position2d;
+        getContentScale(): number;
+        getName(): string;
+    }
+
+    export enum ControllerAxis {
+        LeftStick,
+        LeftStickX,
+        LeftStickY,
+        RightStick,
+        RightStickX,
+        RightStickY,
+        Trigger,
+        TriggerLeft,
+        TriggerRight,
+    }
+
+    export enum ControllerButton {
+        A = 0,
+        B,
+        X,
+        Y,
+        LeftBumper,
+        RightBumper,
+        Back,
+        Start,
+        Guide,
+        LeftThumb,
+        RightThumb,
+        DPadUp,
+        DPadRight,
+        DPadDown,
+        DPadLeft,
+        ButtonCount,
+    }
+
+    export enum NintendoControllerButton {
+        B = 0,
+        A,
+        Y,
+        X,
+        L,
+        R,
+        ZL,
+        ZR,
+        Minus,
+        Plus,
+        LeftStick,
+        RightStick,
+        DPadUp,
+        DPadRight,
+        DPadDown,
+        DPadLeft,
+        ButtonCount,
+    }
+
+    export enum SonyControllerButton {
+        Cross = 0,
+        Circle,
+        Square,
+        Triangle,
+        L1,
+        R1,
+        L2,
+        R2,
+        Share,
+        Options,
+        LeftStick,
+        RightStick,
+        DPadUp,
+        DPadRight,
+        DPadDown,
+        DPadLeft,
+        ButtonCount,
+    }
+
+    export const CONTROLLER_UNDEFINED = -2;
+
+    export class Gamepad {
+        controllerId: number;
+        name: string;
+        connected: boolean;
+
+        getAxisTrigger(axis: ControllerAxis): AxisTrigger;
+        static getGlobalAxisTrigger(axis: ControllerAxis): AxisTrigger;
+        getButtonTrigger(button: ControllerButton): Trigger;
+        static getGlobalButtonTrigger(button: ControllerButton): Trigger;
+
+        runble(strength: number, duration: number): void;
+    }
+
+    export type Controller = Gamepad;
+
+    export class Joystick {
+        joystickId: number;
+        name: string;
+        connected: boolean;
+
+        getSingleAxisTrigger(axisIndex: number): AxisTrigger;
+        getDualAxisTrigger(axisIndexX: number, axisIndexY: number): AxisTrigger;
+        getButtonTrigger(buttonIndex: number): Trigger;
+
+        getAxisCount(): number;
+        getButtonCount(): number;
+    }
+
+    export type ControllerID = {
+        id: number;
+        name: string;
+        isJoystick: boolean;
+    };
+
+    export class Window {
+        title: string;
+        width: number;
+        height: number;
+        currentFrame: number;
+
+        setClearColor(color: Color): void;
+        close(): void;
+        setFullscreen(enabled: boolean): void;
+        setFullscreen(monitor: Monitor): void;
+        setWindowed(config: WindowConfiguration): void;
+
+        enumerateMonitors(): Monitor[];
+        getControllers(): ControllerID[];
+        getController(id: ControllerID): Controller | null;
+        getJoystick(id: ControllerID): Joystick | null;
+
+        instantiate(object: GameObject): void;
+        destroy(object: GameObject): void;
+
+        addUIObject(object: GameObject): void;
+        setCamera(camera: Camera): void;
+        setScene(scene: Scene): void;
+        getTime(): number;
+        isKeyActive(key: Key): boolean;
+
+        isMouseButtonActive(button: MouseButton): boolean;
+        isMouseButtonPressed(button: MouseButton): boolean;
+        getTextInput(): string;
+        startTextInput(): void;
+        stopTextInput(): void;
+        isTextInputActive(): boolean;
+
+        isControllerButtonPressed(
+            controllerID: number,
+            buttonIndex: number,
+        ): boolean;
+        getControllerAxisValue(controllerID: number, axisIndex: number): number;
+        getControllerAxisPairValue(
+            controllerID: number,
+            axisIndexX: number,
+            axisIndexY: number,
+        ): Position2d;
+
+        releaseMouse(): void;
+        captureMouse(): void;
+        getCursorPosition(): Position2d;
+
+        main: Window;
+
+        getCurrentScene(): Scene;
+        getCamera(): Camera;
+        addRenderTarget(): RenderTarget;
+        getSize(): Size2d;
+        activateDebug(): void;
+        desactivateDebug(): void;
+
+        getDeltaTime(): number;
+        getFramesPerSecond(): number;
+        gravity: number;
+
+        useAtlasTracer(enabled: boolean): void;
+        setLogOutput(
+            showLogs: boolean,
+            showWarnings: boolean,
+            showErrors: boolean,
+        ): void;
+
+        usesDeferred: boolean;
+
+        getRenderScale(): number;
+        useMetalUpscaling(ratio: number): void;
+        isMetalUpscalingEnabled(): boolean;
+        getMetalUpscalingRatio(): number;
+
+        getSSAORenderScale(): number;
+
+        addInputAction(action: InputAction): void;
+        resetInputActions(): void;
+        getInputAction(name: string): InputAction | null;
+
+        isActionTriggered(name: string): boolean;
+        isActionCurrentlyActive(name: string): boolean;
+        getActionAxisValue(name: string): AxisPacket;
     }
 }
 

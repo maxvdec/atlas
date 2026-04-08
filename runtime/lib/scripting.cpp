@@ -64,6 +64,7 @@ constexpr const char *ATLAS_PARTICLE_EMITTER_ID_PROP =
     "__atlasParticleEmitterId";
 constexpr const char *ATLAS_GENERATION_PROP = "__atlasGeneration";
 constexpr const char *ATLAS_IS_CORE_OBJECT_PROP = "__atlasIsCoreObject";
+constexpr const char *ATLAS_WINDOW_PROP = "__atlasWindow";
 constexpr const char *ATLAS_CAMERA_PROP = "__atlasCamera";
 constexpr const char *ATLAS_SCENE_PROP = "__atlasScene";
 constexpr const char *ATLAS_NATIVE_COMPONENT_KIND_PROP =
@@ -540,6 +541,13 @@ Camera *getSceneCamera(ScriptHost &host) {
     return nullptr;
 }
 
+Window *getWindow(ScriptHost &host) {
+    if (host.context != nullptr && host.context->window != nullptr) {
+        return host.context->window.get();
+    }
+    return Window::mainWindow;
+}
+
 Scene *getScene(ScriptHost &host) {
     if (host.context == nullptr) {
         return nullptr;
@@ -631,6 +639,15 @@ bool ensureBuiltins(JSContext *ctx, ScriptHost &host) {
         }
     }
 
+    if (JS_IsUndefined(host.atlasInputNamespace)) {
+        host.atlasInputNamespace =
+            runtime::scripting::importModuleNamespace(ctx, "atlas/input");
+        if (JS_IsException(host.atlasInputNamespace)) {
+            runtime::scripting::dumpExecution(ctx);
+            return false;
+        }
+    }
+
     if (JS_IsUndefined(host.atlasGraphicsNamespace)) {
         host.atlasGraphicsNamespace =
             runtime::scripting::importModuleNamespace(ctx, "atlas/graphics");
@@ -673,8 +690,19 @@ bool ensureBuiltins(JSContext *ctx, ScriptHost &host) {
                    host.coreVertexPrototype);
     cachePrototype(ctx, host.atlasNamespace, "Resource",
                    host.resourcePrototype);
+    cachePrototype(ctx, host.atlasNamespace, "Window", host.windowPrototype);
+    cachePrototype(ctx, host.atlasNamespace, "Monitor", host.monitorPrototype);
+    cachePrototype(ctx, host.atlasNamespace, "Gamepad", host.gamepadPrototype);
+    cachePrototype(ctx, host.atlasNamespace, "Joystick",
+                   host.joystickPrototype);
     cachePrototype(ctx, host.atlasNamespace, "Camera", host.cameraPrototype);
     cachePrototype(ctx, host.atlasNamespace, "Scene", host.scenePrototype);
+    cachePrototype(ctx, host.atlasInputNamespace, "Trigger",
+                   host.triggerPrototype);
+    cachePrototype(ctx, host.atlasInputNamespace, "AxisTrigger",
+                   host.axisTriggerPrototype);
+    cachePrototype(ctx, host.atlasInputNamespace, "InputAction",
+                   host.inputActionPrototype);
     cachePrototype(ctx, host.atlasGraphicsNamespace, "Texture",
                    host.texturePrototype);
     cachePrototype(ctx, host.atlasGraphicsNamespace, "Cubemap",
@@ -1177,6 +1205,103 @@ JSValue makeMouseScrollPacketValue(JSContext *ctx,
     JSValue result = JS_NewObject(ctx);
     setProperty(ctx, result, "xoffset", JS_NewFloat64(ctx, packet.xoffset));
     setProperty(ctx, result, "yoffset", JS_NewFloat64(ctx, packet.yoffset));
+    return result;
+}
+
+JSValue makeTriggerValue(JSContext *ctx, ScriptHost &host, const Trigger &value) {
+    ensureBuiltins(ctx, host);
+    JSValue result = newObjectFromPrototype(ctx, host.triggerPrototype);
+    setProperty(ctx, result, "type",
+                JS_NewInt32(ctx, static_cast<int>(value.type)));
+    switch (value.type) {
+    case TriggerType::MouseButton:
+        setProperty(ctx, result, "mouseButton",
+                    JS_NewInt32(ctx, static_cast<int>(value.mouseButton)));
+        break;
+    case TriggerType::Key:
+        setProperty(ctx, result, "key",
+                    JS_NewInt32(ctx, static_cast<int>(value.key)));
+        break;
+    case TriggerType::ControllerButton: {
+        JSValue controllerButton = JS_NewObject(ctx);
+        setProperty(ctx, controllerButton, "controllerID",
+                    JS_NewInt32(ctx, value.controllerButton.controllerID));
+        setProperty(ctx, controllerButton, "buttonIndex",
+                    JS_NewInt32(ctx, value.controllerButton.buttonIndex));
+        setProperty(ctx, result, "controllerButton", controllerButton);
+        break;
+    }
+    }
+    return result;
+}
+
+JSValue makeAxisTriggerValue(JSContext *ctx, ScriptHost &host,
+                             const AxisTrigger &value) {
+    ensureBuiltins(ctx, host);
+    JSValue result = newObjectFromPrototype(ctx, host.axisTriggerPrototype);
+    setProperty(ctx, result, "type",
+                JS_NewInt32(ctx, static_cast<int>(value.type)));
+    setProperty(ctx, result, "positiveX",
+                makeTriggerValue(ctx, host, value.positiveX));
+    setProperty(ctx, result, "negativeX",
+                makeTriggerValue(ctx, host, value.negativeX));
+    setProperty(ctx, result, "positiveY",
+                makeTriggerValue(ctx, host, value.positiveY));
+    setProperty(ctx, result, "negativeY",
+                makeTriggerValue(ctx, host, value.negativeY));
+    setProperty(ctx, result, "controllerId",
+                JS_NewInt32(ctx, value.controllerID));
+    setProperty(ctx, result, "controllerAxisSingle",
+                JS_NewBool(ctx, value.controllerAxisSingle));
+    setProperty(ctx, result, "axisIndex", JS_NewInt32(ctx, value.axisIndex));
+    setProperty(ctx, result, "axisIndexY", JS_NewInt32(ctx, value.axisIndexY));
+    setProperty(ctx, result, "isJoystick", JS_NewBool(ctx, value.isJoystick));
+    return result;
+}
+
+JSValue makeInputActionValue(JSContext *ctx, ScriptHost &host,
+                             const InputAction &value) {
+    ensureBuiltins(ctx, host);
+    JSValue result = newObjectFromPrototype(ctx, host.inputActionPrototype);
+    setProperty(ctx, result, "name", JS_NewString(ctx, value.name.c_str()));
+    setProperty(ctx, result, "isAxis", JS_NewBool(ctx, value.isAxis));
+    setProperty(ctx, result, "isAxisSingle",
+                JS_NewBool(ctx, value.isAxisSingle));
+    setProperty(ctx, result, "normalized", JS_NewBool(ctx, value.normalize2D));
+    setProperty(ctx, result, "invertY",
+                JS_NewBool(ctx, value.invertControllerY));
+    setProperty(ctx, result, "controllerDeadzone",
+                JS_NewFloat64(ctx, value.controllerDeadzone));
+
+    JSValue triggers = JS_NewArray(ctx);
+    for (std::uint32_t i = 0; i < value.buttonTriggers.size(); ++i) {
+        JS_SetPropertyUint32(ctx, triggers, i,
+                             makeTriggerValue(ctx, host, value.buttonTriggers[i]));
+    }
+    setProperty(ctx, result, "triggers", triggers);
+
+    JSValue axisTriggers = JS_NewArray(ctx);
+    for (std::uint32_t i = 0; i < value.axisTriggers.size(); ++i) {
+        JS_SetPropertyUint32(ctx, axisTriggers, i,
+                             makeAxisTriggerValue(ctx, host, value.axisTriggers[i]));
+    }
+    setProperty(ctx, result, "axisTriggers", axisTriggers);
+    return result;
+}
+
+JSValue makeVideoModeValue(JSContext *ctx, const VideoMode &value) {
+    JSValue result = JS_NewObject(ctx);
+    setProperty(ctx, result, "width", JS_NewInt32(ctx, value.width));
+    setProperty(ctx, result, "height", JS_NewInt32(ctx, value.height));
+    setProperty(ctx, result, "refreshRate", JS_NewInt32(ctx, value.refreshRate));
+    return result;
+}
+
+JSValue makeControllerIdValue(JSContext *ctx, const ControllerID &value) {
+    JSValue result = JS_NewObject(ctx);
+    setProperty(ctx, result, "id", JS_NewInt32(ctx, value.id));
+    setProperty(ctx, result, "name", JS_NewString(ctx, value.name.c_str()));
+    setProperty(ctx, result, "isJoystick", JS_NewBool(ctx, value.isJoystick));
     return result;
 }
 
@@ -1952,6 +2077,68 @@ JSValue syncAreaLightWrapper(JSContext *ctx, ScriptHost &host,
                 JS_NewBool(ctx, state->light->castsBothSides));
     setProperty(ctx, wrapper, "rotation",
                 makeRotation3d(ctx, host, state->light->rotation));
+    return wrapper;
+}
+
+JSValue makeMonitorValue(JSContext *ctx, ScriptHost &host, const Monitor &monitor) {
+    ensureBuiltins(ctx, host);
+    JSValue wrapper = newObjectFromPrototype(ctx, host.monitorPrototype);
+    setProperty(ctx, wrapper, ATLAS_GENERATION_PROP,
+                JS_NewInt64(ctx, static_cast<int64_t>(host.generation)));
+    setProperty(ctx, wrapper, "monitorId", JS_NewInt32(ctx, monitor.monitorID));
+    setProperty(ctx, wrapper, "primary", JS_NewBool(ctx, monitor.primary));
+    return wrapper;
+}
+
+JSValue makeGamepadValue(JSContext *ctx, ScriptHost &host, const Gamepad &gamepad) {
+    ensureBuiltins(ctx, host);
+    JSValue wrapper = newObjectFromPrototype(ctx, host.gamepadPrototype);
+    setProperty(ctx, wrapper, ATLAS_GENERATION_PROP,
+                JS_NewInt64(ctx, static_cast<int64_t>(host.generation)));
+    setProperty(ctx, wrapper, "controllerId",
+                JS_NewInt32(ctx, gamepad.controllerID));
+    setProperty(ctx, wrapper, "name", JS_NewString(ctx, gamepad.name.c_str()));
+    setProperty(ctx, wrapper, "connected", JS_NewBool(ctx, gamepad.connected));
+    return wrapper;
+}
+
+JSValue makeJoystickValue(JSContext *ctx, ScriptHost &host,
+                          const Joystick &joystick) {
+    ensureBuiltins(ctx, host);
+    JSValue wrapper = newObjectFromPrototype(ctx, host.joystickPrototype);
+    setProperty(ctx, wrapper, ATLAS_GENERATION_PROP,
+                JS_NewInt64(ctx, static_cast<int64_t>(host.generation)));
+    setProperty(ctx, wrapper, "joystickId",
+                JS_NewInt32(ctx, joystick.joystickID));
+    setProperty(ctx, wrapper, "name", JS_NewString(ctx, joystick.name.c_str()));
+    setProperty(ctx, wrapper, "connected", JS_NewBool(ctx, joystick.connected));
+    return wrapper;
+}
+
+JSValue syncWindowWrapper(JSContext *ctx, ScriptHost &host, Window &window) {
+    if (!ensureBuiltins(ctx, host)) {
+        return JS_EXCEPTION;
+    }
+
+    JSValue wrapper = JS_UNDEFINED;
+    if (!JS_IsUndefined(host.windowValue)) {
+        wrapper = JS_DupValue(ctx, host.windowValue);
+    } else {
+        wrapper = newObjectFromPrototype(ctx, host.windowPrototype);
+        host.windowValue = JS_DupValue(ctx, wrapper);
+    }
+
+    setProperty(ctx, wrapper, ATLAS_WINDOW_PROP, JS_NewBool(ctx, true));
+    setProperty(ctx, wrapper, ATLAS_GENERATION_PROP,
+                JS_NewInt64(ctx, static_cast<int64_t>(host.generation)));
+    setProperty(ctx, wrapper, "_title", JS_NewString(ctx, window.title.c_str()));
+    setProperty(ctx, wrapper, "_width", JS_NewInt32(ctx, window.width));
+    setProperty(ctx, wrapper, "_height", JS_NewInt32(ctx, window.height));
+    setProperty(ctx, wrapper, "_currentFrame",
+                JS_NewInt32(ctx, window.currentFrame));
+    setProperty(ctx, wrapper, "_gravity", JS_NewFloat64(ctx, window.gravity));
+    setProperty(ctx, wrapper, "_usesDeferred",
+                JS_NewBool(ctx, window.usesDeferred));
     return wrapper;
 }
 
@@ -4376,6 +4563,24 @@ Camera *resolveCameraArg(JSContext *ctx, ScriptHost &host, JSValueConst value) {
     return camera;
 }
 
+Window *resolveWindowArg(JSContext *ctx, ScriptHost &host, JSValueConst value) {
+    if (!ensureCurrentGeneration(ctx, host, value)) {
+        return nullptr;
+    }
+
+    bool isWindow = false;
+    if (!readBoolProperty(ctx, value, ATLAS_WINDOW_PROP, isWindow) || !isWindow) {
+        JS_ThrowTypeError(ctx, "Expected Atlas window handle");
+        return nullptr;
+    }
+
+    Window *window = getWindow(host);
+    if (window == nullptr) {
+        JS_ThrowReferenceError(ctx, "Atlas window is unavailable");
+    }
+    return window;
+}
+
 Scene *resolveSceneArg(JSContext *ctx, ScriptHost &host, JSValueConst value) {
     if (!ensureCurrentGeneration(ctx, host, value)) {
         return nullptr;
@@ -4412,6 +4617,96 @@ ScriptTextureState *resolveTexture(JSContext *ctx, ScriptHost &host,
         return nullptr;
     }
     return state;
+}
+
+bool parseWindowConfiguration(JSContext *ctx, JSValueConst value,
+                              const Window *window, WindowConfiguration &out) {
+    out = WindowConfiguration{};
+    if (window != nullptr) {
+        out.title = window->title;
+        out.width = window->width;
+        out.height = window->height;
+        out.renderScale = window->getRenderScale();
+        out.mouseCaptured = false;
+        out.multisampling = window->useMultisampling;
+        out.ssaoScale = window->getSSAORenderScale();
+    }
+    if (!JS_IsObject(value) || JS_IsNull(value)) {
+        return false;
+    }
+
+    readStringProperty(ctx, value, "title", out.title);
+
+    std::int64_t intValue = out.width;
+    if (readIntProperty(ctx, value, "width", intValue)) {
+        out.width = static_cast<int>(intValue);
+    }
+    intValue = out.height;
+    if (readIntProperty(ctx, value, "height", intValue)) {
+        out.height = static_cast<int>(intValue);
+    }
+    double numberValue = out.renderScale;
+    if (readNumberProperty(ctx, value, "renderScale", numberValue)) {
+        out.renderScale = static_cast<float>(numberValue);
+    }
+    readBoolProperty(ctx, value, "mouseCaptured", out.mouseCaptured);
+    intValue = out.posX;
+    if (readIntProperty(ctx, value, "posX", intValue)) {
+        out.posX = static_cast<int>(intValue);
+    }
+    intValue = out.posY;
+    if (readIntProperty(ctx, value, "posY", intValue)) {
+        out.posY = static_cast<int>(intValue);
+    }
+    readBoolProperty(ctx, value, "multisampling", out.multisampling);
+    readBoolProperty(ctx, value, "decorations", out.decorations);
+    readBoolProperty(ctx, value, "resizable", out.resizable);
+    readBoolProperty(ctx, value, "transparent", out.transparent);
+    readBoolProperty(ctx, value, "alwaysOnTop", out.alwaysOnTop);
+    numberValue = out.opacity;
+    if (readNumberProperty(ctx, value, "opacity", numberValue)) {
+        out.opacity = static_cast<float>(numberValue);
+    }
+    intValue = out.aspectRatioX;
+    if (readIntProperty(ctx, value, "aspectRatioX", intValue)) {
+        out.aspectRatioX = static_cast<int>(intValue);
+    }
+    intValue = out.aspectRatioY;
+    if (readIntProperty(ctx, value, "aspectRatioY", intValue)) {
+        out.aspectRatioY = static_cast<int>(intValue);
+    }
+    numberValue = out.ssaoScale;
+    if (readNumberProperty(ctx, value, "ssaoScale", numberValue)) {
+        out.ssaoScale = static_cast<float>(numberValue);
+    }
+    return true;
+}
+
+bool parseControllerIdValue(JSContext *ctx, JSValueConst value,
+                            ControllerID &out) {
+    if (!JS_IsObject(value) || JS_IsNull(value)) {
+        return false;
+    }
+
+    std::int64_t id = out.id;
+    if (!readIntProperty(ctx, value, "id", id)) {
+        return false;
+    }
+    out.id = static_cast<int>(id);
+    readStringProperty(ctx, value, "name", out.name);
+    readBoolProperty(ctx, value, "isJoystick", out.isJoystick);
+    return true;
+}
+
+bool findMonitorById(int monitorId, Monitor &out) {
+    const auto monitors = Window::enumerateMonitors();
+    for (const auto &monitor : monitors) {
+        if (monitor.monitorID == monitorId) {
+            out = monitor;
+            return true;
+        }
+    }
+    return false;
 }
 
 ScriptCubemapState *resolveCubemap(JSContext *ctx, ScriptHost &host,
@@ -4691,6 +4986,703 @@ JSValue jsGetCamera(JSContext *ctx, JSValueConst, int, JSValueConst *) {
     }
 
     return syncCameraWrapper(ctx, *host, *camera);
+}
+
+JSValue jsGetWindow(JSContext *ctx, JSValueConst, int, JSValueConst *) {
+    auto *host = getHost(ctx);
+    if (host == nullptr) {
+        return JS_NULL;
+    }
+
+    Window *window = getWindow(*host);
+    if (window == nullptr) {
+        return JS_NULL;
+    }
+
+    return syncWindowWrapper(ctx, *host, *window);
+}
+
+JSValue jsWindowSetClearColor(JSContext *ctx, JSValueConst, int argc,
+                              JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected window and color");
+    }
+    Window *window = resolveWindowArg(ctx, *host, argv[0]);
+    if (window == nullptr) {
+        return JS_EXCEPTION;
+    }
+    Color color = Color::black();
+    if (!parseColor(ctx, argv[1], color)) {
+        return JS_ThrowTypeError(ctx, "Expected color");
+    }
+    window->setClearColor(color);
+    return syncWindowWrapper(ctx, *host, *window);
+}
+
+JSValue jsWindowClose(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 1) {
+        return JS_ThrowTypeError(ctx, "Expected window");
+    }
+    Window *window = resolveWindowArg(ctx, *host, argv[0]);
+    if (window == nullptr) {
+        return JS_EXCEPTION;
+    }
+    window->close();
+    return JS_UNDEFINED;
+}
+
+JSValue jsWindowSetFullscreen(JSContext *ctx, JSValueConst, int argc,
+                              JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected window and enabled");
+    }
+    Window *window = resolveWindowArg(ctx, *host, argv[0]);
+    if (window == nullptr) {
+        return JS_EXCEPTION;
+    }
+    const bool enabled = JS_ToBool(ctx, argv[1]) == 1;
+    window->setFullscreen(enabled);
+    return syncWindowWrapper(ctx, *host, *window);
+}
+
+JSValue jsWindowSetFullscreenMonitor(JSContext *ctx, JSValueConst, int argc,
+                                     JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected window and monitor");
+    }
+    Window *window = resolveWindowArg(ctx, *host, argv[0]);
+    if (window == nullptr) {
+        return JS_EXCEPTION;
+    }
+    if (!ensureCurrentGeneration(ctx, *host, argv[1])) {
+        return JS_EXCEPTION;
+    }
+    std::int64_t monitorId = 0;
+    if (!readIntProperty(ctx, argv[1], "monitorId", monitorId)) {
+        return JS_ThrowTypeError(ctx, "Expected monitor");
+    }
+    Monitor monitor(0, 0, false);
+    if (!findMonitorById(static_cast<int>(monitorId), monitor)) {
+        return JS_ThrowReferenceError(ctx, "Unknown monitor");
+    }
+    window->setFullscreen(monitor);
+    return syncWindowWrapper(ctx, *host, *window);
+}
+
+JSValue jsWindowSetWindowed(JSContext *ctx, JSValueConst, int argc,
+                            JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected window and configuration");
+    }
+    Window *window = resolveWindowArg(ctx, *host, argv[0]);
+    if (window == nullptr) {
+        return JS_EXCEPTION;
+    }
+    WindowConfiguration config;
+    if (!parseWindowConfiguration(ctx, argv[1], window, config)) {
+        return JS_ThrowTypeError(ctx, "Expected WindowConfiguration");
+    }
+    window->setWindowed(config);
+    return syncWindowWrapper(ctx, *host, *window);
+}
+
+JSValue jsWindowEnumerateMonitors(JSContext *ctx, JSValueConst, int argc,
+                                  JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 1) {
+        return JS_ThrowTypeError(ctx, "Expected window");
+    }
+    Window *window = resolveWindowArg(ctx, *host, argv[0]);
+    if (window == nullptr) {
+        return JS_EXCEPTION;
+    }
+    (void)window;
+    const auto monitors = Window::enumerateMonitors();
+    JSValue result = JS_NewArray(ctx);
+    for (std::uint32_t i = 0; i < monitors.size(); ++i) {
+        JS_SetPropertyUint32(ctx, result, i,
+                             makeMonitorValue(ctx, *host, monitors[i]));
+    }
+    return result;
+}
+
+JSValue jsMonitorQueryVideoModes(JSContext *ctx, JSValueConst, int argc,
+                                 JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 1) {
+        return JS_ThrowTypeError(ctx, "Expected monitor");
+    }
+    if (!ensureCurrentGeneration(ctx, *host, argv[0])) {
+        return JS_EXCEPTION;
+    }
+    std::int64_t monitorId = 0;
+    if (!readIntProperty(ctx, argv[0], "monitorId", monitorId)) {
+        return JS_ThrowTypeError(ctx, "Expected monitor");
+    }
+    Monitor monitor(0, 0, false);
+    if (!findMonitorById(static_cast<int>(monitorId), monitor)) {
+        return JS_ThrowReferenceError(ctx, "Unknown monitor");
+    }
+    const auto modes = monitor.queryVideoModes();
+    JSValue result = JS_NewArray(ctx);
+    for (std::uint32_t i = 0; i < modes.size(); ++i) {
+        JS_SetPropertyUint32(ctx, result, i, makeVideoModeValue(ctx, modes[i]));
+    }
+    return result;
+}
+
+JSValue jsMonitorGetCurrentVideoMode(JSContext *ctx, JSValueConst, int argc,
+                                     JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 1) {
+        return JS_ThrowTypeError(ctx, "Expected monitor");
+    }
+    if (!ensureCurrentGeneration(ctx, *host, argv[0])) {
+        return JS_EXCEPTION;
+    }
+    std::int64_t monitorId = 0;
+    if (!readIntProperty(ctx, argv[0], "monitorId", monitorId)) {
+        return JS_ThrowTypeError(ctx, "Expected monitor");
+    }
+    Monitor monitor(0, 0, false);
+    if (!findMonitorById(static_cast<int>(monitorId), monitor)) {
+        return JS_ThrowReferenceError(ctx, "Unknown monitor");
+    }
+    return makeVideoModeValue(ctx, monitor.getCurrentVideoMode());
+}
+
+JSValue jsMonitorGetPhysicalSize(JSContext *ctx, JSValueConst, int argc,
+                                 JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 1) {
+        return JS_ThrowTypeError(ctx, "Expected monitor");
+    }
+    if (!ensureCurrentGeneration(ctx, *host, argv[0])) {
+        return JS_EXCEPTION;
+    }
+    std::int64_t monitorId = 0;
+    if (!readIntProperty(ctx, argv[0], "monitorId", monitorId)) {
+        return JS_ThrowTypeError(ctx, "Expected monitor");
+    }
+    Monitor monitor(0, 0, false);
+    if (!findMonitorById(static_cast<int>(monitorId), monitor)) {
+        return JS_ThrowReferenceError(ctx, "Unknown monitor");
+    }
+    const auto [width, height] = monitor.getPhysicalSize();
+    return makeSize2d(ctx, *host, {static_cast<float>(width),
+                                   static_cast<float>(height)});
+}
+
+JSValue jsMonitorGetPosition(JSContext *ctx, JSValueConst, int argc,
+                             JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 1) {
+        return JS_ThrowTypeError(ctx, "Expected monitor");
+    }
+    if (!ensureCurrentGeneration(ctx, *host, argv[0])) {
+        return JS_EXCEPTION;
+    }
+    std::int64_t monitorId = 0;
+    if (!readIntProperty(ctx, argv[0], "monitorId", monitorId)) {
+        return JS_ThrowTypeError(ctx, "Expected monitor");
+    }
+    Monitor monitor(0, 0, false);
+    if (!findMonitorById(static_cast<int>(monitorId), monitor)) {
+        return JS_ThrowReferenceError(ctx, "Unknown monitor");
+    }
+    const auto [x, y] = monitor.getPosition();
+    return makePosition2d(ctx, *host,
+                          {static_cast<float>(x), static_cast<float>(y)});
+}
+
+JSValue jsMonitorGetContentScale(JSContext *ctx, JSValueConst, int argc,
+                                 JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 1) {
+        return JS_ThrowTypeError(ctx, "Expected monitor");
+    }
+    if (!ensureCurrentGeneration(ctx, *host, argv[0])) {
+        return JS_EXCEPTION;
+    }
+    std::int64_t monitorId = 0;
+    if (!readIntProperty(ctx, argv[0], "monitorId", monitorId)) {
+        return JS_ThrowTypeError(ctx, "Expected monitor");
+    }
+    Monitor monitor(0, 0, false);
+    if (!findMonitorById(static_cast<int>(monitorId), monitor)) {
+        return JS_ThrowReferenceError(ctx, "Unknown monitor");
+    }
+    const auto scales = monitor.getContentScale();
+    return JS_NewFloat64(ctx, std::get<0>(scales));
+}
+
+JSValue jsMonitorGetName(JSContext *ctx, JSValueConst, int argc,
+                         JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 1) {
+        return JS_ThrowTypeError(ctx, "Expected monitor");
+    }
+    if (!ensureCurrentGeneration(ctx, *host, argv[0])) {
+        return JS_EXCEPTION;
+    }
+    std::int64_t monitorId = 0;
+    if (!readIntProperty(ctx, argv[0], "monitorId", monitorId)) {
+        return JS_ThrowTypeError(ctx, "Expected monitor");
+    }
+    Monitor monitor(0, 0, false);
+    if (!findMonitorById(static_cast<int>(monitorId), monitor)) {
+        return JS_ThrowReferenceError(ctx, "Unknown monitor");
+    }
+    return JS_NewString(ctx, monitor.getName().c_str());
+}
+
+JSValue jsWindowGetControllers(JSContext *ctx, JSValueConst, int argc,
+                               JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 1) {
+        return JS_ThrowTypeError(ctx, "Expected window");
+    }
+    Window *window = resolveWindowArg(ctx, *host, argv[0]);
+    if (window == nullptr) {
+        return JS_EXCEPTION;
+    }
+    const auto controllers = window->getControllers();
+    JSValue result = JS_NewArray(ctx);
+    for (std::uint32_t i = 0; i < controllers.size(); ++i) {
+        JS_SetPropertyUint32(ctx, result, i,
+                             makeControllerIdValue(ctx, controllers[i]));
+    }
+    return result;
+}
+
+JSValue jsWindowGetController(JSContext *ctx, JSValueConst, int argc,
+                              JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected window and controller id");
+    }
+    Window *window = resolveWindowArg(ctx, *host, argv[0]);
+    if (window == nullptr) {
+        return JS_EXCEPTION;
+    }
+    ControllerID id{};
+    if (!parseControllerIdValue(ctx, argv[1], id) || id.isJoystick) {
+        return JS_NULL;
+    }
+    return makeGamepadValue(ctx, *host, window->getController(id));
+}
+
+JSValue jsWindowGetJoystick(JSContext *ctx, JSValueConst, int argc,
+                            JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected window and controller id");
+    }
+    Window *window = resolveWindowArg(ctx, *host, argv[0]);
+    if (window == nullptr) {
+        return JS_EXCEPTION;
+    }
+    ControllerID id{};
+    if (!parseControllerIdValue(ctx, argv[1], id) || !id.isJoystick) {
+        return JS_NULL;
+    }
+    return makeJoystickValue(ctx, *host, window->getJoystick(id));
+}
+
+JSValue jsWindowInstantiate(JSContext *ctx, JSValueConst, int argc,
+                            JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected window and object");
+    }
+    Window *window = resolveWindowArg(ctx, *host, argv[0]);
+    GameObject *object = resolveObjectArg(ctx, *host, argv[1]);
+    if (window == nullptr || object == nullptr) {
+        return JS_EXCEPTION;
+    }
+    (void)window;
+    attachObjectIfReady(*host, *object);
+    return syncObjectWrapper(ctx, *host, *object);
+}
+
+JSValue jsWindowDestroy(JSContext *ctx, JSValueConst, int argc,
+                        JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected window and object");
+    }
+    Window *window = resolveWindowArg(ctx, *host, argv[0]);
+    GameObject *object = resolveObjectArg(ctx, *host, argv[1]);
+    if (window == nullptr || object == nullptr) {
+        return JS_EXCEPTION;
+    }
+    window->removeObject(object);
+    auto stateIt = host->objectStates.find(object->getId());
+    if (stateIt != host->objectStates.end()) {
+        stateIt->second.attachedToWindow = false;
+    }
+    return JS_UNDEFINED;
+}
+
+JSValue jsWindowAddUIObject(JSContext *ctx, JSValueConst, int argc,
+                            JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected window and object");
+    }
+    Window *window = resolveWindowArg(ctx, *host, argv[0]);
+    GameObject *object = resolveObjectArg(ctx, *host, argv[1]);
+    if (window == nullptr || object == nullptr) {
+        return JS_EXCEPTION;
+    }
+    object->initialize();
+    window->addUIObject(object);
+    trackObjectState(*host, *object, true);
+    return syncObjectWrapper(ctx, *host, *object);
+}
+
+JSValue jsWindowSetCamera(JSContext *ctx, JSValueConst, int argc,
+                          JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected window and camera");
+    }
+    Window *window = resolveWindowArg(ctx, *host, argv[0]);
+    Camera *camera = resolveCameraArg(ctx, *host, argv[1]);
+    if (window == nullptr || camera == nullptr) {
+        return JS_EXCEPTION;
+    }
+    window->setCamera(camera);
+    return syncWindowWrapper(ctx, *host, *window);
+}
+
+JSValue jsWindowSetScene(JSContext *ctx, JSValueConst, int argc,
+                         JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected window and scene");
+    }
+    Window *window = resolveWindowArg(ctx, *host, argv[0]);
+    Scene *scene = resolveSceneArg(ctx, *host, argv[1]);
+    if (window == nullptr || scene == nullptr) {
+        return JS_EXCEPTION;
+    }
+    window->setScene(scene);
+    return syncWindowWrapper(ctx, *host, *window);
+}
+
+JSValue jsWindowGetTime(JSContext *ctx, JSValueConst, int argc,
+                        JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 1) {
+        return JS_ThrowTypeError(ctx, "Expected window");
+    }
+    Window *window = resolveWindowArg(ctx, *host, argv[0]);
+    if (window == nullptr) {
+        return JS_EXCEPTION;
+    }
+    return JS_NewFloat64(ctx, window->getTime());
+}
+
+JSValue jsWindowAddRenderTarget(JSContext *ctx, JSValueConst, int argc,
+                                JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected window and render target");
+    }
+    Window *window = resolveWindowArg(ctx, *host, argv[0]);
+    auto *state = resolveRenderTarget(ctx, *host, argv[1]);
+    if (window == nullptr || state == nullptr || !state->renderTarget) {
+        return JS_EXCEPTION;
+    }
+    window->addRenderTarget(state->renderTarget.get());
+    state->attached = true;
+    std::int64_t renderTargetId = 0;
+    readIntProperty(ctx, argv[1], ATLAS_RENDER_TARGET_ID_PROP, renderTargetId);
+    return syncRenderTargetWrapper(ctx, *host,
+                                   static_cast<std::uint64_t>(renderTargetId));
+}
+
+JSValue jsWindowGetSize(JSContext *ctx, JSValueConst, int argc,
+                        JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 1) {
+        return JS_ThrowTypeError(ctx, "Expected window");
+    }
+    Window *window = resolveWindowArg(ctx, *host, argv[0]);
+    if (window == nullptr) {
+        return JS_EXCEPTION;
+    }
+    return makeSize2d(ctx, *host, window->getSize());
+}
+
+JSValue jsWindowGetDeltaTime(JSContext *ctx, JSValueConst, int argc,
+                             JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 1) {
+        return JS_ThrowTypeError(ctx, "Expected window");
+    }
+    Window *window = resolveWindowArg(ctx, *host, argv[0]);
+    if (window == nullptr) {
+        return JS_EXCEPTION;
+    }
+    return JS_NewFloat64(ctx, window->getDeltaTime());
+}
+
+JSValue jsWindowGetFramesPerSecond(JSContext *ctx, JSValueConst, int argc,
+                                   JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 1) {
+        return JS_ThrowTypeError(ctx, "Expected window");
+    }
+    Window *window = resolveWindowArg(ctx, *host, argv[0]);
+    if (window == nullptr) {
+        return JS_EXCEPTION;
+    }
+    return JS_NewFloat64(ctx, window->getFramesPerSecond());
+}
+
+JSValue jsWindowActivateDebug(JSContext *ctx, JSValueConst, int argc,
+                              JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 1) {
+        return JS_ThrowTypeError(ctx, "Expected window");
+    }
+    Window *window = resolveWindowArg(ctx, *host, argv[0]);
+    if (window == nullptr) {
+        return JS_EXCEPTION;
+    }
+    window->activateDebug();
+    return syncWindowWrapper(ctx, *host, *window);
+}
+
+JSValue jsWindowDeactivateDebug(JSContext *ctx, JSValueConst, int argc,
+                                JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 1) {
+        return JS_ThrowTypeError(ctx, "Expected window");
+    }
+    Window *window = resolveWindowArg(ctx, *host, argv[0]);
+    if (window == nullptr) {
+        return JS_EXCEPTION;
+    }
+    window->deactivateDebug();
+    return syncWindowWrapper(ctx, *host, *window);
+}
+
+JSValue jsWindowSetGravity(JSContext *ctx, JSValueConst, int argc,
+                           JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected window and gravity");
+    }
+    Window *window = resolveWindowArg(ctx, *host, argv[0]);
+    if (window == nullptr) {
+        return JS_EXCEPTION;
+    }
+    double gravity = window->gravity;
+    if (!getDouble(ctx, argv[1], gravity)) {
+        return JS_ThrowTypeError(ctx, "Expected gravity");
+    }
+    window->gravity = static_cast<float>(gravity);
+    return syncWindowWrapper(ctx, *host, *window);
+}
+
+JSValue jsWindowUseTracer(JSContext *ctx, JSValueConst, int argc,
+                          JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected window and enabled");
+    }
+    Window *window = resolveWindowArg(ctx, *host, argv[0]);
+    if (window == nullptr) {
+        return JS_EXCEPTION;
+    }
+    window->useTracer(JS_ToBool(ctx, argv[1]) == 1);
+    return syncWindowWrapper(ctx, *host, *window);
+}
+
+JSValue jsWindowSetLogOutput(JSContext *ctx, JSValueConst, int argc,
+                             JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 4) {
+        return JS_ThrowTypeError(ctx, "Expected window and three booleans");
+    }
+    Window *window = resolveWindowArg(ctx, *host, argv[0]);
+    if (window == nullptr) {
+        return JS_EXCEPTION;
+    }
+    window->setLogOutput(JS_ToBool(ctx, argv[1]) == 1,
+                         JS_ToBool(ctx, argv[2]) == 1,
+                         JS_ToBool(ctx, argv[3]) == 1);
+    return syncWindowWrapper(ctx, *host, *window);
+}
+
+JSValue jsWindowGetRenderScale(JSContext *ctx, JSValueConst, int argc,
+                               JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 1) {
+        return JS_ThrowTypeError(ctx, "Expected window");
+    }
+    Window *window = resolveWindowArg(ctx, *host, argv[0]);
+    if (window == nullptr) {
+        return JS_EXCEPTION;
+    }
+    return JS_NewFloat64(ctx, window->getRenderScale());
+}
+
+JSValue jsWindowUseMetalUpscaling(JSContext *ctx, JSValueConst, int argc,
+                                  JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected window and ratio");
+    }
+    Window *window = resolveWindowArg(ctx, *host, argv[0]);
+    if (window == nullptr) {
+        return JS_EXCEPTION;
+    }
+    double ratio = window->getMetalUpscalingRatio();
+    if (!getDouble(ctx, argv[1], ratio)) {
+        return JS_ThrowTypeError(ctx, "Expected ratio");
+    }
+    window->useMetalUpscaling(static_cast<float>(ratio));
+    return syncWindowWrapper(ctx, *host, *window);
+}
+
+JSValue jsWindowIsMetalUpscalingEnabled(JSContext *ctx, JSValueConst, int argc,
+                                        JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 1) {
+        return JS_ThrowTypeError(ctx, "Expected window");
+    }
+    Window *window = resolveWindowArg(ctx, *host, argv[0]);
+    if (window == nullptr) {
+        return JS_EXCEPTION;
+    }
+    return JS_NewBool(ctx, window->isMetalUpscalingEnabled());
+}
+
+JSValue jsWindowGetMetalUpscalingRatio(JSContext *ctx, JSValueConst, int argc,
+                                       JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 1) {
+        return JS_ThrowTypeError(ctx, "Expected window");
+    }
+    Window *window = resolveWindowArg(ctx, *host, argv[0]);
+    if (window == nullptr) {
+        return JS_EXCEPTION;
+    }
+    return JS_NewFloat64(ctx, window->getMetalUpscalingRatio());
+}
+
+JSValue jsWindowGetSSAORenderScale(JSContext *ctx, JSValueConst, int argc,
+                                   JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 1) {
+        return JS_ThrowTypeError(ctx, "Expected window");
+    }
+    Window *window = resolveWindowArg(ctx, *host, argv[0]);
+    if (window == nullptr) {
+        return JS_EXCEPTION;
+    }
+    return JS_NewFloat64(ctx, window->getSSAORenderScale());
+}
+
+JSValue jsWindowGetInputAction(JSContext *ctx, JSValueConst, int argc,
+                               JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected window and action name");
+    }
+    Window *window = resolveWindowArg(ctx, *host, argv[0]);
+    if (window == nullptr) {
+        return JS_EXCEPTION;
+    }
+    const char *name = JS_ToCString(ctx, argv[1]);
+    if (name == nullptr) {
+        return JS_ThrowTypeError(ctx, "Expected action name");
+    }
+    auto action = window->getInputAction(name);
+    JS_FreeCString(ctx, name);
+    if (action == nullptr) {
+        return JS_NULL;
+    }
+    return makeInputActionValue(ctx, *host, *action);
+}
+
+JSValue jsGamepadRumble(JSContext *ctx, JSValueConst, int argc,
+                        JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 3) {
+        return JS_ThrowTypeError(ctx, "Expected gamepad, strength, and duration");
+    }
+    if (!ensureCurrentGeneration(ctx, *host, argv[0])) {
+        return JS_EXCEPTION;
+    }
+    std::int64_t controllerId = CONTROLLER_UNDEFINED;
+    if (!readIntProperty(ctx, argv[0], "controllerId", controllerId)) {
+        return JS_ThrowTypeError(ctx, "Expected gamepad");
+    }
+    double strength = 0.0;
+    double duration = 0.0;
+    if (!getDouble(ctx, argv[1], strength) || !getDouble(ctx, argv[2], duration)) {
+        return JS_ThrowTypeError(ctx, "Expected strength and duration");
+    }
+    Window *window = getWindow(*host);
+    if (window == nullptr) {
+        return JS_NULL;
+    }
+    ControllerID id{static_cast<int>(controllerId), "", false};
+    window->getController(id).rumble(static_cast<float>(strength),
+                                     static_cast<float>(duration));
+    return JS_UNDEFINED;
+}
+
+JSValue jsJoystickGetAxisCount(JSContext *ctx, JSValueConst, int argc,
+                               JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 1) {
+        return JS_ThrowTypeError(ctx, "Expected joystick");
+    }
+    if (!ensureCurrentGeneration(ctx, *host, argv[0])) {
+        return JS_EXCEPTION;
+    }
+    std::int64_t joystickId = 0;
+    if (!readIntProperty(ctx, argv[0], "joystickId", joystickId)) {
+        return JS_ThrowTypeError(ctx, "Expected joystick");
+    }
+    Window *window = getWindow(*host);
+    if (window == nullptr) {
+        return JS_NewInt32(ctx, 0);
+    }
+    ControllerID id{static_cast<int>(joystickId), "", true};
+    return JS_NewInt32(ctx, window->getJoystick(id).getAxisCount());
+}
+
+JSValue jsJoystickGetButtonCount(JSContext *ctx, JSValueConst, int argc,
+                                 JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 1) {
+        return JS_ThrowTypeError(ctx, "Expected joystick");
+    }
+    if (!ensureCurrentGeneration(ctx, *host, argv[0])) {
+        return JS_EXCEPTION;
+    }
+    std::int64_t joystickId = 0;
+    if (!readIntProperty(ctx, argv[0], "joystickId", joystickId)) {
+        return JS_ThrowTypeError(ctx, "Expected joystick");
+    }
+    Window *window = getWindow(*host);
+    if (window == nullptr) {
+        return JS_NewInt32(ctx, 0);
+    }
+    ControllerID id{static_cast<int>(joystickId), "", true};
+    return JS_NewInt32(ctx, window->getJoystick(id).getButtonCount());
 }
 
 JSValue jsUpdateCamera(JSContext *ctx, JSValueConst, int argc,
@@ -7593,6 +8585,148 @@ JSValue jsGetInputConstants(JSContext *ctx, JSValueConst, int, JSValueConst *) {
     return result;
 }
 
+JSValue jsGetWindowConstants(JSContext *ctx, JSValueConst, int, JSValueConst *) {
+    JSValue result = JS_NewObject(ctx);
+
+    JSValue controllerAxis = JS_NewObject(ctx);
+    setProperty(ctx, controllerAxis, "LeftStick",
+                JS_NewInt32(ctx, static_cast<int>(ControllerAxis::LeftStick)));
+    setProperty(ctx, controllerAxis, "LeftStickX",
+                JS_NewInt32(ctx, static_cast<int>(ControllerAxis::LeftStickX)));
+    setProperty(ctx, controllerAxis, "LeftStickY",
+                JS_NewInt32(ctx, static_cast<int>(ControllerAxis::LeftStickY)));
+    setProperty(ctx, controllerAxis, "RightStick",
+                JS_NewInt32(ctx, static_cast<int>(ControllerAxis::RightStick)));
+    setProperty(ctx, controllerAxis, "RightStickX",
+                JS_NewInt32(ctx, static_cast<int>(ControllerAxis::RightStickX)));
+    setProperty(ctx, controllerAxis, "RightStickY",
+                JS_NewInt32(ctx, static_cast<int>(ControllerAxis::RightStickY)));
+    setProperty(ctx, controllerAxis, "Trigger",
+                JS_NewInt32(ctx, static_cast<int>(ControllerAxis::Trigger)));
+    setProperty(ctx, controllerAxis, "TriggerLeft",
+                JS_NewInt32(ctx, static_cast<int>(ControllerAxis::LeftTrigger)));
+    setProperty(ctx, controllerAxis, "TriggerRight",
+                JS_NewInt32(ctx, static_cast<int>(ControllerAxis::RightTrigger)));
+    setProperty(ctx, controllerAxis, "LeftTrigger",
+                JS_NewInt32(ctx, static_cast<int>(ControllerAxis::LeftTrigger)));
+    setProperty(ctx, controllerAxis, "RightTrigger",
+                JS_NewInt32(ctx, static_cast<int>(ControllerAxis::RightTrigger)));
+
+    JSValue controllerButton = JS_NewObject(ctx);
+    setProperty(ctx, controllerButton, "A",
+                JS_NewInt32(ctx, static_cast<int>(ControllerButton::A)));
+    setProperty(ctx, controllerButton, "B",
+                JS_NewInt32(ctx, static_cast<int>(ControllerButton::B)));
+    setProperty(ctx, controllerButton, "X",
+                JS_NewInt32(ctx, static_cast<int>(ControllerButton::X)));
+    setProperty(ctx, controllerButton, "Y",
+                JS_NewInt32(ctx, static_cast<int>(ControllerButton::Y)));
+    setProperty(ctx, controllerButton, "LeftBumper",
+                JS_NewInt32(ctx, static_cast<int>(ControllerButton::LeftBumper)));
+    setProperty(ctx, controllerButton, "RightBumper",
+                JS_NewInt32(ctx, static_cast<int>(ControllerButton::RightBumper)));
+    setProperty(ctx, controllerButton, "Back",
+                JS_NewInt32(ctx, static_cast<int>(ControllerButton::Back)));
+    setProperty(ctx, controllerButton, "Start",
+                JS_NewInt32(ctx, static_cast<int>(ControllerButton::Start)));
+    setProperty(ctx, controllerButton, "Guide",
+                JS_NewInt32(ctx, static_cast<int>(ControllerButton::Guide)));
+    setProperty(ctx, controllerButton, "LeftThumb",
+                JS_NewInt32(ctx, static_cast<int>(ControllerButton::LeftThumb)));
+    setProperty(ctx, controllerButton, "RightThumb",
+                JS_NewInt32(ctx, static_cast<int>(ControllerButton::RightThumb)));
+    setProperty(ctx, controllerButton, "DPadUp",
+                JS_NewInt32(ctx, static_cast<int>(ControllerButton::DPadUp)));
+    setProperty(ctx, controllerButton, "DPadRight",
+                JS_NewInt32(ctx, static_cast<int>(ControllerButton::DPadRight)));
+    setProperty(ctx, controllerButton, "DPadDown",
+                JS_NewInt32(ctx, static_cast<int>(ControllerButton::DPadDown)));
+    setProperty(ctx, controllerButton, "DPadLeft",
+                JS_NewInt32(ctx, static_cast<int>(ControllerButton::DPadLeft)));
+    setProperty(ctx, controllerButton, "ButtonCount",
+                JS_NewInt32(ctx, static_cast<int>(ControllerButton::ButtonCount)));
+
+    JSValue nintendoButton = JS_NewObject(ctx);
+    setProperty(ctx, nintendoButton, "B",
+                JS_NewInt32(ctx, static_cast<int>(NintendoControllerButton::B)));
+    setProperty(ctx, nintendoButton, "A",
+                JS_NewInt32(ctx, static_cast<int>(NintendoControllerButton::A)));
+    setProperty(ctx, nintendoButton, "Y",
+                JS_NewInt32(ctx, static_cast<int>(NintendoControllerButton::Y)));
+    setProperty(ctx, nintendoButton, "X",
+                JS_NewInt32(ctx, static_cast<int>(NintendoControllerButton::X)));
+    setProperty(ctx, nintendoButton, "L",
+                JS_NewInt32(ctx, static_cast<int>(NintendoControllerButton::L)));
+    setProperty(ctx, nintendoButton, "R",
+                JS_NewInt32(ctx, static_cast<int>(NintendoControllerButton::R)));
+    setProperty(ctx, nintendoButton, "ZL",
+                JS_NewInt32(ctx, static_cast<int>(NintendoControllerButton::ZL)));
+    setProperty(ctx, nintendoButton, "ZR",
+                JS_NewInt32(ctx, static_cast<int>(NintendoControllerButton::ZR)));
+    setProperty(ctx, nintendoButton, "Minus",
+                JS_NewInt32(ctx, static_cast<int>(NintendoControllerButton::Minus)));
+    setProperty(ctx, nintendoButton, "Plus",
+                JS_NewInt32(ctx, static_cast<int>(NintendoControllerButton::Plus)));
+    setProperty(ctx, nintendoButton, "LeftStick",
+                JS_NewInt32(ctx, static_cast<int>(NintendoControllerButton::LeftStick)));
+    setProperty(ctx, nintendoButton, "RightStick",
+                JS_NewInt32(ctx, static_cast<int>(NintendoControllerButton::RightStick)));
+    setProperty(ctx, nintendoButton, "DPadUp",
+                JS_NewInt32(ctx, static_cast<int>(NintendoControllerButton::DPadUp)));
+    setProperty(ctx, nintendoButton, "DPadRight",
+                JS_NewInt32(ctx, static_cast<int>(NintendoControllerButton::DPadRight)));
+    setProperty(ctx, nintendoButton, "DPadDown",
+                JS_NewInt32(ctx, static_cast<int>(NintendoControllerButton::DPadDown)));
+    setProperty(ctx, nintendoButton, "DPadLeft",
+                JS_NewInt32(ctx, static_cast<int>(NintendoControllerButton::DPadLeft)));
+    setProperty(ctx, nintendoButton, "ButtonCount",
+                JS_NewInt32(ctx, static_cast<int>(NintendoControllerButton::ButtonCount)));
+
+    JSValue sonyButton = JS_NewObject(ctx);
+    setProperty(ctx, sonyButton, "Cross",
+                JS_NewInt32(ctx, static_cast<int>(SonyControllerButton::Cross)));
+    setProperty(ctx, sonyButton, "Circle",
+                JS_NewInt32(ctx, static_cast<int>(SonyControllerButton::Circle)));
+    setProperty(ctx, sonyButton, "Square",
+                JS_NewInt32(ctx, static_cast<int>(SonyControllerButton::Square)));
+    setProperty(ctx, sonyButton, "Triangle",
+                JS_NewInt32(ctx, static_cast<int>(SonyControllerButton::Triangle)));
+    setProperty(ctx, sonyButton, "L1",
+                JS_NewInt32(ctx, static_cast<int>(SonyControllerButton::L1)));
+    setProperty(ctx, sonyButton, "R1",
+                JS_NewInt32(ctx, static_cast<int>(SonyControllerButton::R1)));
+    setProperty(ctx, sonyButton, "L2",
+                JS_NewInt32(ctx, static_cast<int>(SonyControllerButton::L2)));
+    setProperty(ctx, sonyButton, "R2",
+                JS_NewInt32(ctx, static_cast<int>(SonyControllerButton::R2)));
+    setProperty(ctx, sonyButton, "Share",
+                JS_NewInt32(ctx, static_cast<int>(SonyControllerButton::Share)));
+    setProperty(ctx, sonyButton, "Options",
+                JS_NewInt32(ctx, static_cast<int>(SonyControllerButton::Options)));
+    setProperty(ctx, sonyButton, "LeftStick",
+                JS_NewInt32(ctx, static_cast<int>(SonyControllerButton::LeftStick)));
+    setProperty(ctx, sonyButton, "RightStick",
+                JS_NewInt32(ctx, static_cast<int>(SonyControllerButton::RightStick)));
+    setProperty(ctx, sonyButton, "DPadUp",
+                JS_NewInt32(ctx, static_cast<int>(SonyControllerButton::DPadUp)));
+    setProperty(ctx, sonyButton, "DPadRight",
+                JS_NewInt32(ctx, static_cast<int>(SonyControllerButton::DPadRight)));
+    setProperty(ctx, sonyButton, "DPadDown",
+                JS_NewInt32(ctx, static_cast<int>(SonyControllerButton::DPadDown)));
+    setProperty(ctx, sonyButton, "DPadLeft",
+                JS_NewInt32(ctx, static_cast<int>(SonyControllerButton::DPadLeft)));
+    setProperty(ctx, sonyButton, "ButtonCount",
+                JS_NewInt32(ctx, static_cast<int>(SonyControllerButton::ButtonCount)));
+
+    setProperty(ctx, result, "ControllerAxis", controllerAxis);
+    setProperty(ctx, result, "ControllerButton", controllerButton);
+    setProperty(ctx, result, "NintendoControllerButton", nintendoButton);
+    setProperty(ctx, result, "SonyControllerButton", sonyButton);
+    setProperty(ctx, result, "CONTROLLER_UNDEFINED",
+                JS_NewInt32(ctx, CONTROLLER_UNDEFINED));
+    return result;
+}
+
 JSValue jsRegisterInputAction(JSContext *ctx, JSValueConst, int argc,
                               JSValueConst *argv) {
     auto *host = getHost(ctx);
@@ -9232,6 +10366,10 @@ bool runtime::scripting::checkNotException(JSContext *ctx, JSValueConst value,
 }
 
 void runtime::scripting::clearSceneBindings(JSContext *ctx, ScriptHost &host) {
+    if (!JS_IsUndefined(host.windowValue)) {
+        JS_FreeValue(ctx, host.windowValue);
+        host.windowValue = JS_UNDEFINED;
+    }
     if (!JS_IsUndefined(host.cameraValue)) {
         JS_FreeValue(ctx, host.cameraValue);
         host.cameraValue = JS_UNDEFINED;
@@ -9616,6 +10754,8 @@ void runtime::scripting::installGlobals(JSContext *ctx) {
                       JS_NewCFunction(ctx, jsPrint, "print", 1));
     JS_SetPropertyStr(ctx, global, "__atlasGetScene",
                       JS_NewCFunction(ctx, jsGetScene, "__atlasGetScene", 0));
+    JS_SetPropertyStr(ctx, global, "__atlasGetWindow",
+                      JS_NewCFunction(ctx, jsGetWindow, "__atlasGetWindow", 0));
     JS_SetPropertyStr(ctx, global, "__atlasSetSceneAmbientIntensity",
                       JS_NewCFunction(ctx, jsSetSceneAmbientIntensity,
                                       "__atlasSetSceneAmbientIntensity", 2));
@@ -9664,9 +10804,129 @@ void runtime::scripting::installGlobals(JSContext *ctx) {
     JS_SetPropertyStr(ctx, global, "__atlasGetCameraDirection",
                       JS_NewCFunction(ctx, jsGetCameraDirection,
                                       "__atlasGetCameraDirection", 1));
+    JS_SetPropertyStr(ctx, global, "__atlasSetWindowClearColor",
+                      JS_NewCFunction(ctx, jsWindowSetClearColor,
+                                      "__atlasSetWindowClearColor", 2));
+    JS_SetPropertyStr(ctx, global, "__atlasCloseWindow",
+                      JS_NewCFunction(ctx, jsWindowClose, "__atlasCloseWindow", 1));
+    JS_SetPropertyStr(ctx, global, "__atlasSetWindowFullscreen",
+                      JS_NewCFunction(ctx, jsWindowSetFullscreen,
+                                      "__atlasSetWindowFullscreen", 2));
+    JS_SetPropertyStr(ctx, global, "__atlasSetWindowFullscreenMonitor",
+                      JS_NewCFunction(ctx, jsWindowSetFullscreenMonitor,
+                                      "__atlasSetWindowFullscreenMonitor", 2));
+    JS_SetPropertyStr(ctx, global, "__atlasSetWindowed",
+                      JS_NewCFunction(ctx, jsWindowSetWindowed,
+                                      "__atlasSetWindowed", 2));
+    JS_SetPropertyStr(ctx, global, "__atlasEnumerateMonitors",
+                      JS_NewCFunction(ctx, jsWindowEnumerateMonitors,
+                                      "__atlasEnumerateMonitors", 1));
+    JS_SetPropertyStr(ctx, global, "__atlasMonitorQueryVideoModes",
+                      JS_NewCFunction(ctx, jsMonitorQueryVideoModes,
+                                      "__atlasMonitorQueryVideoModes", 1));
+    JS_SetPropertyStr(ctx, global, "__atlasMonitorGetCurrentVideoMode",
+                      JS_NewCFunction(ctx, jsMonitorGetCurrentVideoMode,
+                                      "__atlasMonitorGetCurrentVideoMode", 1));
+    JS_SetPropertyStr(ctx, global, "__atlasMonitorGetPhysicalSize",
+                      JS_NewCFunction(ctx, jsMonitorGetPhysicalSize,
+                                      "__atlasMonitorGetPhysicalSize", 1));
+    JS_SetPropertyStr(ctx, global, "__atlasMonitorGetPosition",
+                      JS_NewCFunction(ctx, jsMonitorGetPosition,
+                                      "__atlasMonitorGetPosition", 1));
+    JS_SetPropertyStr(ctx, global, "__atlasMonitorGetContentScale",
+                      JS_NewCFunction(ctx, jsMonitorGetContentScale,
+                                      "__atlasMonitorGetContentScale", 1));
+    JS_SetPropertyStr(ctx, global, "__atlasMonitorGetName",
+                      JS_NewCFunction(ctx, jsMonitorGetName,
+                                      "__atlasMonitorGetName", 1));
+    JS_SetPropertyStr(ctx, global, "__atlasGetControllers",
+                      JS_NewCFunction(ctx, jsWindowGetControllers,
+                                      "__atlasGetControllers", 1));
+    JS_SetPropertyStr(ctx, global, "__atlasGetController",
+                      JS_NewCFunction(ctx, jsWindowGetController,
+                                      "__atlasGetController", 2));
+    JS_SetPropertyStr(ctx, global, "__atlasGetJoystick",
+                      JS_NewCFunction(ctx, jsWindowGetJoystick,
+                                      "__atlasGetJoystick", 2));
+    JS_SetPropertyStr(ctx, global, "__atlasInstantiateObject",
+                      JS_NewCFunction(ctx, jsWindowInstantiate,
+                                      "__atlasInstantiateObject", 2));
+    JS_SetPropertyStr(ctx, global, "__atlasDestroyObject",
+                      JS_NewCFunction(ctx, jsWindowDestroy,
+                                      "__atlasDestroyObject", 2));
+    JS_SetPropertyStr(ctx, global, "__atlasAddUIObject",
+                      JS_NewCFunction(ctx, jsWindowAddUIObject,
+                                      "__atlasAddUIObject", 2));
+    JS_SetPropertyStr(ctx, global, "__atlasSetWindowCamera",
+                      JS_NewCFunction(ctx, jsWindowSetCamera,
+                                      "__atlasSetWindowCamera", 2));
+    JS_SetPropertyStr(ctx, global, "__atlasSetWindowScene",
+                      JS_NewCFunction(ctx, jsWindowSetScene,
+                                      "__atlasSetWindowScene", 2));
+    JS_SetPropertyStr(ctx, global, "__atlasGetWindowTime",
+                      JS_NewCFunction(ctx, jsWindowGetTime,
+                                      "__atlasGetWindowTime", 1));
+    JS_SetPropertyStr(ctx, global, "__atlasAddWindowRenderTarget",
+                      JS_NewCFunction(ctx, jsWindowAddRenderTarget,
+                                      "__atlasAddWindowRenderTarget", 2));
+    JS_SetPropertyStr(ctx, global, "__atlasGetWindowSize",
+                      JS_NewCFunction(ctx, jsWindowGetSize,
+                                      "__atlasGetWindowSize", 1));
+    JS_SetPropertyStr(ctx, global, "__atlasGetWindowDeltaTime",
+                      JS_NewCFunction(ctx, jsWindowGetDeltaTime,
+                                      "__atlasGetWindowDeltaTime", 1));
+    JS_SetPropertyStr(ctx, global, "__atlasGetWindowFramesPerSecond",
+                      JS_NewCFunction(ctx, jsWindowGetFramesPerSecond,
+                                      "__atlasGetWindowFramesPerSecond", 1));
+    JS_SetPropertyStr(ctx, global, "__atlasActivateWindowDebug",
+                      JS_NewCFunction(ctx, jsWindowActivateDebug,
+                                      "__atlasActivateWindowDebug", 1));
+    JS_SetPropertyStr(ctx, global, "__atlasDeactivateWindowDebug",
+                      JS_NewCFunction(ctx, jsWindowDeactivateDebug,
+                                      "__atlasDeactivateWindowDebug", 1));
+    JS_SetPropertyStr(ctx, global, "__atlasSetWindowGravity",
+                      JS_NewCFunction(ctx, jsWindowSetGravity,
+                                      "__atlasSetWindowGravity", 2));
+    JS_SetPropertyStr(ctx, global, "__atlasUseWindowTracer",
+                      JS_NewCFunction(ctx, jsWindowUseTracer,
+                                      "__atlasUseWindowTracer", 2));
+    JS_SetPropertyStr(ctx, global, "__atlasSetWindowLogOutput",
+                      JS_NewCFunction(ctx, jsWindowSetLogOutput,
+                                      "__atlasSetWindowLogOutput", 4));
+    JS_SetPropertyStr(ctx, global, "__atlasGetWindowRenderScale",
+                      JS_NewCFunction(ctx, jsWindowGetRenderScale,
+                                      "__atlasGetWindowRenderScale", 1));
+    JS_SetPropertyStr(ctx, global, "__atlasUseWindowMetalUpscaling",
+                      JS_NewCFunction(ctx, jsWindowUseMetalUpscaling,
+                                      "__atlasUseWindowMetalUpscaling", 2));
+    JS_SetPropertyStr(
+        ctx, global, "__atlasIsWindowMetalUpscalingEnabled",
+        JS_NewCFunction(ctx, jsWindowIsMetalUpscalingEnabled,
+                        "__atlasIsWindowMetalUpscalingEnabled", 1));
+    JS_SetPropertyStr(ctx, global, "__atlasGetWindowMetalUpscalingRatio",
+                      JS_NewCFunction(ctx, jsWindowGetMetalUpscalingRatio,
+                                      "__atlasGetWindowMetalUpscalingRatio", 1));
+    JS_SetPropertyStr(ctx, global, "__atlasGetWindowSSAORenderScale",
+                      JS_NewCFunction(ctx, jsWindowGetSSAORenderScale,
+                                      "__atlasGetWindowSSAORenderScale", 1));
+    JS_SetPropertyStr(ctx, global, "__atlasGetWindowInputAction",
+                      JS_NewCFunction(ctx, jsWindowGetInputAction,
+                                      "__atlasGetWindowInputAction", 2));
+    JS_SetPropertyStr(ctx, global, "__atlasGamepadRumble",
+                      JS_NewCFunction(ctx, jsGamepadRumble,
+                                      "__atlasGamepadRumble", 3));
+    JS_SetPropertyStr(ctx, global, "__atlasJoystickGetAxisCount",
+                      JS_NewCFunction(ctx, jsJoystickGetAxisCount,
+                                      "__atlasJoystickGetAxisCount", 1));
+    JS_SetPropertyStr(ctx, global, "__atlasJoystickGetButtonCount",
+                      JS_NewCFunction(ctx, jsJoystickGetButtonCount,
+                                      "__atlasJoystickGetButtonCount", 1));
     JS_SetPropertyStr(ctx, global, "__atlasGetInputConstants",
                       JS_NewCFunction(ctx, jsGetInputConstants,
                                       "__atlasGetInputConstants", 0));
+    JS_SetPropertyStr(ctx, global, "__atlasGetWindowConstants",
+                      JS_NewCFunction(ctx, jsGetWindowConstants,
+                                      "__atlasGetWindowConstants", 0));
     JS_SetPropertyStr(ctx, global, "__atlasRegisterInputAction",
                       JS_NewCFunction(ctx, jsRegisterInputAction,
                                       "__atlasRegisterInputAction", 1));

@@ -167,9 +167,11 @@ struct ScriptHost {
     std::vector<JSValue> interactiveValues;
     std::unordered_map<int, bool> interactiveKeyStates;
     bool interactiveFirstMouse = true;
+    JSValue windowValue = JS_UNDEFINED;
     JSValue cameraValue = JS_UNDEFINED;
     JSValue sceneValue = JS_UNDEFINED;
     JSValue atlasNamespace = JS_UNDEFINED;
+    JSValue atlasInputNamespace = JS_UNDEFINED;
     JSValue atlasUnitsNamespace = JS_UNDEFINED;
     JSValue atlasGraphicsNamespace = JS_UNDEFINED;
     JSValue atlasParticleNamespace = JS_UNDEFINED;
@@ -182,6 +184,10 @@ struct ScriptHost {
     JSValue instancePrototype = JS_UNDEFINED;
     JSValue coreVertexPrototype = JS_UNDEFINED;
     JSValue resourcePrototype = JS_UNDEFINED;
+    JSValue windowPrototype = JS_UNDEFINED;
+    JSValue monitorPrototype = JS_UNDEFINED;
+    JSValue gamepadPrototype = JS_UNDEFINED;
+    JSValue joystickPrototype = JS_UNDEFINED;
     JSValue cameraPrototype = JS_UNDEFINED;
     JSValue scenePrototype = JS_UNDEFINED;
     JSValue texturePrototype = JS_UNDEFINED;
@@ -204,6 +210,9 @@ struct ScriptHost {
     JSValue colorPrototype = JS_UNDEFINED;
     JSValue size2dPrototype = JS_UNDEFINED;
     JSValue quaternionPrototype = JS_UNDEFINED;
+    JSValue triggerPrototype = JS_UNDEFINED;
+    JSValue axisTriggerPrototype = JS_UNDEFINED;
+    JSValue inputActionPrototype = JS_UNDEFINED;
     std::uint64_t nextComponentId = 1;
     std::uint64_t nextAudioPlayerId = 1;
     std::uint64_t nextRigidbodyId = 1;
