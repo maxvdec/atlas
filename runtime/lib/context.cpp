@@ -2076,6 +2076,10 @@ void attachComponent(Context &context, const PendingComponent &pending) {
             rigidbody->setMotionType(parseMotionType(motionType));
         }
 
+        runtime::scripting::registerNativeRigidbody(
+            context.context, context.scriptHost, pending.object->getId(),
+            rigidbody);
+
         return;
     }
 
@@ -2119,6 +2123,9 @@ void attachComponent(Context &context, const PendingComponent &pending) {
         auto component = std::make_shared<FixedJoint>();
         pending.object->addComponent(component);
         configureJointBase(*component, context, *pending.object, pending.data);
+        runtime::scripting::registerNativeFixedJoint(
+            context.context, context.scriptHost, pending.object->getId(),
+            component);
         return;
     }
 
@@ -2151,6 +2158,10 @@ void attachComponent(Context &context, const PendingComponent &pending) {
             tryReadFloatAny(*motor, {"maxTorque"}, component->motor.maxTorque);
         }
 
+        runtime::scripting::registerNativeHingeJoint(
+            context.context, context.scriptHost, pending.object->getId(),
+            component);
+
         return;
     }
 
@@ -2182,6 +2193,10 @@ void attachComponent(Context &context, const PendingComponent &pending) {
             tryReadFloatAny(*spring, {"damping"}, component->spring.damping);
         }
 
+        runtime::scripting::registerNativeSpringJoint(
+            context.context, context.scriptHost, pending.object->getId(),
+            component);
+
         return;
     }
 
@@ -2189,6 +2204,9 @@ void attachComponent(Context &context, const PendingComponent &pending) {
         auto component = std::make_shared<Vehicle>();
         pending.object->addComponent(component);
         configureVehicleSettings(component->settings, pending.data);
+        runtime::scripting::registerNativeVehicle(
+            context.context, context.scriptHost, pending.object->getId(),
+            component);
         return;
     }
 

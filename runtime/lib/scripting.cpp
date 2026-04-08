@@ -9298,6 +9298,96 @@ std::uint64_t runtime::scripting::registerComponentInstance(
     return componentId;
 }
 
+void runtime::scripting::registerNativeRigidbody(
+    JSContext *ctx, ScriptHost &host, int ownerId,
+    const std::shared_ptr<Rigidbody> &component) {
+    if (ctx == nullptr || !component) {
+        return;
+    }
+
+    const std::uint64_t rigidbodyId =
+        registerRigidbodyState(host, component, ctx, JS_UNDEFINED, true);
+    JSValue wrapper = syncRigidbodyWrapper(ctx, host, rigidbodyId);
+    const std::string name = component->isSensor ? "Sensor" : "Rigidbody";
+    const std::uint64_t componentId =
+        registerComponentInstance(ctx, host, component.get(), ownerId, name,
+                                  wrapper);
+    if (component->isSensor) {
+        host.componentLookup[makeComponentLookupKey(ownerId, "Rigidbody")] =
+            componentId;
+    }
+    JS_FreeValue(ctx, wrapper);
+}
+
+void runtime::scripting::registerNativeVehicle(
+    JSContext *ctx, ScriptHost &host, int ownerId,
+    const std::shared_ptr<Vehicle> &component) {
+    if (ctx == nullptr || !component) {
+        return;
+    }
+
+    const std::uint64_t vehicleId = registerVehicleState(
+        host, component, component.get(), ctx, JS_UNDEFINED, true);
+    JSValue wrapper = syncVehicleWrapper(ctx, host, vehicleId);
+    registerComponentInstance(ctx, host, component.get(), ownerId, "Vehicle",
+                              wrapper);
+    JS_FreeValue(ctx, wrapper);
+}
+
+void runtime::scripting::registerNativeFixedJoint(
+    JSContext *ctx, ScriptHost &host, int ownerId,
+    const std::shared_ptr<FixedJoint> &component) {
+    if (ctx == nullptr || !component) {
+        return;
+    }
+
+    const std::uint64_t jointId = registerFixedJointState(
+        host, component, component.get(), ctx, JS_UNDEFINED, true);
+    JSValue wrapper = syncFixedJointWrapper(ctx, host, jointId);
+    const std::uint64_t componentId =
+        registerComponentInstance(ctx, host, component.get(), ownerId,
+                                  "FixedJoint", wrapper);
+    host.componentLookup[makeComponentLookupKey(ownerId, "Joint")] =
+        componentId;
+    JS_FreeValue(ctx, wrapper);
+}
+
+void runtime::scripting::registerNativeHingeJoint(
+    JSContext *ctx, ScriptHost &host, int ownerId,
+    const std::shared_ptr<HingeJoint> &component) {
+    if (ctx == nullptr || !component) {
+        return;
+    }
+
+    const std::uint64_t jointId = registerHingeJointState(
+        host, component, component.get(), ctx, JS_UNDEFINED, true);
+    JSValue wrapper = syncHingeJointWrapper(ctx, host, jointId);
+    const std::uint64_t componentId =
+        registerComponentInstance(ctx, host, component.get(), ownerId,
+                                  "HingeJoint", wrapper);
+    host.componentLookup[makeComponentLookupKey(ownerId, "Joint")] =
+        componentId;
+    JS_FreeValue(ctx, wrapper);
+}
+
+void runtime::scripting::registerNativeSpringJoint(
+    JSContext *ctx, ScriptHost &host, int ownerId,
+    const std::shared_ptr<SpringJoint> &component) {
+    if (ctx == nullptr || !component) {
+        return;
+    }
+
+    const std::uint64_t jointId = registerSpringJointState(
+        host, component, component.get(), ctx, JS_UNDEFINED, true);
+    JSValue wrapper = syncSpringJointWrapper(ctx, host, jointId);
+    const std::uint64_t componentId =
+        registerComponentInstance(ctx, host, component.get(), ownerId,
+                                  "SpringJoint", wrapper);
+    host.componentLookup[makeComponentLookupKey(ownerId, "Joint")] =
+        componentId;
+    JS_FreeValue(ctx, wrapper);
+}
+
 void runtime::scripting::installGlobals(JSContext *ctx) {
     JSValue global = JS_GetGlobalObject(ctx);
     JS_SetPropertyStr(ctx, global, "print",

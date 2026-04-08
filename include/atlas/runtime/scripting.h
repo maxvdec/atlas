@@ -240,6 +240,16 @@ std::uint64_t registerComponentInstance(JSContext *ctx, ScriptHost &host,
                                         Component *component, int ownerId,
                                         const std::string &name,
                                         JSValueConst value);
+void registerNativeRigidbody(JSContext *ctx, ScriptHost &host, int ownerId,
+                             const std::shared_ptr<Rigidbody> &component);
+void registerNativeVehicle(JSContext *ctx, ScriptHost &host, int ownerId,
+                           const std::shared_ptr<Vehicle> &component);
+void registerNativeFixedJoint(JSContext *ctx, ScriptHost &host, int ownerId,
+                              const std::shared_ptr<FixedJoint> &component);
+void registerNativeHingeJoint(JSContext *ctx, ScriptHost &host, int ownerId,
+                              const std::shared_ptr<HingeJoint> &component);
+void registerNativeSpringJoint(JSContext *ctx, ScriptHost &host, int ownerId,
+                               const std::shared_ptr<SpringJoint> &component);
 void dispatchInteractiveFrame(JSContext *ctx, ScriptHost &host, Window &window,
                               float deltaTime);
 void dispatchInteractiveMouseMove(JSContext *ctx, ScriptHost &host,

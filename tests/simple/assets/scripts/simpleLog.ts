@@ -19,9 +19,6 @@ export class SimpleLog extends Component {
     }
 
     update(deltaTime: number) {
-        let parent = this.getObject("Cube");
-        parent.setPosition(Position3d.zero());
-
         if (Input.isKeyPressed(Key.A)) {
             Debug.print("Key A is active!");
         }
