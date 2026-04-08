@@ -250,17 +250,24 @@ class Terrain : public GameObject {
      * @brief Scale applied across each axis.
      */
     Scale3d scale = {1.0, 1.0, 1.0};
+    bool isVisible = true;
 
     /**
      * @brief Collection of biomes available for classification.
      */
     std::vector<Biome> biomes;
 
+    Position3d getPosition() const override { return position; }
+    Rotation3d getRotation() const override { return rotation; }
+    Size3d getScale() const override { return scale; }
+    bool canCastShadows() const override { return isVisible; }
+
     /**
      * @brief Moves the terrain to an absolute world-space position.
      */
     void setPosition(const Position3d &newPosition) override {
         this->position = newPosition;
+        updateModelMatrix();
     };
 
     /**
@@ -268,12 +275,26 @@ class Terrain : public GameObject {
      */
     void setRotation(const Rotation3d &newRotation) override {
         this->rotation = newRotation;
+        updateModelMatrix();
     };
 
     /**
      * @brief Sets the absolute terrain scale.
      */
-    void setScale(const Scale3d &newScale) override { this->scale = newScale; };
+    void setScale(const Scale3d &newScale) override {
+        this->scale = newScale;
+        updateModelMatrix();
+    };
+
+    void attachTexture(const Texture &texture) override {
+        if (biomes.empty()) {
+            Biome biome("Default", texture, Color::white());
+            biome.useTexture = true;
+            biomes.push_back(biome);
+            return;
+        }
+        biomes.front().attachTexture(texture);
+    }
 
     /**
      * @brief Translates the terrain by the given delta.
@@ -282,7 +303,11 @@ class Terrain : public GameObject {
         this->position.x += deltaPosition.x;
         this->position.y += deltaPosition.y;
         this->position.z += deltaPosition.z;
+        updateModelMatrix();
     };
+
+    void lookAt(const Position3d &target,
+                const Normal3d &up = {0.0, 1.0, 0.0}) override;
 
     /**
      * @brief Recomputes the model matrix from the current transform.
@@ -296,6 +321,7 @@ class Terrain : public GameObject {
         this->scale.x *= deltaScale.x;
         this->scale.y *= deltaScale.y;
         this->scale.z *= deltaScale.z;
+        updateModelMatrix();
     };
 
     /**
@@ -305,7 +331,11 @@ class Terrain : public GameObject {
         this->rotation.pitch += deltaRotation.pitch;
         this->rotation.yaw += deltaRotation.yaw;
         this->rotation.roll += deltaRotation.roll;
+        updateModelMatrix();
     };
+
+    void hide() override { isVisible = false; }
+    void show() override { isVisible = true; }
 
     /**
      * @brief Maximum elevation (in world units) used when normalizing heights.

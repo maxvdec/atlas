@@ -8,6 +8,8 @@
 //
 
 #include "atlas/runtime/scripting.h"
+#include "aurora/procedural.h"
+#include "aurora/terrain.h"
 #include "atlas/audio.h"
 #include "atlas/effect.h"
 #include "atlas/input.h"
@@ -675,6 +677,15 @@ bool ensureBuiltins(JSContext *ctx, ScriptHost &host) {
         }
     }
 
+    if (JS_IsUndefined(host.auroraNamespace)) {
+        host.auroraNamespace =
+            runtime::scripting::importModuleNamespace(ctx, "aurora");
+        if (JS_IsException(host.auroraNamespace)) {
+            runtime::scripting::dumpExecution(ctx);
+            return false;
+        }
+    }
+
     cachePrototype(ctx, host.atlasNamespace, "Component",
                    host.componentPrototype);
     cachePrototype(ctx, host.atlasNamespace, "GameObject",
@@ -721,6 +732,20 @@ bool ensureBuiltins(JSContext *ctx, ScriptHost &host) {
                    host.areaLightPrototype);
     cachePrototype(ctx, host.atlasParticleNamespace, "ParticleEmitter",
                    host.particleEmitterPrototype);
+    cachePrototype(ctx, host.auroraNamespace, "Terrain", host.terrainPrototype);
+    cachePrototype(ctx, host.auroraNamespace, "Biome", host.biomePrototype);
+    cachePrototype(ctx, host.auroraNamespace, "TerrainGenerator",
+                   host.terrainGeneratorPrototype);
+    cachePrototype(ctx, host.auroraNamespace, "HillGenerator",
+                   host.hillGeneratorPrototype);
+    cachePrototype(ctx, host.auroraNamespace, "MountainGenerator",
+                   host.mountainGeneratorPrototype);
+    cachePrototype(ctx, host.auroraNamespace, "PlainGenerator",
+                   host.plainGeneratorPrototype);
+    cachePrototype(ctx, host.auroraNamespace, "IslandGenerator",
+                   host.islandGeneratorPrototype);
+    cachePrototype(ctx, host.auroraNamespace, "CompoundGenerator",
+                   host.compoundGeneratorPrototype);
     cachePrototype(ctx, host.atlasBezelNamespace, "Rigidbody",
                    host.rigidbodyPrototype);
     cachePrototype(ctx, host.atlasBezelNamespace, "Sensor",
@@ -972,6 +997,169 @@ bool parseResource(JSContext *ctx, JSValueConst value, Resource &out) {
     out.path = path;
     out.name = name;
     out.type = toNativeResourceType(static_cast<int>(type));
+    return true;
+}
+
+std::shared_ptr<TerrainGenerator>
+parseTerrainGeneratorValue(JSContext *ctx, ScriptHost &host, JSValueConst value) {
+    if (!JS_IsObject(value) || JS_IsNull(value)) {
+        return nullptr;
+    }
+
+    std::string algorithm;
+    if (!readStringProperty(ctx, value, "algorithm", algorithm)) {
+        if (!readStringProperty(ctx, value, "type", algorithm)) {
+            return nullptr;
+        }
+    }
+
+    const std::string token = normalizeToken(algorithm);
+
+    if (token == "hill" || token == "hills" || token == "perlin" ||
+        token == "perlinnoise") {
+        double scale = 0.01;
+        double amplitude = 10.0;
+        readNumberProperty(ctx, value, "scale", scale);
+        readNumberProperty(ctx, value, "amplitude", amplitude);
+        return std::make_shared<HillGenerator>(static_cast<float>(scale),
+                                               static_cast<float>(amplitude));
+    }
+
+    if (token == "plain" || token == "plains") {
+        double scale = 0.02;
+        double amplitude = 2.0;
+        readNumberProperty(ctx, value, "scale", scale);
+        readNumberProperty(ctx, value, "amplitude", amplitude);
+        return std::make_shared<PlainGenerator>(static_cast<float>(scale),
+                                                static_cast<float>(amplitude));
+    }
+
+    if (token == "mountain" || token == "mountains" || token == "fractal" ||
+        token == "fractalnoise" || token == "simplex" ||
+        token == "simplexnoise" || token == "diamondsquare") {
+        double scale = 10.0;
+        double amplitude = 100.0;
+        std::int64_t octaves = 5;
+        double persistence = 0.5;
+        readNumberProperty(ctx, value, "scale", scale);
+        readNumberProperty(ctx, value, "amplitude", amplitude);
+        readIntProperty(ctx, value, "octaves", octaves);
+        if (!readNumberProperty(ctx, value, "persistence", persistence)) {
+            readNumberProperty(ctx, value, "persistance", persistence);
+        }
+        return std::make_shared<MountainGenerator>(
+            static_cast<float>(scale), static_cast<float>(amplitude),
+            static_cast<int>(octaves), static_cast<float>(persistence));
+    }
+
+    if (token == "island" || token == "worley" || token == "worleynoise") {
+        std::int64_t numFeatures = 10;
+        double scale = 0.01;
+        readIntProperty(ctx, value, "numFeatures", numFeatures);
+        readNumberProperty(ctx, value, "scale", scale);
+        return std::make_shared<IslandGenerator>(
+            static_cast<int>(numFeatures), static_cast<float>(scale));
+    }
+
+    if (token == "compound" || token == "combined" || token == "composite") {
+        auto compound = std::make_shared<CompoundGenerator>();
+        JSValue generators = JS_GetPropertyStr(ctx, value, "generators");
+        if (!JS_IsException(generators) && JS_IsArray(generators)) {
+            std::uint32_t length = 0;
+            JSValue lengthValue = JS_GetPropertyStr(ctx, generators, "length");
+            if (!JS_IsException(lengthValue) &&
+                getUint32(ctx, lengthValue, length)) {
+                for (std::uint32_t i = 0; i < length; ++i) {
+                    JSValue childValue = JS_GetPropertyUint32(ctx, generators, i);
+                    auto child =
+                        !JS_IsException(childValue)
+                            ? parseTerrainGeneratorValue(ctx, host, childValue)
+                            : nullptr;
+                    JS_FreeValue(ctx, childValue);
+                    if (!child) {
+                        continue;
+                    }
+                    if (auto hill =
+                            std::dynamic_pointer_cast<HillGenerator>(child)) {
+                        compound->addGenerator(*hill);
+                    } else if (auto plain =
+                                   std::dynamic_pointer_cast<PlainGenerator>(
+                                       child)) {
+                        compound->addGenerator(*plain);
+                    } else if (auto mountain =
+                                   std::dynamic_pointer_cast<MountainGenerator>(
+                                       child)) {
+                        compound->addGenerator(*mountain);
+                    } else if (auto island =
+                                   std::dynamic_pointer_cast<IslandGenerator>(
+                                       child)) {
+                        compound->addGenerator(*island);
+                    } else if (auto nested =
+                                   std::dynamic_pointer_cast<CompoundGenerator>(
+                                       child)) {
+                        compound->addGenerator(*nested);
+                    }
+                }
+            }
+            JS_FreeValue(ctx, lengthValue);
+        }
+        JS_FreeValue(ctx, generators);
+        return compound;
+    }
+
+    (void)host;
+    return nullptr;
+}
+
+bool parseBiomeValue(JSContext *ctx, ScriptHost &host, JSValueConst value,
+                     Biome &out) {
+    if (!JS_IsObject(value) || JS_IsNull(value)) {
+        return false;
+    }
+
+    readStringProperty(ctx, value, "name", out.name);
+
+    JSValue prop = JS_GetPropertyStr(ctx, value, "color");
+    if (!JS_IsException(prop) && !JS_IsUndefined(prop) && !JS_IsNull(prop)) {
+        parseColor(ctx, prop, out.color);
+    }
+    JS_FreeValue(ctx, prop);
+
+    bool useTexture = out.useTexture;
+    readBoolProperty(ctx, value, "useTexture", useTexture);
+    out.useTexture = useTexture;
+
+    double number = out.minHeight;
+    readNumberProperty(ctx, value, "minHeight", number);
+    out.minHeight = static_cast<float>(number);
+    number = out.maxHeight;
+    readNumberProperty(ctx, value, "maxHeight", number);
+    out.maxHeight = static_cast<float>(number);
+    number = out.minMoisture;
+    readNumberProperty(ctx, value, "minMoisture", number);
+    out.minMoisture = static_cast<float>(number);
+    number = out.maxMoisture;
+    readNumberProperty(ctx, value, "maxMoisture", number);
+    out.maxMoisture = static_cast<float>(number);
+    number = out.minTemperature;
+    readNumberProperty(ctx, value, "minTemperature", number);
+    out.minTemperature = static_cast<float>(number);
+    number = out.maxTemperature;
+    readNumberProperty(ctx, value, "maxTemperature", number);
+    out.maxTemperature = static_cast<float>(number);
+
+    prop = JS_GetPropertyStr(ctx, value, "texture");
+    if (!JS_IsException(prop) && !JS_IsUndefined(prop) && !JS_IsNull(prop)) {
+        auto *textureState = resolveTexture(ctx, host, prop);
+        if (textureState != nullptr && textureState->texture) {
+            out.texture = *textureState->texture;
+            if (out.texture.texture != nullptr || out.texture.id != 0) {
+                out.useTexture = true;
+            }
+        }
+    }
+    JS_FreeValue(ctx, prop);
+
     return true;
 }
 
@@ -2080,6 +2268,105 @@ JSValue syncAreaLightWrapper(JSContext *ctx, ScriptHost &host,
     return wrapper;
 }
 
+JSValue makeBiomeValue(JSContext *ctx, ScriptHost &host, const Biome &biome) {
+    ensureBuiltins(ctx, host);
+    JSValue result = newObjectFromPrototype(ctx, host.biomePrototype);
+    setProperty(ctx, result, "name", JS_NewString(ctx, biome.name.c_str()));
+    setProperty(ctx, result, "color", makeColor(ctx, host, biome.color));
+    setProperty(ctx, result, "useTexture", JS_NewBool(ctx, biome.useTexture));
+    setProperty(ctx, result, "minHeight", JS_NewFloat64(ctx, biome.minHeight));
+    setProperty(ctx, result, "maxHeight", JS_NewFloat64(ctx, biome.maxHeight));
+    setProperty(ctx, result, "minMoisture",
+                JS_NewFloat64(ctx, biome.minMoisture));
+    setProperty(ctx, result, "maxMoisture",
+                JS_NewFloat64(ctx, biome.maxMoisture));
+    setProperty(ctx, result, "minTemperature",
+                JS_NewFloat64(ctx, biome.minTemperature));
+    setProperty(ctx, result, "maxTemperature",
+                JS_NewFloat64(ctx, biome.maxTemperature));
+    if (biome.texture.texture != nullptr || biome.texture.id != 0) {
+        const std::uint64_t textureId = registerTextureState(host, biome.texture);
+        setProperty(ctx, result, "texture",
+                    syncTextureWrapper(ctx, host, textureId));
+    } else {
+        setProperty(ctx, result, "texture", JS_NULL);
+    }
+    return result;
+}
+
+JSValue makeTerrainGeneratorValue(JSContext *ctx, ScriptHost &host,
+                                  const std::shared_ptr<TerrainGenerator> &generator) {
+    ensureBuiltins(ctx, host);
+    if (!generator) {
+        return JS_NULL;
+    }
+
+    JSValueConst prototype = host.terrainGeneratorPrototype;
+    if (auto hill = std::dynamic_pointer_cast<HillGenerator>(generator)) {
+        JSValue result = newObjectFromPrototype(ctx, host.hillGeneratorPrototype);
+        setProperty(ctx, result, "algorithm", JS_NewString(ctx, "hill"));
+        setProperty(ctx, result, "type", JS_NewString(ctx, "hill"));
+        setProperty(ctx, result, "scale", JS_NewFloat64(ctx, hill->getScale()));
+        setProperty(ctx, result, "amplitude",
+                    JS_NewFloat64(ctx, hill->getAmplitude()));
+        return result;
+    }
+    if (auto mountain = std::dynamic_pointer_cast<MountainGenerator>(generator)) {
+        JSValue result =
+            newObjectFromPrototype(ctx, host.mountainGeneratorPrototype);
+        setProperty(ctx, result, "algorithm", JS_NewString(ctx, "mountain"));
+        setProperty(ctx, result, "type", JS_NewString(ctx, "mountain"));
+        setProperty(ctx, result, "scale",
+                    JS_NewFloat64(ctx, mountain->getScale()));
+        setProperty(ctx, result, "amplitude",
+                    JS_NewFloat64(ctx, mountain->getAmplitude()));
+        setProperty(ctx, result, "octaves",
+                    JS_NewInt32(ctx, mountain->getOctaves()));
+        setProperty(ctx, result, "persistence",
+                    JS_NewFloat64(ctx, mountain->getPersistence()));
+        setProperty(ctx, result, "persistance",
+                    JS_NewFloat64(ctx, mountain->getPersistence()));
+        return result;
+    }
+    if (auto plain = std::dynamic_pointer_cast<PlainGenerator>(generator)) {
+        JSValue result = newObjectFromPrototype(ctx, host.plainGeneratorPrototype);
+        setProperty(ctx, result, "algorithm", JS_NewString(ctx, "plain"));
+        setProperty(ctx, result, "type", JS_NewString(ctx, "plain"));
+        setProperty(ctx, result, "scale", JS_NewFloat64(ctx, plain->getScale()));
+        setProperty(ctx, result, "amplitude",
+                    JS_NewFloat64(ctx, plain->getAmplitude()));
+        return result;
+    }
+    if (auto island = std::dynamic_pointer_cast<IslandGenerator>(generator)) {
+        JSValue result =
+            newObjectFromPrototype(ctx, host.islandGeneratorPrototype);
+        setProperty(ctx, result, "algorithm", JS_NewString(ctx, "island"));
+        setProperty(ctx, result, "type", JS_NewString(ctx, "island"));
+        setProperty(ctx, result, "numFeatures",
+                    JS_NewInt32(ctx, island->getNumFeatures()));
+        setProperty(ctx, result, "scale",
+                    JS_NewFloat64(ctx, island->getScale()));
+        return result;
+    }
+    if (auto compound = std::dynamic_pointer_cast<CompoundGenerator>(generator)) {
+        JSValue result =
+            newObjectFromPrototype(ctx, host.compoundGeneratorPrototype);
+        setProperty(ctx, result, "algorithm", JS_NewString(ctx, "compound"));
+        setProperty(ctx, result, "type", JS_NewString(ctx, "compound"));
+        JSValue children = JS_NewArray(ctx);
+        const auto &generators = compound->getGenerators();
+        for (std::uint32_t i = 0; i < generators.size(); ++i) {
+            JS_SetPropertyUint32(ctx, children, i,
+                                 makeTerrainGeneratorValue(ctx, host,
+                                                           generators[i]));
+        }
+        setProperty(ctx, result, "generators", children);
+        return result;
+    }
+
+    return newObjectFromPrototype(ctx, prototype);
+}
+
 JSValue makeMonitorValue(JSContext *ctx, ScriptHost &host, const Monitor &monitor) {
     ensureBuiltins(ctx, host);
     JSValue wrapper = newObjectFromPrototype(ctx, host.monitorPrototype);
@@ -2552,6 +2839,16 @@ void attachObjectIfReady(ScriptHost &host, GameObject &object) {
         return;
     }
 
+    if (auto *terrain = dynamic_cast<Terrain *>(&object); terrain != nullptr) {
+        if (terrain->createdWithMap) {
+            if (terrain->heightmap.path.empty()) {
+                return;
+            }
+        } else if (terrain->generator == nullptr) {
+            return;
+        }
+    }
+
     object.initialize();
     host.context->window->addObject(&object);
     state.attachedToWindow = true;
@@ -2691,6 +2988,8 @@ JSValue syncObjectWrapper(JSContext *ctx, ScriptHost &host,
             prototype = host.particleEmitterPrototype;
         } else if (dynamic_cast<Model *>(&object) != nullptr) {
             prototype = host.modelPrototype;
+        } else if (dynamic_cast<Terrain *>(&object) != nullptr) {
+            prototype = host.terrainPrototype;
         }
         wrapper = newObjectFromPrototype(ctx, prototype);
         host.objectCache[objectId] = JS_DupValue(ctx, wrapper);
@@ -2779,6 +3078,47 @@ JSValue syncObjectWrapper(JSContext *ctx, ScriptHost &host,
         setProperty(ctx, wrapper, "instances", instances);
         setProperty(ctx, wrapper, "castsShadows",
                     JS_NewBool(ctx, core->castsShadows));
+    }
+
+    if (auto *terrain = dynamic_cast<Terrain *>(&object); terrain != nullptr) {
+        setProperty(ctx, wrapper, "heightmap",
+                    makeResource(ctx, host, terrain->heightmap));
+        if (terrain->moistureTexture.texture != nullptr ||
+            terrain->moistureTexture.id != 0) {
+            const std::uint64_t moistureId =
+                registerTextureState(host, terrain->moistureTexture);
+            setProperty(ctx, wrapper, "moistureTexture",
+                        syncTextureWrapper(ctx, host, moistureId));
+        } else {
+            setProperty(ctx, wrapper, "moistureTexture", JS_NULL);
+        }
+        if (terrain->temperatureTexture.texture != nullptr ||
+            terrain->temperatureTexture.id != 0) {
+            const std::uint64_t temperatureId =
+                registerTextureState(host, terrain->temperatureTexture);
+            setProperty(ctx, wrapper, "temperatureTexture",
+                        syncTextureWrapper(ctx, host, temperatureId));
+        } else {
+            setProperty(ctx, wrapper, "temperatureTexture", JS_NULL);
+        }
+        setProperty(ctx, wrapper, "generator",
+                    makeTerrainGeneratorValue(ctx, host, terrain->generator));
+        setProperty(ctx, wrapper, "createdWithMap",
+                    JS_NewBool(ctx, terrain->createdWithMap));
+        setProperty(ctx, wrapper, "width", JS_NewInt32(ctx, terrain->width));
+        setProperty(ctx, wrapper, "length", JS_NewInt32(ctx, terrain->height));
+        setProperty(ctx, wrapper, "height", JS_NewInt32(ctx, terrain->height));
+        setProperty(ctx, wrapper, "resolution",
+                    JS_NewInt32(ctx, static_cast<int>(terrain->resolution)));
+        setProperty(ctx, wrapper, "maxPeak", JS_NewFloat64(ctx, terrain->maxPeak));
+        setProperty(ctx, wrapper, "seaLevel",
+                    JS_NewFloat64(ctx, terrain->seaLevel));
+        JSValue biomes = JS_NewArray(ctx);
+        for (std::uint32_t i = 0; i < terrain->biomes.size(); ++i) {
+            JS_SetPropertyUint32(ctx, biomes, i,
+                                 makeBiomeValue(ctx, host, terrain->biomes[i]));
+        }
+        setProperty(ctx, wrapper, "biomes", biomes);
     }
 
     return wrapper;
@@ -2898,6 +3238,95 @@ bool applyCoreObject(JSContext *ctx, ScriptHost &host, JSValueConst wrapper,
         attachObjectIfReady(host, object);
     }
 
+    return true;
+}
+
+bool applyTerrain(JSContext *ctx, ScriptHost &host, JSValueConst wrapper,
+                  Terrain &terrain) {
+    applyBaseObject(ctx, host, wrapper, terrain);
+
+    JSValue value = JS_GetPropertyStr(ctx, wrapper, "heightmap");
+    if (!JS_IsException(value) && !JS_IsUndefined(value) && !JS_IsNull(value)) {
+        Resource heightmap;
+        if (parseResource(ctx, value, heightmap)) {
+            terrain.heightmap = heightmap;
+            terrain.createdWithMap = true;
+        }
+    }
+    JS_FreeValue(ctx, value);
+
+    value = JS_GetPropertyStr(ctx, wrapper, "moistureTexture");
+    if (!JS_IsException(value) && !JS_IsUndefined(value) && !JS_IsNull(value)) {
+        auto *textureState = resolveTexture(ctx, host, value);
+        if (textureState != nullptr && textureState->texture) {
+            terrain.moistureTexture = *textureState->texture;
+        }
+    }
+    JS_FreeValue(ctx, value);
+
+    value = JS_GetPropertyStr(ctx, wrapper, "temperatureTexture");
+    if (!JS_IsException(value) && !JS_IsUndefined(value) && !JS_IsNull(value)) {
+        auto *textureState = resolveTexture(ctx, host, value);
+        if (textureState != nullptr && textureState->texture) {
+            terrain.temperatureTexture = *textureState->texture;
+        }
+    }
+    JS_FreeValue(ctx, value);
+
+    value = JS_GetPropertyStr(ctx, wrapper, "generator");
+    if (!JS_IsException(value) && !JS_IsUndefined(value) && !JS_IsNull(value)) {
+        auto generator = parseTerrainGeneratorValue(ctx, host, value);
+        if (generator) {
+            terrain.generator = generator;
+            terrain.createdWithMap = false;
+        }
+    }
+    JS_FreeValue(ctx, value);
+
+    bool createdWithMap = terrain.createdWithMap;
+    readBoolProperty(ctx, wrapper, "createdWithMap", createdWithMap);
+    terrain.createdWithMap = createdWithMap;
+
+    std::int64_t integer = terrain.width;
+    readIntProperty(ctx, wrapper, "width", integer);
+    terrain.width = static_cast<int>(integer);
+    integer = terrain.height;
+    if (!readIntProperty(ctx, wrapper, "length", integer)) {
+        readIntProperty(ctx, wrapper, "height", integer);
+    }
+    terrain.height = static_cast<int>(integer);
+    integer = static_cast<int>(terrain.resolution);
+    readIntProperty(ctx, wrapper, "resolution", integer);
+    terrain.resolution = static_cast<unsigned int>(integer);
+
+    double number = terrain.maxPeak;
+    readNumberProperty(ctx, wrapper, "maxPeak", number);
+    terrain.maxPeak = static_cast<float>(number);
+    number = terrain.seaLevel;
+    readNumberProperty(ctx, wrapper, "seaLevel", number);
+    terrain.seaLevel = static_cast<float>(number);
+
+    value = JS_GetPropertyStr(ctx, wrapper, "biomes");
+    if (!JS_IsException(value) && JS_IsArray(value)) {
+        std::uint32_t length = 0;
+        if (getArrayLength(ctx, value, length)) {
+            terrain.biomes.clear();
+            terrain.biomes.reserve(length);
+            for (std::uint32_t i = 0; i < length; ++i) {
+                JSValue biomeValue = JS_GetPropertyUint32(ctx, value, i);
+                if (!JS_IsException(biomeValue)) {
+                    Biome biome("", Color());
+                    if (parseBiomeValue(ctx, host, biomeValue, biome)) {
+                        terrain.biomes.push_back(biome);
+                    }
+                }
+                JS_FreeValue(ctx, biomeValue);
+            }
+        }
+    }
+    JS_FreeValue(ctx, value);
+
+    terrain.updateModelMatrix();
     return true;
 }
 
@@ -9365,6 +9794,18 @@ std::shared_ptr<CoreObject> ownCoreObject(ScriptHost &host,
     return object;
 }
 
+std::shared_ptr<Terrain> ownTerrain(ScriptHost &host,
+                                    std::shared_ptr<Terrain> terrain,
+                                    bool attachedToWindow = false) {
+    if (host.context != nullptr) {
+        host.context->objects.push_back(terrain);
+    }
+    host.objectStates[terrain->getId()] = {.object = terrain.get(),
+                                           .attachedToWindow = attachedToWindow,
+                                           .textureIds = {}};
+    return terrain;
+}
+
 std::shared_ptr<Model> ownModel(ScriptHost &host, std::shared_ptr<Model> model,
                                 bool attachedToWindow = false) {
     if (host.context != nullptr) {
@@ -9398,6 +9839,18 @@ JSValue jsCreateCoreObject(JSContext *ctx, JSValueConst, int argc,
     auto object = ownCoreObject(*host, std::make_shared<CoreObject>());
     applyCoreObject(ctx, *host, argv[0], *object);
     return syncObjectWrapper(ctx, *host, *object);
+}
+
+JSValue jsCreateTerrain(JSContext *ctx, JSValueConst, int argc,
+                        JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || host->context == nullptr || argc < 1) {
+        return JS_ThrowInternalError(ctx, "Atlas scripting host unavailable");
+    }
+
+    auto terrain = ownTerrain(*host, std::make_shared<Terrain>());
+    applyTerrain(ctx, *host, argv[0], *terrain);
+    return syncObjectWrapper(ctx, *host, *terrain);
 }
 
 JSValue jsCreateModel(JSContext *ctx, JSValueConst, int argc,
@@ -9974,6 +10427,12 @@ JSValue jsUpdateObject(JSContext *ctx, JSValueConst, int argc,
         if (!applyCoreObject(ctx, *host, argv[0], *core)) {
             return JS_EXCEPTION;
         }
+    } else if (auto *terrain = dynamic_cast<Terrain *>(object);
+               terrain != nullptr) {
+        if (!applyTerrain(ctx, *host, argv[0], *terrain)) {
+            return JS_EXCEPTION;
+        }
+        attachObjectIfReady(*host, *terrain);
     } else {
         applyBaseObject(ctx, *host, argv[0], *object);
         attachObjectIfReady(*host, *object);
@@ -10131,6 +10590,65 @@ JSValue jsAttachTexture(JSContext *ctx, JSValueConst, int argc,
     object->attachTexture(*textureState->texture);
     attachObjectIfReady(*host, *object);
     return syncObjectWrapper(ctx, *host, *object);
+}
+
+JSValue jsAuroraPerlinNoise(JSContext *ctx, JSValueConst, int argc,
+                            JSValueConst *argv) {
+    double x = 0.0;
+    double y = 0.0;
+    std::int64_t seed = 0;
+    if (argc < 3 || !getInt64(ctx, argv[0], seed) || !getDouble(ctx, argv[1], x) ||
+        !getDouble(ctx, argv[2], y)) {
+        return JS_ThrowTypeError(ctx, "Expected seed, x, and y");
+    }
+    PerlinNoise noise(static_cast<unsigned int>(seed));
+    return JS_NewFloat64(ctx, noise.noise(static_cast<float>(x),
+                                          static_cast<float>(y)));
+}
+
+JSValue jsAuroraSimplexNoise(JSContext *ctx, JSValueConst, int argc,
+                             JSValueConst *argv) {
+    double x = 0.0;
+    double y = 0.0;
+    if (argc < 2 || !getDouble(ctx, argv[0], x) || !getDouble(ctx, argv[1], y)) {
+        return JS_ThrowTypeError(ctx, "Expected x and y");
+    }
+    return JS_NewFloat64(
+        ctx, SimplexNoise::noise(static_cast<float>(x), static_cast<float>(y)));
+}
+
+JSValue jsAuroraWorleyNoise(JSContext *ctx, JSValueConst, int argc,
+                            JSValueConst *argv) {
+    std::int64_t numPoints = 0;
+    std::int64_t seed = 0;
+    double x = 0.0;
+    double y = 0.0;
+    if (argc < 4 || !getInt64(ctx, argv[0], numPoints) ||
+        !getInt64(ctx, argv[1], seed) || !getDouble(ctx, argv[2], x) ||
+        !getDouble(ctx, argv[3], y)) {
+        return JS_ThrowTypeError(ctx, "Expected numPoints, seed, x, and y");
+    }
+    WorleyNoise noise(static_cast<int>(numPoints), static_cast<unsigned int>(seed));
+    return JS_NewFloat64(ctx, noise.noise(static_cast<float>(x),
+                                          static_cast<float>(y)));
+}
+
+JSValue jsAuroraFractalNoise(JSContext *ctx, JSValueConst, int argc,
+                             JSValueConst *argv) {
+    std::int64_t octaves = 0;
+    double persistence = 0.0;
+    double x = 0.0;
+    double y = 0.0;
+    if (argc < 4 || !getInt64(ctx, argv[0], octaves) ||
+        !getDouble(ctx, argv[1], persistence) || !getDouble(ctx, argv[2], x) ||
+        !getDouble(ctx, argv[3], y)) {
+        return JS_ThrowTypeError(
+            ctx, "Expected octaves, persistence, x, and y");
+    }
+    FractalNoise noise(static_cast<int>(octaves),
+                       static_cast<float>(persistence));
+    return JS_NewFloat64(ctx, noise.noise(static_cast<float>(x),
+                                          static_cast<float>(y)));
 }
 
 JSValue jsShowObject(JSContext *ctx, JSValueConst, int argc,
@@ -10474,9 +10992,47 @@ void runtime::scripting::clearSceneBindings(JSContext *ctx, ScriptHost &host) {
         host.atlasBezelNamespace = JS_UNDEFINED;
     }
 
+    if (!JS_IsUndefined(host.auroraNamespace)) {
+        JS_FreeValue(ctx, host.auroraNamespace);
+        host.auroraNamespace = JS_UNDEFINED;
+    }
+
     if (!JS_IsUndefined(host.particleEmitterPrototype)) {
         JS_FreeValue(ctx, host.particleEmitterPrototype);
         host.particleEmitterPrototype = JS_UNDEFINED;
+    }
+
+    if (!JS_IsUndefined(host.terrainPrototype)) {
+        JS_FreeValue(ctx, host.terrainPrototype);
+        host.terrainPrototype = JS_UNDEFINED;
+    }
+    if (!JS_IsUndefined(host.biomePrototype)) {
+        JS_FreeValue(ctx, host.biomePrototype);
+        host.biomePrototype = JS_UNDEFINED;
+    }
+    if (!JS_IsUndefined(host.terrainGeneratorPrototype)) {
+        JS_FreeValue(ctx, host.terrainGeneratorPrototype);
+        host.terrainGeneratorPrototype = JS_UNDEFINED;
+    }
+    if (!JS_IsUndefined(host.hillGeneratorPrototype)) {
+        JS_FreeValue(ctx, host.hillGeneratorPrototype);
+        host.hillGeneratorPrototype = JS_UNDEFINED;
+    }
+    if (!JS_IsUndefined(host.mountainGeneratorPrototype)) {
+        JS_FreeValue(ctx, host.mountainGeneratorPrototype);
+        host.mountainGeneratorPrototype = JS_UNDEFINED;
+    }
+    if (!JS_IsUndefined(host.plainGeneratorPrototype)) {
+        JS_FreeValue(ctx, host.plainGeneratorPrototype);
+        host.plainGeneratorPrototype = JS_UNDEFINED;
+    }
+    if (!JS_IsUndefined(host.islandGeneratorPrototype)) {
+        JS_FreeValue(ctx, host.islandGeneratorPrototype);
+        host.islandGeneratorPrototype = JS_UNDEFINED;
+    }
+    if (!JS_IsUndefined(host.compoundGeneratorPrototype)) {
+        JS_FreeValue(ctx, host.compoundGeneratorPrototype);
+        host.compoundGeneratorPrototype = JS_UNDEFINED;
     }
 
     if (!JS_IsUndefined(host.rigidbodyPrototype)) {
@@ -10927,6 +11483,18 @@ void runtime::scripting::installGlobals(JSContext *ctx) {
     JS_SetPropertyStr(ctx, global, "__atlasGetWindowConstants",
                       JS_NewCFunction(ctx, jsGetWindowConstants,
                                       "__atlasGetWindowConstants", 0));
+    JS_SetPropertyStr(ctx, global, "__auroraPerlinNoise",
+                      JS_NewCFunction(ctx, jsAuroraPerlinNoise,
+                                      "__auroraPerlinNoise", 3));
+    JS_SetPropertyStr(ctx, global, "__auroraSimplexNoise",
+                      JS_NewCFunction(ctx, jsAuroraSimplexNoise,
+                                      "__auroraSimplexNoise", 2));
+    JS_SetPropertyStr(ctx, global, "__auroraWorleyNoise",
+                      JS_NewCFunction(ctx, jsAuroraWorleyNoise,
+                                      "__auroraWorleyNoise", 4));
+    JS_SetPropertyStr(ctx, global, "__auroraFractalNoise",
+                      JS_NewCFunction(ctx, jsAuroraFractalNoise,
+                                      "__auroraFractalNoise", 4));
     JS_SetPropertyStr(ctx, global, "__atlasRegisterInputAction",
                       JS_NewCFunction(ctx, jsRegisterInputAction,
                                       "__atlasRegisterInputAction", 1));
@@ -11336,6 +11904,9 @@ void runtime::scripting::installGlobals(JSContext *ctx) {
     JS_SetPropertyStr(
         ctx, global, "__atlasCreateCoreObject",
         JS_NewCFunction(ctx, jsCreateCoreObject, "__atlasCreateCoreObject", 1));
+    JS_SetPropertyStr(ctx, global, "__auroraCreateTerrain",
+                      JS_NewCFunction(ctx, jsCreateTerrain,
+                                      "__auroraCreateTerrain", 1));
     JS_SetPropertyStr(
         ctx, global, "__atlasCreateModel",
         JS_NewCFunction(ctx, jsCreateModel, "__atlasCreateModel", 1));
@@ -11431,6 +12002,9 @@ void runtime::scripting::installGlobals(JSContext *ctx) {
     JS_SetPropertyStr(
         ctx, global, "__atlasUpdateCoreObject",
         JS_NewCFunction(ctx, jsUpdateObject, "__atlasUpdateCoreObject", 2));
+    JS_SetPropertyStr(ctx, global, "__auroraUpdateTerrain",
+                      JS_NewCFunction(ctx, jsUpdateObject,
+                                      "__auroraUpdateTerrain", 1));
     JS_SetPropertyStr(
         ctx, global, "__atlasCreateBox",
         JS_NewCFunction(ctx, jsCreatePrimitiveBox, "__atlasCreateBox", 1));

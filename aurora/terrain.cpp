@@ -8,6 +8,7 @@
 //
 #include <cstddef>
 #include <cstdint>
+#include <cmath>
 #include "atlas/tracer/data.h"
 #include "opal/opal.h"
 #include "atlas/camera.h"
@@ -181,11 +182,16 @@ void Terrain::initialize() {
     drawingState->configureAttributes(attributeBindings);
 
     patch_count = 4;
+    updateModelMatrix();
 }
 
 void Terrain::render(float, std::shared_ptr<opal::CommandBuffer> commandBuffer,
                      bool updatePipeline) {
     (void)updatePipeline;
+    if (!isVisible) {
+        return;
+    }
+    updateModelMatrix();
 
     static std::shared_ptr<opal::Pipeline> terrainPipeline = nullptr;
     if (terrainPipeline == nullptr) {
@@ -319,6 +325,35 @@ void Terrain::render(float, std::shared_ptr<opal::CommandBuffer> commandBuffer,
         debugPacket.objectId = this->id;
         debugPacket.send();
     }
+}
+
+void Terrain::lookAt(const Position3d &target, const Normal3d &up) {
+    glm::vec3 pos = position.toGlm();
+    glm::vec3 targetPos = target.toGlm();
+    glm::vec3 upVec = up.toGlm();
+
+    glm::vec3 forward = glm::normalize(targetPos - pos);
+    glm::vec3 right = glm::normalize(glm::cross(forward, upVec));
+    glm::vec3 realUp = glm::cross(right, forward);
+
+    glm::mat3 rotMatrix;
+    rotMatrix[0] = right;
+    rotMatrix[1] = realUp;
+    rotMatrix[2] = -forward;
+
+    float pitch = glm::degrees(asin(glm::clamp(rotMatrix[2][1], -1.0f, 1.0f)));
+    float yaw = 0.0f;
+    float roll = 0.0f;
+
+    if (abs(cos(glm::radians(pitch))) > 0.00001f) {
+        yaw = glm::degrees(atan2(-rotMatrix[2][0], rotMatrix[2][2]));
+        roll = glm::degrees(atan2(-rotMatrix[0][1], rotMatrix[1][1]));
+    } else {
+        yaw = glm::degrees(atan2(rotMatrix[1][0], rotMatrix[0][0]));
+    }
+
+    rotation = Rotation3d{pitch, yaw, roll};
+    updateModelMatrix();
 }
 
 void Terrain::updateModelMatrix() {

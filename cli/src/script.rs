@@ -428,7 +428,9 @@ fn run_esbuild(project_dir: &Path, entry_points: &[PathBuf]) -> Result<(), Strin
         .arg("--external:atlas")
         .arg("--external:atlas/*")
         .arg("--external:bezel")
-        .arg("--external:bezel/*");
+        .arg("--external:bezel/*")
+        .arg("--external:aurora")
+        .arg("--external:aurora/*");
 
     let output = command
         .output()

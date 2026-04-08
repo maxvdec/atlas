@@ -29,13 +29,13 @@ declare module "atlas" {
         Scale3d,
     } from "atlas/units";
     import {
-        Texture,
         Skybox,
         Light,
         SpotLight,
         DirectionalLight,
         AreaLight,
         RenderTarget,
+        Texture,
     } from "atlas/graphics";
     import {
         AxisTrigger,
@@ -1759,5 +1759,142 @@ declare module "bezel" {
         constructor(); // sets isSensor to true
 
         setSignal(signal: string): void;
+    }
+}
+
+declare module "aurora" {
+    import { GameObject, Resource } from "atlas";
+    import { Texture } from "atlas/graphics";
+    import {
+        Color,
+        Position3d,
+        Rotation3d,
+        Normal3d,
+        Scale3d,
+    } from "atlas/units";
+
+    export class PerlinNoise {
+        constructor(seed?: number);
+        noise(x: number, y: number): number;
+    }
+
+    export class SimplexNoise {
+        static noise(xin: number, yin: number): number;
+    }
+
+    export class WorleyNoise {
+        constructor(numPoints: number, seed?: number);
+        noise(x: number, y: number): number;
+    }
+
+    export class FractalNoise {
+        constructor(o: number, p: number);
+        noise(x: number, y: number): number;
+    }
+
+    export class Noise {
+        static perlin(x: number, y: number): number;
+        static simplex(x: number, y: number): number;
+        static worley(x: number, y: number): number;
+        static fractal(x: number, y: number, octaves: number, persistence: number): number;
+        static seed: number;
+        static initializedSeed: boolean;
+    }
+
+    export class Biome {
+        name: string;
+        texture: Texture;
+        color: Color;
+        useTexture: boolean;
+
+        attachTexture(texture: Texture): void;
+
+        minHeight: number;
+        maxHeight: number;
+        minMoisture: number;
+        maxMoisture: number;
+        minTemperature: number;
+        maxTemperature: number;
+
+        constructor(
+            name: string,
+            texture: Texture,
+            color: Color,
+            useTexture: boolean,
+        );
+
+        condition: BiomeFunction;
+    }
+
+    export type BiomeFunction = (biome: Biome) => void;
+
+    export class Terrain extends GameObject {
+        attachTexture(texture: Texture): void;
+        setPosition(position: Position3d): void;
+        move(position: Position3d): void;
+        setRotation(rotation: Rotation3d): void;
+        lookAt(target: Position3d, up?: Normal3d): void;
+        rotate(rotation: Rotation3d): void;
+        setScale(scale: Scale3d): void;
+        scaleBy(scale: Scale3d): void;
+        show(): void;
+        hide(): void;
+
+        heightmap: Resource;
+        moistureTexture: Texture;
+        temperatureTexture: Texture;
+        generator: TerrainGenerator;
+
+        createdWithMap: boolean;
+        width: number;
+        length: number;
+        height: number;
+
+        addBiome(biome: Biome): void;
+
+        static fromGenerator<T extends TerrainGenerator>(generator: T): Terrain;
+        static fromHeightmap(heightmap: Resource): Terrain;
+
+        maxPeak: number;
+        seaLevel: number;
+    }
+
+    export abstract class TerrainGenerator {
+        abstract generateHeight(x: number, y: number): number;
+        applyTo(terrain: Terrain): void;
+    }
+
+    export class HillGenerator extends TerrainGenerator {
+        constructor(scale: number, amplitude: number);
+
+        override generateHeight(x: number, y: number): number;
+    }
+
+    export class MountainGenerator extends TerrainGenerator {
+        constructor(
+            scale: number,
+            amplitude: number,
+            octaves: number,
+            persistance: number,
+        );
+
+        override generateHeight(x: number, y: number): number;
+    }
+
+    export class PlainGenerator extends TerrainGenerator {
+        constructor(scale: number, amplitude: number);
+
+        override generateHeight(x: number, y: number): number;
+    }
+
+    export class IslandGenerator extends TerrainGenerator {
+        constructor(numFeatures: number, scale: number);
+
+        override generateHeight(x: number, y: number): number;
+    }
+
+    export class CompoundGenerator extends TerrainGenerator {
+        addGenerator<T extends TerrainGenerator>(generator: T): void;
+        override generateHeight(x: number, y: number): number;
     }
 }
