@@ -22,6 +22,30 @@ export class Scene {
         return globalThis.__atlasUseAtmosphereSkybox(this, enabled);
     }
 
+    setEnvironment(environment) {
+        return globalThis.__atlasSetSceneEnvironment(this, environment);
+    }
+
+    setAmbientColor(color) {
+        return globalThis.__atlasSetSceneAmbientColor(this, color);
+    }
+
+    addDirectionalLight(light) {
+        return globalThis.__atlasSceneAddDirectionalLight(this, light);
+    }
+
+    addLight(light) {
+        return globalThis.__atlasSceneAddLight(this, light);
+    }
+
+    addSpotLight(light) {
+        return globalThis.__atlasSceneAddSpotLight(this, light);
+    }
+
+    addAreaLight(light) {
+        return globalThis.__atlasSceneAddAreaLight(this, light);
+    }
+
     getCamera() {
         return globalThis.__atlasGetCamera();
     }

@@ -389,6 +389,9 @@ bool setProperty(JSContext *ctx, JSValue obj, const char *name, JSValue value) {
     return true;
 }
 
+ScriptTextureState *resolveTexture(JSContext *ctx, ScriptHost &host,
+                                   JSValueConst value);
+
 bool getInt64(JSContext *ctx, JSValueConst value, std::int64_t &out) {
     int64_t temp = 0;
     if (JS_ToInt64(ctx, &temp, value) < 0) {
@@ -840,6 +843,90 @@ bool parseColor(JSContext *ctx, JSValueConst value, Color &out) {
     }
     readNumberProperty(ctx, value, "a", a);
     out = Color(r, g, b, a);
+    return true;
+}
+
+bool parseEnvironmentValue(JSContext *ctx, ScriptHost &host, JSValueConst value,
+                           Environment &out) {
+    if (!JS_IsObject(value) || JS_IsNull(value)) {
+        return false;
+    }
+
+    JSValue prop = JS_GetPropertyStr(ctx, value, "fog");
+    if (!JS_IsException(prop) && !JS_IsUndefined(prop) && JS_IsObject(prop) &&
+        !JS_IsNull(prop)) {
+        JSValue field = JS_GetPropertyStr(ctx, prop, "color");
+        if (!JS_IsException(field) && !JS_IsUndefined(field)) {
+            parseColor(ctx, field, out.fog.color);
+        }
+        JS_FreeValue(ctx, field);
+
+        double number = out.fog.intensity;
+        readNumberProperty(ctx, prop, "intensity", number);
+        out.fog.intensity = static_cast<float>(number);
+    }
+    JS_FreeValue(ctx, prop);
+
+    prop = JS_GetPropertyStr(ctx, value, "volumetricLighting");
+    if (!JS_IsException(prop) && !JS_IsUndefined(prop) && JS_IsObject(prop) &&
+        !JS_IsNull(prop)) {
+        readBoolProperty(ctx, prop, "enabled", out.volumetricLighting.enabled);
+        double number = out.volumetricLighting.density;
+        readNumberProperty(ctx, prop, "density", number);
+        out.volumetricLighting.density = static_cast<float>(number);
+        number = out.volumetricLighting.weight;
+        readNumberProperty(ctx, prop, "weight", number);
+        out.volumetricLighting.weight = static_cast<float>(number);
+        number = out.volumetricLighting.decay;
+        readNumberProperty(ctx, prop, "decay", number);
+        out.volumetricLighting.decay = static_cast<float>(number);
+        number = out.volumetricLighting.exposure;
+        readNumberProperty(ctx, prop, "exposure", number);
+        out.volumetricLighting.exposure = static_cast<float>(number);
+    }
+    JS_FreeValue(ctx, prop);
+
+    prop = JS_GetPropertyStr(ctx, value, "lightBloom");
+    if (!JS_IsException(prop) && !JS_IsUndefined(prop) && JS_IsObject(prop) &&
+        !JS_IsNull(prop)) {
+        double radius = out.lightBloom.radius;
+        readNumberProperty(ctx, prop, "radius", radius);
+        out.lightBloom.radius = static_cast<float>(radius);
+
+        std::int64_t maxSamples = out.lightBloom.maxSamples;
+        readIntProperty(ctx, prop, "maxSamples", maxSamples);
+        out.lightBloom.maxSamples = static_cast<int>(maxSamples);
+    }
+    JS_FreeValue(ctx, prop);
+
+    prop = JS_GetPropertyStr(ctx, value, "rimLighting");
+    if (JS_IsException(prop) || JS_IsUndefined(prop) || !JS_IsObject(prop) ||
+        JS_IsNull(prop)) {
+        JS_FreeValue(ctx, prop);
+        prop = JS_GetPropertyStr(ctx, value, "rimLight");
+    }
+    if (!JS_IsException(prop) && !JS_IsUndefined(prop) && JS_IsObject(prop) &&
+        !JS_IsNull(prop)) {
+        JSValue field = JS_GetPropertyStr(ctx, prop, "color");
+        if (!JS_IsException(field) && !JS_IsUndefined(field)) {
+            parseColor(ctx, field, out.rimLight.color);
+        }
+        JS_FreeValue(ctx, field);
+
+        double intensity = out.rimLight.intensity;
+        readNumberProperty(ctx, prop, "intensity", intensity);
+        out.rimLight.intensity = static_cast<float>(intensity);
+    }
+    JS_FreeValue(ctx, prop);
+
+    prop = JS_GetPropertyStr(ctx, value, "lookupTexture");
+    if (!JS_IsException(prop) && !JS_IsUndefined(prop) && !JS_IsNull(prop)) {
+        auto *textureState = resolveTexture(ctx, host, prop);
+        if (textureState != nullptr && textureState->texture) {
+            out.lookupTexture = *textureState->texture;
+        }
+    }
+    JS_FreeValue(ctx, prop);
     return true;
 }
 
@@ -4791,6 +4878,48 @@ JSValue jsSetSceneAutomaticAmbient(JSContext *ctx, JSValueConst, int argc,
     return syncSceneWrapper(ctx, *host, *scene);
 }
 
+JSValue jsSetSceneEnvironment(JSContext *ctx, JSValueConst, int argc,
+                              JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected scene and environment");
+    }
+
+    Scene *scene = resolveSceneArg(ctx, *host, argv[0]);
+    if (scene == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    Environment environment;
+    if (!parseEnvironmentValue(ctx, *host, argv[1], environment)) {
+        return JS_ThrowTypeError(ctx, "Expected environment");
+    }
+
+    scene->setEnvironment(environment);
+    return syncSceneWrapper(ctx, *host, *scene);
+}
+
+JSValue jsSetSceneAmbientColor(JSContext *ctx, JSValueConst, int argc,
+                               JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected scene and color");
+    }
+
+    Scene *scene = resolveSceneArg(ctx, *host, argv[0]);
+    if (scene == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    Color color;
+    if (!parseColor(ctx, argv[1], color)) {
+        return JS_ThrowTypeError(ctx, "Expected color");
+    }
+
+    scene->setAmbientColor(color);
+    return syncSceneWrapper(ctx, *host, *scene);
+}
+
 JSValue jsSetSceneSkybox(JSContext *ctx, JSValueConst, int argc,
                          JSValueConst *argv) {
     auto *host = getHost(ctx);
@@ -4825,6 +4954,99 @@ JSValue jsUseAtmosphereSkybox(JSContext *ctx, JSValueConst, int argc,
     }
 
     scene->setUseAtmosphereSkybox(JS_ToBool(ctx, argv[1]) == 1);
+    return syncSceneWrapper(ctx, *host, *scene);
+}
+
+JSValue jsSceneAddDirectionalLight(JSContext *ctx, JSValueConst, int argc,
+                                   JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected scene and directional light");
+    }
+
+    Scene *scene = resolveSceneArg(ctx, *host, argv[0]);
+    if (scene == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    auto *state = resolveDirectionalLight(ctx, *host, argv[1]);
+    if (state == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    scene->addDirectionalLight(state->light);
+    return syncSceneWrapper(ctx, *host, *scene);
+}
+
+JSValue jsSceneAddLight(JSContext *ctx, JSValueConst, int argc,
+                        JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected scene and light");
+    }
+
+    Scene *scene = resolveSceneArg(ctx, *host, argv[0]);
+    if (scene == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    auto *state = resolvePointLight(ctx, *host, argv[1]);
+    if (state == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    const auto &lights = scene->getPointLights();
+    if (std::find(lights.begin(), lights.end(), state->light) == lights.end()) {
+        scene->addLight(state->light);
+    }
+    return syncSceneWrapper(ctx, *host, *scene);
+}
+
+JSValue jsSceneAddSpotLight(JSContext *ctx, JSValueConst, int argc,
+                            JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected scene and spot light");
+    }
+
+    Scene *scene = resolveSceneArg(ctx, *host, argv[0]);
+    if (scene == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    auto *state = resolveSpotLight(ctx, *host, argv[1]);
+    if (state == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    const auto &lights = scene->getSpotlights();
+    if (std::find(lights.begin(), lights.end(), state->light) == lights.end()) {
+        scene->addSpotlight(state->light);
+    }
+    return syncSceneWrapper(ctx, *host, *scene);
+}
+
+JSValue jsSceneAddAreaLight(JSContext *ctx, JSValueConst, int argc,
+                            JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected scene and area light");
+    }
+
+    Scene *scene = resolveSceneArg(ctx, *host, argv[0]);
+    if (scene == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    auto *state = resolveAreaLight(ctx, *host, argv[1]);
+    if (state == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    const auto &lights = scene->getAreaLights();
+    if (std::find(lights.begin(), lights.end(), state->light) == lights.end()) {
+        scene->addAreaLight(state->light);
+    }
     return syncSceneWrapper(ctx, *host, *scene);
 }
 
@@ -9400,12 +9622,30 @@ void runtime::scripting::installGlobals(JSContext *ctx) {
     JS_SetPropertyStr(ctx, global, "__atlasSetSceneAutomaticAmbient",
                       JS_NewCFunction(ctx, jsSetSceneAutomaticAmbient,
                                       "__atlasSetSceneAutomaticAmbient", 2));
+    JS_SetPropertyStr(ctx, global, "__atlasSetSceneEnvironment",
+                      JS_NewCFunction(ctx, jsSetSceneEnvironment,
+                                      "__atlasSetSceneEnvironment", 2));
+    JS_SetPropertyStr(ctx, global, "__atlasSetSceneAmbientColor",
+                      JS_NewCFunction(ctx, jsSetSceneAmbientColor,
+                                      "__atlasSetSceneAmbientColor", 2));
     JS_SetPropertyStr(
         ctx, global, "__atlasSetSceneSkybox",
         JS_NewCFunction(ctx, jsSetSceneSkybox, "__atlasSetSceneSkybox", 2));
     JS_SetPropertyStr(ctx, global, "__atlasUseAtmosphereSkybox",
                       JS_NewCFunction(ctx, jsUseAtmosphereSkybox,
                                       "__atlasUseAtmosphereSkybox", 2));
+    JS_SetPropertyStr(ctx, global, "__atlasSceneAddDirectionalLight",
+                      JS_NewCFunction(ctx, jsSceneAddDirectionalLight,
+                                      "__atlasSceneAddDirectionalLight", 2));
+    JS_SetPropertyStr(ctx, global, "__atlasSceneAddLight",
+                      JS_NewCFunction(ctx, jsSceneAddLight,
+                                      "__atlasSceneAddLight", 2));
+    JS_SetPropertyStr(ctx, global, "__atlasSceneAddSpotLight",
+                      JS_NewCFunction(ctx, jsSceneAddSpotLight,
+                                      "__atlasSceneAddSpotLight", 2));
+    JS_SetPropertyStr(ctx, global, "__atlasSceneAddAreaLight",
+                      JS_NewCFunction(ctx, jsSceneAddAreaLight,
+                                      "__atlasSceneAddAreaLight", 2));
     JS_SetPropertyStr(ctx, global, "__atlasGetCamera",
                       JS_NewCFunction(ctx, jsGetCamera, "__atlasGetCamera", 0));
     JS_SetPropertyStr(

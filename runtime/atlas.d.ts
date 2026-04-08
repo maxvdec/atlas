@@ -28,7 +28,14 @@ declare module "atlas" {
         Rotation3d,
         Scale3d,
     } from "atlas/units";
-    import { Texture, Skybox } from "atlas/graphics";
+    import {
+        Texture,
+        Skybox,
+        Light,
+        SpotLight,
+        DirectionalLight,
+        AreaLight,
+    } from "atlas/graphics";
     import { QueryResult } from "bezel";
 
     export type Fog = {
@@ -70,6 +77,15 @@ declare module "atlas" {
 
         setSkybox(skybox: Skybox): void;
         useAtmosphereSkybox(enabled: boolean): void;
+
+        setEnvironment(environment: Environment): void;
+
+        setAmbientColor(color: Color): void;
+        setAmbientIntensity(intensity: number): void;
+        addDirectionalLight(light: DirectionalLight): void;
+        addLight(light: Light): void;
+        addSpotLight(light: SpotLight): void;
+        addAreaLight(light: AreaLight): void;
 
         getCamera(): Camera;
 
