@@ -46,7 +46,7 @@ class AudioPlayer : public Component {
      * @brief Construct a new empty AudioPlayer object
      *
      */
-    AudioPlayer() {}
+    AudioPlayer() { init(); }
 
     /**
      * @brief Destroy the Audio Player object and release resources.

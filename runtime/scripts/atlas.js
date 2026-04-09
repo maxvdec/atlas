@@ -613,6 +613,7 @@ export class Window {
         this._currentFrame = 0;
         this._gravity = 9.81;
         this._usesDeferred = false;
+        this.audioEngine = null;
         return globalThis.__atlasGetWindow() ?? this;
     }
 

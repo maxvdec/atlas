@@ -40,7 +40,6 @@ export class AudioPlayer extends Component {
     }
 
     setSource(resource) {
-        this.source = resource;
         globalThis.__atlasSetAudioPlayerSource(this.id, resource);
     }
 

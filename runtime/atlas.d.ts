@@ -46,6 +46,7 @@ declare module "atlas" {
         AxisPacket,
     } from "atlas/input";
     import { QueryResult } from "bezel";
+    import { AudioEngine } from "finewave";
 
     export type Fog = {
         color: Color;
@@ -482,6 +483,8 @@ declare module "atlas" {
         width: number;
         height: number;
         currentFrame: number;
+
+        audioEngine: AudioEngine;
 
         setClearColor(color: Color): void;
         close(): void;
@@ -1004,6 +1007,7 @@ declare module "atlas/units" {
 declare module "atlas/audio" {
     import { Component, Resource } from "atlas";
     import { Color, Position3d } from "atlas/units";
+    import { AudioSource } from "finewave";
 
     export class AudioPlayer extends Component {
         constructor();
@@ -1021,6 +1025,8 @@ declare module "atlas/audio" {
 
         setPosition(position: Position3d): void;
         useSpatialAudio(enabled: boolean): void;
+
+        source: AudioSource;
     }
 }
 
@@ -1796,7 +1802,12 @@ declare module "aurora" {
         static perlin(x: number, y: number): number;
         static simplex(x: number, y: number): number;
         static worley(x: number, y: number): number;
-        static fractal(x: number, y: number, octaves: number, persistence: number): number;
+        static fractal(
+            x: number,
+            y: number,
+            octaves: number,
+            persistence: number,
+        ): number;
         static seed: number;
         static initializedSeed: boolean;
     }
@@ -1896,5 +1907,68 @@ declare module "aurora" {
     export class CompoundGenerator extends TerrainGenerator {
         addGenerator<T extends TerrainGenerator>(generator: T): void;
         override generateHeight(x: number, y: number): number;
+    }
+}
+
+declare module "finewave" {
+    import { Position3d } from "atlas/units";
+    import { Resource } from "atlas";
+
+    export class AudioEngine {
+        setListenerPosition(position: Position3d): void;
+        setListenerOrientation(forward: Position3d, up: Position3d): void;
+        setListenerVelocity(velocity: Position3d): void;
+        setMasterVolume(volume: number): void;
+        deviceName: string;
+    }
+
+    export class AudioData {
+        static fromResource(resource: Resource): AudioData;
+        isMono: boolean;
+        resource: Resource;
+    }
+
+    export class AudioSource {
+        setData(data: AudioData): void;
+        fromFile(resource: Resource): void;
+        play(): void;
+        pause(): void;
+        stop(): void;
+        setLoop(loop: boolean): void;
+        setVolume(volume: number): void;
+        setPitch(pitch: number): void;
+        setPosition(position: Position3d): void;
+        setVelocity(velocity: Position3d): void;
+
+        isPlaying(): boolean;
+        playFrom(position: number): void;
+        disableSpatialization(): void;
+        applyEffect(effect: AudioEffect): void;
+        getPosition(): Position3d;
+        getListenerPosition(): Position3d;
+        useSpatialization(): void;
+    }
+
+    export abstract class AudioEffect {}
+
+    export class Reverb extends AudioEffect {
+        setRoomSize(size: number): void;
+        setDamping(damping: number): void;
+        setWetLevel(level: number): void;
+        setDryLevel(level: number): void;
+        setWidth(width: number): void;
+    }
+
+    export class Echo extends AudioEffect {
+        setDelay(delay: number): void;
+        setDecay(decay: number): void;
+        setWetLevel(level: number): void;
+        setDryLevel(level: number): void;
+    }
+
+    export class Distortion extends AudioEffect {
+        setEdge(edge: number): void;
+        setGain(gain: number): void;
+        setLowpassCutoff(cutoff: number): void;
     }
 }

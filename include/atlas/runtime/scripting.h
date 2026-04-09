@@ -22,6 +22,13 @@ class GameObject;
 class Model;
 class Component;
 class AudioPlayer;
+class AudioEngine;
+class AudioData;
+class AudioSource;
+class AudioEffect;
+class Reverb;
+class Echo;
+class Distortion;
 class ParticleEmitter;
 class Joint;
 class FixedJoint;
@@ -59,6 +66,32 @@ struct ScriptAudioPlayerState {
     std::shared_ptr<AudioPlayer> component;
     JSValue value = JS_UNDEFINED;
     bool attached = false;
+};
+
+struct ScriptAudioDataState {
+    std::shared_ptr<AudioData> data;
+    JSValue value = JS_UNDEFINED;
+};
+
+struct ScriptAudioSourceState {
+    std::shared_ptr<AudioSource> ownedSource;
+    AudioSource *source = nullptr;
+    JSValue value = JS_UNDEFINED;
+};
+
+struct ScriptReverbState {
+    std::shared_ptr<Reverb> effect;
+    JSValue value = JS_UNDEFINED;
+};
+
+struct ScriptEchoState {
+    std::shared_ptr<Echo> effect;
+    JSValue value = JS_UNDEFINED;
+};
+
+struct ScriptDistortionState {
+    std::shared_ptr<Distortion> effect;
+    JSValue value = JS_UNDEFINED;
 };
 
 struct ScriptRigidbodyState {
@@ -151,6 +184,16 @@ struct ScriptHost {
     std::unordered_map<int, std::vector<std::uint64_t>> componentOrder;
     std::unordered_map<std::string, std::uint64_t> componentLookup;
     std::unordered_map<std::uint64_t, ScriptAudioPlayerState> audioPlayers;
+    std::unordered_map<std::uint64_t, ScriptAudioDataState> audioData;
+    std::unordered_map<AudioData *, std::uint64_t> audioDataIds;
+    std::unordered_map<std::uint64_t, ScriptAudioSourceState> audioSources;
+    std::unordered_map<AudioSource *, std::uint64_t> audioSourceIds;
+    std::unordered_map<std::uint64_t, ScriptReverbState> reverbs;
+    std::unordered_map<Reverb *, std::uint64_t> reverbIds;
+    std::unordered_map<std::uint64_t, ScriptEchoState> echoes;
+    std::unordered_map<Echo *, std::uint64_t> echoIds;
+    std::unordered_map<std::uint64_t, ScriptDistortionState> distortions;
+    std::unordered_map<Distortion *, std::uint64_t> distortionIds;
     std::unordered_map<std::uint64_t, ScriptRigidbodyState> rigidbodies;
     std::unordered_map<std::uint64_t, ScriptVehicleState> vehicles;
     std::unordered_map<std::uint64_t, ScriptFixedJointState> fixedJoints;
@@ -178,6 +221,8 @@ struct ScriptHost {
     JSValue atlasParticleNamespace = JS_UNDEFINED;
     JSValue atlasBezelNamespace = JS_UNDEFINED;
     JSValue auroraNamespace = JS_UNDEFINED;
+    JSValue finewaveNamespace = JS_UNDEFINED;
+    JSValue audioEngineValue = JS_UNDEFINED;
     JSValue componentPrototype = JS_UNDEFINED;
     JSValue gameObjectPrototype = JS_UNDEFINED;
     JSValue coreObjectPrototype = JS_UNDEFINED;
@@ -193,6 +238,13 @@ struct ScriptHost {
     JSValue joystickPrototype = JS_UNDEFINED;
     JSValue cameraPrototype = JS_UNDEFINED;
     JSValue scenePrototype = JS_UNDEFINED;
+    JSValue audioEnginePrototype = JS_UNDEFINED;
+    JSValue audioDataPrototype = JS_UNDEFINED;
+    JSValue audioSourcePrototype = JS_UNDEFINED;
+    JSValue audioEffectPrototype = JS_UNDEFINED;
+    JSValue reverbPrototype = JS_UNDEFINED;
+    JSValue echoPrototype = JS_UNDEFINED;
+    JSValue distortionPrototype = JS_UNDEFINED;
     JSValue texturePrototype = JS_UNDEFINED;
     JSValue cubemapPrototype = JS_UNDEFINED;
     JSValue skyboxPrototype = JS_UNDEFINED;
@@ -225,6 +277,11 @@ struct ScriptHost {
     JSValue inputActionPrototype = JS_UNDEFINED;
     std::uint64_t nextComponentId = 1;
     std::uint64_t nextAudioPlayerId = 1;
+    std::uint64_t nextAudioDataId = 1;
+    std::uint64_t nextAudioSourceId = 1;
+    std::uint64_t nextReverbId = 1;
+    std::uint64_t nextEchoId = 1;
+    std::uint64_t nextDistortionId = 1;
     std::uint64_t nextRigidbodyId = 1;
     std::uint64_t nextVehicleId = 1;
     std::uint64_t nextFixedJointId = 1;

@@ -46,6 +46,11 @@ namespace {
 constexpr const char *ATLAS_OBJECT_ID_PROP = "__atlasObjectId";
 constexpr const char *ATLAS_COMPONENT_ID_PROP = "__atlasComponentId";
 constexpr const char *ATLAS_AUDIO_PLAYER_ID_PROP = "__atlasAudioPlayerId";
+constexpr const char *ATLAS_AUDIO_DATA_ID_PROP = "__atlasAudioDataId";
+constexpr const char *ATLAS_AUDIO_SOURCE_ID_PROP = "__atlasAudioSourceId";
+constexpr const char *ATLAS_REVERB_ID_PROP = "__atlasReverbId";
+constexpr const char *ATLAS_ECHO_ID_PROP = "__atlasEchoId";
+constexpr const char *ATLAS_DISTORTION_ID_PROP = "__atlasDistortionId";
 constexpr const char *ATLAS_RIGIDBODY_ID_PROP = "__atlasRigidbodyId";
 constexpr const char *ATLAS_VEHICLE_ID_PROP = "__atlasVehicleId";
 constexpr const char *ATLAS_FIXED_JOINT_ID_PROP = "__atlasFixedJointId";
@@ -69,6 +74,7 @@ constexpr const char *ATLAS_IS_CORE_OBJECT_PROP = "__atlasIsCoreObject";
 constexpr const char *ATLAS_WINDOW_PROP = "__atlasWindow";
 constexpr const char *ATLAS_CAMERA_PROP = "__atlasCamera";
 constexpr const char *ATLAS_SCENE_PROP = "__atlasScene";
+constexpr const char *ATLAS_AUDIO_ENGINE_PROP = "__atlasAudioEngine";
 constexpr const char *ATLAS_NATIVE_COMPONENT_KIND_PROP =
     "__atlasNativeComponentKind";
 
@@ -686,6 +692,15 @@ bool ensureBuiltins(JSContext *ctx, ScriptHost &host) {
         }
     }
 
+    if (JS_IsUndefined(host.finewaveNamespace)) {
+        host.finewaveNamespace =
+            runtime::scripting::importModuleNamespace(ctx, "finewave");
+        if (JS_IsException(host.finewaveNamespace)) {
+            runtime::scripting::dumpExecution(ctx);
+            return false;
+        }
+    }
+
     cachePrototype(ctx, host.atlasNamespace, "Component",
                    host.componentPrototype);
     cachePrototype(ctx, host.atlasNamespace, "GameObject",
@@ -708,6 +723,18 @@ bool ensureBuiltins(JSContext *ctx, ScriptHost &host) {
                    host.joystickPrototype);
     cachePrototype(ctx, host.atlasNamespace, "Camera", host.cameraPrototype);
     cachePrototype(ctx, host.atlasNamespace, "Scene", host.scenePrototype);
+    cachePrototype(ctx, host.finewaveNamespace, "AudioEngine",
+                   host.audioEnginePrototype);
+    cachePrototype(ctx, host.finewaveNamespace, "AudioData",
+                   host.audioDataPrototype);
+    cachePrototype(ctx, host.finewaveNamespace, "AudioSource",
+                   host.audioSourcePrototype);
+    cachePrototype(ctx, host.finewaveNamespace, "AudioEffect",
+                   host.audioEffectPrototype);
+    cachePrototype(ctx, host.finewaveNamespace, "Reverb", host.reverbPrototype);
+    cachePrototype(ctx, host.finewaveNamespace, "Echo", host.echoPrototype);
+    cachePrototype(ctx, host.finewaveNamespace, "Distortion",
+                   host.distortionPrototype);
     cachePrototype(ctx, host.atlasInputNamespace, "Trigger",
                    host.triggerPrototype);
     cachePrototype(ctx, host.atlasInputNamespace, "AxisTrigger",
@@ -1286,6 +1313,49 @@ ScriptAudioPlayerState *findAudioPlayerState(ScriptHost &host,
     return &it->second;
 }
 
+ScriptAudioDataState *findAudioDataState(ScriptHost &host,
+                                         std::uint64_t audioDataId) {
+    auto it = host.audioData.find(audioDataId);
+    if (it == host.audioData.end()) {
+        return nullptr;
+    }
+    return &it->second;
+}
+
+ScriptAudioSourceState *findAudioSourceState(ScriptHost &host,
+                                             std::uint64_t audioSourceId) {
+    auto it = host.audioSources.find(audioSourceId);
+    if (it == host.audioSources.end()) {
+        return nullptr;
+    }
+    return &it->second;
+}
+
+ScriptReverbState *findReverbState(ScriptHost &host, std::uint64_t reverbId) {
+    auto it = host.reverbs.find(reverbId);
+    if (it == host.reverbs.end()) {
+        return nullptr;
+    }
+    return &it->second;
+}
+
+ScriptEchoState *findEchoState(ScriptHost &host, std::uint64_t echoId) {
+    auto it = host.echoes.find(echoId);
+    if (it == host.echoes.end()) {
+        return nullptr;
+    }
+    return &it->second;
+}
+
+ScriptDistortionState *findDistortionState(ScriptHost &host,
+                                           std::uint64_t distortionId) {
+    auto it = host.distortions.find(distortionId);
+    if (it == host.distortions.end()) {
+        return nullptr;
+    }
+    return &it->second;
+}
+
 bool getArrayLength(JSContext *ctx, JSValueConst value, std::uint32_t &length) {
     JSValue lengthValue = JS_GetPropertyStr(ctx, value, "length");
     if (JS_IsException(lengthValue)) {
@@ -1848,6 +1918,260 @@ ScriptAreaLightState *findAreaLightState(ScriptHost &host,
         return nullptr;
     }
     return &it->second;
+}
+
+std::uint64_t registerAudioDataState(
+    ScriptHost &host, const std::shared_ptr<AudioData> &data) {
+    if (!data) {
+        return 0;
+    }
+
+    auto it = host.audioDataIds.find(data.get());
+    if (it != host.audioDataIds.end()) {
+        return it->second;
+    }
+
+    const std::uint64_t audioDataId = host.nextAudioDataId++;
+    host.audioData[audioDataId] = {.data = data, .value = JS_UNDEFINED};
+    host.audioDataIds[data.get()] = audioDataId;
+    return audioDataId;
+}
+
+std::uint64_t registerAudioSourceState(
+    ScriptHost &host, const std::shared_ptr<AudioSource> &ownedSource) {
+    if (!ownedSource) {
+        return 0;
+    }
+
+    auto it = host.audioSourceIds.find(ownedSource.get());
+    if (it != host.audioSourceIds.end()) {
+        return it->second;
+    }
+
+    const std::uint64_t audioSourceId = host.nextAudioSourceId++;
+    host.audioSources[audioSourceId] = {.ownedSource = ownedSource,
+                                        .source = ownedSource.get(),
+                                        .value = JS_UNDEFINED};
+    host.audioSourceIds[ownedSource.get()] = audioSourceId;
+    return audioSourceId;
+}
+
+std::uint64_t registerAudioSourcePointer(ScriptHost &host, AudioSource *source) {
+    if (source == nullptr) {
+        return 0;
+    }
+
+    auto it = host.audioSourceIds.find(source);
+    if (it != host.audioSourceIds.end()) {
+        return it->second;
+    }
+
+    const std::uint64_t audioSourceId = host.nextAudioSourceId++;
+    host.audioSources[audioSourceId] = {.ownedSource = nullptr,
+                                        .source = source,
+                                        .value = JS_UNDEFINED};
+    host.audioSourceIds[source] = audioSourceId;
+    return audioSourceId;
+}
+
+std::uint64_t registerReverbState(ScriptHost &host,
+                                  const std::shared_ptr<Reverb> &effect) {
+    if (!effect) {
+        return 0;
+    }
+
+    auto it = host.reverbIds.find(effect.get());
+    if (it != host.reverbIds.end()) {
+        return it->second;
+    }
+
+    const std::uint64_t reverbId = host.nextReverbId++;
+    host.reverbs[reverbId] = {.effect = effect, .value = JS_UNDEFINED};
+    host.reverbIds[effect.get()] = reverbId;
+    return reverbId;
+}
+
+std::uint64_t registerEchoState(ScriptHost &host,
+                                const std::shared_ptr<Echo> &effect) {
+    if (!effect) {
+        return 0;
+    }
+
+    auto it = host.echoIds.find(effect.get());
+    if (it != host.echoIds.end()) {
+        return it->second;
+    }
+
+    const std::uint64_t echoId = host.nextEchoId++;
+    host.echoes[echoId] = {.effect = effect, .value = JS_UNDEFINED};
+    host.echoIds[effect.get()] = echoId;
+    return echoId;
+}
+
+std::uint64_t registerDistortionState(
+    ScriptHost &host, const std::shared_ptr<Distortion> &effect) {
+    if (!effect) {
+        return 0;
+    }
+
+    auto it = host.distortionIds.find(effect.get());
+    if (it != host.distortionIds.end()) {
+        return it->second;
+    }
+
+    const std::uint64_t distortionId = host.nextDistortionId++;
+    host.distortions[distortionId] = {.effect = effect, .value = JS_UNDEFINED};
+    host.distortionIds[effect.get()] = distortionId;
+    return distortionId;
+}
+
+JSValue syncAudioEngineWrapper(JSContext *ctx, ScriptHost &host,
+                               AudioEngine &engine) {
+    if (!ensureBuiltins(ctx, host)) {
+        return JS_EXCEPTION;
+    }
+
+    JSValue wrapper = JS_UNDEFINED;
+    if (!JS_IsUndefined(host.audioEngineValue)) {
+        wrapper = JS_DupValue(ctx, host.audioEngineValue);
+    } else {
+        wrapper = newObjectFromPrototype(ctx, host.audioEnginePrototype);
+        host.audioEngineValue = JS_DupValue(ctx, wrapper);
+    }
+
+    setProperty(ctx, wrapper, ATLAS_AUDIO_ENGINE_PROP, JS_NewBool(ctx, true));
+    setProperty(ctx, wrapper, ATLAS_GENERATION_PROP,
+                JS_NewInt64(ctx, static_cast<int64_t>(host.generation)));
+    setProperty(ctx, wrapper, "deviceName",
+                JS_NewString(ctx, engine.deviceName.c_str()));
+    return wrapper;
+}
+
+JSValue syncAudioDataWrapper(JSContext *ctx, ScriptHost &host,
+                             std::uint64_t audioDataId) {
+    auto *state = findAudioDataState(host, audioDataId);
+    if (state == nullptr || !state->data) {
+        return JS_NULL;
+    }
+    if (!ensureBuiltins(ctx, host)) {
+        return JS_EXCEPTION;
+    }
+
+    JSValue wrapper = JS_UNDEFINED;
+    if (!JS_IsUndefined(state->value)) {
+        wrapper = JS_DupValue(ctx, state->value);
+    } else {
+        wrapper = newObjectFromPrototype(ctx, host.audioDataPrototype);
+        state->value = JS_DupValue(ctx, wrapper);
+    }
+
+    setProperty(ctx, wrapper, ATLAS_AUDIO_DATA_ID_PROP,
+                JS_NewInt64(ctx, static_cast<int64_t>(audioDataId)));
+    setProperty(ctx, wrapper, ATLAS_GENERATION_PROP,
+                JS_NewInt64(ctx, static_cast<int64_t>(host.generation)));
+    setProperty(ctx, wrapper, "isMono", JS_NewBool(ctx, state->data->isMono));
+    setProperty(ctx, wrapper, "resource",
+                makeResource(ctx, host, state->data->resource));
+    return wrapper;
+}
+
+JSValue syncAudioSourceWrapper(JSContext *ctx, ScriptHost &host,
+                               std::uint64_t audioSourceId) {
+    auto *state = findAudioSourceState(host, audioSourceId);
+    if (state == nullptr || state->source == nullptr) {
+        return JS_NULL;
+    }
+    if (!ensureBuiltins(ctx, host)) {
+        return JS_EXCEPTION;
+    }
+
+    JSValue wrapper = JS_UNDEFINED;
+    if (!JS_IsUndefined(state->value)) {
+        wrapper = JS_DupValue(ctx, state->value);
+    } else {
+        wrapper = newObjectFromPrototype(ctx, host.audioSourcePrototype);
+        state->value = JS_DupValue(ctx, wrapper);
+    }
+
+    setProperty(ctx, wrapper, ATLAS_AUDIO_SOURCE_ID_PROP,
+                JS_NewInt64(ctx, static_cast<int64_t>(audioSourceId)));
+    setProperty(ctx, wrapper, ATLAS_GENERATION_PROP,
+                JS_NewInt64(ctx, static_cast<int64_t>(host.generation)));
+    return wrapper;
+}
+
+JSValue syncReverbWrapper(JSContext *ctx, ScriptHost &host,
+                          std::uint64_t reverbId) {
+    auto *state = findReverbState(host, reverbId);
+    if (state == nullptr || !state->effect) {
+        return JS_NULL;
+    }
+    if (!ensureBuiltins(ctx, host)) {
+        return JS_EXCEPTION;
+    }
+
+    JSValue wrapper = JS_UNDEFINED;
+    if (!JS_IsUndefined(state->value)) {
+        wrapper = JS_DupValue(ctx, state->value);
+    } else {
+        wrapper = newObjectFromPrototype(ctx, host.reverbPrototype);
+        state->value = JS_DupValue(ctx, wrapper);
+    }
+
+    setProperty(ctx, wrapper, ATLAS_REVERB_ID_PROP,
+                JS_NewInt64(ctx, static_cast<int64_t>(reverbId)));
+    setProperty(ctx, wrapper, ATLAS_GENERATION_PROP,
+                JS_NewInt64(ctx, static_cast<int64_t>(host.generation)));
+    return wrapper;
+}
+
+JSValue syncEchoWrapper(JSContext *ctx, ScriptHost &host, std::uint64_t echoId) {
+    auto *state = findEchoState(host, echoId);
+    if (state == nullptr || !state->effect) {
+        return JS_NULL;
+    }
+    if (!ensureBuiltins(ctx, host)) {
+        return JS_EXCEPTION;
+    }
+
+    JSValue wrapper = JS_UNDEFINED;
+    if (!JS_IsUndefined(state->value)) {
+        wrapper = JS_DupValue(ctx, state->value);
+    } else {
+        wrapper = newObjectFromPrototype(ctx, host.echoPrototype);
+        state->value = JS_DupValue(ctx, wrapper);
+    }
+
+    setProperty(ctx, wrapper, ATLAS_ECHO_ID_PROP,
+                JS_NewInt64(ctx, static_cast<int64_t>(echoId)));
+    setProperty(ctx, wrapper, ATLAS_GENERATION_PROP,
+                JS_NewInt64(ctx, static_cast<int64_t>(host.generation)));
+    return wrapper;
+}
+
+JSValue syncDistortionWrapper(JSContext *ctx, ScriptHost &host,
+                              std::uint64_t distortionId) {
+    auto *state = findDistortionState(host, distortionId);
+    if (state == nullptr || !state->effect) {
+        return JS_NULL;
+    }
+    if (!ensureBuiltins(ctx, host)) {
+        return JS_EXCEPTION;
+    }
+
+    JSValue wrapper = JS_UNDEFINED;
+    if (!JS_IsUndefined(state->value)) {
+        wrapper = JS_DupValue(ctx, state->value);
+    } else {
+        wrapper = newObjectFromPrototype(ctx, host.distortionPrototype);
+        state->value = JS_DupValue(ctx, wrapper);
+    }
+
+    setProperty(ctx, wrapper, ATLAS_DISTORTION_ID_PROP,
+                JS_NewInt64(ctx, static_cast<int64_t>(distortionId)));
+    setProperty(ctx, wrapper, ATLAS_GENERATION_PROP,
+                JS_NewInt64(ctx, static_cast<int64_t>(host.generation)));
+    return wrapper;
 }
 
 std::uint64_t registerTextureState(ScriptHost &host, const Texture &texture) {
@@ -2426,6 +2750,16 @@ JSValue syncWindowWrapper(JSContext *ctx, ScriptHost &host, Window &window) {
     setProperty(ctx, wrapper, "_gravity", JS_NewFloat64(ctx, window.gravity));
     setProperty(ctx, wrapper, "_usesDeferred",
                 JS_NewBool(ctx, window.usesDeferred));
+    if (window.audioEngine == nullptr) {
+        window.audioEngine = std::make_shared<AudioEngine>();
+        window.audioEngine->initialize();
+    }
+    if (window.audioEngine != nullptr) {
+        setProperty(ctx, wrapper, "audioEngine",
+                    syncAudioEngineWrapper(ctx, host, *window.audioEngine));
+    } else {
+        setProperty(ctx, wrapper, "audioEngine", JS_NULL);
+    }
     return wrapper;
 }
 
@@ -5028,6 +5362,127 @@ Scene *resolveSceneArg(JSContext *ctx, ScriptHost &host, JSValueConst value) {
     return scene;
 }
 
+AudioEngine *resolveAudioEngineArg(JSContext *ctx, ScriptHost &host,
+                                   JSValueConst value) {
+    if (!ensureCurrentGeneration(ctx, host, value)) {
+        return nullptr;
+    }
+
+    bool isAudioEngine = false;
+    if (!readBoolProperty(ctx, value, ATLAS_AUDIO_ENGINE_PROP, isAudioEngine) ||
+        !isAudioEngine) {
+        JS_ThrowTypeError(ctx, "Expected Finewave audio engine handle");
+        return nullptr;
+    }
+
+    Window *window = getWindow(host);
+    if (window == nullptr || window->audioEngine == nullptr) {
+        JS_ThrowReferenceError(ctx, "Finewave audio engine is unavailable");
+        return nullptr;
+    }
+    return window->audioEngine.get();
+}
+
+ScriptAudioDataState *resolveAudioData(JSContext *ctx, ScriptHost &host,
+                                       JSValueConst value) {
+    if (!ensureCurrentGeneration(ctx, host, value)) {
+        return nullptr;
+    }
+
+    std::int64_t audioDataId = 0;
+    if (!readIntProperty(ctx, value, ATLAS_AUDIO_DATA_ID_PROP, audioDataId)) {
+        JS_ThrowTypeError(ctx, "Expected Finewave audio data handle");
+        return nullptr;
+    }
+
+    auto *state = findAudioDataState(host, static_cast<std::uint64_t>(audioDataId));
+    if (state == nullptr || !state->data) {
+        JS_ThrowReferenceError(ctx, "Unknown Finewave audio data id");
+        return nullptr;
+    }
+    return state;
+}
+
+ScriptAudioSourceState *resolveAudioSource(JSContext *ctx, ScriptHost &host,
+                                           JSValueConst value) {
+    if (!ensureCurrentGeneration(ctx, host, value)) {
+        return nullptr;
+    }
+
+    std::int64_t audioSourceId = 0;
+    if (!readIntProperty(ctx, value, ATLAS_AUDIO_SOURCE_ID_PROP, audioSourceId)) {
+        JS_ThrowTypeError(ctx, "Expected Finewave audio source handle");
+        return nullptr;
+    }
+
+    auto *state =
+        findAudioSourceState(host, static_cast<std::uint64_t>(audioSourceId));
+    if (state == nullptr || state->source == nullptr) {
+        JS_ThrowReferenceError(ctx, "Unknown Finewave audio source id");
+        return nullptr;
+    }
+    return state;
+}
+
+Reverb *resolveReverb(JSContext *ctx, ScriptHost &host, JSValueConst value) {
+    if (!ensureCurrentGeneration(ctx, host, value)) {
+        return nullptr;
+    }
+
+    std::int64_t reverbId = 0;
+    if (!readIntProperty(ctx, value, ATLAS_REVERB_ID_PROP, reverbId)) {
+        JS_ThrowTypeError(ctx, "Expected Finewave reverb handle");
+        return nullptr;
+    }
+
+    auto *state = findReverbState(host, static_cast<std::uint64_t>(reverbId));
+    if (state == nullptr || !state->effect) {
+        JS_ThrowReferenceError(ctx, "Unknown Finewave reverb id");
+        return nullptr;
+    }
+    return state->effect.get();
+}
+
+Echo *resolveEcho(JSContext *ctx, ScriptHost &host, JSValueConst value) {
+    if (!ensureCurrentGeneration(ctx, host, value)) {
+        return nullptr;
+    }
+
+    std::int64_t echoId = 0;
+    if (!readIntProperty(ctx, value, ATLAS_ECHO_ID_PROP, echoId)) {
+        JS_ThrowTypeError(ctx, "Expected Finewave echo handle");
+        return nullptr;
+    }
+
+    auto *state = findEchoState(host, static_cast<std::uint64_t>(echoId));
+    if (state == nullptr || !state->effect) {
+        JS_ThrowReferenceError(ctx, "Unknown Finewave echo id");
+        return nullptr;
+    }
+    return state->effect.get();
+}
+
+Distortion *resolveDistortion(JSContext *ctx, ScriptHost &host,
+                              JSValueConst value) {
+    if (!ensureCurrentGeneration(ctx, host, value)) {
+        return nullptr;
+    }
+
+    std::int64_t distortionId = 0;
+    if (!readIntProperty(ctx, value, ATLAS_DISTORTION_ID_PROP, distortionId)) {
+        JS_ThrowTypeError(ctx, "Expected Finewave distortion handle");
+        return nullptr;
+    }
+
+    auto *state =
+        findDistortionState(host, static_cast<std::uint64_t>(distortionId));
+    if (state == nullptr || !state->effect) {
+        JS_ThrowReferenceError(ctx, "Unknown Finewave distortion id");
+        return nullptr;
+    }
+    return state->effect.get();
+}
+
 ScriptTextureState *resolveTexture(JSContext *ctx, ScriptHost &host,
                                    JSValueConst value) {
     if (!ensureCurrentGeneration(ctx, host, value)) {
@@ -7436,6 +7891,770 @@ JSValue jsGetResourceByName(JSContext *ctx, JSValueConst, int argc,
     return makeResource(ctx, *host, resource);
 }
 
+JSValue jsGetAudioEngine(JSContext *ctx, JSValueConst, int, JSValueConst *) {
+    auto *host = getHost(ctx);
+    if (host == nullptr) {
+        return JS_NULL;
+    }
+
+    Window *window = getWindow(*host);
+    if (window == nullptr) {
+        return JS_NULL;
+    }
+    if (window->audioEngine == nullptr) {
+        window->audioEngine = std::make_shared<AudioEngine>();
+        window->audioEngine->initialize();
+    }
+    if (window->audioEngine == nullptr) {
+        return JS_NULL;
+    }
+    return syncAudioEngineWrapper(ctx, *host, *window->audioEngine);
+}
+
+JSValue jsAudioEngineSetListenerPosition(JSContext *ctx, JSValueConst, int argc,
+                                         JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected audio engine and position");
+    }
+
+    AudioEngine *engine = resolveAudioEngineArg(ctx, *host, argv[0]);
+    if (engine == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    Position3d position;
+    if (!parsePosition3d(ctx, argv[1], position)) {
+        return JS_ThrowTypeError(ctx, "Expected Position3d");
+    }
+
+    engine->setListenerPosition(position);
+    return JS_UNDEFINED;
+}
+
+JSValue jsAudioEngineSetListenerOrientation(JSContext *ctx, JSValueConst,
+                                            int argc, JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 3) {
+        return JS_ThrowTypeError(ctx, "Expected audio engine, forward, and up");
+    }
+
+    AudioEngine *engine = resolveAudioEngineArg(ctx, *host, argv[0]);
+    if (engine == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    Position3d forward;
+    Position3d up;
+    if (!parsePosition3d(ctx, argv[1], forward) ||
+        !parsePosition3d(ctx, argv[2], up)) {
+        return JS_ThrowTypeError(ctx, "Expected Position3d values");
+    }
+
+    engine->setListenerOrientation(forward, up);
+    return JS_UNDEFINED;
+}
+
+JSValue jsAudioEngineSetListenerVelocity(JSContext *ctx, JSValueConst,
+                                         int argc, JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected audio engine and velocity");
+    }
+
+    AudioEngine *engine = resolveAudioEngineArg(ctx, *host, argv[0]);
+    if (engine == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    Position3d velocity;
+    if (!parsePosition3d(ctx, argv[1], velocity)) {
+        return JS_ThrowTypeError(ctx, "Expected Position3d");
+    }
+
+    engine->setListenerVelocity(velocity);
+    return JS_UNDEFINED;
+}
+
+JSValue jsAudioEngineSetMasterVolume(JSContext *ctx, JSValueConst, int argc,
+                                     JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected audio engine and volume");
+    }
+
+    AudioEngine *engine = resolveAudioEngineArg(ctx, *host, argv[0]);
+    if (engine == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    double volume = 1.0;
+    if (!getDouble(ctx, argv[1], volume)) {
+        return JS_ThrowTypeError(ctx, "Expected volume");
+    }
+
+    engine->setMasterVolume(static_cast<float>(volume));
+    return JS_UNDEFINED;
+}
+
+JSValue jsCreateAudioData(JSContext *ctx, JSValueConst, int argc,
+                          JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 1) {
+        return JS_ThrowTypeError(ctx, "Expected resource");
+    }
+    if (!ensureBuiltins(ctx, *host)) {
+        return JS_EXCEPTION;
+    }
+
+    Resource resource;
+    if (!parseResource(ctx, argv[0], resource)) {
+        return JS_ThrowTypeError(ctx, "Expected Resource");
+    }
+
+    auto data = AudioData::fromResource(resource);
+    if (!data) {
+        return JS_NULL;
+    }
+
+    const std::uint64_t audioDataId = registerAudioDataState(*host, data);
+    return syncAudioDataWrapper(ctx, *host, audioDataId);
+}
+
+JSValue jsCreateAudioSource(JSContext *ctx, JSValueConst, int argc,
+                            JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    (void)argc;
+    (void)argv;
+    if (host == nullptr) {
+        return JS_ThrowInternalError(ctx, "Script host is unavailable");
+    }
+    if (!ensureBuiltins(ctx, *host)) {
+        return JS_EXCEPTION;
+    }
+
+    auto source = std::make_shared<AudioSource>();
+    const std::uint64_t audioSourceId = registerAudioSourceState(*host, source);
+    return syncAudioSourceWrapper(ctx, *host, audioSourceId);
+}
+
+JSValue jsAudioSourceSetData(JSContext *ctx, JSValueConst, int argc,
+                             JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected audio source and audio data");
+    }
+
+    auto *sourceState = resolveAudioSource(ctx, *host, argv[0]);
+    auto *dataState = resolveAudioData(ctx, *host, argv[1]);
+    if (sourceState == nullptr || dataState == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    sourceState->source->setData(dataState->data);
+    return JS_UNDEFINED;
+}
+
+JSValue jsAudioSourceFromFile(JSContext *ctx, JSValueConst, int argc,
+                              JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected audio source and resource");
+    }
+
+    auto *sourceState = resolveAudioSource(ctx, *host, argv[0]);
+    if (sourceState == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    Resource resource;
+    if (!parseResource(ctx, argv[1], resource)) {
+        return JS_ThrowTypeError(ctx, "Expected Resource");
+    }
+
+    sourceState->source->fromFile(resource);
+    return JS_UNDEFINED;
+}
+
+JSValue jsAudioSourcePlay(JSContext *ctx, JSValueConst, int argc,
+                          JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 1) {
+        return JS_ThrowTypeError(ctx, "Expected audio source");
+    }
+
+    auto *sourceState = resolveAudioSource(ctx, *host, argv[0]);
+    if (sourceState == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    sourceState->source->play();
+    return JS_UNDEFINED;
+}
+
+JSValue jsAudioSourcePause(JSContext *ctx, JSValueConst, int argc,
+                           JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 1) {
+        return JS_ThrowTypeError(ctx, "Expected audio source");
+    }
+
+    auto *sourceState = resolveAudioSource(ctx, *host, argv[0]);
+    if (sourceState == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    sourceState->source->pause();
+    return JS_UNDEFINED;
+}
+
+JSValue jsAudioSourceStop(JSContext *ctx, JSValueConst, int argc,
+                          JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 1) {
+        return JS_ThrowTypeError(ctx, "Expected audio source");
+    }
+
+    auto *sourceState = resolveAudioSource(ctx, *host, argv[0]);
+    if (sourceState == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    sourceState->source->stop();
+    return JS_UNDEFINED;
+}
+
+JSValue jsAudioSourceSetLoop(JSContext *ctx, JSValueConst, int argc,
+                             JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected audio source and loop flag");
+    }
+
+    auto *sourceState = resolveAudioSource(ctx, *host, argv[0]);
+    if (sourceState == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    sourceState->source->setLooping(JS_ToBool(ctx, argv[1]) == 1);
+    return JS_UNDEFINED;
+}
+
+JSValue jsAudioSourceSetVolume(JSContext *ctx, JSValueConst, int argc,
+                               JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected audio source and volume");
+    }
+
+    auto *sourceState = resolveAudioSource(ctx, *host, argv[0]);
+    if (sourceState == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    double volume = 1.0;
+    if (!getDouble(ctx, argv[1], volume)) {
+        return JS_ThrowTypeError(ctx, "Expected volume");
+    }
+
+    sourceState->source->setVolume(static_cast<float>(volume));
+    return JS_UNDEFINED;
+}
+
+JSValue jsAudioSourceSetPitch(JSContext *ctx, JSValueConst, int argc,
+                              JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected audio source and pitch");
+    }
+
+    auto *sourceState = resolveAudioSource(ctx, *host, argv[0]);
+    if (sourceState == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    double pitch = 1.0;
+    if (!getDouble(ctx, argv[1], pitch)) {
+        return JS_ThrowTypeError(ctx, "Expected pitch");
+    }
+
+    sourceState->source->setPitch(static_cast<float>(pitch));
+    return JS_UNDEFINED;
+}
+
+JSValue jsAudioSourceSetPosition(JSContext *ctx, JSValueConst, int argc,
+                                 JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected audio source and position");
+    }
+
+    auto *sourceState = resolveAudioSource(ctx, *host, argv[0]);
+    if (sourceState == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    Position3d position;
+    if (!parsePosition3d(ctx, argv[1], position)) {
+        return JS_ThrowTypeError(ctx, "Expected Position3d");
+    }
+
+    sourceState->source->setPosition(position);
+    return JS_UNDEFINED;
+}
+
+JSValue jsAudioSourceSetVelocity(JSContext *ctx, JSValueConst, int argc,
+                                 JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected audio source and velocity");
+    }
+
+    auto *sourceState = resolveAudioSource(ctx, *host, argv[0]);
+    if (sourceState == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    Position3d velocity;
+    if (!parsePosition3d(ctx, argv[1], velocity)) {
+        return JS_ThrowTypeError(ctx, "Expected Position3d");
+    }
+
+    sourceState->source->setVelocity(velocity);
+    return JS_UNDEFINED;
+}
+
+JSValue jsAudioSourceIsPlaying(JSContext *ctx, JSValueConst, int argc,
+                               JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 1) {
+        return JS_ThrowTypeError(ctx, "Expected audio source");
+    }
+
+    auto *sourceState = resolveAudioSource(ctx, *host, argv[0]);
+    if (sourceState == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    return JS_NewBool(ctx, sourceState->source->isPlaying());
+}
+
+JSValue jsAudioSourcePlayFrom(JSContext *ctx, JSValueConst, int argc,
+                              JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected audio source and position");
+    }
+
+    auto *sourceState = resolveAudioSource(ctx, *host, argv[0]);
+    if (sourceState == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    double position = 0.0;
+    if (!getDouble(ctx, argv[1], position)) {
+        return JS_ThrowTypeError(ctx, "Expected position");
+    }
+
+    sourceState->source->playFrom(static_cast<float>(position));
+    return JS_UNDEFINED;
+}
+
+JSValue jsAudioSourceDisableSpatialization(JSContext *ctx, JSValueConst,
+                                           int argc, JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 1) {
+        return JS_ThrowTypeError(ctx, "Expected audio source");
+    }
+
+    auto *sourceState = resolveAudioSource(ctx, *host, argv[0]);
+    if (sourceState == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    sourceState->source->disableSpatialization();
+    return JS_UNDEFINED;
+}
+
+JSValue jsAudioSourceApplyEffect(JSContext *ctx, JSValueConst, int argc,
+                                 JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected audio source and effect");
+    }
+
+    auto *sourceState = resolveAudioSource(ctx, *host, argv[0]);
+    if (sourceState == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    if (!ensureCurrentGeneration(ctx, *host, argv[1])) {
+        return JS_EXCEPTION;
+    }
+
+    std::int64_t effectId = 0;
+    if (readIntProperty(ctx, argv[1], ATLAS_REVERB_ID_PROP, effectId)) {
+        auto *state = findReverbState(*host, static_cast<std::uint64_t>(effectId));
+        if (state == nullptr || !state->effect) {
+            return JS_ThrowReferenceError(ctx, "Unknown Finewave reverb id");
+        }
+        sourceState->source->applyEffect(*state->effect);
+        return JS_UNDEFINED;
+    }
+    if (readIntProperty(ctx, argv[1], ATLAS_ECHO_ID_PROP, effectId)) {
+        auto *state = findEchoState(*host, static_cast<std::uint64_t>(effectId));
+        if (state == nullptr || !state->effect) {
+            return JS_ThrowReferenceError(ctx, "Unknown Finewave echo id");
+        }
+        sourceState->source->applyEffect(*state->effect);
+        return JS_UNDEFINED;
+    }
+    if (readIntProperty(ctx, argv[1], ATLAS_DISTORTION_ID_PROP, effectId)) {
+        auto *state =
+            findDistortionState(*host, static_cast<std::uint64_t>(effectId));
+        if (state == nullptr || !state->effect) {
+            return JS_ThrowReferenceError(ctx,
+                                          "Unknown Finewave distortion id");
+        }
+        sourceState->source->applyEffect(*state->effect);
+        return JS_UNDEFINED;
+    }
+
+    return JS_ThrowTypeError(ctx, "Expected Finewave audio effect");
+}
+
+JSValue jsAudioSourceGetPosition(JSContext *ctx, JSValueConst, int argc,
+                                 JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 1) {
+        return JS_ThrowTypeError(ctx, "Expected audio source");
+    }
+
+    auto *sourceState = resolveAudioSource(ctx, *host, argv[0]);
+    if (sourceState == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    return makePosition3d(ctx, *host, sourceState->source->getPosition());
+}
+
+JSValue jsAudioSourceGetListenerPosition(JSContext *ctx, JSValueConst, int argc,
+                                         JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 1) {
+        return JS_ThrowTypeError(ctx, "Expected audio source");
+    }
+
+    auto *sourceState = resolveAudioSource(ctx, *host, argv[0]);
+    if (sourceState == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    return makePosition3d(ctx, *host,
+                          sourceState->source->getListenerPosition());
+}
+
+JSValue jsAudioSourceUseSpatialization(JSContext *ctx, JSValueConst, int argc,
+                                       JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 1) {
+        return JS_ThrowTypeError(ctx, "Expected audio source");
+    }
+
+    auto *sourceState = resolveAudioSource(ctx, *host, argv[0]);
+    if (sourceState == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    sourceState->source->useSpatialization();
+    return JS_UNDEFINED;
+}
+
+JSValue jsCreateReverb(JSContext *ctx, JSValueConst, int, JSValueConst *) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || !ensureBuiltins(ctx, *host)) {
+        return JS_EXCEPTION;
+    }
+
+    auto effect = std::make_shared<Reverb>();
+    const std::uint64_t reverbId = registerReverbState(*host, effect);
+    return syncReverbWrapper(ctx, *host, reverbId);
+}
+
+JSValue jsCreateEcho(JSContext *ctx, JSValueConst, int, JSValueConst *) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || !ensureBuiltins(ctx, *host)) {
+        return JS_EXCEPTION;
+    }
+
+    auto effect = std::make_shared<Echo>();
+    const std::uint64_t echoId = registerEchoState(*host, effect);
+    return syncEchoWrapper(ctx, *host, echoId);
+}
+
+JSValue jsCreateDistortion(JSContext *ctx, JSValueConst, int, JSValueConst *) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || !ensureBuiltins(ctx, *host)) {
+        return JS_EXCEPTION;
+    }
+
+    auto effect = std::make_shared<Distortion>();
+    const std::uint64_t distortionId = registerDistortionState(*host, effect);
+    return syncDistortionWrapper(ctx, *host, distortionId);
+}
+
+JSValue jsReverbSetRoomSize(JSContext *ctx, JSValueConst, int argc,
+                            JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected reverb and size");
+    }
+
+    Reverb *effect = resolveReverb(ctx, *host, argv[0]);
+    if (effect == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    double value = 0.0;
+    if (!getDouble(ctx, argv[1], value)) {
+        return JS_ThrowTypeError(ctx, "Expected size");
+    }
+
+    effect->setRoomSize(static_cast<float>(value));
+    return JS_UNDEFINED;
+}
+
+JSValue jsReverbSetDamping(JSContext *ctx, JSValueConst, int argc,
+                           JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected reverb and damping");
+    }
+
+    Reverb *effect = resolveReverb(ctx, *host, argv[0]);
+    if (effect == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    double value = 0.0;
+    if (!getDouble(ctx, argv[1], value)) {
+        return JS_ThrowTypeError(ctx, "Expected damping");
+    }
+
+    effect->setDamping(static_cast<float>(value));
+    return JS_UNDEFINED;
+}
+
+JSValue jsReverbSetWetLevel(JSContext *ctx, JSValueConst, int argc,
+                            JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected reverb and level");
+    }
+
+    Reverb *effect = resolveReverb(ctx, *host, argv[0]);
+    if (effect == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    double value = 0.0;
+    if (!getDouble(ctx, argv[1], value)) {
+        return JS_ThrowTypeError(ctx, "Expected level");
+    }
+
+    effect->setWetLevel(static_cast<float>(value));
+    return JS_UNDEFINED;
+}
+
+JSValue jsReverbSetDryLevel(JSContext *ctx, JSValueConst, int argc,
+                            JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected reverb and level");
+    }
+
+    Reverb *effect = resolveReverb(ctx, *host, argv[0]);
+    if (effect == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    double value = 0.0;
+    if (!getDouble(ctx, argv[1], value)) {
+        return JS_ThrowTypeError(ctx, "Expected level");
+    }
+
+    effect->setDryLevel(static_cast<float>(value));
+    return JS_UNDEFINED;
+}
+
+JSValue jsReverbSetWidth(JSContext *ctx, JSValueConst, int argc,
+                         JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected reverb and width");
+    }
+
+    Reverb *effect = resolveReverb(ctx, *host, argv[0]);
+    if (effect == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    double value = 0.0;
+    if (!getDouble(ctx, argv[1], value)) {
+        return JS_ThrowTypeError(ctx, "Expected width");
+    }
+
+    effect->setWidth(static_cast<float>(value));
+    return JS_UNDEFINED;
+}
+
+JSValue jsEchoSetDelay(JSContext *ctx, JSValueConst, int argc,
+                       JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected echo and delay");
+    }
+
+    Echo *effect = resolveEcho(ctx, *host, argv[0]);
+    if (effect == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    double value = 0.0;
+    if (!getDouble(ctx, argv[1], value)) {
+        return JS_ThrowTypeError(ctx, "Expected delay");
+    }
+
+    effect->setDelay(static_cast<float>(value));
+    return JS_UNDEFINED;
+}
+
+JSValue jsEchoSetDecay(JSContext *ctx, JSValueConst, int argc,
+                       JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected echo and decay");
+    }
+
+    Echo *effect = resolveEcho(ctx, *host, argv[0]);
+    if (effect == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    double value = 0.0;
+    if (!getDouble(ctx, argv[1], value)) {
+        return JS_ThrowTypeError(ctx, "Expected decay");
+    }
+
+    effect->setDecay(static_cast<float>(value));
+    return JS_UNDEFINED;
+}
+
+JSValue jsEchoSetWetLevel(JSContext *ctx, JSValueConst, int argc,
+                          JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected echo and level");
+    }
+
+    Echo *effect = resolveEcho(ctx, *host, argv[0]);
+    if (effect == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    double value = 0.0;
+    if (!getDouble(ctx, argv[1], value)) {
+        return JS_ThrowTypeError(ctx, "Expected level");
+    }
+
+    effect->setWetLevel(static_cast<float>(value));
+    return JS_UNDEFINED;
+}
+
+JSValue jsEchoSetDryLevel(JSContext *ctx, JSValueConst, int argc,
+                          JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected echo and level");
+    }
+
+    Echo *effect = resolveEcho(ctx, *host, argv[0]);
+    if (effect == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    double value = 0.0;
+    if (!getDouble(ctx, argv[1], value)) {
+        return JS_ThrowTypeError(ctx, "Expected level");
+    }
+
+    effect->setDryLevel(static_cast<float>(value));
+    return JS_UNDEFINED;
+}
+
+JSValue jsDistortionSetEdge(JSContext *ctx, JSValueConst, int argc,
+                            JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected distortion and edge");
+    }
+
+    Distortion *effect = resolveDistortion(ctx, *host, argv[0]);
+    if (effect == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    double value = 0.0;
+    if (!getDouble(ctx, argv[1], value)) {
+        return JS_ThrowTypeError(ctx, "Expected edge");
+    }
+
+    effect->setEdge(static_cast<float>(value));
+    return JS_UNDEFINED;
+}
+
+JSValue jsDistortionSetGain(JSContext *ctx, JSValueConst, int argc,
+                            JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected distortion and gain");
+    }
+
+    Distortion *effect = resolveDistortion(ctx, *host, argv[0]);
+    if (effect == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    double value = 0.0;
+    if (!getDouble(ctx, argv[1], value)) {
+        return JS_ThrowTypeError(ctx, "Expected gain");
+    }
+
+    effect->setGain(static_cast<float>(value));
+    return JS_UNDEFINED;
+}
+
+JSValue jsDistortionSetLowpassCutoff(JSContext *ctx, JSValueConst, int argc,
+                                     JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected distortion and cutoff");
+    }
+
+    Distortion *effect = resolveDistortion(ctx, *host, argv[0]);
+    if (effect == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    double value = 0.0;
+    if (!getDouble(ctx, argv[1], value)) {
+        return JS_ThrowTypeError(ctx, "Expected cutoff");
+    }
+
+    effect->setLowpassCutoff(static_cast<float>(value));
+    return JS_UNDEFINED;
+}
+
 JSValue jsCreateAudioPlayer(JSContext *ctx, JSValueConst, int argc,
                             JSValueConst *argv) {
     auto *host = getHost(ctx);
@@ -7445,6 +8664,7 @@ JSValue jsCreateAudioPlayer(JSContext *ctx, JSValueConst, int argc,
 
     std::uint64_t audioPlayerId = host->nextAudioPlayerId++;
     auto component = std::make_shared<AudioPlayer>();
+    component->init();
 
     host->audioPlayers[audioPlayerId] = {.component = component,
                                          .value = JS_DupValue(ctx, argv[0]),
@@ -7459,6 +8679,14 @@ JSValue jsCreateAudioPlayer(JSContext *ctx, JSValueConst, int argc,
                 JS_NewInt64(ctx, static_cast<int64_t>(host->generation)));
     setProperty(ctx, wrapper, ATLAS_NATIVE_COMPONENT_KIND_PROP,
                 JS_NewString(ctx, "audio-player"));
+    if (component->source != nullptr) {
+        const std::uint64_t audioSourceId =
+            registerAudioSourcePointer(*host, component->source.get());
+        setProperty(ctx, wrapper, "source",
+                    syncAudioSourceWrapper(ctx, *host, audioSourceId));
+    } else {
+        setProperty(ctx, wrapper, "source", JS_NULL);
+    }
     JS_FreeValue(ctx, wrapper);
 
     return JS_UNDEFINED;
@@ -7482,6 +8710,24 @@ ScriptAudioPlayerState *resolveAudioPlayer(JSContext *ctx, ScriptHost &host,
     return state;
 }
 
+void syncAudioPlayerSourceProperty(JSContext *ctx, ScriptHost &host,
+                                   ScriptAudioPlayerState &state) {
+    if (JS_IsUndefined(state.value)) {
+        return;
+    }
+
+    JSValue wrapper = JS_DupValue(ctx, state.value);
+    if (state.component && state.component->source != nullptr) {
+        const std::uint64_t audioSourceId =
+            registerAudioSourcePointer(host, state.component->source.get());
+        setProperty(ctx, wrapper, "source",
+                    syncAudioSourceWrapper(ctx, host, audioSourceId));
+    } else {
+        setProperty(ctx, wrapper, "source", JS_NULL);
+    }
+    JS_FreeValue(ctx, wrapper);
+}
+
 JSValue jsInitAudioPlayer(JSContext *ctx, JSValueConst, int argc,
                           JSValueConst *argv) {
     auto *host = getHost(ctx);
@@ -7495,6 +8741,7 @@ JSValue jsInitAudioPlayer(JSContext *ctx, JSValueConst, int argc,
     }
 
     state->component->init();
+    syncAudioPlayerSourceProperty(ctx, *host, *state);
     return JS_UNDEFINED;
 }
 
@@ -7601,6 +8848,7 @@ JSValue jsSetAudioPlayerSource(JSContext *ctx, JSValueConst, int argc,
     }
 
     state->component->setSource(resource);
+    syncAudioPlayerSourceProperty(ctx, *host, *state);
     return JS_UNDEFINED;
 }
 
@@ -10981,6 +12229,31 @@ void runtime::scripting::clearSceneBindings(JSContext *ctx, ScriptHost &host) {
         JS_FreeValue(ctx, state.value);
     }
     host.areaLights.clear();
+    for (auto &[_, state] : host.audioData) {
+        JS_FreeValue(ctx, state.value);
+    }
+    host.audioData.clear();
+    host.audioDataIds.clear();
+    for (auto &[_, state] : host.audioSources) {
+        JS_FreeValue(ctx, state.value);
+    }
+    host.audioSources.clear();
+    host.audioSourceIds.clear();
+    for (auto &[_, state] : host.reverbs) {
+        JS_FreeValue(ctx, state.value);
+    }
+    host.reverbs.clear();
+    host.reverbIds.clear();
+    for (auto &[_, state] : host.echoes) {
+        JS_FreeValue(ctx, state.value);
+    }
+    host.echoes.clear();
+    host.echoIds.clear();
+    for (auto &[_, state] : host.distortions) {
+        JS_FreeValue(ctx, state.value);
+    }
+    host.distortions.clear();
+    host.distortionIds.clear();
 
     if (!JS_IsUndefined(host.atlasParticleNamespace)) {
         JS_FreeValue(ctx, host.atlasParticleNamespace);
@@ -10995,6 +12268,14 @@ void runtime::scripting::clearSceneBindings(JSContext *ctx, ScriptHost &host) {
     if (!JS_IsUndefined(host.auroraNamespace)) {
         JS_FreeValue(ctx, host.auroraNamespace);
         host.auroraNamespace = JS_UNDEFINED;
+    }
+    if (!JS_IsUndefined(host.finewaveNamespace)) {
+        JS_FreeValue(ctx, host.finewaveNamespace);
+        host.finewaveNamespace = JS_UNDEFINED;
+    }
+    if (!JS_IsUndefined(host.audioEngineValue)) {
+        JS_FreeValue(ctx, host.audioEngineValue);
+        host.audioEngineValue = JS_UNDEFINED;
     }
 
     if (!JS_IsUndefined(host.particleEmitterPrototype)) {
@@ -11033,6 +12314,34 @@ void runtime::scripting::clearSceneBindings(JSContext *ctx, ScriptHost &host) {
     if (!JS_IsUndefined(host.compoundGeneratorPrototype)) {
         JS_FreeValue(ctx, host.compoundGeneratorPrototype);
         host.compoundGeneratorPrototype = JS_UNDEFINED;
+    }
+    if (!JS_IsUndefined(host.audioEnginePrototype)) {
+        JS_FreeValue(ctx, host.audioEnginePrototype);
+        host.audioEnginePrototype = JS_UNDEFINED;
+    }
+    if (!JS_IsUndefined(host.audioDataPrototype)) {
+        JS_FreeValue(ctx, host.audioDataPrototype);
+        host.audioDataPrototype = JS_UNDEFINED;
+    }
+    if (!JS_IsUndefined(host.audioSourcePrototype)) {
+        JS_FreeValue(ctx, host.audioSourcePrototype);
+        host.audioSourcePrototype = JS_UNDEFINED;
+    }
+    if (!JS_IsUndefined(host.audioEffectPrototype)) {
+        JS_FreeValue(ctx, host.audioEffectPrototype);
+        host.audioEffectPrototype = JS_UNDEFINED;
+    }
+    if (!JS_IsUndefined(host.reverbPrototype)) {
+        JS_FreeValue(ctx, host.reverbPrototype);
+        host.reverbPrototype = JS_UNDEFINED;
+    }
+    if (!JS_IsUndefined(host.echoPrototype)) {
+        JS_FreeValue(ctx, host.echoPrototype);
+        host.echoPrototype = JS_UNDEFINED;
+    }
+    if (!JS_IsUndefined(host.distortionPrototype)) {
+        JS_FreeValue(ctx, host.distortionPrototype);
+        host.distortionPrototype = JS_UNDEFINED;
     }
 
     if (!JS_IsUndefined(host.rigidbodyPrototype)) {
@@ -11073,6 +12382,11 @@ void runtime::scripting::clearSceneBindings(JSContext *ctx, ScriptHost &host) {
     host.objectStates.clear();
     host.nextComponentId = 1;
     host.nextAudioPlayerId = 1;
+    host.nextAudioDataId = 1;
+    host.nextAudioSourceId = 1;
+    host.nextReverbId = 1;
+    host.nextEchoId = 1;
+    host.nextDistortionId = 1;
     host.nextRigidbodyId = 1;
     host.nextVehicleId = 1;
     host.nextFixedJointId = 1;
@@ -11676,6 +12990,131 @@ void runtime::scripting::installGlobals(JSContext *ctx) {
     JS_SetPropertyStr(
         ctx, global, "__atlasAddComponent",
         JS_NewCFunction(ctx, jsAddComponent, "__atlasAddComponent", 2));
+    JS_SetPropertyStr(ctx, global, "__finewaveGetAudioEngine",
+                      JS_NewCFunction(ctx, jsGetAudioEngine,
+                                      "__finewaveGetAudioEngine", 0));
+    JS_SetPropertyStr(ctx, global, "__finewaveAudioEngineSetListenerPosition",
+                      JS_NewCFunction(ctx, jsAudioEngineSetListenerPosition,
+                                      "__finewaveAudioEngineSetListenerPosition",
+                                      2));
+    JS_SetPropertyStr(
+        ctx, global, "__finewaveAudioEngineSetListenerOrientation",
+        JS_NewCFunction(ctx, jsAudioEngineSetListenerOrientation,
+                        "__finewaveAudioEngineSetListenerOrientation", 3));
+    JS_SetPropertyStr(ctx, global, "__finewaveAudioEngineSetListenerVelocity",
+                      JS_NewCFunction(ctx, jsAudioEngineSetListenerVelocity,
+                                      "__finewaveAudioEngineSetListenerVelocity",
+                                      2));
+    JS_SetPropertyStr(ctx, global, "__finewaveAudioEngineSetMasterVolume",
+                      JS_NewCFunction(ctx, jsAudioEngineSetMasterVolume,
+                                      "__finewaveAudioEngineSetMasterVolume",
+                                      2));
+    JS_SetPropertyStr(ctx, global, "__finewaveCreateAudioData",
+                      JS_NewCFunction(ctx, jsCreateAudioData,
+                                      "__finewaveCreateAudioData", 1));
+    JS_SetPropertyStr(ctx, global, "__finewaveCreateAudioSource",
+                      JS_NewCFunction(ctx, jsCreateAudioSource,
+                                      "__finewaveCreateAudioSource", 0));
+    JS_SetPropertyStr(ctx, global, "__finewaveAudioSourceSetData",
+                      JS_NewCFunction(ctx, jsAudioSourceSetData,
+                                      "__finewaveAudioSourceSetData", 2));
+    JS_SetPropertyStr(ctx, global, "__finewaveAudioSourceFromFile",
+                      JS_NewCFunction(ctx, jsAudioSourceFromFile,
+                                      "__finewaveAudioSourceFromFile", 2));
+    JS_SetPropertyStr(ctx, global, "__finewaveAudioSourcePlay",
+                      JS_NewCFunction(ctx, jsAudioSourcePlay,
+                                      "__finewaveAudioSourcePlay", 1));
+    JS_SetPropertyStr(ctx, global, "__finewaveAudioSourcePause",
+                      JS_NewCFunction(ctx, jsAudioSourcePause,
+                                      "__finewaveAudioSourcePause", 1));
+    JS_SetPropertyStr(ctx, global, "__finewaveAudioSourceStop",
+                      JS_NewCFunction(ctx, jsAudioSourceStop,
+                                      "__finewaveAudioSourceStop", 1));
+    JS_SetPropertyStr(ctx, global, "__finewaveAudioSourceSetLoop",
+                      JS_NewCFunction(ctx, jsAudioSourceSetLoop,
+                                      "__finewaveAudioSourceSetLoop", 2));
+    JS_SetPropertyStr(ctx, global, "__finewaveAudioSourceSetVolume",
+                      JS_NewCFunction(ctx, jsAudioSourceSetVolume,
+                                      "__finewaveAudioSourceSetVolume", 2));
+    JS_SetPropertyStr(ctx, global, "__finewaveAudioSourceSetPitch",
+                      JS_NewCFunction(ctx, jsAudioSourceSetPitch,
+                                      "__finewaveAudioSourceSetPitch", 2));
+    JS_SetPropertyStr(ctx, global, "__finewaveAudioSourceSetPosition",
+                      JS_NewCFunction(ctx, jsAudioSourceSetPosition,
+                                      "__finewaveAudioSourceSetPosition", 2));
+    JS_SetPropertyStr(ctx, global, "__finewaveAudioSourceSetVelocity",
+                      JS_NewCFunction(ctx, jsAudioSourceSetVelocity,
+                                      "__finewaveAudioSourceSetVelocity", 2));
+    JS_SetPropertyStr(ctx, global, "__finewaveAudioSourceIsPlaying",
+                      JS_NewCFunction(ctx, jsAudioSourceIsPlaying,
+                                      "__finewaveAudioSourceIsPlaying", 1));
+    JS_SetPropertyStr(ctx, global, "__finewaveAudioSourcePlayFrom",
+                      JS_NewCFunction(ctx, jsAudioSourcePlayFrom,
+                                      "__finewaveAudioSourcePlayFrom", 2));
+    JS_SetPropertyStr(
+        ctx, global, "__finewaveAudioSourceDisableSpatialization",
+        JS_NewCFunction(ctx, jsAudioSourceDisableSpatialization,
+                        "__finewaveAudioSourceDisableSpatialization", 1));
+    JS_SetPropertyStr(ctx, global, "__finewaveAudioSourceApplyEffect",
+                      JS_NewCFunction(ctx, jsAudioSourceApplyEffect,
+                                      "__finewaveAudioSourceApplyEffect", 2));
+    JS_SetPropertyStr(ctx, global, "__finewaveAudioSourceGetPosition",
+                      JS_NewCFunction(ctx, jsAudioSourceGetPosition,
+                                      "__finewaveAudioSourceGetPosition", 1));
+    JS_SetPropertyStr(
+        ctx, global, "__finewaveAudioSourceGetListenerPosition",
+        JS_NewCFunction(ctx, jsAudioSourceGetListenerPosition,
+                        "__finewaveAudioSourceGetListenerPosition", 1));
+    JS_SetPropertyStr(ctx, global, "__finewaveAudioSourceUseSpatialization",
+                      JS_NewCFunction(ctx, jsAudioSourceUseSpatialization,
+                                      "__finewaveAudioSourceUseSpatialization",
+                                      1));
+    JS_SetPropertyStr(ctx, global, "__finewaveCreateReverb",
+                      JS_NewCFunction(ctx, jsCreateReverb,
+                                      "__finewaveCreateReverb", 0));
+    JS_SetPropertyStr(ctx, global, "__finewaveCreateEcho",
+                      JS_NewCFunction(ctx, jsCreateEcho,
+                                      "__finewaveCreateEcho", 0));
+    JS_SetPropertyStr(ctx, global, "__finewaveCreateDistortion",
+                      JS_NewCFunction(ctx, jsCreateDistortion,
+                                      "__finewaveCreateDistortion", 0));
+    JS_SetPropertyStr(ctx, global, "__finewaveReverbSetRoomSize",
+                      JS_NewCFunction(ctx, jsReverbSetRoomSize,
+                                      "__finewaveReverbSetRoomSize", 2));
+    JS_SetPropertyStr(ctx, global, "__finewaveReverbSetDamping",
+                      JS_NewCFunction(ctx, jsReverbSetDamping,
+                                      "__finewaveReverbSetDamping", 2));
+    JS_SetPropertyStr(ctx, global, "__finewaveReverbSetWetLevel",
+                      JS_NewCFunction(ctx, jsReverbSetWetLevel,
+                                      "__finewaveReverbSetWetLevel", 2));
+    JS_SetPropertyStr(ctx, global, "__finewaveReverbSetDryLevel",
+                      JS_NewCFunction(ctx, jsReverbSetDryLevel,
+                                      "__finewaveReverbSetDryLevel", 2));
+    JS_SetPropertyStr(ctx, global, "__finewaveReverbSetWidth",
+                      JS_NewCFunction(ctx, jsReverbSetWidth,
+                                      "__finewaveReverbSetWidth", 2));
+    JS_SetPropertyStr(ctx, global, "__finewaveEchoSetDelay",
+                      JS_NewCFunction(ctx, jsEchoSetDelay,
+                                      "__finewaveEchoSetDelay", 2));
+    JS_SetPropertyStr(ctx, global, "__finewaveEchoSetDecay",
+                      JS_NewCFunction(ctx, jsEchoSetDecay,
+                                      "__finewaveEchoSetDecay", 2));
+    JS_SetPropertyStr(ctx, global, "__finewaveEchoSetWetLevel",
+                      JS_NewCFunction(ctx, jsEchoSetWetLevel,
+                                      "__finewaveEchoSetWetLevel", 2));
+    JS_SetPropertyStr(ctx, global, "__finewaveEchoSetDryLevel",
+                      JS_NewCFunction(ctx, jsEchoSetDryLevel,
+                                      "__finewaveEchoSetDryLevel", 2));
+    JS_SetPropertyStr(ctx, global, "__finewaveDistortionSetEdge",
+                      JS_NewCFunction(ctx, jsDistortionSetEdge,
+                                      "__finewaveDistortionSetEdge", 2));
+    JS_SetPropertyStr(ctx, global, "__finewaveDistortionSetGain",
+                      JS_NewCFunction(ctx, jsDistortionSetGain,
+                                      "__finewaveDistortionSetGain", 2));
+    JS_SetPropertyStr(ctx, global, "__finewaveDistortionSetLowpassCutoff",
+                      JS_NewCFunction(ctx, jsDistortionSetLowpassCutoff,
+                                      "__finewaveDistortionSetLowpassCutoff",
+                                      2));
     JS_SetPropertyStr(ctx, global, "__atlasCreateAudioPlayer",
                       JS_NewCFunction(ctx, jsCreateAudioPlayer,
                                       "__atlasCreateAudioPlayer", 1));
