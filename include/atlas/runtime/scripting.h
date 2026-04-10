@@ -38,6 +38,16 @@ class Vehicle;
 class Rigidbody;
 class Window;
 class Terrain;
+class UIObject;
+class Image;
+class Text;
+class TextField;
+class Button;
+class Checkbox;
+class Column;
+class Row;
+class Stack;
+struct Font;
 struct Light;
 class DirectionalLight;
 struct Spotlight;
@@ -134,6 +144,12 @@ struct ScriptTextureState {
     JSValue value = JS_UNDEFINED;
 };
 
+struct ScriptFontState {
+    std::shared_ptr<Font> font;
+    JSValue value = JS_UNDEFINED;
+    std::uint64_t textureId = 0;
+};
+
 struct ScriptCubemapState {
     std::shared_ptr<Cubemap> cubemap;
     JSValue value = JS_UNDEFINED;
@@ -200,6 +216,7 @@ struct ScriptHost {
     std::unordered_map<std::uint64_t, ScriptHingeJointState> hingeJoints;
     std::unordered_map<std::uint64_t, ScriptSpringJointState> springJoints;
     std::unordered_map<std::uint64_t, ScriptTextureState> textures;
+    std::unordered_map<std::uint64_t, ScriptFontState> fonts;
     std::unordered_map<std::uint64_t, ScriptCubemapState> cubemaps;
     std::unordered_map<std::uint64_t, ScriptSkyboxState> skyboxes;
     std::unordered_map<std::uint64_t, ScriptRenderTargetState> renderTargets;
@@ -222,9 +239,11 @@ struct ScriptHost {
     JSValue atlasBezelNamespace = JS_UNDEFINED;
     JSValue auroraNamespace = JS_UNDEFINED;
     JSValue finewaveNamespace = JS_UNDEFINED;
+    JSValue graphiteNamespace = JS_UNDEFINED;
     JSValue audioEngineValue = JS_UNDEFINED;
     JSValue componentPrototype = JS_UNDEFINED;
     JSValue gameObjectPrototype = JS_UNDEFINED;
+    JSValue uiObjectPrototype = JS_UNDEFINED;
     JSValue coreObjectPrototype = JS_UNDEFINED;
     JSValue modelPrototype = JS_UNDEFINED;
     JSValue terrainPrototype = JS_UNDEFINED;
@@ -245,6 +264,18 @@ struct ScriptHost {
     JSValue reverbPrototype = JS_UNDEFINED;
     JSValue echoPrototype = JS_UNDEFINED;
     JSValue distortionPrototype = JS_UNDEFINED;
+    JSValue imagePrototype = JS_UNDEFINED;
+    JSValue textPrototype = JS_UNDEFINED;
+    JSValue textFieldPrototype = JS_UNDEFINED;
+    JSValue buttonPrototype = JS_UNDEFINED;
+    JSValue checkboxPrototype = JS_UNDEFINED;
+    JSValue columnPrototype = JS_UNDEFINED;
+    JSValue rowPrototype = JS_UNDEFINED;
+    JSValue stackPrototype = JS_UNDEFINED;
+    JSValue fontPrototype = JS_UNDEFINED;
+    JSValue uiStylePrototype = JS_UNDEFINED;
+    JSValue uiStyleVariantPrototype = JS_UNDEFINED;
+    JSValue themePrototype = JS_UNDEFINED;
     JSValue texturePrototype = JS_UNDEFINED;
     JSValue cubemapPrototype = JS_UNDEFINED;
     JSValue skyboxPrototype = JS_UNDEFINED;
@@ -282,6 +313,7 @@ struct ScriptHost {
     std::uint64_t nextReverbId = 1;
     std::uint64_t nextEchoId = 1;
     std::uint64_t nextDistortionId = 1;
+    std::uint64_t nextFontId = 1;
     std::uint64_t nextRigidbodyId = 1;
     std::uint64_t nextVehicleId = 1;
     std::uint64_t nextFixedJointId = 1;

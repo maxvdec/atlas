@@ -186,20 +186,26 @@ declare module "atlas" {
 
         constructor();
 
-        abstract attachTexture(texture: Texture): void;
-        abstract setPosition(position: Position3d): void;
-        abstract move(position: Position3d): void;
-        abstract setRotation(rotation: Rotation3d): void;
-        abstract lookAt(target: Position3d, up?: Normal3d): void;
-        abstract rotate(rotation: Rotation3d): void;
-        abstract setScale(scale: Scale3d): void;
-        abstract scaleBy(scale: Scale3d): void;
-        abstract show(): void;
-        abstract hide(): void;
+        attachTexture(texture: Texture): void;
+        setPosition(position: Position3d): void;
+        move(position: Position3d): void;
+        lookAt(target: Position3d, up?: Normal3d): void;
+        setRotation(rotation: Rotation3d): void;
+        rotate(rotation: Rotation3d): void;
+        setScale(scale: Scale3d): void;
+        scaleBy(scale: Scale3d): void;
+        show(): void;
+        hide(): void;
 
         as<T extends GameObject>(type: new (...args: any[]) => T): T | null;
 
         addComponent<T extends Component>(component: T): void;
+    }
+
+    export abstract class UIObject extends GameObject {
+        getSize(): Size2d;
+        getScreenPosition(): Position2d;
+        abstract setScreenPosition(position: Position2d): void;
     }
 
     export class CoreObject extends GameObject {
@@ -500,7 +506,7 @@ declare module "atlas" {
         instantiate(object: GameObject): void;
         destroy(object: GameObject): void;
 
-        addUIObject(object: GameObject): void;
+        addUIObject(object: UIObject): void;
         setCamera(camera: Camera): void;
         setScene(scene: Scene): void;
         getTime(): number;
@@ -1970,5 +1976,418 @@ declare module "finewave" {
         setEdge(edge: number): void;
         setGain(gain: number): void;
         setLowpassCutoff(cutoff: number): void;
+    }
+}
+
+declare module "graphite" {
+    import { UIObject, Resource } from "atlas";
+    import { Texture } from "atlas/graphics";
+    import { Position2d, Position3d, Color, Size2d, Size3d } from "atlas/units";
+
+    export class Image extends UIObject {
+        texture: Texture;
+        position: Position3d;
+        size: Size2d;
+        tint: Color;
+
+        constructor();
+        constructor(
+            texture: Texture,
+            size: Size2d,
+            position: Position2d,
+            tint: Color,
+        );
+
+        override getSize(): Size2d;
+        override getScreenPosition(): Position2d;
+        override setScreenPosition(position: Position2d): void;
+
+        style(): UIStyle;
+        setStyle(style: UIStyle): Image;
+
+        setTexture(texture: Texture): void;
+        setSize(size: Size2d): void;
+    }
+
+    export type TextFieldChangeEvent = {
+        text: string;
+        cursorPosition: number;
+        focused: boolean;
+    };
+
+    export type ButtonClickEvent = {
+        label: string;
+    };
+
+    export type CheckboxToggleEvent = {
+        label: string;
+        checked: boolean;
+    };
+
+    export namespace TextField {
+        export type ChangeCallback = (event: TextFieldChangeEvent) => void;
+    }
+
+    export class TextField extends UIObject {
+        text: string;
+        placeholder: string;
+        font: Font;
+        position: Position3d;
+        fontSize: number;
+        padding: Size2d;
+        maximumWidth: number;
+        textColor: Color;
+        placeholderColor: Color;
+        backgroundColor: Color;
+        borderColor: Color;
+        focusedBorderColor: Color;
+        cursorColor: Color;
+
+        constructor();
+
+        constructor(
+            font: Font,
+            maximumWidth: number,
+            position: Position2d,
+            text: string,
+            placeholder: string,
+        );
+
+        override getSize(): Size2d;
+        override getScreenPosition(): Position2d;
+        override setScreenPosition(position: Position2d): void;
+
+        getText(): string;
+        isFocused(): boolean;
+        getCursorIndex(): number;
+        style(): UIStyle;
+
+        setText(text: string): TextField;
+        setPlaceholder(placeholder: string): TextField;
+        setPadding(padding: Size2d): TextField;
+        setMaximumWidth(width: number): TextField;
+        setFontSize(size: number): TextField;
+        setStyle(style: UIStyle): TextField;
+        setOnChange(callback: TextField.ChangeCallback): TextField;
+
+        focus(): void;
+        blur(): void;
+    }
+
+    export namespace Button {
+        export type ClickCallback = (event: ButtonClickEvent) => void;
+    }
+
+    export class Button extends UIObject {
+        label: string;
+        font: Font;
+        position: Position3d;
+        fontSize: number;
+        padding: Size2d;
+        minimumSize: Size2d;
+        textColor: Color;
+        backgroundColor: Color;
+        hoverBackgroundColor: Color;
+        pressedBackgroundColor: Color;
+        borderColor: Color;
+        hoverBorderColor: Color;
+        enabled: boolean;
+
+        constructor();
+
+        constructor(font: Font, label: string, position: Position2d);
+
+        override getSize(): Size2d;
+        override getScreenPosition(): Position2d;
+        override setScreenPosition(position: Position2d): void;
+
+        getLabel(): string;
+        isHovered(): boolean;
+        isEnabled(): boolean;
+
+        style(): UIStyle;
+
+        setLabel(label: string): Button;
+        setPadding(padding: Size2d): Button;
+        setMinimumSize(size: Size2d): Button;
+        setFontSize(size: number): Button;
+        setStyle(style: UIStyle): Button;
+        setOnClick(callback: Button.ClickCallback): Button;
+        setEnabled(enabled: boolean): void;
+    }
+
+    export namespace Checkbox {
+        export type ToggleCallback = (event: CheckboxToggleEvent) => void;
+    }
+
+    export class Checkbox extends UIObject {
+        label: string;
+        font: Font;
+        position: Position3d;
+        fontSize: number;
+        padding: Size2d;
+        boxSize: number;
+        spacing: number;
+        checked: boolean;
+        enabled: boolean;
+        textColor: Color;
+        boxBackgroundColor: Color;
+        hoverBoxBackgroundColor: Color;
+        borderColor: Color;
+        activeBorderColor: Color;
+        checkColor: Color;
+
+        constructor();
+
+        constructor(font: Font, label: string, position: Position2d);
+
+        override getSize(): Size2d;
+        override getScreenPosition(): Position2d;
+        override setScreenPosition(position: Position2d): void;
+
+        getLabel(): string;
+        isChecked(): boolean;
+        isHovered(): boolean;
+        isEnabled(): boolean;
+
+        style(): UIStyle;
+
+        setLabel(label: string): Checkbox;
+        setPadding(padding: Size2d): Checkbox;
+        setFontSize(size: number): Checkbox;
+        setBoxSize(size: number): Checkbox;
+        setSpacing(spacing: number): Checkbox;
+        setStyle(style: UIStyle): Checkbox;
+        setOnToggle(callback: Checkbox.ToggleCallback): Checkbox;
+        setChecked(checked: boolean): void;
+        setEnabled(enabled: boolean): void;
+        toggle(): void;
+    }
+
+    export enum ElementAlignment {
+        Top,
+        Center,
+        Bottom,
+    }
+
+    export enum LayoutAnchor {
+        TopLeft,
+        TopCenter,
+        TopRight,
+        CenterLeft,
+        Center,
+        CenterRight,
+        BottomLeft,
+        BottomCenter,
+        BottomRight,
+    }
+
+    export class Column extends UIObject {
+        constructor(position: Position2d);
+        constructor(
+            children: UIObject[],
+            spacing: number,
+            padding: Size2d,
+            position: Position2d,
+        );
+
+        spacing: number;
+        maxSize: Size2d;
+        padding: Size2d;
+        children: UIObject[];
+        position: Position3d;
+        alignment: ElementAlignment;
+        anchor: LayoutAnchor;
+
+        addChild(child: UIObject): void;
+        setChildren(children: UIObject[]): void;
+
+        override getSize(): Size2d;
+
+        override getScreenPosition(): Position2d;
+        override setScreenPosition(position: Position2d): void;
+
+        style: UIStyle;
+        setStyle(style: UIStyle): Column;
+    }
+
+    export class Row extends UIObject {
+        constructor(position: Position2d);
+        constructor(
+            children: UIObject[],
+            spacing: number,
+            padding: Size2d,
+            position: Position2d,
+        );
+
+        spacing: number;
+        maxSize: Size2d;
+        padding: Size2d;
+        children: UIObject[];
+        position: Position3d;
+        alignment: ElementAlignment;
+        anchor: LayoutAnchor;
+
+        addChild(child: UIObject): void;
+        setChildren(children: UIObject[]): void;
+
+        override getSize(): Size2d;
+
+        override getScreenPosition(): Position2d;
+        override setScreenPosition(position: Position2d): void;
+
+        style: UIStyle;
+        setStyle(style: UIStyle): Column;
+    }
+
+    export class Stack extends UIObject {
+        constructor(position: Position2d);
+        constructor(
+            children: UIObject[],
+            padding: Size2d,
+            position: Position2d,
+        );
+
+        maxSize: Size2d;
+        padding: Size2d;
+        children: UIObject[];
+        position: Position3d;
+        horizontalAlignment: ElementAlignment;
+        verticalAlignment: ElementAlignment;
+        anchor: LayoutAnchor;
+
+        addChild(child: UIObject): void;
+        setChildren(children: UIObject[]): void;
+
+        override getSize(): Size2d;
+
+        override getScreenPosition(): Position2d;
+        override setScreenPosition(position: Position2d): void;
+
+        style: UIStyle;
+        setStyle(style: UIStyle): Column;
+    }
+
+    export enum UIStyleState {
+        Normal,
+        Hovered,
+        Pressed,
+        Disabled,
+        Focused,
+        Checked,
+    }
+
+    export type UIStyleStateSnapshot = {
+        hovered: boolean;
+        pressed: boolean;
+        disabled: boolean;
+        focused: boolean;
+        checked: boolean;
+    };
+
+    export class UIStyleVariant {
+        paddingValue?: number;
+        cornerRadiusValue?: number;
+        borderWidthValue?: number;
+        backgroundColorValue?: Color;
+        borderColorValue?: Color;
+        foregroundColorValue?: Color;
+        tintColorValue?: Color;
+        fontValue?: Font;
+        fontSizeValue?: number;
+
+        padding(value: Size2d): UIStyleVariant;
+        cornerRadius(value: number): UIStyleVariant;
+        borderWidth(value: number): UIStyleVariant;
+        backgroundColor(value: Color): UIStyleVariant;
+        borderColor(value: Color): UIStyleVariant;
+        foregroundColor(value: Color): UIStyleVariant;
+        tintColor(value: Color): UIStyleVariant;
+        font(value: Font): UIStyleVariant;
+        fontSize(value: number): UIStyleVariant;
+    }
+
+    export type UIResolvedStyle = {
+        padding: Size2d;
+        cornerRadius: number;
+        borderWidth: number;
+        backgroundColor: Color;
+        borderColor: Color;
+        foregroundColor: Color;
+        tintColor: Color;
+        font: Font;
+        fontSize: number;
+    };
+
+    export class UIStyle {
+        normal(): UIStyleVariant;
+        hovered(): UIStyleVariant;
+        pressed(): UIStyleVariant;
+        disabled(): UIStyleVariant;
+        focused(): UIStyleVariant;
+        checked(): UIStyleVariant;
+        variant(state: UIStyleState): UIStyleVariant;
+    }
+
+    export class Theme {
+        text: UIStyle;
+        image: UIStyle;
+        textField: UIStyle;
+        button: UIStyle;
+        checkbox: UIStyle;
+        row: UIStyle;
+        column: UIStyle;
+        stack: UIStyle;
+
+        static current(): Theme;
+        static set(theme: Theme): void;
+        static reset(): void;
+    }
+
+    export type Character = {
+        size: Size2d;
+        bearing: Position2d;
+        advance: number;
+        uvMin: Position2d;
+        uvMax: Position2d;
+    };
+
+    export type FontAtlas = Map<string, Character>;
+
+    export class Font {
+        name: string;
+        atlas: Texture;
+        size: number;
+        resource: Resource;
+        texture: Texture;
+
+        static fromResource(resource: Resource): Font;
+        static getFont(name: string): Font;
+
+        changeSize(size: number): Font;
+    }
+
+    export class Text extends UIObject {
+        content: string;
+        font: Font;
+        position: Position3d;
+        fontSize: number;
+        color: Color;
+
+        constructor();
+        constructor(
+            text: string,
+            font: Font,
+            color: Color,
+            position: Position2d,
+        );
+
+        override getSize(): Size2d;
+        override getScreenPosition(): Position2d;
+        override setScreenPosition(position: Position2d): void;
+
+        style(): UIStyle;
+        setStyle(style: UIStyle): Text;
+        setFontSize(size: number): Text;
     }
 }

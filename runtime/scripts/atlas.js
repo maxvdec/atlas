@@ -297,6 +297,39 @@ export class GameObject {
     }
 }
 
+export class UIObject extends GameObject {
+    getSize() {
+        return globalThis.__graphiteGetUISize(this);
+    }
+
+    getScreenPosition() {
+        return globalThis.__graphiteGetUIScreenPosition(this);
+    }
+
+    setScreenPosition(position) {
+        this.position = new Position3d(position.x, position.y, 0);
+        return globalThis.__graphiteSetUIScreenPosition(this, position);
+    }
+
+    setPosition(position) {
+        this.position = position;
+        return globalThis.__graphiteSetUIScreenPosition(
+            this,
+            new Position2d(position.x, position.y),
+        );
+    }
+
+    move(position) {
+        const screenPosition = this.getScreenPosition();
+        return this.setScreenPosition(
+            new Position2d(
+                screenPosition.x + position.x,
+                screenPosition.y + position.y,
+            ),
+        );
+    }
+}
+
 export class CoreObject extends GameObject {
     constructor() {
         super();

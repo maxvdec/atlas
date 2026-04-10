@@ -21,6 +21,11 @@
 #include "atlas/texture.h"
 #include "atlas/window.h"
 #include "atlas/workspace.h"
+#include "graphite/image.h"
+#include "graphite/input.h"
+#include "graphite/layout.h"
+#include "graphite/style.h"
+#include "graphite/text.h"
 #include <algorithm>
 #include <array>
 #include <cctype>
@@ -51,6 +56,7 @@ constexpr const char *ATLAS_AUDIO_SOURCE_ID_PROP = "__atlasAudioSourceId";
 constexpr const char *ATLAS_REVERB_ID_PROP = "__atlasReverbId";
 constexpr const char *ATLAS_ECHO_ID_PROP = "__atlasEchoId";
 constexpr const char *ATLAS_DISTORTION_ID_PROP = "__atlasDistortionId";
+constexpr const char *ATLAS_FONT_ID_PROP = "__atlasFontId";
 constexpr const char *ATLAS_RIGIDBODY_ID_PROP = "__atlasRigidbodyId";
 constexpr const char *ATLAS_VEHICLE_ID_PROP = "__atlasVehicleId";
 constexpr const char *ATLAS_FIXED_JOINT_ID_PROP = "__atlasFixedJointId";
@@ -77,6 +83,9 @@ constexpr const char *ATLAS_SCENE_PROP = "__atlasScene";
 constexpr const char *ATLAS_AUDIO_ENGINE_PROP = "__atlasAudioEngine";
 constexpr const char *ATLAS_NATIVE_COMPONENT_KIND_PROP =
     "__atlasNativeComponentKind";
+constexpr const char *GRAPHITE_ON_CHANGE_PROP = "__graphiteOnChange";
+constexpr const char *GRAPHITE_ON_CLICK_PROP = "__graphiteOnClick";
+constexpr const char *GRAPHITE_ON_TOGGLE_PROP = "__graphiteOnToggle";
 
 const auto ATLAS_KEY_ENTRIES = std::to_array<std::pair<const char *, Key>>({
     {"Unknown", Key::Unknown},
@@ -701,10 +710,21 @@ bool ensureBuiltins(JSContext *ctx, ScriptHost &host) {
         }
     }
 
+    if (JS_IsUndefined(host.graphiteNamespace)) {
+        host.graphiteNamespace =
+            runtime::scripting::importModuleNamespace(ctx, "graphite");
+        if (JS_IsException(host.graphiteNamespace)) {
+            runtime::scripting::dumpExecution(ctx);
+            return false;
+        }
+    }
+
     cachePrototype(ctx, host.atlasNamespace, "Component",
                    host.componentPrototype);
     cachePrototype(ctx, host.atlasNamespace, "GameObject",
                    host.gameObjectPrototype);
+    cachePrototype(ctx, host.atlasNamespace, "UIObject",
+                   host.uiObjectPrototype);
     cachePrototype(ctx, host.atlasNamespace, "CoreObject",
                    host.coreObjectPrototype);
     cachePrototype(ctx, host.atlasNamespace, "Model", host.modelPrototype);
@@ -735,6 +755,22 @@ bool ensureBuiltins(JSContext *ctx, ScriptHost &host) {
     cachePrototype(ctx, host.finewaveNamespace, "Echo", host.echoPrototype);
     cachePrototype(ctx, host.finewaveNamespace, "Distortion",
                    host.distortionPrototype);
+    cachePrototype(ctx, host.graphiteNamespace, "Image", host.imagePrototype);
+    cachePrototype(ctx, host.graphiteNamespace, "Text", host.textPrototype);
+    cachePrototype(ctx, host.graphiteNamespace, "TextField",
+                   host.textFieldPrototype);
+    cachePrototype(ctx, host.graphiteNamespace, "Button", host.buttonPrototype);
+    cachePrototype(ctx, host.graphiteNamespace, "Checkbox",
+                   host.checkboxPrototype);
+    cachePrototype(ctx, host.graphiteNamespace, "Column", host.columnPrototype);
+    cachePrototype(ctx, host.graphiteNamespace, "Row", host.rowPrototype);
+    cachePrototype(ctx, host.graphiteNamespace, "Stack", host.stackPrototype);
+    cachePrototype(ctx, host.graphiteNamespace, "Font", host.fontPrototype);
+    cachePrototype(ctx, host.graphiteNamespace, "UIStyle",
+                   host.uiStylePrototype);
+    cachePrototype(ctx, host.graphiteNamespace, "UIStyleVariant",
+                   host.uiStyleVariantPrototype);
+    cachePrototype(ctx, host.graphiteNamespace, "Theme", host.themePrototype);
     cachePrototype(ctx, host.atlasInputNamespace, "Trigger",
                    host.triggerPrototype);
     cachePrototype(ctx, host.atlasInputNamespace, "AxisTrigger",
@@ -2592,6 +2628,378 @@ JSValue syncAreaLightWrapper(JSContext *ctx, ScriptHost &host,
     return wrapper;
 }
 
+ScriptFontState *findFontState(ScriptHost &host, std::uint64_t fontId) {
+    auto it = host.fonts.find(fontId);
+    if (it == host.fonts.end()) {
+        return nullptr;
+    }
+    return &it->second;
+}
+
+Texture makeAtlasTexture(const Font &font) {
+    Texture atlasTexture;
+    atlasTexture.resource = font.resource;
+    atlasTexture.texture = font.texture;
+    atlasTexture.type = TextureType::Color;
+    if (font.texture != nullptr) {
+        atlasTexture.id = font.texture->textureID;
+        atlasTexture.creationData.width = font.texture->width;
+        atlasTexture.creationData.height = font.texture->height;
+        atlasTexture.creationData.channels = 1;
+    }
+    return atlasTexture;
+}
+
+std::uint64_t registerFontState(ScriptHost &host, const Font &font) {
+    const std::uint64_t fontId = host.nextFontId++;
+    auto state = ScriptFontState{
+        .font = std::make_shared<Font>(font),
+        .value = JS_UNDEFINED,
+        .textureId = 0,
+    };
+    if (state.font->texture != nullptr) {
+        state.textureId = registerTextureState(host, makeAtlasTexture(*state.font));
+    }
+    host.fonts[fontId] = std::move(state);
+    return fontId;
+}
+
+JSValue syncFontWrapper(JSContext *ctx, ScriptHost &host, std::uint64_t fontId) {
+    auto *state = findFontState(host, fontId);
+    if (state == nullptr || !state->font) {
+        return JS_NULL;
+    }
+    if (!ensureBuiltins(ctx, host)) {
+        return JS_EXCEPTION;
+    }
+
+    if (state->font->texture != nullptr) {
+        if (state->textureId == 0) {
+            state->textureId =
+                registerTextureState(host, makeAtlasTexture(*state->font));
+        } else if (auto *textureState = findTextureState(host, state->textureId);
+                   textureState != nullptr && textureState->texture != nullptr) {
+            *textureState->texture = makeAtlasTexture(*state->font);
+        }
+    }
+
+    JSValue wrapper = JS_UNDEFINED;
+    if (!JS_IsUndefined(state->value)) {
+        wrapper = JS_DupValue(ctx, state->value);
+    } else {
+        wrapper = newObjectFromPrototype(ctx, host.fontPrototype);
+        state->value = JS_DupValue(ctx, wrapper);
+    }
+
+    setProperty(ctx, wrapper, ATLAS_FONT_ID_PROP,
+                JS_NewInt64(ctx, static_cast<int64_t>(fontId)));
+    setProperty(ctx, wrapper, ATLAS_GENERATION_PROP,
+                JS_NewInt64(ctx, static_cast<int64_t>(host.generation)));
+    setProperty(ctx, wrapper, "name",
+                JS_NewString(ctx, state->font->name.c_str()));
+    setProperty(ctx, wrapper, "size", JS_NewInt32(ctx, state->font->size));
+    setProperty(ctx, wrapper, "resource",
+                makeResource(ctx, host, state->font->resource));
+    if (state->textureId != 0) {
+        JSValue texture = syncTextureWrapper(ctx, host, state->textureId);
+        setProperty(ctx, wrapper, "atlas", JS_DupValue(ctx, texture));
+        setProperty(ctx, wrapper, "texture", texture);
+    } else {
+        setProperty(ctx, wrapper, "atlas", JS_NULL);
+        setProperty(ctx, wrapper, "texture", JS_NULL);
+    }
+    return wrapper;
+}
+
+ScriptFontState *resolveFont(JSContext *ctx, ScriptHost &host, JSValueConst value) {
+    if (!ensureCurrentGeneration(ctx, host, value)) {
+        return nullptr;
+    }
+
+    std::int64_t fontId = 0;
+    if (!readIntProperty(ctx, value, ATLAS_FONT_ID_PROP, fontId)) {
+        JS_ThrowTypeError(ctx, "Expected Graphite font handle");
+        return nullptr;
+    }
+
+    auto *state = findFontState(host, static_cast<std::uint64_t>(fontId));
+    if (state == nullptr || !state->font) {
+        JS_ThrowReferenceError(ctx, "Unknown Graphite font id");
+        return nullptr;
+    }
+    return state;
+}
+
+JSValue syncObjectWrapper(JSContext *ctx, ScriptHost &host, GameObject &object);
+GameObject *resolveObjectArg(JSContext *ctx, ScriptHost &host,
+                             JSValueConst value);
+
+JSValue makeUIStyleVariantValue(JSContext *ctx, ScriptHost &host,
+                                const graphite::UIStyleVariant &variant) {
+    JSValue value = newObjectFromPrototype(ctx, host.uiStyleVariantPrototype);
+    if (variant.paddingValue.has_value()) {
+        setProperty(ctx, value, "paddingValue",
+                    makeSize2d(ctx, host, *variant.paddingValue));
+    }
+    if (variant.cornerRadiusValue.has_value()) {
+        setProperty(ctx, value, "cornerRadiusValue",
+                    JS_NewFloat64(ctx, *variant.cornerRadiusValue));
+    }
+    if (variant.borderWidthValue.has_value()) {
+        setProperty(ctx, value, "borderWidthValue",
+                    JS_NewFloat64(ctx, *variant.borderWidthValue));
+    }
+    if (variant.backgroundColorValue.has_value()) {
+        setProperty(ctx, value, "backgroundColorValue",
+                    makeColor(ctx, host, *variant.backgroundColorValue));
+    }
+    if (variant.borderColorValue.has_value()) {
+        setProperty(ctx, value, "borderColorValue",
+                    makeColor(ctx, host, *variant.borderColorValue));
+    }
+    if (variant.foregroundColorValue.has_value()) {
+        setProperty(ctx, value, "foregroundColorValue",
+                    makeColor(ctx, host, *variant.foregroundColorValue));
+    }
+    if (variant.tintColorValue.has_value()) {
+        setProperty(ctx, value, "tintColorValue",
+                    makeColor(ctx, host, *variant.tintColorValue));
+    }
+    if (variant.fontValue.has_value() && *variant.fontValue != nullptr) {
+        setProperty(ctx, value, "fontValue",
+                    syncFontWrapper(
+                        ctx, host,
+                        registerFontState(host, *(*variant.fontValue))));
+    }
+    if (variant.fontSizeValue.has_value()) {
+        setProperty(ctx, value, "fontSizeValue",
+                    JS_NewFloat64(ctx, *variant.fontSizeValue));
+    }
+    return value;
+}
+
+JSValue makeUIStyleValue(JSContext *ctx, ScriptHost &host,
+                         const graphite::UIStyle &style) {
+    JSValue value = newObjectFromPrototype(ctx, host.uiStylePrototype);
+    setProperty(ctx, value, "__normal",
+                makeUIStyleVariantValue(ctx, host, style.normal()));
+    setProperty(ctx, value, "__hovered",
+                makeUIStyleVariantValue(ctx, host, style.hovered()));
+    setProperty(ctx, value, "__pressed",
+                makeUIStyleVariantValue(ctx, host, style.pressed()));
+    setProperty(ctx, value, "__disabled",
+                makeUIStyleVariantValue(ctx, host, style.disabled()));
+    setProperty(ctx, value, "__focused",
+                makeUIStyleVariantValue(ctx, host, style.focused()));
+    setProperty(ctx, value, "__checked",
+                makeUIStyleVariantValue(ctx, host, style.checked()));
+    return value;
+}
+
+JSValue makeThemeValue(JSContext *ctx, ScriptHost &host,
+                       const graphite::Theme &theme) {
+    JSValue value = newObjectFromPrototype(ctx, host.themePrototype);
+    setProperty(ctx, value, "text", makeUIStyleValue(ctx, host, theme.text));
+    setProperty(ctx, value, "image", makeUIStyleValue(ctx, host, theme.image));
+    setProperty(ctx, value, "textField",
+                makeUIStyleValue(ctx, host, theme.textField));
+    setProperty(ctx, value, "button",
+                makeUIStyleValue(ctx, host, theme.button));
+    setProperty(ctx, value, "checkbox",
+                makeUIStyleValue(ctx, host, theme.checkbox));
+    setProperty(ctx, value, "row", makeUIStyleValue(ctx, host, theme.row));
+    setProperty(ctx, value, "column", makeUIStyleValue(ctx, host, theme.column));
+    setProperty(ctx, value, "stack", makeUIStyleValue(ctx, host, theme.stack));
+    return value;
+}
+
+bool parseUIStyleVariant(JSContext *ctx, ScriptHost &host, JSValueConst value,
+                         graphite::UIStyleVariant &out) {
+    JSValue field = JS_GetPropertyStr(ctx, value, "paddingValue");
+    if (!JS_IsException(field) && !JS_IsUndefined(field) && !JS_IsNull(field)) {
+        Size2d padding;
+        if (parseSize2d(ctx, field, padding)) {
+            out.paddingValue = padding;
+        }
+    }
+    JS_FreeValue(ctx, field);
+
+    double number = 0.0;
+    if (readNumberProperty(ctx, value, "cornerRadiusValue", number)) {
+        out.cornerRadiusValue = static_cast<float>(number);
+    }
+    if (readNumberProperty(ctx, value, "borderWidthValue", number)) {
+        out.borderWidthValue = static_cast<float>(number);
+    }
+    if (readNumberProperty(ctx, value, "fontSizeValue", number)) {
+        out.fontSizeValue = static_cast<float>(number);
+    }
+
+    field = JS_GetPropertyStr(ctx, value, "backgroundColorValue");
+    if (!JS_IsException(field) && !JS_IsUndefined(field) && !JS_IsNull(field)) {
+        Color color;
+        if (parseColor(ctx, field, color)) {
+            out.backgroundColorValue = color;
+        }
+    }
+    JS_FreeValue(ctx, field);
+
+    field = JS_GetPropertyStr(ctx, value, "borderColorValue");
+    if (!JS_IsException(field) && !JS_IsUndefined(field) && !JS_IsNull(field)) {
+        Color color;
+        if (parseColor(ctx, field, color)) {
+            out.borderColorValue = color;
+        }
+    }
+    JS_FreeValue(ctx, field);
+
+    field = JS_GetPropertyStr(ctx, value, "foregroundColorValue");
+    if (!JS_IsException(field) && !JS_IsUndefined(field) && !JS_IsNull(field)) {
+        Color color;
+        if (parseColor(ctx, field, color)) {
+            out.foregroundColorValue = color;
+        }
+    }
+    JS_FreeValue(ctx, field);
+
+    field = JS_GetPropertyStr(ctx, value, "tintColorValue");
+    if (!JS_IsException(field) && !JS_IsUndefined(field) && !JS_IsNull(field)) {
+        Color color;
+        if (parseColor(ctx, field, color)) {
+            out.tintColorValue = color;
+        }
+    }
+    JS_FreeValue(ctx, field);
+
+    field = JS_GetPropertyStr(ctx, value, "fontValue");
+    if (!JS_IsException(field) && !JS_IsUndefined(field) && !JS_IsNull(field)) {
+        auto *fontState = resolveFont(ctx, host, field);
+        if (fontState != nullptr && fontState->font) {
+            out.fontValue = fontState->font.get();
+        }
+    }
+    JS_FreeValue(ctx, field);
+
+    return true;
+}
+
+bool parseUIStyle(JSContext *ctx, ScriptHost &host, JSValueConst value,
+                  graphite::UIStyle &out) {
+    JSValue field = JS_GetPropertyStr(ctx, value, "__normal");
+    if (!JS_IsException(field) && !JS_IsUndefined(field) && !JS_IsNull(field)) {
+        parseUIStyleVariant(ctx, host, field, out.normal());
+    }
+    JS_FreeValue(ctx, field);
+
+    field = JS_GetPropertyStr(ctx, value, "__hovered");
+    if (!JS_IsException(field) && !JS_IsUndefined(field) && !JS_IsNull(field)) {
+        parseUIStyleVariant(ctx, host, field, out.hovered());
+    }
+    JS_FreeValue(ctx, field);
+
+    field = JS_GetPropertyStr(ctx, value, "__pressed");
+    if (!JS_IsException(field) && !JS_IsUndefined(field) && !JS_IsNull(field)) {
+        parseUIStyleVariant(ctx, host, field, out.pressed());
+    }
+    JS_FreeValue(ctx, field);
+
+    field = JS_GetPropertyStr(ctx, value, "__disabled");
+    if (!JS_IsException(field) && !JS_IsUndefined(field) && !JS_IsNull(field)) {
+        parseUIStyleVariant(ctx, host, field, out.disabled());
+    }
+    JS_FreeValue(ctx, field);
+
+    field = JS_GetPropertyStr(ctx, value, "__focused");
+    if (!JS_IsException(field) && !JS_IsUndefined(field) && !JS_IsNull(field)) {
+        parseUIStyleVariant(ctx, host, field, out.focused());
+    }
+    JS_FreeValue(ctx, field);
+
+    field = JS_GetPropertyStr(ctx, value, "__checked");
+    if (!JS_IsException(field) && !JS_IsUndefined(field) && !JS_IsNull(field)) {
+        parseUIStyleVariant(ctx, host, field, out.checked());
+    }
+    JS_FreeValue(ctx, field);
+
+    return true;
+}
+
+bool parseTheme(JSContext *ctx, ScriptHost &host, JSValueConst value,
+                graphite::Theme &out) {
+    JSValue field = JS_GetPropertyStr(ctx, value, "text");
+    if (!JS_IsException(field) && !JS_IsUndefined(field)) {
+        parseUIStyle(ctx, host, field, out.text);
+    }
+    JS_FreeValue(ctx, field);
+    field = JS_GetPropertyStr(ctx, value, "image");
+    if (!JS_IsException(field) && !JS_IsUndefined(field)) {
+        parseUIStyle(ctx, host, field, out.image);
+    }
+    JS_FreeValue(ctx, field);
+    field = JS_GetPropertyStr(ctx, value, "textField");
+    if (!JS_IsException(field) && !JS_IsUndefined(field)) {
+        parseUIStyle(ctx, host, field, out.textField);
+    }
+    JS_FreeValue(ctx, field);
+    field = JS_GetPropertyStr(ctx, value, "button");
+    if (!JS_IsException(field) && !JS_IsUndefined(field)) {
+        parseUIStyle(ctx, host, field, out.button);
+    }
+    JS_FreeValue(ctx, field);
+    field = JS_GetPropertyStr(ctx, value, "checkbox");
+    if (!JS_IsException(field) && !JS_IsUndefined(field)) {
+        parseUIStyle(ctx, host, field, out.checkbox);
+    }
+    JS_FreeValue(ctx, field);
+    field = JS_GetPropertyStr(ctx, value, "row");
+    if (!JS_IsException(field) && !JS_IsUndefined(field)) {
+        parseUIStyle(ctx, host, field, out.row);
+    }
+    JS_FreeValue(ctx, field);
+    field = JS_GetPropertyStr(ctx, value, "column");
+    if (!JS_IsException(field) && !JS_IsUndefined(field)) {
+        parseUIStyle(ctx, host, field, out.column);
+    }
+    JS_FreeValue(ctx, field);
+    field = JS_GetPropertyStr(ctx, value, "stack");
+    if (!JS_IsException(field) && !JS_IsUndefined(field)) {
+        parseUIStyle(ctx, host, field, out.stack);
+    }
+    JS_FreeValue(ctx, field);
+    return true;
+}
+
+bool callGraphiteCallback(JSContext *ctx, ScriptHost &host, GameObject &object,
+                          const char *propName, int argc, JSValue *argv) {
+    JSValue wrapper = syncObjectWrapper(ctx, host, object);
+    if (JS_IsException(wrapper) || JS_IsNull(wrapper)) {
+        for (int i = 0; i < argc; ++i) {
+            JS_FreeValue(ctx, argv[i]);
+        }
+        JS_FreeValue(ctx, wrapper);
+        return false;
+    }
+    JSValue callback = JS_GetPropertyStr(ctx, wrapper, propName);
+    if (JS_IsException(callback) || !JS_IsFunction(ctx, callback)) {
+        for (int i = 0; i < argc; ++i) {
+            JS_FreeValue(ctx, argv[i]);
+        }
+        JS_FreeValue(ctx, callback);
+        JS_FreeValue(ctx, wrapper);
+        return false;
+    }
+    JSValue result = JS_Call(ctx, callback, wrapper, argc,
+                             const_cast<JSValueConst *>(argv));
+    const bool ok = !JS_IsException(result);
+    for (int i = 0; i < argc; ++i) {
+        JS_FreeValue(ctx, argv[i]);
+    }
+    JS_FreeValue(ctx, result);
+    JS_FreeValue(ctx, callback);
+    JS_FreeValue(ctx, wrapper);
+    return ok;
+}
+
 JSValue makeBiomeValue(JSContext *ctx, ScriptHost &host, const Biome &biome) {
     ensureBuiltins(ctx, host);
     JSValue result = newObjectFromPrototype(ctx, host.biomePrototype);
@@ -3161,6 +3569,9 @@ void attachObjectIfReady(ScriptHost &host, GameObject &object) {
     if (host.context == nullptr || host.context->window == nullptr) {
         return;
     }
+    if (dynamic_cast<UIObject *>(&object) != nullptr) {
+        return;
+    }
 
     auto &state = host.objectStates[object.getId()];
     state.object = &object;
@@ -3316,7 +3727,25 @@ JSValue syncObjectWrapper(JSContext *ctx, ScriptHost &host,
         wrapper = JS_DupValue(ctx, cacheIt->second);
     } else {
         JSValueConst prototype = host.gameObjectPrototype;
-        if (dynamic_cast<CoreObject *>(&object) != nullptr) {
+        if (dynamic_cast<Image *>(&object) != nullptr) {
+            prototype = host.imagePrototype;
+        } else if (dynamic_cast<Text *>(&object) != nullptr) {
+            prototype = host.textPrototype;
+        } else if (dynamic_cast<TextField *>(&object) != nullptr) {
+            prototype = host.textFieldPrototype;
+        } else if (dynamic_cast<Button *>(&object) != nullptr) {
+            prototype = host.buttonPrototype;
+        } else if (dynamic_cast<Checkbox *>(&object) != nullptr) {
+            prototype = host.checkboxPrototype;
+        } else if (dynamic_cast<Column *>(&object) != nullptr) {
+            prototype = host.columnPrototype;
+        } else if (dynamic_cast<Row *>(&object) != nullptr) {
+            prototype = host.rowPrototype;
+        } else if (dynamic_cast<Stack *>(&object) != nullptr) {
+            prototype = host.stackPrototype;
+        } else if (dynamic_cast<UIObject *>(&object) != nullptr) {
+            prototype = host.uiObjectPrototype;
+        } else if (dynamic_cast<CoreObject *>(&object) != nullptr) {
             prototype = host.coreObjectPrototype;
         } else if (dynamic_cast<ParticleEmitter *>(&object) != nullptr) {
             prototype = host.particleEmitterPrototype;
@@ -3344,8 +3773,16 @@ JSValue syncObjectWrapper(JSContext *ctx, ScriptHost &host,
     setProperty(ctx, wrapper, "id", JS_NewInt32(ctx, objectId));
     setProperty(ctx, wrapper, "components",
                 buildComponentsArray(ctx, host, objectId));
-    setProperty(ctx, wrapper, "position",
-                makePosition3d(ctx, host, object.getPosition()));
+    if (auto *uiObject = dynamic_cast<UIObject *>(&object); uiObject != nullptr) {
+        const Position2d screenPosition = uiObject->getScreenPosition();
+        setProperty(ctx, wrapper, "position",
+                    makePosition3d(ctx, host,
+                                   Position3d(screenPosition.x, screenPosition.y,
+                                              0.0f)));
+    } else {
+        setProperty(ctx, wrapper, "position",
+                    makePosition3d(ctx, host, object.getPosition()));
+    }
     setProperty(ctx, wrapper, "rotation",
                 makeRotation3d(ctx, host, object.getRotation()));
     setProperty(ctx, wrapper, "scale",
@@ -3455,7 +3892,232 @@ JSValue syncObjectWrapper(JSContext *ctx, ScriptHost &host,
         setProperty(ctx, wrapper, "biomes", biomes);
     }
 
+    if (auto *image = dynamic_cast<Image *>(&object); image != nullptr) {
+        if (image->texture.texture != nullptr || image->texture.id != 0) {
+            const std::uint64_t textureId =
+                registerTextureState(host, image->texture);
+            setProperty(ctx, wrapper, "texture",
+                        syncTextureWrapper(ctx, host, textureId));
+        } else {
+            setProperty(ctx, wrapper, "texture", JS_NULL);
+        }
+        setProperty(ctx, wrapper, "size", makeSize2d(ctx, host, image->size));
+        setProperty(ctx, wrapper, "tint", makeColor(ctx, host, image->tint));
+    } else if (auto *text = dynamic_cast<Text *>(&object); text != nullptr) {
+        setProperty(ctx, wrapper, "content",
+                    JS_NewString(ctx, text->content.c_str()));
+        setProperty(ctx, wrapper, "font",
+                    syncFontWrapper(ctx, host, registerFontState(host, text->font)));
+        setProperty(ctx, wrapper, "fontSize",
+                    JS_NewFloat64(ctx, text->fontSize));
+        setProperty(ctx, wrapper, "color", makeColor(ctx, host, text->color));
+    } else if (auto *field = dynamic_cast<TextField *>(&object);
+               field != nullptr) {
+        setProperty(ctx, wrapper, "text", JS_NewString(ctx, field->text.c_str()));
+        setProperty(ctx, wrapper, "placeholder",
+                    JS_NewString(ctx, field->placeholder.c_str()));
+        setProperty(ctx, wrapper, "font", syncFontWrapper(
+                                             ctx, host,
+                                             registerFontState(host, field->font)));
+        setProperty(ctx, wrapper, "fontSize",
+                    JS_NewFloat64(ctx, field->fontSize));
+        setProperty(ctx, wrapper, "padding",
+                    makeSize2d(ctx, host, field->padding));
+        setProperty(ctx, wrapper, "maximumWidth",
+                    JS_NewFloat64(ctx, field->maximumWidth));
+        setProperty(ctx, wrapper, "textColor",
+                    makeColor(ctx, host, field->textColor));
+        setProperty(ctx, wrapper, "placeholderColor",
+                    makeColor(ctx, host, field->placeholderColor));
+        setProperty(ctx, wrapper, "backgroundColor",
+                    makeColor(ctx, host, field->backgroundColor));
+        setProperty(ctx, wrapper, "borderColor",
+                    makeColor(ctx, host, field->borderColor));
+        setProperty(ctx, wrapper, "focusedBorderColor",
+                    makeColor(ctx, host, field->focusedBorderColor));
+        setProperty(ctx, wrapper, "cursorColor",
+                    makeColor(ctx, host, field->cursorColor));
+    } else if (auto *button = dynamic_cast<Button *>(&object);
+               button != nullptr) {
+        setProperty(ctx, wrapper, "label",
+                    JS_NewString(ctx, button->label.c_str()));
+        setProperty(ctx, wrapper, "font", syncFontWrapper(
+                                             ctx, host, registerFontState(host,
+                                                                          button->font)));
+        setProperty(ctx, wrapper, "fontSize",
+                    JS_NewFloat64(ctx, button->fontSize));
+        setProperty(ctx, wrapper, "padding",
+                    makeSize2d(ctx, host, button->padding));
+        setProperty(ctx, wrapper, "minimumSize",
+                    makeSize2d(ctx, host, button->minimumSize));
+        setProperty(ctx, wrapper, "textColor",
+                    makeColor(ctx, host, button->textColor));
+        setProperty(ctx, wrapper, "backgroundColor",
+                    makeColor(ctx, host, button->backgroundColor));
+        setProperty(ctx, wrapper, "hoverBackgroundColor",
+                    makeColor(ctx, host, button->hoverBackgroundColor));
+        setProperty(ctx, wrapper, "pressedBackgroundColor",
+                    makeColor(ctx, host, button->pressedBackgroundColor));
+        setProperty(ctx, wrapper, "borderColor",
+                    makeColor(ctx, host, button->borderColor));
+        setProperty(ctx, wrapper, "hoverBorderColor",
+                    makeColor(ctx, host, button->hoverBorderColor));
+        setProperty(ctx, wrapper, "enabled",
+                    JS_NewBool(ctx, button->enabled));
+    } else if (auto *checkbox = dynamic_cast<Checkbox *>(&object);
+               checkbox != nullptr) {
+        setProperty(ctx, wrapper, "label",
+                    JS_NewString(ctx, checkbox->label.c_str()));
+        setProperty(ctx, wrapper, "font", syncFontWrapper(
+                                             ctx, host, registerFontState(host,
+                                                                          checkbox->font)));
+        setProperty(ctx, wrapper, "fontSize",
+                    JS_NewFloat64(ctx, checkbox->fontSize));
+        setProperty(ctx, wrapper, "padding",
+                    makeSize2d(ctx, host, checkbox->padding));
+        setProperty(ctx, wrapper, "boxSize",
+                    JS_NewFloat64(ctx, checkbox->boxSize));
+        setProperty(ctx, wrapper, "spacing",
+                    JS_NewFloat64(ctx, checkbox->spacing));
+        setProperty(ctx, wrapper, "checked",
+                    JS_NewBool(ctx, checkbox->checked));
+        setProperty(ctx, wrapper, "enabled",
+                    JS_NewBool(ctx, checkbox->enabled));
+        setProperty(ctx, wrapper, "textColor",
+                    makeColor(ctx, host, checkbox->textColor));
+        setProperty(ctx, wrapper, "boxBackgroundColor",
+                    makeColor(ctx, host, checkbox->boxBackgroundColor));
+        setProperty(ctx, wrapper, "hoverBoxBackgroundColor",
+                    makeColor(ctx, host, checkbox->hoverBoxBackgroundColor));
+        setProperty(ctx, wrapper, "borderColor",
+                    makeColor(ctx, host, checkbox->borderColor));
+        setProperty(ctx, wrapper, "activeBorderColor",
+                    makeColor(ctx, host, checkbox->activeBorderColor));
+        setProperty(ctx, wrapper, "checkColor",
+                    makeColor(ctx, host, checkbox->checkColor));
+    } else if (auto *column = dynamic_cast<Column *>(&object);
+               column != nullptr) {
+        setProperty(ctx, wrapper, "spacing",
+                    JS_NewFloat64(ctx, column->spacing));
+        setProperty(ctx, wrapper, "maxSize",
+                    makeSize2d(ctx, host, column->maxSize));
+        setProperty(ctx, wrapper, "padding",
+                    makeSize2d(ctx, host, column->padding));
+        setProperty(ctx, wrapper, "style",
+                    makeUIStyleValue(ctx, host, column->style()));
+        JSValue children = JS_NewArray(ctx);
+        for (std::uint32_t i = 0; i < column->children.size(); ++i) {
+            if (column->children[i] == nullptr) {
+                JS_SetPropertyUint32(ctx, children, i, JS_NULL);
+            } else {
+                JS_SetPropertyUint32(
+                    ctx, children, i,
+                    syncObjectWrapper(ctx, host, *column->children[i]));
+            }
+        }
+        setProperty(ctx, wrapper, "children", children);
+        setProperty(ctx, wrapper, "alignment",
+                    JS_NewInt32(ctx, static_cast<int>(column->alignment)));
+        setProperty(ctx, wrapper, "anchor",
+                    JS_NewInt32(ctx, static_cast<int>(column->anchor)));
+    } else if (auto *row = dynamic_cast<Row *>(&object); row != nullptr) {
+        setProperty(ctx, wrapper, "spacing", JS_NewFloat64(ctx, row->spacing));
+        setProperty(ctx, wrapper, "maxSize",
+                    makeSize2d(ctx, host, row->maxSize));
+        setProperty(ctx, wrapper, "padding",
+                    makeSize2d(ctx, host, row->padding));
+        setProperty(ctx, wrapper, "style",
+                    makeUIStyleValue(ctx, host, row->style()));
+        JSValue children = JS_NewArray(ctx);
+        for (std::uint32_t i = 0; i < row->children.size(); ++i) {
+            if (row->children[i] == nullptr) {
+                JS_SetPropertyUint32(ctx, children, i, JS_NULL);
+            } else {
+                JS_SetPropertyUint32(
+                    ctx, children, i,
+                    syncObjectWrapper(ctx, host, *row->children[i]));
+            }
+        }
+        setProperty(ctx, wrapper, "children", children);
+        setProperty(ctx, wrapper, "alignment",
+                    JS_NewInt32(ctx, static_cast<int>(row->alignment)));
+        setProperty(ctx, wrapper, "anchor",
+                    JS_NewInt32(ctx, static_cast<int>(row->anchor)));
+    } else if (auto *stack = dynamic_cast<Stack *>(&object); stack != nullptr) {
+        setProperty(ctx, wrapper, "maxSize",
+                    makeSize2d(ctx, host, stack->maxSize));
+        setProperty(ctx, wrapper, "padding",
+                    makeSize2d(ctx, host, stack->padding));
+        setProperty(ctx, wrapper, "style",
+                    makeUIStyleValue(ctx, host, stack->style()));
+        JSValue children = JS_NewArray(ctx);
+        for (std::uint32_t i = 0; i < stack->children.size(); ++i) {
+            if (stack->children[i] == nullptr) {
+                JS_SetPropertyUint32(ctx, children, i, JS_NULL);
+            } else {
+                JS_SetPropertyUint32(
+                    ctx, children, i,
+                    syncObjectWrapper(ctx, host, *stack->children[i]));
+            }
+        }
+        setProperty(ctx, wrapper, "children", children);
+        setProperty(ctx, wrapper, "horizontalAlignment",
+                    JS_NewInt32(ctx,
+                                static_cast<int>(stack->horizontalAlignment)));
+        setProperty(ctx, wrapper, "verticalAlignment",
+                    JS_NewInt32(ctx,
+                                static_cast<int>(stack->verticalAlignment)));
+        setProperty(ctx, wrapper, "anchor",
+                    JS_NewInt32(ctx, static_cast<int>(stack->anchor)));
+    }
+
     return wrapper;
+}
+
+bool parseGraphiteStyleProperty(JSContext *ctx, ScriptHost &host,
+                                JSValueConst wrapper, const char *propName,
+                                graphite::UIStyle &out) {
+    JSValue value = JS_GetPropertyStr(ctx, wrapper, propName);
+    if (JS_IsException(value) || JS_IsUndefined(value) || JS_IsNull(value)) {
+        JS_FreeValue(ctx, value);
+        return false;
+    }
+    const bool ok = parseUIStyle(ctx, host, value, out);
+    JS_FreeValue(ctx, value);
+    return ok;
+}
+
+bool parseUIChildren(JSContext *ctx, ScriptHost &host, JSValueConst value,
+                     std::vector<UIObject *> &out) {
+    if (!JS_IsArray(value)) {
+        return false;
+    }
+
+    std::uint32_t length = 0;
+    if (!getArrayLength(ctx, value, length)) {
+        return false;
+    }
+
+    out.clear();
+    out.reserve(length);
+    for (std::uint32_t i = 0; i < length; ++i) {
+        JSValue childValue = JS_GetPropertyUint32(ctx, value, i);
+        if (JS_IsException(childValue) || JS_IsNull(childValue) ||
+            JS_IsUndefined(childValue)) {
+            JS_FreeValue(ctx, childValue);
+            continue;
+        }
+        GameObject *child = resolveObjectArg(ctx, host, childValue);
+        JS_FreeValue(ctx, childValue);
+        if (child == nullptr) {
+            continue;
+        }
+        auto *uiChild = dynamic_cast<UIObject *>(child);
+        if (uiChild != nullptr) {
+            out.push_back(uiChild);
+        }
+    }
+    return true;
 }
 
 bool applyBaseObject(JSContext *ctx, ScriptHost &host, JSValueConst wrapper,
@@ -3466,7 +4128,16 @@ bool applyBaseObject(JSContext *ctx, ScriptHost &host, JSValueConst wrapper,
 
     JSValue value = JS_GetPropertyStr(ctx, wrapper, "position");
     if (!JS_IsException(value) && !JS_IsUndefined(value)) {
-        parsePosition3d(ctx, value, position);
+        if (auto *uiObject = dynamic_cast<UIObject *>(&object);
+            uiObject != nullptr) {
+            Position3d screenPosition;
+            if (parsePosition3d(ctx, value, screenPosition)) {
+                uiObject->setScreenPosition(
+                    Position2d(screenPosition.x, screenPosition.y));
+            }
+        } else {
+            parsePosition3d(ctx, value, position);
+        }
     }
     JS_FreeValue(ctx, value);
 
@@ -3482,9 +4153,11 @@ bool applyBaseObject(JSContext *ctx, ScriptHost &host, JSValueConst wrapper,
     }
     JS_FreeValue(ctx, value);
 
-    object.setPosition(position);
-    object.setRotation(rotation);
-    object.setScale(scale);
+    if (dynamic_cast<UIObject *>(&object) == nullptr) {
+        object.setPosition(position);
+        object.setRotation(rotation);
+        object.setScale(scale);
+    }
 
     if (host.context != nullptr) {
         std::string name;
@@ -3493,6 +4166,417 @@ bool applyBaseObject(JSContext *ctx, ScriptHost &host, JSValueConst wrapper,
         }
     }
 
+    return true;
+}
+
+bool applyImage(JSContext *ctx, ScriptHost &host, JSValueConst wrapper,
+                Image &image) {
+    applyBaseObject(ctx, host, wrapper, image);
+
+    JSValue value = JS_GetPropertyStr(ctx, wrapper, "texture");
+    if (!JS_IsException(value) && !JS_IsUndefined(value) && !JS_IsNull(value)) {
+        auto *textureState = resolveTexture(ctx, host, value);
+        if (textureState != nullptr && textureState->texture) {
+            image.setTexture(*textureState->texture);
+        }
+    }
+    JS_FreeValue(ctx, value);
+
+    Size2d size = image.size;
+    value = JS_GetPropertyStr(ctx, wrapper, "size");
+    if (!JS_IsException(value) && !JS_IsUndefined(value) && !JS_IsNull(value)) {
+        parseSize2d(ctx, value, size);
+    }
+    JS_FreeValue(ctx, value);
+    image.setSize(size);
+
+    Color tint = image.tint;
+    value = JS_GetPropertyStr(ctx, wrapper, "tint");
+    if (!JS_IsException(value) && !JS_IsUndefined(value) && !JS_IsNull(value)) {
+        parseColor(ctx, value, tint);
+    }
+    JS_FreeValue(ctx, value);
+    image.tint = tint;
+
+    graphite::UIStyle style;
+    if (parseGraphiteStyleProperty(ctx, host, wrapper, "__style", style)) {
+        image.setStyle(style);
+    }
+
+    return true;
+}
+
+bool applyText(JSContext *ctx, ScriptHost &host, JSValueConst wrapper,
+               Text &text) {
+    applyBaseObject(ctx, host, wrapper, text);
+
+    std::string content = text.content;
+    readStringProperty(ctx, wrapper, "content", content);
+    text.content = content;
+
+    JSValue value = JS_GetPropertyStr(ctx, wrapper, "font");
+    if (!JS_IsException(value) && !JS_IsUndefined(value) && !JS_IsNull(value)) {
+        auto *fontState = resolveFont(ctx, host, value);
+        if (fontState != nullptr && fontState->font) {
+            text.font = *fontState->font;
+        }
+    }
+    JS_FreeValue(ctx, value);
+
+    double fontSize = text.fontSize;
+    readNumberProperty(ctx, wrapper, "fontSize", fontSize);
+    text.fontSize = static_cast<float>(fontSize);
+
+    Color color = text.color;
+    value = JS_GetPropertyStr(ctx, wrapper, "color");
+    if (!JS_IsException(value) && !JS_IsUndefined(value) && !JS_IsNull(value)) {
+        parseColor(ctx, value, color);
+    }
+    JS_FreeValue(ctx, value);
+    text.color = color;
+
+    graphite::UIStyle style;
+    if (parseGraphiteStyleProperty(ctx, host, wrapper, "__style", style)) {
+        text.setStyle(style);
+    }
+
+    return true;
+}
+
+bool applyTextField(JSContext *ctx, ScriptHost &host, JSValueConst wrapper,
+                    TextField &field) {
+    applyBaseObject(ctx, host, wrapper, field);
+
+    readStringProperty(ctx, wrapper, "text", field.text);
+    readStringProperty(ctx, wrapper, "placeholder", field.placeholder);
+
+    JSValue value = JS_GetPropertyStr(ctx, wrapper, "font");
+    if (!JS_IsException(value) && !JS_IsUndefined(value) && !JS_IsNull(value)) {
+        auto *fontState = resolveFont(ctx, host, value);
+        if (fontState != nullptr && fontState->font) {
+            field.font = *fontState->font;
+        }
+    }
+    JS_FreeValue(ctx, value);
+
+    double number = 0.0;
+    if (readNumberProperty(ctx, wrapper, "fontSize", number)) {
+        field.fontSize = static_cast<float>(number);
+    }
+    value = JS_GetPropertyStr(ctx, wrapper, "padding");
+    if (!JS_IsException(value) && !JS_IsUndefined(value) && !JS_IsNull(value)) {
+        parseSize2d(ctx, value, field.padding);
+    }
+    JS_FreeValue(ctx, value);
+    if (readNumberProperty(ctx, wrapper, "maximumWidth", number)) {
+        field.maximumWidth = static_cast<float>(number);
+    }
+    value = JS_GetPropertyStr(ctx, wrapper, "textColor");
+    if (!JS_IsException(value) && !JS_IsUndefined(value) && !JS_IsNull(value)) {
+        parseColor(ctx, value, field.textColor);
+    }
+    JS_FreeValue(ctx, value);
+    value = JS_GetPropertyStr(ctx, wrapper, "placeholderColor");
+    if (!JS_IsException(value) && !JS_IsUndefined(value) && !JS_IsNull(value)) {
+        parseColor(ctx, value, field.placeholderColor);
+    }
+    JS_FreeValue(ctx, value);
+    value = JS_GetPropertyStr(ctx, wrapper, "backgroundColor");
+    if (!JS_IsException(value) && !JS_IsUndefined(value) && !JS_IsNull(value)) {
+        parseColor(ctx, value, field.backgroundColor);
+    }
+    JS_FreeValue(ctx, value);
+    value = JS_GetPropertyStr(ctx, wrapper, "borderColor");
+    if (!JS_IsException(value) && !JS_IsUndefined(value) && !JS_IsNull(value)) {
+        parseColor(ctx, value, field.borderColor);
+    }
+    JS_FreeValue(ctx, value);
+    value = JS_GetPropertyStr(ctx, wrapper, "focusedBorderColor");
+    if (!JS_IsException(value) && !JS_IsUndefined(value) && !JS_IsNull(value)) {
+        parseColor(ctx, value, field.focusedBorderColor);
+    }
+    JS_FreeValue(ctx, value);
+    value = JS_GetPropertyStr(ctx, wrapper, "cursorColor");
+    if (!JS_IsException(value) && !JS_IsUndefined(value) && !JS_IsNull(value)) {
+        parseColor(ctx, value, field.cursorColor);
+    }
+    JS_FreeValue(ctx, value);
+
+    graphite::UIStyle style;
+    if (parseGraphiteStyleProperty(ctx, host, wrapper, "__style", style)) {
+        field.setStyle(style);
+    }
+
+    return true;
+}
+
+bool applyButton(JSContext *ctx, ScriptHost &host, JSValueConst wrapper,
+                 Button &button) {
+    applyBaseObject(ctx, host, wrapper, button);
+
+    readStringProperty(ctx, wrapper, "label", button.label);
+
+    JSValue value = JS_GetPropertyStr(ctx, wrapper, "font");
+    if (!JS_IsException(value) && !JS_IsUndefined(value) && !JS_IsNull(value)) {
+        auto *fontState = resolveFont(ctx, host, value);
+        if (fontState != nullptr && fontState->font) {
+            button.font = *fontState->font;
+        }
+    }
+    JS_FreeValue(ctx, value);
+
+    double number = 0.0;
+    if (readNumberProperty(ctx, wrapper, "fontSize", number)) {
+        button.fontSize = static_cast<float>(number);
+    }
+    value = JS_GetPropertyStr(ctx, wrapper, "padding");
+    if (!JS_IsException(value) && !JS_IsUndefined(value) && !JS_IsNull(value)) {
+        parseSize2d(ctx, value, button.padding);
+    }
+    JS_FreeValue(ctx, value);
+    value = JS_GetPropertyStr(ctx, wrapper, "minimumSize");
+    if (!JS_IsException(value) && !JS_IsUndefined(value) && !JS_IsNull(value)) {
+        parseSize2d(ctx, value, button.minimumSize);
+    }
+    JS_FreeValue(ctx, value);
+    value = JS_GetPropertyStr(ctx, wrapper, "textColor");
+    if (!JS_IsException(value) && !JS_IsUndefined(value) && !JS_IsNull(value)) {
+        parseColor(ctx, value, button.textColor);
+    }
+    JS_FreeValue(ctx, value);
+    value = JS_GetPropertyStr(ctx, wrapper, "backgroundColor");
+    if (!JS_IsException(value) && !JS_IsUndefined(value) && !JS_IsNull(value)) {
+        parseColor(ctx, value, button.backgroundColor);
+    }
+    JS_FreeValue(ctx, value);
+    value = JS_GetPropertyStr(ctx, wrapper, "hoverBackgroundColor");
+    if (!JS_IsException(value) && !JS_IsUndefined(value) && !JS_IsNull(value)) {
+        parseColor(ctx, value, button.hoverBackgroundColor);
+    }
+    JS_FreeValue(ctx, value);
+    value = JS_GetPropertyStr(ctx, wrapper, "pressedBackgroundColor");
+    if (!JS_IsException(value) && !JS_IsUndefined(value) && !JS_IsNull(value)) {
+        parseColor(ctx, value, button.pressedBackgroundColor);
+    }
+    JS_FreeValue(ctx, value);
+    value = JS_GetPropertyStr(ctx, wrapper, "borderColor");
+    if (!JS_IsException(value) && !JS_IsUndefined(value) && !JS_IsNull(value)) {
+        parseColor(ctx, value, button.borderColor);
+    }
+    JS_FreeValue(ctx, value);
+    value = JS_GetPropertyStr(ctx, wrapper, "hoverBorderColor");
+    if (!JS_IsException(value) && !JS_IsUndefined(value) && !JS_IsNull(value)) {
+        parseColor(ctx, value, button.hoverBorderColor);
+    }
+    JS_FreeValue(ctx, value);
+    bool enabled = button.enabled;
+    if (readBoolProperty(ctx, wrapper, "enabled", enabled)) {
+        button.enabled = enabled;
+    }
+
+    graphite::UIStyle style;
+    if (parseGraphiteStyleProperty(ctx, host, wrapper, "__style", style)) {
+        button.setStyle(style);
+    }
+
+    return true;
+}
+
+bool applyCheckbox(JSContext *ctx, ScriptHost &host, JSValueConst wrapper,
+                   Checkbox &checkbox) {
+    applyBaseObject(ctx, host, wrapper, checkbox);
+
+    readStringProperty(ctx, wrapper, "label", checkbox.label);
+
+    JSValue value = JS_GetPropertyStr(ctx, wrapper, "font");
+    if (!JS_IsException(value) && !JS_IsUndefined(value) && !JS_IsNull(value)) {
+        auto *fontState = resolveFont(ctx, host, value);
+        if (fontState != nullptr && fontState->font) {
+            checkbox.font = *fontState->font;
+        }
+    }
+    JS_FreeValue(ctx, value);
+
+    double number = 0.0;
+    if (readNumberProperty(ctx, wrapper, "fontSize", number)) {
+        checkbox.fontSize = static_cast<float>(number);
+    }
+    value = JS_GetPropertyStr(ctx, wrapper, "padding");
+    if (!JS_IsException(value) && !JS_IsUndefined(value) && !JS_IsNull(value)) {
+        parseSize2d(ctx, value, checkbox.padding);
+    }
+    JS_FreeValue(ctx, value);
+    if (readNumberProperty(ctx, wrapper, "boxSize", number)) {
+        checkbox.boxSize = static_cast<float>(number);
+    }
+    if (readNumberProperty(ctx, wrapper, "spacing", number)) {
+        checkbox.spacing = static_cast<float>(number);
+    }
+    bool checked = checkbox.checked;
+    if (readBoolProperty(ctx, wrapper, "checked", checked)) {
+        checkbox.checked = checked;
+    }
+    bool enabled = checkbox.enabled;
+    if (readBoolProperty(ctx, wrapper, "enabled", enabled)) {
+        checkbox.enabled = enabled;
+    }
+    value = JS_GetPropertyStr(ctx, wrapper, "textColor");
+    if (!JS_IsException(value) && !JS_IsUndefined(value) && !JS_IsNull(value)) {
+        parseColor(ctx, value, checkbox.textColor);
+    }
+    JS_FreeValue(ctx, value);
+    value = JS_GetPropertyStr(ctx, wrapper, "boxBackgroundColor");
+    if (!JS_IsException(value) && !JS_IsUndefined(value) && !JS_IsNull(value)) {
+        parseColor(ctx, value, checkbox.boxBackgroundColor);
+    }
+    JS_FreeValue(ctx, value);
+    value = JS_GetPropertyStr(ctx, wrapper, "hoverBoxBackgroundColor");
+    if (!JS_IsException(value) && !JS_IsUndefined(value) && !JS_IsNull(value)) {
+        parseColor(ctx, value, checkbox.hoverBoxBackgroundColor);
+    }
+    JS_FreeValue(ctx, value);
+    value = JS_GetPropertyStr(ctx, wrapper, "borderColor");
+    if (!JS_IsException(value) && !JS_IsUndefined(value) && !JS_IsNull(value)) {
+        parseColor(ctx, value, checkbox.borderColor);
+    }
+    JS_FreeValue(ctx, value);
+    value = JS_GetPropertyStr(ctx, wrapper, "activeBorderColor");
+    if (!JS_IsException(value) && !JS_IsUndefined(value) && !JS_IsNull(value)) {
+        parseColor(ctx, value, checkbox.activeBorderColor);
+    }
+    JS_FreeValue(ctx, value);
+    value = JS_GetPropertyStr(ctx, wrapper, "checkColor");
+    if (!JS_IsException(value) && !JS_IsUndefined(value) && !JS_IsNull(value)) {
+        parseColor(ctx, value, checkbox.checkColor);
+    }
+    JS_FreeValue(ctx, value);
+
+    graphite::UIStyle style;
+    if (parseGraphiteStyleProperty(ctx, host, wrapper, "__style", style)) {
+        checkbox.setStyle(style);
+    }
+
+    return true;
+}
+
+bool applyColumn(JSContext *ctx, ScriptHost &host, JSValueConst wrapper,
+                 Column &column) {
+    applyBaseObject(ctx, host, wrapper, column);
+
+    double number = 0.0;
+    if (readNumberProperty(ctx, wrapper, "spacing", number)) {
+        column.spacing = static_cast<float>(number);
+    }
+    JSValue value = JS_GetPropertyStr(ctx, wrapper, "maxSize");
+    if (!JS_IsException(value) && !JS_IsUndefined(value) && !JS_IsNull(value)) {
+        parseSize2d(ctx, value, column.maxSize);
+    }
+    JS_FreeValue(ctx, value);
+    value = JS_GetPropertyStr(ctx, wrapper, "padding");
+    if (!JS_IsException(value) && !JS_IsUndefined(value) && !JS_IsNull(value)) {
+        parseSize2d(ctx, value, column.padding);
+    }
+    JS_FreeValue(ctx, value);
+    std::int64_t enumValue = 0;
+    if (readIntProperty(ctx, wrapper, "alignment", enumValue)) {
+        column.alignment = static_cast<ElementAlignment>(enumValue);
+    }
+    if (readIntProperty(ctx, wrapper, "anchor", enumValue)) {
+        column.anchor = static_cast<LayoutAnchor>(enumValue);
+    }
+    value = JS_GetPropertyStr(ctx, wrapper, "children");
+    if (!JS_IsException(value) && !JS_IsUndefined(value) && !JS_IsNull(value)) {
+        std::vector<UIObject *> children;
+        if (parseUIChildren(ctx, host, value, children)) {
+            column.setChildren(children);
+        }
+    }
+    JS_FreeValue(ctx, value);
+
+    graphite::UIStyle style;
+    if (parseGraphiteStyleProperty(ctx, host, wrapper, "style", style)) {
+        column.setStyle(style);
+    }
+    return true;
+}
+
+bool applyRow(JSContext *ctx, ScriptHost &host, JSValueConst wrapper, Row &row) {
+    applyBaseObject(ctx, host, wrapper, row);
+
+    double number = 0.0;
+    if (readNumberProperty(ctx, wrapper, "spacing", number)) {
+        row.spacing = static_cast<float>(number);
+    }
+    JSValue value = JS_GetPropertyStr(ctx, wrapper, "maxSize");
+    if (!JS_IsException(value) && !JS_IsUndefined(value) && !JS_IsNull(value)) {
+        parseSize2d(ctx, value, row.maxSize);
+    }
+    JS_FreeValue(ctx, value);
+    value = JS_GetPropertyStr(ctx, wrapper, "padding");
+    if (!JS_IsException(value) && !JS_IsUndefined(value) && !JS_IsNull(value)) {
+        parseSize2d(ctx, value, row.padding);
+    }
+    JS_FreeValue(ctx, value);
+    std::int64_t enumValue = 0;
+    if (readIntProperty(ctx, wrapper, "alignment", enumValue)) {
+        row.alignment = static_cast<ElementAlignment>(enumValue);
+    }
+    if (readIntProperty(ctx, wrapper, "anchor", enumValue)) {
+        row.anchor = static_cast<LayoutAnchor>(enumValue);
+    }
+    value = JS_GetPropertyStr(ctx, wrapper, "children");
+    if (!JS_IsException(value) && !JS_IsUndefined(value) && !JS_IsNull(value)) {
+        std::vector<UIObject *> children;
+        if (parseUIChildren(ctx, host, value, children)) {
+            row.setChildren(children);
+        }
+    }
+    JS_FreeValue(ctx, value);
+
+    graphite::UIStyle style;
+    if (parseGraphiteStyleProperty(ctx, host, wrapper, "style", style)) {
+        row.setStyle(style);
+    }
+    return true;
+}
+
+bool applyStack(JSContext *ctx, ScriptHost &host, JSValueConst wrapper,
+                Stack &stack) {
+    applyBaseObject(ctx, host, wrapper, stack);
+
+    JSValue value = JS_GetPropertyStr(ctx, wrapper, "maxSize");
+    if (!JS_IsException(value) && !JS_IsUndefined(value) && !JS_IsNull(value)) {
+        parseSize2d(ctx, value, stack.maxSize);
+    }
+    JS_FreeValue(ctx, value);
+    value = JS_GetPropertyStr(ctx, wrapper, "padding");
+    if (!JS_IsException(value) && !JS_IsUndefined(value) && !JS_IsNull(value)) {
+        parseSize2d(ctx, value, stack.padding);
+    }
+    JS_FreeValue(ctx, value);
+    std::int64_t enumValue = 0;
+    if (readIntProperty(ctx, wrapper, "horizontalAlignment", enumValue)) {
+        stack.horizontalAlignment = static_cast<ElementAlignment>(enumValue);
+    }
+    if (readIntProperty(ctx, wrapper, "verticalAlignment", enumValue)) {
+        stack.verticalAlignment = static_cast<ElementAlignment>(enumValue);
+    }
+    if (readIntProperty(ctx, wrapper, "anchor", enumValue)) {
+        stack.anchor = static_cast<LayoutAnchor>(enumValue);
+    }
+    value = JS_GetPropertyStr(ctx, wrapper, "children");
+    if (!JS_IsException(value) && !JS_IsUndefined(value) && !JS_IsNull(value)) {
+        std::vector<UIObject *> children;
+        if (parseUIChildren(ctx, host, value, children)) {
+            stack.setChildren(children);
+        }
+    }
+    JS_FreeValue(ctx, value);
+
+    graphite::UIStyle style;
+    if (parseGraphiteStyleProperty(ctx, host, wrapper, "style", style)) {
+        stack.setStyle(style);
+    }
     return true;
 }
 
@@ -6223,6 +7307,9 @@ JSValue jsWindowAddUIObject(JSContext *ctx, JSValueConst, int argc,
     GameObject *object = resolveObjectArg(ctx, *host, argv[1]);
     if (window == nullptr || object == nullptr) {
         return JS_EXCEPTION;
+    }
+    if (dynamic_cast<UIObject *>(object) == nullptr) {
+        return JS_ThrowTypeError(ctx, "Expected UIObject");
     }
     object->initialize();
     window->addUIObject(object);
@@ -11077,6 +12164,442 @@ ownParticleEmitter(ScriptHost &host, std::shared_ptr<ParticleEmitter> emitter,
     return emitter;
 }
 
+template <typename TObject>
+std::shared_ptr<TObject> ownUIObject(ScriptHost &host,
+                                     std::shared_ptr<TObject> object,
+                                     bool attachedToWindow = false) {
+    if (host.context != nullptr) {
+        host.context->objects.push_back(object);
+    }
+    host.objectStates[object->getId()] = {.object = object.get(),
+                                          .attachedToWindow = attachedToWindow,
+                                          .textureIds = {}};
+    return object;
+}
+
+void bindTextFieldCallback(JSContext *ctx, ScriptHost *host, TextField &field) {
+    field.setOnChange([ctx, host, &field](const TextFieldChangeEvent &event) {
+        if (host == nullptr) {
+            return;
+        }
+        JSValue payload = JS_NewObject(ctx);
+        setProperty(ctx, payload, "text", JS_NewString(ctx, event.text.c_str()));
+        setProperty(ctx, payload, "cursorPosition",
+                    JS_NewInt64(ctx,
+                                static_cast<int64_t>(event.cursorIndex)));
+        setProperty(ctx, payload, "focused", JS_NewBool(ctx, event.focused));
+        JSValue args[] = {payload};
+        callGraphiteCallback(ctx, *host, field, GRAPHITE_ON_CHANGE_PROP, 1, args);
+    });
+}
+
+void bindButtonCallback(JSContext *ctx, ScriptHost *host, Button &button) {
+    button.setOnClick([ctx, host, &button](const ButtonClickEvent &event) {
+        if (host == nullptr) {
+            return;
+        }
+        JSValue payload = JS_NewObject(ctx);
+        setProperty(ctx, payload, "label",
+                    JS_NewString(ctx, event.label.c_str()));
+        JSValue args[] = {payload};
+        callGraphiteCallback(ctx, *host, button, GRAPHITE_ON_CLICK_PROP, 1, args);
+    });
+}
+
+void bindCheckboxCallback(JSContext *ctx, ScriptHost *host, Checkbox &checkbox) {
+    checkbox.setOnToggle([ctx, host, &checkbox](const CheckboxToggleEvent &event) {
+        if (host == nullptr) {
+            return;
+        }
+        JSValue payload = JS_NewObject(ctx);
+        setProperty(ctx, payload, "label",
+                    JS_NewString(ctx, event.label.c_str()));
+        setProperty(ctx, payload, "checked", JS_NewBool(ctx, event.checked));
+        JSValue args[] = {payload};
+        callGraphiteCallback(ctx, *host, checkbox, GRAPHITE_ON_TOGGLE_PROP, 1,
+                             args);
+    });
+}
+
+JSValue jsGraphiteGetUISize(JSContext *ctx, JSValueConst, int argc,
+                            JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 1) {
+        return JS_ThrowTypeError(ctx, "Expected UI object");
+    }
+    GameObject *object = resolveObjectArg(ctx, *host, argv[0]);
+    auto *uiObject = object != nullptr ? dynamic_cast<UIObject *>(object) : nullptr;
+    if (uiObject == nullptr) {
+        return JS_ThrowTypeError(ctx, "Expected UI object");
+    }
+    return makeSize2d(ctx, *host, uiObject->getSize());
+}
+
+JSValue jsGraphiteGetUIScreenPosition(JSContext *ctx, JSValueConst, int argc,
+                                      JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 1) {
+        return JS_ThrowTypeError(ctx, "Expected UI object");
+    }
+    GameObject *object = resolveObjectArg(ctx, *host, argv[0]);
+    auto *uiObject = object != nullptr ? dynamic_cast<UIObject *>(object) : nullptr;
+    if (uiObject == nullptr) {
+        return JS_ThrowTypeError(ctx, "Expected UI object");
+    }
+    return makePosition2d(ctx, *host, uiObject->getScreenPosition());
+}
+
+JSValue jsGraphiteSetUIScreenPosition(JSContext *ctx, JSValueConst, int argc,
+                                      JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected UI object and position");
+    }
+    GameObject *object = resolveObjectArg(ctx, *host, argv[0]);
+    auto *uiObject = object != nullptr ? dynamic_cast<UIObject *>(object) : nullptr;
+    if (uiObject == nullptr) {
+        return JS_ThrowTypeError(ctx, "Expected UI object");
+    }
+    Position2d position;
+    if (!parsePosition2d(ctx, argv[1], position)) {
+        return JS_ThrowTypeError(ctx, "Expected Position2d");
+    }
+    uiObject->setScreenPosition(position);
+    return syncObjectWrapper(ctx, *host, *uiObject);
+}
+
+JSValue jsGraphiteSetUIObjectStyle(JSContext *ctx, JSValueConst, int argc,
+                                   JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected UI object and style");
+    }
+    GameObject *object = resolveObjectArg(ctx, *host, argv[0]);
+    if (object == nullptr) {
+        return JS_EXCEPTION;
+    }
+
+    graphite::UIStyle style;
+    if (!parseUIStyle(ctx, *host, argv[1], style)) {
+        return JS_ThrowTypeError(ctx, "Expected UIStyle");
+    }
+
+    if (auto *image = dynamic_cast<Image *>(object); image != nullptr) {
+        image->setStyle(style);
+    } else if (auto *text = dynamic_cast<Text *>(object); text != nullptr) {
+        text->setStyle(style);
+    } else if (auto *field = dynamic_cast<TextField *>(object);
+               field != nullptr) {
+        field->setStyle(style);
+    } else if (auto *button = dynamic_cast<Button *>(object);
+               button != nullptr) {
+        button->setStyle(style);
+    } else if (auto *checkbox = dynamic_cast<Checkbox *>(object);
+               checkbox != nullptr) {
+        checkbox->setStyle(style);
+    } else if (auto *column = dynamic_cast<Column *>(object);
+               column != nullptr) {
+        column->setStyle(style);
+    } else if (auto *row = dynamic_cast<Row *>(object); row != nullptr) {
+        row->setStyle(style);
+    } else if (auto *stack = dynamic_cast<Stack *>(object); stack != nullptr) {
+        stack->setStyle(style);
+    } else {
+        return JS_ThrowTypeError(ctx, "Expected styled Graphite object");
+    }
+
+    return syncObjectWrapper(ctx, *host, *object);
+}
+
+JSValue jsGraphiteCreateImage(JSContext *ctx, JSValueConst, int argc,
+                              JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || host->context == nullptr || argc < 1) {
+        return JS_ThrowInternalError(ctx, "Atlas scripting host unavailable");
+    }
+    auto object = ownUIObject(*host, std::make_shared<Image>());
+    applyImage(ctx, *host, argv[0], *object);
+    return syncObjectWrapper(ctx, *host, *object);
+}
+
+JSValue jsGraphiteCreateText(JSContext *ctx, JSValueConst, int argc,
+                             JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || host->context == nullptr || argc < 1) {
+        return JS_ThrowInternalError(ctx, "Atlas scripting host unavailable");
+    }
+    auto object = ownUIObject(*host, std::make_shared<Text>());
+    applyText(ctx, *host, argv[0], *object);
+    return syncObjectWrapper(ctx, *host, *object);
+}
+
+JSValue jsGraphiteCreateTextField(JSContext *ctx, JSValueConst, int argc,
+                                  JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || host->context == nullptr || argc < 1) {
+        return JS_ThrowInternalError(ctx, "Atlas scripting host unavailable");
+    }
+    auto object = ownUIObject(*host, std::make_shared<TextField>());
+    bindTextFieldCallback(ctx, host, *object);
+    applyTextField(ctx, *host, argv[0], *object);
+    return syncObjectWrapper(ctx, *host, *object);
+}
+
+JSValue jsGraphiteCreateButton(JSContext *ctx, JSValueConst, int argc,
+                               JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || host->context == nullptr || argc < 1) {
+        return JS_ThrowInternalError(ctx, "Atlas scripting host unavailable");
+    }
+    auto object = ownUIObject(*host, std::make_shared<Button>());
+    bindButtonCallback(ctx, host, *object);
+    applyButton(ctx, *host, argv[0], *object);
+    return syncObjectWrapper(ctx, *host, *object);
+}
+
+JSValue jsGraphiteCreateCheckbox(JSContext *ctx, JSValueConst, int argc,
+                                 JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || host->context == nullptr || argc < 1) {
+        return JS_ThrowInternalError(ctx, "Atlas scripting host unavailable");
+    }
+    auto object = ownUIObject(*host, std::make_shared<Checkbox>());
+    bindCheckboxCallback(ctx, host, *object);
+    applyCheckbox(ctx, *host, argv[0], *object);
+    return syncObjectWrapper(ctx, *host, *object);
+}
+
+JSValue jsGraphiteCreateColumn(JSContext *ctx, JSValueConst, int argc,
+                               JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || host->context == nullptr || argc < 1) {
+        return JS_ThrowInternalError(ctx, "Atlas scripting host unavailable");
+    }
+    auto object = ownUIObject(*host, std::make_shared<Column>());
+    applyColumn(ctx, *host, argv[0], *object);
+    return syncObjectWrapper(ctx, *host, *object);
+}
+
+JSValue jsGraphiteCreateRow(JSContext *ctx, JSValueConst, int argc,
+                            JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || host->context == nullptr || argc < 1) {
+        return JS_ThrowInternalError(ctx, "Atlas scripting host unavailable");
+    }
+    auto object = ownUIObject(*host, std::make_shared<Row>());
+    applyRow(ctx, *host, argv[0], *object);
+    return syncObjectWrapper(ctx, *host, *object);
+}
+
+JSValue jsGraphiteCreateStack(JSContext *ctx, JSValueConst, int argc,
+                              JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || host->context == nullptr || argc < 1) {
+        return JS_ThrowInternalError(ctx, "Atlas scripting host unavailable");
+    }
+    auto object = ownUIObject(*host, std::make_shared<Stack>());
+    applyStack(ctx, *host, argv[0], *object);
+    return syncObjectWrapper(ctx, *host, *object);
+}
+
+JSValue jsGraphiteCreateFont(JSContext *ctx, JSValueConst, int argc,
+                             JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 1) {
+        return JS_ThrowTypeError(ctx, "Expected resource");
+    }
+    if (!ensureBuiltins(ctx, *host)) {
+        return JS_EXCEPTION;
+    }
+
+    Resource resource;
+    if (!parseResource(ctx, argv[0], resource)) {
+        return JS_ThrowTypeError(ctx, "Expected Resource");
+    }
+    std::string name = !resource.name.empty()
+                           ? resource.name
+                           : resource.path.stem().string();
+    Font font = Font::fromResource(name, resource, 48);
+    return syncFontWrapper(ctx, *host, registerFontState(*host, font));
+}
+
+JSValue jsGraphiteGetFont(JSContext *ctx, JSValueConst, int argc,
+                          JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 1) {
+        return JS_ThrowTypeError(ctx, "Expected font name");
+    }
+    const char *name = JS_ToCString(ctx, argv[0]);
+    if (name == nullptr) {
+        return JS_ThrowTypeError(ctx, "Expected font name");
+    }
+    Font font = Font::getFont(name);
+    JS_FreeCString(ctx, name);
+    return syncFontWrapper(ctx, *host, registerFontState(*host, font));
+}
+
+JSValue jsGraphiteChangeFontSize(JSContext *ctx, JSValueConst, int argc,
+                                 JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected font and size");
+    }
+    auto *state = resolveFont(ctx, *host, argv[0]);
+    if (state == nullptr || !state->font) {
+        return JS_EXCEPTION;
+    }
+    std::int64_t size = 0;
+    if (!getInt64(ctx, argv[1], size)) {
+        return JS_ThrowTypeError(ctx, "Expected size");
+    }
+    state->font->changeSize(static_cast<int>(size));
+    return syncFontWrapper(
+        ctx, *host,
+        static_cast<std::uint64_t>([](
+            ScriptHost &h, Font *fontPtr) -> std::uint64_t {
+            for (const auto &[id, state] : h.fonts) {
+                if (state.font.get() == fontPtr) {
+                    return id;
+                }
+            }
+            return 0;
+        }(*host, state->font.get())));
+}
+
+JSValue jsGraphiteGetTheme(JSContext *ctx, JSValueConst, int, JSValueConst *) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || !ensureBuiltins(ctx, *host)) {
+        return JS_EXCEPTION;
+    }
+    return makeThemeValue(ctx, *host, graphite::Theme::current());
+}
+
+JSValue jsGraphiteSetTheme(JSContext *ctx, JSValueConst, int argc,
+                           JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 1) {
+        return JS_ThrowTypeError(ctx, "Expected theme");
+    }
+    graphite::Theme theme;
+    if (!parseTheme(ctx, *host, argv[0], theme)) {
+        return JS_ThrowTypeError(ctx, "Expected theme");
+    }
+    graphite::Theme::set(theme);
+    return makeThemeValue(ctx, *host, graphite::Theme::current());
+}
+
+JSValue jsGraphiteResetTheme(JSContext *ctx, JSValueConst, int, JSValueConst *) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || !ensureBuiltins(ctx, *host)) {
+        return JS_EXCEPTION;
+    }
+    graphite::Theme::reset();
+    return makeThemeValue(ctx, *host, graphite::Theme::current());
+}
+
+JSValue jsGraphiteTextFieldFocus(JSContext *ctx, JSValueConst, int argc,
+                                 JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 1) {
+        return JS_ThrowTypeError(ctx, "Expected text field");
+    }
+    GameObject *object = resolveObjectArg(ctx, *host, argv[0]);
+    auto *field = object != nullptr ? dynamic_cast<TextField *>(object) : nullptr;
+    if (field == nullptr) {
+        return JS_ThrowTypeError(ctx, "Expected text field");
+    }
+    field->focus();
+    return syncObjectWrapper(ctx, *host, *field);
+}
+
+JSValue jsGraphiteTextFieldBlur(JSContext *ctx, JSValueConst, int argc,
+                                JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 1) {
+        return JS_ThrowTypeError(ctx, "Expected text field");
+    }
+    GameObject *object = resolveObjectArg(ctx, *host, argv[0]);
+    auto *field = object != nullptr ? dynamic_cast<TextField *>(object) : nullptr;
+    if (field == nullptr) {
+        return JS_ThrowTypeError(ctx, "Expected text field");
+    }
+    field->blur();
+    return syncObjectWrapper(ctx, *host, *field);
+}
+
+JSValue jsGraphiteTextFieldIsFocused(JSContext *ctx, JSValueConst, int argc,
+                                     JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 1) {
+        return JS_ThrowTypeError(ctx, "Expected text field");
+    }
+    GameObject *object = resolveObjectArg(ctx, *host, argv[0]);
+    auto *field = object != nullptr ? dynamic_cast<TextField *>(object) : nullptr;
+    if (field == nullptr) {
+        return JS_ThrowTypeError(ctx, "Expected text field");
+    }
+    return JS_NewBool(ctx, field->isFocused());
+}
+
+JSValue jsGraphiteTextFieldGetCursorIndex(JSContext *ctx, JSValueConst, int argc,
+                                          JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 1) {
+        return JS_ThrowTypeError(ctx, "Expected text field");
+    }
+    GameObject *object = resolveObjectArg(ctx, *host, argv[0]);
+    auto *field = object != nullptr ? dynamic_cast<TextField *>(object) : nullptr;
+    if (field == nullptr) {
+        return JS_ThrowTypeError(ctx, "Expected text field");
+    }
+    return JS_NewInt64(ctx, static_cast<int64_t>(field->getCursorIndex()));
+}
+
+JSValue jsGraphiteButtonIsHovered(JSContext *ctx, JSValueConst, int argc,
+                                  JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 1) {
+        return JS_ThrowTypeError(ctx, "Expected button");
+    }
+    GameObject *object = resolveObjectArg(ctx, *host, argv[0]);
+    auto *button = object != nullptr ? dynamic_cast<Button *>(object) : nullptr;
+    if (button == nullptr) {
+        return JS_ThrowTypeError(ctx, "Expected button");
+    }
+    return JS_NewBool(ctx, button->isHovered());
+}
+
+JSValue jsGraphiteCheckboxToggle(JSContext *ctx, JSValueConst, int argc,
+                                 JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 1) {
+        return JS_ThrowTypeError(ctx, "Expected checkbox");
+    }
+    GameObject *object = resolveObjectArg(ctx, *host, argv[0]);
+    auto *checkbox =
+        object != nullptr ? dynamic_cast<Checkbox *>(object) : nullptr;
+    if (checkbox == nullptr) {
+        return JS_ThrowTypeError(ctx, "Expected checkbox");
+    }
+    checkbox->toggle();
+    return syncObjectWrapper(ctx, *host, *checkbox);
+}
+
+JSValue jsGraphiteCheckboxIsHovered(JSContext *ctx, JSValueConst, int argc,
+                                    JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 1) {
+        return JS_ThrowTypeError(ctx, "Expected checkbox");
+    }
+    GameObject *object = resolveObjectArg(ctx, *host, argv[0]);
+    auto *checkbox =
+        object != nullptr ? dynamic_cast<Checkbox *>(object) : nullptr;
+    if (checkbox == nullptr) {
+        return JS_ThrowTypeError(ctx, "Expected checkbox");
+    }
+    return JS_NewBool(ctx, checkbox->isHovered());
+}
+
 JSValue jsCreateCoreObject(JSContext *ctx, JSValueConst, int argc,
                            JSValueConst *argv) {
     auto *host = getHost(ctx);
@@ -11671,7 +13194,27 @@ JSValue jsUpdateObject(JSContext *ctx, JSValueConst, int argc,
         return JS_EXCEPTION;
     }
 
-    if (auto *core = dynamic_cast<CoreObject *>(object); core != nullptr) {
+    if (auto *image = dynamic_cast<Image *>(object); image != nullptr) {
+        applyImage(ctx, *host, argv[0], *image);
+    } else if (auto *text = dynamic_cast<Text *>(object); text != nullptr) {
+        applyText(ctx, *host, argv[0], *text);
+    } else if (auto *field = dynamic_cast<TextField *>(object);
+               field != nullptr) {
+        applyTextField(ctx, *host, argv[0], *field);
+    } else if (auto *button = dynamic_cast<Button *>(object);
+               button != nullptr) {
+        applyButton(ctx, *host, argv[0], *button);
+    } else if (auto *checkbox = dynamic_cast<Checkbox *>(object);
+               checkbox != nullptr) {
+        applyCheckbox(ctx, *host, argv[0], *checkbox);
+    } else if (auto *column = dynamic_cast<Column *>(object);
+               column != nullptr) {
+        applyColumn(ctx, *host, argv[0], *column);
+    } else if (auto *row = dynamic_cast<Row *>(object); row != nullptr) {
+        applyRow(ctx, *host, argv[0], *row);
+    } else if (auto *stack = dynamic_cast<Stack *>(object); stack != nullptr) {
+        applyStack(ctx, *host, argv[0], *stack);
+    } else if (auto *core = dynamic_cast<CoreObject *>(object); core != nullptr) {
         if (!applyCoreObject(ctx, *host, argv[0], *core)) {
             return JS_EXCEPTION;
         }
@@ -12254,6 +13797,10 @@ void runtime::scripting::clearSceneBindings(JSContext *ctx, ScriptHost &host) {
     }
     host.distortions.clear();
     host.distortionIds.clear();
+    for (auto &[_, state] : host.fonts) {
+        JS_FreeValue(ctx, state.value);
+    }
+    host.fonts.clear();
 
     if (!JS_IsUndefined(host.atlasParticleNamespace)) {
         JS_FreeValue(ctx, host.atlasParticleNamespace);
@@ -12272,6 +13819,10 @@ void runtime::scripting::clearSceneBindings(JSContext *ctx, ScriptHost &host) {
     if (!JS_IsUndefined(host.finewaveNamespace)) {
         JS_FreeValue(ctx, host.finewaveNamespace);
         host.finewaveNamespace = JS_UNDEFINED;
+    }
+    if (!JS_IsUndefined(host.graphiteNamespace)) {
+        JS_FreeValue(ctx, host.graphiteNamespace);
+        host.graphiteNamespace = JS_UNDEFINED;
     }
     if (!JS_IsUndefined(host.audioEngineValue)) {
         JS_FreeValue(ctx, host.audioEngineValue);
@@ -12343,6 +13894,58 @@ void runtime::scripting::clearSceneBindings(JSContext *ctx, ScriptHost &host) {
         JS_FreeValue(ctx, host.distortionPrototype);
         host.distortionPrototype = JS_UNDEFINED;
     }
+    if (!JS_IsUndefined(host.imagePrototype)) {
+        JS_FreeValue(ctx, host.imagePrototype);
+        host.imagePrototype = JS_UNDEFINED;
+    }
+    if (!JS_IsUndefined(host.textPrototype)) {
+        JS_FreeValue(ctx, host.textPrototype);
+        host.textPrototype = JS_UNDEFINED;
+    }
+    if (!JS_IsUndefined(host.textFieldPrototype)) {
+        JS_FreeValue(ctx, host.textFieldPrototype);
+        host.textFieldPrototype = JS_UNDEFINED;
+    }
+    if (!JS_IsUndefined(host.buttonPrototype)) {
+        JS_FreeValue(ctx, host.buttonPrototype);
+        host.buttonPrototype = JS_UNDEFINED;
+    }
+    if (!JS_IsUndefined(host.checkboxPrototype)) {
+        JS_FreeValue(ctx, host.checkboxPrototype);
+        host.checkboxPrototype = JS_UNDEFINED;
+    }
+    if (!JS_IsUndefined(host.columnPrototype)) {
+        JS_FreeValue(ctx, host.columnPrototype);
+        host.columnPrototype = JS_UNDEFINED;
+    }
+    if (!JS_IsUndefined(host.rowPrototype)) {
+        JS_FreeValue(ctx, host.rowPrototype);
+        host.rowPrototype = JS_UNDEFINED;
+    }
+    if (!JS_IsUndefined(host.stackPrototype)) {
+        JS_FreeValue(ctx, host.stackPrototype);
+        host.stackPrototype = JS_UNDEFINED;
+    }
+    if (!JS_IsUndefined(host.fontPrototype)) {
+        JS_FreeValue(ctx, host.fontPrototype);
+        host.fontPrototype = JS_UNDEFINED;
+    }
+    if (!JS_IsUndefined(host.uiStylePrototype)) {
+        JS_FreeValue(ctx, host.uiStylePrototype);
+        host.uiStylePrototype = JS_UNDEFINED;
+    }
+    if (!JS_IsUndefined(host.uiStyleVariantPrototype)) {
+        JS_FreeValue(ctx, host.uiStyleVariantPrototype);
+        host.uiStyleVariantPrototype = JS_UNDEFINED;
+    }
+    if (!JS_IsUndefined(host.themePrototype)) {
+        JS_FreeValue(ctx, host.themePrototype);
+        host.themePrototype = JS_UNDEFINED;
+    }
+    if (!JS_IsUndefined(host.uiObjectPrototype)) {
+        JS_FreeValue(ctx, host.uiObjectPrototype);
+        host.uiObjectPrototype = JS_UNDEFINED;
+    }
 
     if (!JS_IsUndefined(host.rigidbodyPrototype)) {
         JS_FreeValue(ctx, host.rigidbodyPrototype);
@@ -12387,6 +13990,7 @@ void runtime::scripting::clearSceneBindings(JSContext *ctx, ScriptHost &host) {
     host.nextReverbId = 1;
     host.nextEchoId = 1;
     host.nextDistortionId = 1;
+    host.nextFontId = 1;
     host.nextRigidbodyId = 1;
     host.nextVehicleId = 1;
     host.nextFixedJointId = 1;
@@ -12990,6 +14594,82 @@ void runtime::scripting::installGlobals(JSContext *ctx) {
     JS_SetPropertyStr(
         ctx, global, "__atlasAddComponent",
         JS_NewCFunction(ctx, jsAddComponent, "__atlasAddComponent", 2));
+    JS_SetPropertyStr(ctx, global, "__graphiteGetUISize",
+                      JS_NewCFunction(ctx, jsGraphiteGetUISize,
+                                      "__graphiteGetUISize", 1));
+    JS_SetPropertyStr(ctx, global, "__graphiteGetUIScreenPosition",
+                      JS_NewCFunction(ctx, jsGraphiteGetUIScreenPosition,
+                                      "__graphiteGetUIScreenPosition", 1));
+    JS_SetPropertyStr(ctx, global, "__graphiteSetUIScreenPosition",
+                      JS_NewCFunction(ctx, jsGraphiteSetUIScreenPosition,
+                                      "__graphiteSetUIScreenPosition", 2));
+    JS_SetPropertyStr(ctx, global, "__graphiteSetUIObjectStyle",
+                      JS_NewCFunction(ctx, jsGraphiteSetUIObjectStyle,
+                                      "__graphiteSetUIObjectStyle", 2));
+    JS_SetPropertyStr(ctx, global, "__graphiteCreateImage",
+                      JS_NewCFunction(ctx, jsGraphiteCreateImage,
+                                      "__graphiteCreateImage", 1));
+    JS_SetPropertyStr(ctx, global, "__graphiteCreateText",
+                      JS_NewCFunction(ctx, jsGraphiteCreateText,
+                                      "__graphiteCreateText", 1));
+    JS_SetPropertyStr(ctx, global, "__graphiteCreateTextField",
+                      JS_NewCFunction(ctx, jsGraphiteCreateTextField,
+                                      "__graphiteCreateTextField", 1));
+    JS_SetPropertyStr(ctx, global, "__graphiteCreateButton",
+                      JS_NewCFunction(ctx, jsGraphiteCreateButton,
+                                      "__graphiteCreateButton", 1));
+    JS_SetPropertyStr(ctx, global, "__graphiteCreateCheckbox",
+                      JS_NewCFunction(ctx, jsGraphiteCreateCheckbox,
+                                      "__graphiteCreateCheckbox", 1));
+    JS_SetPropertyStr(ctx, global, "__graphiteCreateColumn",
+                      JS_NewCFunction(ctx, jsGraphiteCreateColumn,
+                                      "__graphiteCreateColumn", 1));
+    JS_SetPropertyStr(ctx, global, "__graphiteCreateRow",
+                      JS_NewCFunction(ctx, jsGraphiteCreateRow,
+                                      "__graphiteCreateRow", 1));
+    JS_SetPropertyStr(ctx, global, "__graphiteCreateStack",
+                      JS_NewCFunction(ctx, jsGraphiteCreateStack,
+                                      "__graphiteCreateStack", 1));
+    JS_SetPropertyStr(ctx, global, "__graphiteCreateFont",
+                      JS_NewCFunction(ctx, jsGraphiteCreateFont,
+                                      "__graphiteCreateFont", 1));
+    JS_SetPropertyStr(ctx, global, "__graphiteGetFont",
+                      JS_NewCFunction(ctx, jsGraphiteGetFont,
+                                      "__graphiteGetFont", 1));
+    JS_SetPropertyStr(ctx, global, "__graphiteChangeFontSize",
+                      JS_NewCFunction(ctx, jsGraphiteChangeFontSize,
+                                      "__graphiteChangeFontSize", 2));
+    JS_SetPropertyStr(ctx, global, "__graphiteGetTheme",
+                      JS_NewCFunction(ctx, jsGraphiteGetTheme,
+                                      "__graphiteGetTheme", 0));
+    JS_SetPropertyStr(ctx, global, "__graphiteSetTheme",
+                      JS_NewCFunction(ctx, jsGraphiteSetTheme,
+                                      "__graphiteSetTheme", 1));
+    JS_SetPropertyStr(ctx, global, "__graphiteResetTheme",
+                      JS_NewCFunction(ctx, jsGraphiteResetTheme,
+                                      "__graphiteResetTheme", 0));
+    JS_SetPropertyStr(ctx, global, "__graphiteTextFieldFocus",
+                      JS_NewCFunction(ctx, jsGraphiteTextFieldFocus,
+                                      "__graphiteTextFieldFocus", 1));
+    JS_SetPropertyStr(ctx, global, "__graphiteTextFieldBlur",
+                      JS_NewCFunction(ctx, jsGraphiteTextFieldBlur,
+                                      "__graphiteTextFieldBlur", 1));
+    JS_SetPropertyStr(ctx, global, "__graphiteTextFieldIsFocused",
+                      JS_NewCFunction(ctx, jsGraphiteTextFieldIsFocused,
+                                      "__graphiteTextFieldIsFocused", 1));
+    JS_SetPropertyStr(
+        ctx, global, "__graphiteTextFieldGetCursorIndex",
+        JS_NewCFunction(ctx, jsGraphiteTextFieldGetCursorIndex,
+                        "__graphiteTextFieldGetCursorIndex", 1));
+    JS_SetPropertyStr(ctx, global, "__graphiteButtonIsHovered",
+                      JS_NewCFunction(ctx, jsGraphiteButtonIsHovered,
+                                      "__graphiteButtonIsHovered", 1));
+    JS_SetPropertyStr(ctx, global, "__graphiteCheckboxToggle",
+                      JS_NewCFunction(ctx, jsGraphiteCheckboxToggle,
+                                      "__graphiteCheckboxToggle", 1));
+    JS_SetPropertyStr(ctx, global, "__graphiteCheckboxIsHovered",
+                      JS_NewCFunction(ctx, jsGraphiteCheckboxIsHovered,
+                                      "__graphiteCheckboxIsHovered", 1));
     JS_SetPropertyStr(ctx, global, "__finewaveGetAudioEngine",
                       JS_NewCFunction(ctx, jsGetAudioEngine,
                                       "__finewaveGetAudioEngine", 0));

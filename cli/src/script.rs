@@ -432,7 +432,9 @@ fn run_esbuild(project_dir: &Path, entry_points: &[PathBuf]) -> Result<(), Strin
         .arg("--external:aurora")
         .arg("--external:aurora/*")
         .arg("--external:finewave")
-        .arg("--external:finewave/*");
+        .arg("--external:finewave/*")
+        .arg("--external:graphite")
+        .arg("--external:graphite/*");
 
     let output = command
         .output()
