@@ -48,6 +48,10 @@ class Column;
 class Row;
 class Stack;
 struct Font;
+class WorleyNoise3D;
+class Clouds;
+class Atmosphere;
+struct Fluid;
 struct Light;
 class DirectionalLight;
 struct Spotlight;
@@ -189,6 +193,24 @@ struct ScriptAreaLightState {
     JSValue value = JS_UNDEFINED;
 };
 
+struct ScriptWorleyNoiseState {
+    std::shared_ptr<WorleyNoise3D> noise;
+    JSValue value = JS_UNDEFINED;
+};
+
+struct ScriptCloudsState {
+    std::shared_ptr<Clouds> ownedClouds;
+    Clouds *clouds = nullptr;
+    JSValue value = JS_UNDEFINED;
+};
+
+struct ScriptAtmosphereState {
+    std::shared_ptr<Atmosphere> ownedAtmosphere;
+    Atmosphere *atmosphere = nullptr;
+    JSValue value = JS_UNDEFINED;
+    JSValue weatherDelegate = JS_UNDEFINED;
+};
+
 struct ScriptHost {
     Context *context = nullptr;
     std::unordered_map<std::string, std::string> modules;
@@ -225,6 +247,11 @@ struct ScriptHost {
         directionalLights;
     std::unordered_map<std::uint64_t, ScriptSpotLightState> spotLights;
     std::unordered_map<std::uint64_t, ScriptAreaLightState> areaLights;
+    std::unordered_map<std::uint64_t, ScriptWorleyNoiseState> worleyNoise;
+    std::unordered_map<std::uint64_t, ScriptCloudsState> clouds;
+    std::unordered_map<Clouds *, std::uint64_t> cloudIds;
+    std::unordered_map<std::uint64_t, ScriptAtmosphereState> atmospheres;
+    std::unordered_map<Atmosphere *, std::uint64_t> atmosphereIds;
     std::vector<JSValue> interactiveValues;
     std::unordered_map<int, bool> interactiveKeyStates;
     bool interactiveFirstMouse = true;
@@ -240,6 +267,7 @@ struct ScriptHost {
     JSValue auroraNamespace = JS_UNDEFINED;
     JSValue finewaveNamespace = JS_UNDEFINED;
     JSValue graphiteNamespace = JS_UNDEFINED;
+    JSValue hydraNamespace = JS_UNDEFINED;
     JSValue audioEngineValue = JS_UNDEFINED;
     JSValue componentPrototype = JS_UNDEFINED;
     JSValue gameObjectPrototype = JS_UNDEFINED;
@@ -276,6 +304,10 @@ struct ScriptHost {
     JSValue uiStylePrototype = JS_UNDEFINED;
     JSValue uiStyleVariantPrototype = JS_UNDEFINED;
     JSValue themePrototype = JS_UNDEFINED;
+    JSValue worleyNoisePrototype = JS_UNDEFINED;
+    JSValue cloudsPrototype = JS_UNDEFINED;
+    JSValue atmospherePrototype = JS_UNDEFINED;
+    JSValue fluidPrototype = JS_UNDEFINED;
     JSValue texturePrototype = JS_UNDEFINED;
     JSValue cubemapPrototype = JS_UNDEFINED;
     JSValue skyboxPrototype = JS_UNDEFINED;
@@ -327,6 +359,9 @@ struct ScriptHost {
     std::uint64_t nextDirectionalLightId = 1;
     std::uint64_t nextSpotLightId = 1;
     std::uint64_t nextAreaLightId = 1;
+    std::uint64_t nextWorleyNoiseId = 1;
+    std::uint64_t nextCloudsId = 1;
+    std::uint64_t nextAtmosphereId = 1;
     std::uint64_t generation = 1;
 };
 

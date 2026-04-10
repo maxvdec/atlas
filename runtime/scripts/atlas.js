@@ -46,6 +46,7 @@ function makeControllerAxisTrigger(controllerId, axis) {
 export class Scene {
     constructor() {
         this.name = "";
+        this.atmosphere = null;
         return globalThis.__atlasGetScene() ?? this;
     }
 

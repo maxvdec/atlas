@@ -26,6 +26,8 @@
 #include "graphite/layout.h"
 #include "graphite/style.h"
 #include "graphite/text.h"
+#include "hydra/atmosphere.h"
+#include "hydra/fluid.h"
 #include <algorithm>
 #include <array>
 #include <cctype>
@@ -75,6 +77,9 @@ constexpr const char *ATLAS_SPOT_LIGHT_ID_PROP = "__atlasSpotLightId";
 constexpr const char *ATLAS_AREA_LIGHT_ID_PROP = "__atlasAreaLightId";
 constexpr const char *ATLAS_PARTICLE_EMITTER_ID_PROP =
     "__atlasParticleEmitterId";
+constexpr const char *ATLAS_WORLEY_NOISE_ID_PROP = "__atlasWorleyNoiseId";
+constexpr const char *ATLAS_CLOUDS_ID_PROP = "__atlasCloudsId";
+constexpr const char *ATLAS_ATMOSPHERE_ID_PROP = "__atlasAtmosphereId";
 constexpr const char *ATLAS_GENERATION_PROP = "__atlasGeneration";
 constexpr const char *ATLAS_IS_CORE_OBJECT_PROP = "__atlasIsCoreObject";
 constexpr const char *ATLAS_WINDOW_PROP = "__atlasWindow";
@@ -719,6 +724,15 @@ bool ensureBuiltins(JSContext *ctx, ScriptHost &host) {
         }
     }
 
+    if (JS_IsUndefined(host.hydraNamespace)) {
+        host.hydraNamespace =
+            runtime::scripting::importModuleNamespace(ctx, "hydra");
+        if (JS_IsException(host.hydraNamespace)) {
+            runtime::scripting::dumpExecution(ctx);
+            return false;
+        }
+    }
+
     cachePrototype(ctx, host.atlasNamespace, "Component",
                    host.componentPrototype);
     cachePrototype(ctx, host.atlasNamespace, "GameObject",
@@ -771,6 +785,12 @@ bool ensureBuiltins(JSContext *ctx, ScriptHost &host) {
     cachePrototype(ctx, host.graphiteNamespace, "UIStyleVariant",
                    host.uiStyleVariantPrototype);
     cachePrototype(ctx, host.graphiteNamespace, "Theme", host.themePrototype);
+    cachePrototype(ctx, host.hydraNamespace, "WorleyNoise3D",
+                   host.worleyNoisePrototype);
+    cachePrototype(ctx, host.hydraNamespace, "Clouds", host.cloudsPrototype);
+    cachePrototype(ctx, host.hydraNamespace, "Atmosphere",
+                   host.atmospherePrototype);
+    cachePrototype(ctx, host.hydraNamespace, "Fluid", host.fluidPrototype);
     cachePrototype(ctx, host.atlasInputNamespace, "Trigger",
                    host.triggerPrototype);
     cachePrototype(ctx, host.atlasInputNamespace, "AxisTrigger",
@@ -1064,7 +1084,8 @@ bool parseResource(JSContext *ctx, JSValueConst value, Resource &out) {
 }
 
 std::shared_ptr<TerrainGenerator>
-parseTerrainGeneratorValue(JSContext *ctx, ScriptHost &host, JSValueConst value) {
+parseTerrainGeneratorValue(JSContext *ctx, ScriptHost &host,
+                           JSValueConst value) {
     if (!JS_IsObject(value) || JS_IsNull(value)) {
         return nullptr;
     }
@@ -1120,8 +1141,8 @@ parseTerrainGeneratorValue(JSContext *ctx, ScriptHost &host, JSValueConst value)
         double scale = 0.01;
         readIntProperty(ctx, value, "numFeatures", numFeatures);
         readNumberProperty(ctx, value, "scale", scale);
-        return std::make_shared<IslandGenerator>(
-            static_cast<int>(numFeatures), static_cast<float>(scale));
+        return std::make_shared<IslandGenerator>(static_cast<int>(numFeatures),
+                                                 static_cast<float>(scale));
     }
 
     if (token == "compound" || token == "combined" || token == "composite") {
@@ -1133,7 +1154,8 @@ parseTerrainGeneratorValue(JSContext *ctx, ScriptHost &host, JSValueConst value)
             if (!JS_IsException(lengthValue) &&
                 getUint32(ctx, lengthValue, length)) {
                 for (std::uint32_t i = 0; i < length; ++i) {
-                    JSValue childValue = JS_GetPropertyUint32(ctx, generators, i);
+                    JSValue childValue =
+                        JS_GetPropertyUint32(ctx, generators, i);
                     auto child =
                         !JS_IsException(childValue)
                             ? parseTerrainGeneratorValue(ctx, host, childValue)
@@ -1502,7 +1524,8 @@ JSValue makeMouseScrollPacketValue(JSContext *ctx,
     return result;
 }
 
-JSValue makeTriggerValue(JSContext *ctx, ScriptHost &host, const Trigger &value) {
+JSValue makeTriggerValue(JSContext *ctx, ScriptHost &host,
+                         const Trigger &value) {
     ensureBuiltins(ctx, host);
     JSValue result = newObjectFromPrototype(ctx, host.triggerPrototype);
     setProperty(ctx, result, "type",
@@ -1569,15 +1592,17 @@ JSValue makeInputActionValue(JSContext *ctx, ScriptHost &host,
 
     JSValue triggers = JS_NewArray(ctx);
     for (std::uint32_t i = 0; i < value.buttonTriggers.size(); ++i) {
-        JS_SetPropertyUint32(ctx, triggers, i,
-                             makeTriggerValue(ctx, host, value.buttonTriggers[i]));
+        JS_SetPropertyUint32(
+            ctx, triggers, i,
+            makeTriggerValue(ctx, host, value.buttonTriggers[i]));
     }
     setProperty(ctx, result, "triggers", triggers);
 
     JSValue axisTriggers = JS_NewArray(ctx);
     for (std::uint32_t i = 0; i < value.axisTriggers.size(); ++i) {
-        JS_SetPropertyUint32(ctx, axisTriggers, i,
-                             makeAxisTriggerValue(ctx, host, value.axisTriggers[i]));
+        JS_SetPropertyUint32(
+            ctx, axisTriggers, i,
+            makeAxisTriggerValue(ctx, host, value.axisTriggers[i]));
     }
     setProperty(ctx, result, "axisTriggers", axisTriggers);
     return result;
@@ -1587,7 +1612,8 @@ JSValue makeVideoModeValue(JSContext *ctx, const VideoMode &value) {
     JSValue result = JS_NewObject(ctx);
     setProperty(ctx, result, "width", JS_NewInt32(ctx, value.width));
     setProperty(ctx, result, "height", JS_NewInt32(ctx, value.height));
-    setProperty(ctx, result, "refreshRate", JS_NewInt32(ctx, value.refreshRate));
+    setProperty(ctx, result, "refreshRate",
+                JS_NewInt32(ctx, value.refreshRate));
     return result;
 }
 
@@ -1956,8 +1982,8 @@ ScriptAreaLightState *findAreaLightState(ScriptHost &host,
     return &it->second;
 }
 
-std::uint64_t registerAudioDataState(
-    ScriptHost &host, const std::shared_ptr<AudioData> &data) {
+std::uint64_t registerAudioDataState(ScriptHost &host,
+                                     const std::shared_ptr<AudioData> &data) {
     if (!data) {
         return 0;
     }
@@ -1973,8 +1999,9 @@ std::uint64_t registerAudioDataState(
     return audioDataId;
 }
 
-std::uint64_t registerAudioSourceState(
-    ScriptHost &host, const std::shared_ptr<AudioSource> &ownedSource) {
+std::uint64_t
+registerAudioSourceState(ScriptHost &host,
+                         const std::shared_ptr<AudioSource> &ownedSource) {
     if (!ownedSource) {
         return 0;
     }
@@ -1992,7 +2019,8 @@ std::uint64_t registerAudioSourceState(
     return audioSourceId;
 }
 
-std::uint64_t registerAudioSourcePointer(ScriptHost &host, AudioSource *source) {
+std::uint64_t registerAudioSourcePointer(ScriptHost &host,
+                                         AudioSource *source) {
     if (source == nullptr) {
         return 0;
     }
@@ -2003,9 +2031,8 @@ std::uint64_t registerAudioSourcePointer(ScriptHost &host, AudioSource *source) 
     }
 
     const std::uint64_t audioSourceId = host.nextAudioSourceId++;
-    host.audioSources[audioSourceId] = {.ownedSource = nullptr,
-                                        .source = source,
-                                        .value = JS_UNDEFINED};
+    host.audioSources[audioSourceId] = {
+        .ownedSource = nullptr, .source = source, .value = JS_UNDEFINED};
     host.audioSourceIds[source] = audioSourceId;
     return audioSourceId;
 }
@@ -2044,8 +2071,9 @@ std::uint64_t registerEchoState(ScriptHost &host,
     return echoId;
 }
 
-std::uint64_t registerDistortionState(
-    ScriptHost &host, const std::shared_ptr<Distortion> &effect) {
+std::uint64_t
+registerDistortionState(ScriptHost &host,
+                        const std::shared_ptr<Distortion> &effect) {
     if (!effect) {
         return 0;
     }
@@ -2161,7 +2189,8 @@ JSValue syncReverbWrapper(JSContext *ctx, ScriptHost &host,
     return wrapper;
 }
 
-JSValue syncEchoWrapper(JSContext *ctx, ScriptHost &host, std::uint64_t echoId) {
+JSValue syncEchoWrapper(JSContext *ctx, ScriptHost &host,
+                        std::uint64_t echoId) {
     auto *state = findEchoState(host, echoId);
     if (state == nullptr || !state->effect) {
         return JS_NULL;
@@ -2628,6 +2657,360 @@ JSValue syncAreaLightWrapper(JSContext *ctx, ScriptHost &host,
     return wrapper;
 }
 
+ScriptWorleyNoiseState *findWorleyNoiseState(ScriptHost &host,
+                                             std::uint64_t noiseId) {
+    auto it = host.worleyNoise.find(noiseId);
+    if (it == host.worleyNoise.end()) {
+        return nullptr;
+    }
+    return &it->second;
+}
+
+std::uint64_t registerWorleyNoiseState(ScriptHost &host,
+                                       std::shared_ptr<WorleyNoise3D> noise) {
+    const std::uint64_t noiseId = host.nextWorleyNoiseId++;
+    host.worleyNoise[noiseId] = {.noise = std::move(noise),
+                                 .value = JS_UNDEFINED};
+    return noiseId;
+}
+
+JSValue syncWorleyNoiseWrapper(JSContext *ctx, ScriptHost &host,
+                               std::uint64_t noiseId) {
+    auto *state = findWorleyNoiseState(host, noiseId);
+    if (state == nullptr || !state->noise) {
+        return JS_NULL;
+    }
+    if (!ensureBuiltins(ctx, host)) {
+        return JS_EXCEPTION;
+    }
+
+    JSValue wrapper = JS_UNDEFINED;
+    if (!JS_IsUndefined(state->value)) {
+        wrapper = JS_DupValue(ctx, state->value);
+    } else {
+        wrapper = newObjectFromPrototype(ctx, host.worleyNoisePrototype);
+        state->value = JS_DupValue(ctx, wrapper);
+    }
+
+    setProperty(ctx, wrapper, ATLAS_WORLEY_NOISE_ID_PROP,
+                JS_NewInt64(ctx, static_cast<int64_t>(noiseId)));
+    setProperty(ctx, wrapper, ATLAS_GENERATION_PROP,
+                JS_NewInt64(ctx, static_cast<int64_t>(host.generation)));
+    return wrapper;
+}
+
+ScriptWorleyNoiseState *resolveWorleyNoise(JSContext *ctx, ScriptHost &host,
+                                           JSValueConst value) {
+    if (!ensureCurrentGeneration(ctx, host, value)) {
+        return nullptr;
+    }
+
+    std::int64_t noiseId = 0;
+    if (!readIntProperty(ctx, value, ATLAS_WORLEY_NOISE_ID_PROP, noiseId)) {
+        JS_ThrowTypeError(ctx, "Expected WorleyNoise3D handle");
+        return nullptr;
+    }
+
+    auto *state =
+        findWorleyNoiseState(host, static_cast<std::uint64_t>(noiseId));
+    if (state == nullptr || !state->noise) {
+        JS_ThrowReferenceError(ctx, "Unknown WorleyNoise3D id");
+        return nullptr;
+    }
+    return state;
+}
+
+ScriptCloudsState *findCloudsState(ScriptHost &host, std::uint64_t cloudsId) {
+    auto it = host.clouds.find(cloudsId);
+    if (it == host.clouds.end()) {
+        return nullptr;
+    }
+    return &it->second;
+}
+
+std::uint64_t registerCloudsState(ScriptHost &host,
+                                  std::shared_ptr<Clouds> clouds) {
+    if (!clouds) {
+        return 0;
+    }
+    auto existing = host.cloudIds.find(clouds.get());
+    if (existing != host.cloudIds.end()) {
+        return existing->second;
+    }
+
+    const std::uint64_t cloudsId = host.nextCloudsId++;
+    host.clouds[cloudsId] = {
+        .ownedClouds = clouds, .clouds = clouds.get(), .value = JS_UNDEFINED};
+    host.cloudIds[clouds.get()] = cloudsId;
+    return cloudsId;
+}
+
+JSValue syncCloudsWrapper(JSContext *ctx, ScriptHost &host,
+                          std::uint64_t cloudsId) {
+    auto *state = findCloudsState(host, cloudsId);
+    if (state == nullptr || state->clouds == nullptr) {
+        return JS_NULL;
+    }
+    if (!ensureBuiltins(ctx, host)) {
+        return JS_EXCEPTION;
+    }
+
+    JSValue wrapper = JS_UNDEFINED;
+    if (!JS_IsUndefined(state->value)) {
+        wrapper = JS_DupValue(ctx, state->value);
+    } else {
+        wrapper = newObjectFromPrototype(ctx, host.cloudsPrototype);
+        state->value = JS_DupValue(ctx, wrapper);
+    }
+
+    setProperty(ctx, wrapper, ATLAS_CLOUDS_ID_PROP,
+                JS_NewInt64(ctx, static_cast<int64_t>(cloudsId)));
+    setProperty(ctx, wrapper, ATLAS_GENERATION_PROP,
+                JS_NewInt64(ctx, static_cast<int64_t>(host.generation)));
+    setProperty(ctx, wrapper, "position",
+                makePosition3d(ctx, host, state->clouds->position));
+    setProperty(ctx, wrapper, "size",
+                makePosition3d(ctx, host, state->clouds->size));
+    setProperty(ctx, wrapper, "scale",
+                JS_NewFloat64(ctx, state->clouds->scale));
+    setProperty(ctx, wrapper, "offset",
+                makePosition3d(ctx, host, state->clouds->offset));
+    setProperty(ctx, wrapper, "density",
+                JS_NewFloat64(ctx, state->clouds->density));
+    setProperty(ctx, wrapper, "densityMultiplier",
+                JS_NewFloat64(ctx, state->clouds->densityMultiplier));
+    setProperty(ctx, wrapper, "absorption",
+                JS_NewFloat64(ctx, state->clouds->absorption));
+    setProperty(ctx, wrapper, "scattering",
+                JS_NewFloat64(ctx, state->clouds->scattering));
+    setProperty(ctx, wrapper, "phase",
+                JS_NewFloat64(ctx, state->clouds->phase));
+    setProperty(ctx, wrapper, "clusterStrength",
+                JS_NewFloat64(ctx, state->clouds->clusterStrength));
+    setProperty(ctx, wrapper, "primaryStepCount",
+                JS_NewInt32(ctx, state->clouds->primaryStepCount));
+    setProperty(ctx, wrapper, "lightStepCount",
+                JS_NewInt32(ctx, state->clouds->lightStepCount));
+    setProperty(ctx, wrapper, "lightStepMultiplier",
+                JS_NewFloat64(ctx, state->clouds->lightStepMultiplier));
+    setProperty(ctx, wrapper, "minStepLength",
+                JS_NewFloat64(ctx, state->clouds->minStepLength));
+    setProperty(ctx, wrapper, "wind",
+                makePosition3d(ctx, host, state->clouds->wind));
+    return wrapper;
+}
+
+ScriptCloudsState *resolveClouds(JSContext *ctx, ScriptHost &host,
+                                 JSValueConst value) {
+    if (!ensureCurrentGeneration(ctx, host, value)) {
+        return nullptr;
+    }
+
+    std::int64_t cloudsId = 0;
+    if (!readIntProperty(ctx, value, ATLAS_CLOUDS_ID_PROP, cloudsId)) {
+        JS_ThrowTypeError(ctx, "Expected Clouds handle");
+        return nullptr;
+    }
+
+    auto *state = findCloudsState(host, static_cast<std::uint64_t>(cloudsId));
+    if (state == nullptr || state->clouds == nullptr) {
+        JS_ThrowReferenceError(ctx, "Unknown Clouds id");
+        return nullptr;
+    }
+    return state;
+}
+
+ScriptAtmosphereState *findAtmosphereState(ScriptHost &host,
+                                           std::uint64_t atmosphereId) {
+    auto it = host.atmospheres.find(atmosphereId);
+    if (it == host.atmospheres.end()) {
+        return nullptr;
+    }
+    return &it->second;
+}
+
+std::uint64_t registerAtmosphereState(ScriptHost &host,
+                                      std::shared_ptr<Atmosphere> atmosphere) {
+    if (!atmosphere) {
+        return 0;
+    }
+    auto existing = host.atmosphereIds.find(atmosphere.get());
+    if (existing != host.atmosphereIds.end()) {
+        return existing->second;
+    }
+
+    const std::uint64_t atmosphereId = host.nextAtmosphereId++;
+    host.atmospheres[atmosphereId] = {.ownedAtmosphere = atmosphere,
+                                      .atmosphere = atmosphere.get(),
+                                      .value = JS_UNDEFINED,
+                                      .weatherDelegate = JS_UNDEFINED};
+    host.atmosphereIds[atmosphere.get()] = atmosphereId;
+    return atmosphereId;
+}
+
+JSValue syncAtmosphereWrapper(JSContext *ctx, ScriptHost &host,
+                              std::uint64_t atmosphereId);
+
+JSValue makeViewInformationValue(JSContext *ctx, ScriptHost &host,
+                                 const ViewInformation &info) {
+    JSValue value = JS_NewObject(ctx);
+    setProperty(ctx, value, "position",
+                makePosition3d(ctx, host, info.position));
+    setProperty(ctx, value, "target", makePosition3d(ctx, host, info.target));
+    setProperty(ctx, value, "time", JS_NewFloat64(ctx, info.time));
+    setProperty(ctx, value, "deltaTime", JS_NewFloat64(ctx, info.deltaTime));
+    return value;
+}
+
+bool parseWeatherState(JSContext *ctx, JSValueConst value, WeatherState &out) {
+    if (JS_IsUndefined(value) || JS_IsNull(value)) {
+        return false;
+    }
+
+    std::int64_t condition = static_cast<std::int64_t>(out.condition);
+    if (readIntProperty(ctx, value, "condition", condition)) {
+        out.condition = static_cast<WeatherCondition>(condition);
+    }
+
+    double intensity = out.intensity;
+    if (readNumberProperty(ctx, value, "intensity", intensity)) {
+        out.intensity = static_cast<float>(intensity);
+    }
+
+    JSValue wind = JS_GetPropertyStr(ctx, value, "wind");
+    if (!JS_IsException(wind) && !JS_IsUndefined(wind) && !JS_IsNull(wind)) {
+        parsePosition3d(ctx, wind, out.wind);
+    }
+    JS_FreeValue(ctx, wind);
+
+    return true;
+}
+
+void bindAtmosphereWeatherDelegate(JSContext *ctx, ScriptHost &host,
+                                   std::uint64_t atmosphereId) {
+    auto *state = findAtmosphereState(host, atmosphereId);
+    if (state == nullptr || state->atmosphere == nullptr) {
+        return;
+    }
+
+    ScriptHost *hostPtr = &host;
+    state->atmosphere->weatherDelegate = [ctx, hostPtr,
+                                          atmosphereId](ViewInformation info) {
+        if (hostPtr == nullptr) {
+            return WeatherState();
+        }
+        auto *callbackState = findAtmosphereState(*hostPtr, atmosphereId);
+        if (callbackState == nullptr ||
+            JS_IsUndefined(callbackState->weatherDelegate)) {
+            return WeatherState();
+        }
+        JSValue wrapper = syncAtmosphereWrapper(ctx, *hostPtr, atmosphereId);
+        if (JS_IsException(wrapper) || JS_IsNull(wrapper)) {
+            JS_FreeValue(ctx, wrapper);
+            return WeatherState();
+        }
+
+        JSValue payload = makeViewInformationValue(ctx, *hostPtr, info);
+        JSValue args[] = {payload};
+        JSValue result = JS_Call(ctx, callbackState->weatherDelegate, wrapper,
+                                 1, const_cast<JSValueConst *>(args));
+        JS_FreeValue(ctx, payload);
+        JS_FreeValue(ctx, wrapper);
+        if (JS_IsException(result)) {
+            runtime::scripting::dumpExecution(ctx);
+            JS_FreeValue(ctx, result);
+            return WeatherState();
+        }
+
+        WeatherState state;
+        parseWeatherState(ctx, result, state);
+        JS_FreeValue(ctx, result);
+        return state;
+    };
+}
+
+JSValue syncAtmosphereWrapper(JSContext *ctx, ScriptHost &host,
+                              std::uint64_t atmosphereId) {
+    auto *state = findAtmosphereState(host, atmosphereId);
+    if (state == nullptr || state->atmosphere == nullptr) {
+        return JS_NULL;
+    }
+    if (!ensureBuiltins(ctx, host)) {
+        return JS_EXCEPTION;
+    }
+
+    JSValue wrapper = JS_UNDEFINED;
+    if (!JS_IsUndefined(state->value)) {
+        wrapper = JS_DupValue(ctx, state->value);
+    } else {
+        wrapper = newObjectFromPrototype(ctx, host.atmospherePrototype);
+        state->value = JS_DupValue(ctx, wrapper);
+    }
+
+    setProperty(ctx, wrapper, ATLAS_ATMOSPHERE_ID_PROP,
+                JS_NewInt64(ctx, static_cast<int64_t>(atmosphereId)));
+    setProperty(ctx, wrapper, ATLAS_GENERATION_PROP,
+                JS_NewInt64(ctx, static_cast<int64_t>(host.generation)));
+    setProperty(ctx, wrapper, "timeOfDay",
+                JS_NewFloat64(ctx, state->atmosphere->timeOfDay));
+    setProperty(ctx, wrapper, "secondsPerHour",
+                JS_NewFloat64(ctx, state->atmosphere->secondsPerHour));
+    setProperty(ctx, wrapper, "wind",
+                makePosition3d(ctx, host, state->atmosphere->wind));
+    setProperty(ctx, wrapper, "sunColor",
+                makeColor(ctx, host, state->atmosphere->sunColor));
+    setProperty(ctx, wrapper, "moonColor",
+                makeColor(ctx, host, state->atmosphere->moonColor));
+    setProperty(ctx, wrapper, "sunSize",
+                JS_NewFloat64(ctx, state->atmosphere->sunSize));
+    setProperty(ctx, wrapper, "moonSize",
+                JS_NewFloat64(ctx, state->atmosphere->moonSize));
+    setProperty(ctx, wrapper, "sunTintStrength",
+                JS_NewFloat64(ctx, state->atmosphere->sunTintStrength));
+    setProperty(ctx, wrapper, "moonTintStrength",
+                JS_NewFloat64(ctx, state->atmosphere->moonTintStrength));
+    setProperty(ctx, wrapper, "starIntensity",
+                JS_NewFloat64(ctx, state->atmosphere->starIntensity));
+    setProperty(ctx, wrapper, "cycle",
+                JS_NewBool(ctx, state->atmosphere->cycle));
+    if (state->atmosphere->clouds) {
+        setProperty(ctx, wrapper, "clouds",
+                    syncCloudsWrapper(
+                        ctx, host,
+                        registerCloudsState(host, state->atmosphere->clouds)));
+    } else {
+        setProperty(ctx, wrapper, "clouds", JS_NULL);
+    }
+    if (!JS_IsUndefined(state->weatherDelegate)) {
+        setProperty(ctx, wrapper, "weatherDelegate",
+                    JS_DupValue(ctx, state->weatherDelegate));
+    } else {
+        setProperty(ctx, wrapper, "weatherDelegate", JS_NULL);
+    }
+    return wrapper;
+}
+
+ScriptAtmosphereState *resolveAtmosphere(JSContext *ctx, ScriptHost &host,
+                                         JSValueConst value) {
+    if (!ensureCurrentGeneration(ctx, host, value)) {
+        return nullptr;
+    }
+
+    std::int64_t atmosphereId = 0;
+    if (!readIntProperty(ctx, value, ATLAS_ATMOSPHERE_ID_PROP, atmosphereId)) {
+        JS_ThrowTypeError(ctx, "Expected Atmosphere handle");
+        return nullptr;
+    }
+
+    auto *state =
+        findAtmosphereState(host, static_cast<std::uint64_t>(atmosphereId));
+    if (state == nullptr || state->atmosphere == nullptr) {
+        JS_ThrowReferenceError(ctx, "Unknown Atmosphere id");
+        return nullptr;
+    }
+    return state;
+}
+
 ScriptFontState *findFontState(ScriptHost &host, std::uint64_t fontId) {
     auto it = host.fonts.find(fontId);
     if (it == host.fonts.end()) {
@@ -2658,13 +3041,15 @@ std::uint64_t registerFontState(ScriptHost &host, const Font &font) {
         .textureId = 0,
     };
     if (state.font->texture != nullptr) {
-        state.textureId = registerTextureState(host, makeAtlasTexture(*state.font));
+        state.textureId =
+            registerTextureState(host, makeAtlasTexture(*state.font));
     }
     host.fonts[fontId] = std::move(state);
     return fontId;
 }
 
-JSValue syncFontWrapper(JSContext *ctx, ScriptHost &host, std::uint64_t fontId) {
+JSValue syncFontWrapper(JSContext *ctx, ScriptHost &host,
+                        std::uint64_t fontId) {
     auto *state = findFontState(host, fontId);
     if (state == nullptr || !state->font) {
         return JS_NULL;
@@ -2677,8 +3062,10 @@ JSValue syncFontWrapper(JSContext *ctx, ScriptHost &host, std::uint64_t fontId) 
         if (state->textureId == 0) {
             state->textureId =
                 registerTextureState(host, makeAtlasTexture(*state->font));
-        } else if (auto *textureState = findTextureState(host, state->textureId);
-                   textureState != nullptr && textureState->texture != nullptr) {
+        } else if (auto *textureState =
+                       findTextureState(host, state->textureId);
+                   textureState != nullptr &&
+                   textureState->texture != nullptr) {
             *textureState->texture = makeAtlasTexture(*state->font);
         }
     }
@@ -2711,7 +3098,8 @@ JSValue syncFontWrapper(JSContext *ctx, ScriptHost &host, std::uint64_t fontId) 
     return wrapper;
 }
 
-ScriptFontState *resolveFont(JSContext *ctx, ScriptHost &host, JSValueConst value) {
+ScriptFontState *resolveFont(JSContext *ctx, ScriptHost &host,
+                             JSValueConst value) {
     if (!ensureCurrentGeneration(ctx, host, value)) {
         return nullptr;
     }
@@ -2766,10 +3154,10 @@ JSValue makeUIStyleVariantValue(JSContext *ctx, ScriptHost &host,
                     makeColor(ctx, host, *variant.tintColorValue));
     }
     if (variant.fontValue.has_value() && *variant.fontValue != nullptr) {
-        setProperty(ctx, value, "fontValue",
-                    syncFontWrapper(
-                        ctx, host,
-                        registerFontState(host, *(*variant.fontValue))));
+        setProperty(
+            ctx, value, "fontValue",
+            syncFontWrapper(ctx, host,
+                            registerFontState(host, *(*variant.fontValue))));
     }
     if (variant.fontSizeValue.has_value()) {
         setProperty(ctx, value, "fontSizeValue",
@@ -2808,7 +3196,8 @@ JSValue makeThemeValue(JSContext *ctx, ScriptHost &host,
     setProperty(ctx, value, "checkbox",
                 makeUIStyleValue(ctx, host, theme.checkbox));
     setProperty(ctx, value, "row", makeUIStyleValue(ctx, host, theme.row));
-    setProperty(ctx, value, "column", makeUIStyleValue(ctx, host, theme.column));
+    setProperty(ctx, value, "column",
+                makeUIStyleValue(ctx, host, theme.column));
     setProperty(ctx, value, "stack", makeUIStyleValue(ctx, host, theme.stack));
     return value;
 }
@@ -2988,8 +3377,8 @@ bool callGraphiteCallback(JSContext *ctx, ScriptHost &host, GameObject &object,
         JS_FreeValue(ctx, wrapper);
         return false;
     }
-    JSValue result = JS_Call(ctx, callback, wrapper, argc,
-                             const_cast<JSValueConst *>(argv));
+    JSValue result =
+        JS_Call(ctx, callback, wrapper, argc, const_cast<JSValueConst *>(argv));
     const bool ok = !JS_IsException(result);
     for (int i = 0; i < argc; ++i) {
         JS_FreeValue(ctx, argv[i]);
@@ -3017,7 +3406,8 @@ JSValue makeBiomeValue(JSContext *ctx, ScriptHost &host, const Biome &biome) {
     setProperty(ctx, result, "maxTemperature",
                 JS_NewFloat64(ctx, biome.maxTemperature));
     if (biome.texture.texture != nullptr || biome.texture.id != 0) {
-        const std::uint64_t textureId = registerTextureState(host, biome.texture);
+        const std::uint64_t textureId =
+            registerTextureState(host, biome.texture);
         setProperty(ctx, result, "texture",
                     syncTextureWrapper(ctx, host, textureId));
     } else {
@@ -3026,8 +3416,9 @@ JSValue makeBiomeValue(JSContext *ctx, ScriptHost &host, const Biome &biome) {
     return result;
 }
 
-JSValue makeTerrainGeneratorValue(JSContext *ctx, ScriptHost &host,
-                                  const std::shared_ptr<TerrainGenerator> &generator) {
+JSValue
+makeTerrainGeneratorValue(JSContext *ctx, ScriptHost &host,
+                          const std::shared_ptr<TerrainGenerator> &generator) {
     ensureBuiltins(ctx, host);
     if (!generator) {
         return JS_NULL;
@@ -3035,7 +3426,8 @@ JSValue makeTerrainGeneratorValue(JSContext *ctx, ScriptHost &host,
 
     JSValueConst prototype = host.terrainGeneratorPrototype;
     if (auto hill = std::dynamic_pointer_cast<HillGenerator>(generator)) {
-        JSValue result = newObjectFromPrototype(ctx, host.hillGeneratorPrototype);
+        JSValue result =
+            newObjectFromPrototype(ctx, host.hillGeneratorPrototype);
         setProperty(ctx, result, "algorithm", JS_NewString(ctx, "hill"));
         setProperty(ctx, result, "type", JS_NewString(ctx, "hill"));
         setProperty(ctx, result, "scale", JS_NewFloat64(ctx, hill->getScale()));
@@ -3043,7 +3435,8 @@ JSValue makeTerrainGeneratorValue(JSContext *ctx, ScriptHost &host,
                     JS_NewFloat64(ctx, hill->getAmplitude()));
         return result;
     }
-    if (auto mountain = std::dynamic_pointer_cast<MountainGenerator>(generator)) {
+    if (auto mountain =
+            std::dynamic_pointer_cast<MountainGenerator>(generator)) {
         JSValue result =
             newObjectFromPrototype(ctx, host.mountainGeneratorPrototype);
         setProperty(ctx, result, "algorithm", JS_NewString(ctx, "mountain"));
@@ -3061,10 +3454,12 @@ JSValue makeTerrainGeneratorValue(JSContext *ctx, ScriptHost &host,
         return result;
     }
     if (auto plain = std::dynamic_pointer_cast<PlainGenerator>(generator)) {
-        JSValue result = newObjectFromPrototype(ctx, host.plainGeneratorPrototype);
+        JSValue result =
+            newObjectFromPrototype(ctx, host.plainGeneratorPrototype);
         setProperty(ctx, result, "algorithm", JS_NewString(ctx, "plain"));
         setProperty(ctx, result, "type", JS_NewString(ctx, "plain"));
-        setProperty(ctx, result, "scale", JS_NewFloat64(ctx, plain->getScale()));
+        setProperty(ctx, result, "scale",
+                    JS_NewFloat64(ctx, plain->getScale()));
         setProperty(ctx, result, "amplitude",
                     JS_NewFloat64(ctx, plain->getAmplitude()));
         return result;
@@ -3080,7 +3475,8 @@ JSValue makeTerrainGeneratorValue(JSContext *ctx, ScriptHost &host,
                     JS_NewFloat64(ctx, island->getScale()));
         return result;
     }
-    if (auto compound = std::dynamic_pointer_cast<CompoundGenerator>(generator)) {
+    if (auto compound =
+            std::dynamic_pointer_cast<CompoundGenerator>(generator)) {
         JSValue result =
             newObjectFromPrototype(ctx, host.compoundGeneratorPrototype);
         setProperty(ctx, result, "algorithm", JS_NewString(ctx, "compound"));
@@ -3088,9 +3484,9 @@ JSValue makeTerrainGeneratorValue(JSContext *ctx, ScriptHost &host,
         JSValue children = JS_NewArray(ctx);
         const auto &generators = compound->getGenerators();
         for (std::uint32_t i = 0; i < generators.size(); ++i) {
-            JS_SetPropertyUint32(ctx, children, i,
-                                 makeTerrainGeneratorValue(ctx, host,
-                                                           generators[i]));
+            JS_SetPropertyUint32(
+                ctx, children, i,
+                makeTerrainGeneratorValue(ctx, host, generators[i]));
         }
         setProperty(ctx, result, "generators", children);
         return result;
@@ -3099,7 +3495,8 @@ JSValue makeTerrainGeneratorValue(JSContext *ctx, ScriptHost &host,
     return newObjectFromPrototype(ctx, prototype);
 }
 
-JSValue makeMonitorValue(JSContext *ctx, ScriptHost &host, const Monitor &monitor) {
+JSValue makeMonitorValue(JSContext *ctx, ScriptHost &host,
+                         const Monitor &monitor) {
     ensureBuiltins(ctx, host);
     JSValue wrapper = newObjectFromPrototype(ctx, host.monitorPrototype);
     setProperty(ctx, wrapper, ATLAS_GENERATION_PROP,
@@ -3109,7 +3506,8 @@ JSValue makeMonitorValue(JSContext *ctx, ScriptHost &host, const Monitor &monito
     return wrapper;
 }
 
-JSValue makeGamepadValue(JSContext *ctx, ScriptHost &host, const Gamepad &gamepad) {
+JSValue makeGamepadValue(JSContext *ctx, ScriptHost &host,
+                         const Gamepad &gamepad) {
     ensureBuiltins(ctx, host);
     JSValue wrapper = newObjectFromPrototype(ctx, host.gamepadPrototype);
     setProperty(ctx, wrapper, ATLAS_GENERATION_PROP,
@@ -3150,7 +3548,8 @@ JSValue syncWindowWrapper(JSContext *ctx, ScriptHost &host, Window &window) {
     setProperty(ctx, wrapper, ATLAS_WINDOW_PROP, JS_NewBool(ctx, true));
     setProperty(ctx, wrapper, ATLAS_GENERATION_PROP,
                 JS_NewInt64(ctx, static_cast<int64_t>(host.generation)));
-    setProperty(ctx, wrapper, "_title", JS_NewString(ctx, window.title.c_str()));
+    setProperty(ctx, wrapper, "_title",
+                JS_NewString(ctx, window.title.c_str()));
     setProperty(ctx, wrapper, "_width", JS_NewInt32(ctx, window.width));
     setProperty(ctx, wrapper, "_height", JS_NewInt32(ctx, window.height));
     setProperty(ctx, wrapper, "_currentFrame",
@@ -3172,7 +3571,6 @@ JSValue syncWindowWrapper(JSContext *ctx, ScriptHost &host, Window &window) {
 }
 
 JSValue syncSceneWrapper(JSContext *ctx, ScriptHost &host, Scene &scene) {
-    (void)scene;
     if (!ensureBuiltins(ctx, host)) {
         return JS_EXCEPTION;
     }
@@ -3194,6 +3592,12 @@ JSValue syncSceneWrapper(JSContext *ctx, ScriptHost &host, Scene &scene) {
     setProperty(ctx, wrapper, ATLAS_GENERATION_PROP,
                 JS_NewInt64(ctx, static_cast<int64_t>(host.generation)));
     setProperty(ctx, wrapper, "name", JS_NewString(ctx, name.c_str()));
+    setProperty(ctx, wrapper, "atmosphere",
+                syncAtmosphereWrapper(
+                    ctx, host,
+                    registerAtmosphereState(
+                        host, std::shared_ptr<Atmosphere>(
+                                  &scene.atmosphere, [](Atmosphere *) {}))));
     return wrapper;
 }
 
@@ -3593,6 +3997,11 @@ void attachObjectIfReady(ScriptHost &host, GameObject &object) {
             return;
         }
     }
+    if (auto *fluid = dynamic_cast<Fluid *>(&object); fluid != nullptr) {
+        if (!fluid->isCreated()) {
+            return;
+        }
+    }
 
     object.initialize();
     host.context->window->addObject(&object);
@@ -3743,6 +4152,8 @@ JSValue syncObjectWrapper(JSContext *ctx, ScriptHost &host,
             prototype = host.rowPrototype;
         } else if (dynamic_cast<Stack *>(&object) != nullptr) {
             prototype = host.stackPrototype;
+        } else if (dynamic_cast<Fluid *>(&object) != nullptr) {
+            prototype = host.fluidPrototype;
         } else if (dynamic_cast<UIObject *>(&object) != nullptr) {
             prototype = host.uiObjectPrototype;
         } else if (dynamic_cast<CoreObject *>(&object) != nullptr) {
@@ -3773,12 +4184,13 @@ JSValue syncObjectWrapper(JSContext *ctx, ScriptHost &host,
     setProperty(ctx, wrapper, "id", JS_NewInt32(ctx, objectId));
     setProperty(ctx, wrapper, "components",
                 buildComponentsArray(ctx, host, objectId));
-    if (auto *uiObject = dynamic_cast<UIObject *>(&object); uiObject != nullptr) {
+    if (auto *uiObject = dynamic_cast<UIObject *>(&object);
+        uiObject != nullptr) {
         const Position2d screenPosition = uiObject->getScreenPosition();
         setProperty(ctx, wrapper, "position",
-                    makePosition3d(ctx, host,
-                                   Position3d(screenPosition.x, screenPosition.y,
-                                              0.0f)));
+                    makePosition3d(
+                        ctx, host,
+                        Position3d(screenPosition.x, screenPosition.y, 0.0f)));
     } else {
         setProperty(ctx, wrapper, "position",
                     makePosition3d(ctx, host, object.getPosition()));
@@ -3881,7 +4293,8 @@ JSValue syncObjectWrapper(JSContext *ctx, ScriptHost &host,
         setProperty(ctx, wrapper, "height", JS_NewInt32(ctx, terrain->height));
         setProperty(ctx, wrapper, "resolution",
                     JS_NewInt32(ctx, static_cast<int>(terrain->resolution)));
-        setProperty(ctx, wrapper, "maxPeak", JS_NewFloat64(ctx, terrain->maxPeak));
+        setProperty(ctx, wrapper, "maxPeak",
+                    JS_NewFloat64(ctx, terrain->maxPeak));
         setProperty(ctx, wrapper, "seaLevel",
                     JS_NewFloat64(ctx, terrain->seaLevel));
         JSValue biomes = JS_NewArray(ctx);
@@ -3906,19 +4319,21 @@ JSValue syncObjectWrapper(JSContext *ctx, ScriptHost &host,
     } else if (auto *text = dynamic_cast<Text *>(&object); text != nullptr) {
         setProperty(ctx, wrapper, "content",
                     JS_NewString(ctx, text->content.c_str()));
-        setProperty(ctx, wrapper, "font",
-                    syncFontWrapper(ctx, host, registerFontState(host, text->font)));
+        setProperty(
+            ctx, wrapper, "font",
+            syncFontWrapper(ctx, host, registerFontState(host, text->font)));
         setProperty(ctx, wrapper, "fontSize",
                     JS_NewFloat64(ctx, text->fontSize));
         setProperty(ctx, wrapper, "color", makeColor(ctx, host, text->color));
     } else if (auto *field = dynamic_cast<TextField *>(&object);
                field != nullptr) {
-        setProperty(ctx, wrapper, "text", JS_NewString(ctx, field->text.c_str()));
+        setProperty(ctx, wrapper, "text",
+                    JS_NewString(ctx, field->text.c_str()));
         setProperty(ctx, wrapper, "placeholder",
                     JS_NewString(ctx, field->placeholder.c_str()));
-        setProperty(ctx, wrapper, "font", syncFontWrapper(
-                                             ctx, host,
-                                             registerFontState(host, field->font)));
+        setProperty(
+            ctx, wrapper, "font",
+            syncFontWrapper(ctx, host, registerFontState(host, field->font)));
         setProperty(ctx, wrapper, "fontSize",
                     JS_NewFloat64(ctx, field->fontSize));
         setProperty(ctx, wrapper, "padding",
@@ -3941,9 +4356,9 @@ JSValue syncObjectWrapper(JSContext *ctx, ScriptHost &host,
                button != nullptr) {
         setProperty(ctx, wrapper, "label",
                     JS_NewString(ctx, button->label.c_str()));
-        setProperty(ctx, wrapper, "font", syncFontWrapper(
-                                             ctx, host, registerFontState(host,
-                                                                          button->font)));
+        setProperty(
+            ctx, wrapper, "font",
+            syncFontWrapper(ctx, host, registerFontState(host, button->font)));
         setProperty(ctx, wrapper, "fontSize",
                     JS_NewFloat64(ctx, button->fontSize));
         setProperty(ctx, wrapper, "padding",
@@ -3962,15 +4377,14 @@ JSValue syncObjectWrapper(JSContext *ctx, ScriptHost &host,
                     makeColor(ctx, host, button->borderColor));
         setProperty(ctx, wrapper, "hoverBorderColor",
                     makeColor(ctx, host, button->hoverBorderColor));
-        setProperty(ctx, wrapper, "enabled",
-                    JS_NewBool(ctx, button->enabled));
+        setProperty(ctx, wrapper, "enabled", JS_NewBool(ctx, button->enabled));
     } else if (auto *checkbox = dynamic_cast<Checkbox *>(&object);
                checkbox != nullptr) {
         setProperty(ctx, wrapper, "label",
                     JS_NewString(ctx, checkbox->label.c_str()));
-        setProperty(ctx, wrapper, "font", syncFontWrapper(
-                                             ctx, host, registerFontState(host,
-                                                                          checkbox->font)));
+        setProperty(ctx, wrapper, "font",
+                    syncFontWrapper(ctx, host,
+                                    registerFontState(host, checkbox->font)));
         setProperty(ctx, wrapper, "fontSize",
                     JS_NewFloat64(ctx, checkbox->fontSize));
         setProperty(ctx, wrapper, "padding",
@@ -4061,14 +4475,35 @@ JSValue syncObjectWrapper(JSContext *ctx, ScriptHost &host,
             }
         }
         setProperty(ctx, wrapper, "children", children);
-        setProperty(ctx, wrapper, "horizontalAlignment",
-                    JS_NewInt32(ctx,
-                                static_cast<int>(stack->horizontalAlignment)));
-        setProperty(ctx, wrapper, "verticalAlignment",
-                    JS_NewInt32(ctx,
-                                static_cast<int>(stack->verticalAlignment)));
+        setProperty(
+            ctx, wrapper, "horizontalAlignment",
+            JS_NewInt32(ctx, static_cast<int>(stack->horizontalAlignment)));
+        setProperty(
+            ctx, wrapper, "verticalAlignment",
+            JS_NewInt32(ctx, static_cast<int>(stack->verticalAlignment)));
         setProperty(ctx, wrapper, "anchor",
                     JS_NewInt32(ctx, static_cast<int>(stack->anchor)));
+    } else if (auto *fluid = dynamic_cast<Fluid *>(&object); fluid != nullptr) {
+        setProperty(ctx, wrapper, "waveVelocity",
+                    JS_NewFloat64(ctx, fluid->waveVelocity));
+        if (fluid->normalTexture.texture != nullptr ||
+            fluid->normalTexture.id != 0) {
+            setProperty(ctx, wrapper, "normalTexture",
+                        syncTextureWrapper(
+                            ctx, host,
+                            registerTextureState(host, fluid->normalTexture)));
+        } else {
+            setProperty(ctx, wrapper, "normalTexture", JS_NULL);
+        }
+        if (fluid->movementTexture.texture != nullptr ||
+            fluid->movementTexture.id != 0) {
+            setProperty(ctx, wrapper, "movementTexture",
+                        syncTextureWrapper(ctx, host,
+                                           registerTextureState(
+                                               host, fluid->movementTexture)));
+        } else {
+            setProperty(ctx, wrapper, "movementTexture", JS_NULL);
+        }
     }
 
     return wrapper;
@@ -4120,6 +4555,165 @@ bool parseUIChildren(JSContext *ctx, ScriptHost &host, JSValueConst value,
     return true;
 }
 
+bool applyClouds(JSContext *ctx, ScriptHost &host, JSValueConst wrapper,
+                 Clouds &clouds) {
+    (void)host;
+    JSValue value = JS_GetPropertyStr(ctx, wrapper, "position");
+    if (!JS_IsException(value) && !JS_IsUndefined(value) && !JS_IsNull(value)) {
+        parsePosition3d(ctx, value, clouds.position);
+    }
+    JS_FreeValue(ctx, value);
+
+    value = JS_GetPropertyStr(ctx, wrapper, "size");
+    if (!JS_IsException(value) && !JS_IsUndefined(value) && !JS_IsNull(value)) {
+        parsePosition3d(ctx, value, clouds.size);
+    }
+    JS_FreeValue(ctx, value);
+
+    value = JS_GetPropertyStr(ctx, wrapper, "offset");
+    if (!JS_IsException(value) && !JS_IsUndefined(value) && !JS_IsNull(value)) {
+        parsePosition3d(ctx, value, clouds.offset);
+    }
+    JS_FreeValue(ctx, value);
+
+    value = JS_GetPropertyStr(ctx, wrapper, "wind");
+    if (!JS_IsException(value) && !JS_IsUndefined(value) && !JS_IsNull(value)) {
+        parsePosition3d(ctx, value, clouds.wind);
+    }
+    JS_FreeValue(ctx, value);
+
+    double number = 0.0;
+    if (readNumberProperty(ctx, wrapper, "scale", number)) {
+        clouds.scale = static_cast<float>(number);
+    }
+    if (readNumberProperty(ctx, wrapper, "density", number)) {
+        clouds.density = static_cast<float>(number);
+    }
+    if (readNumberProperty(ctx, wrapper, "densityMultiplier", number)) {
+        clouds.densityMultiplier = static_cast<float>(number);
+    }
+    if (readNumberProperty(ctx, wrapper, "absorption", number)) {
+        clouds.absorption = static_cast<float>(number);
+    }
+    if (readNumberProperty(ctx, wrapper, "scattering", number)) {
+        clouds.scattering = static_cast<float>(number);
+    }
+    if (readNumberProperty(ctx, wrapper, "phase", number)) {
+        clouds.phase = static_cast<float>(number);
+    }
+    if (readNumberProperty(ctx, wrapper, "clusterStrength", number)) {
+        clouds.clusterStrength = static_cast<float>(number);
+    }
+    if (readNumberProperty(ctx, wrapper, "lightStepMultiplier", number)) {
+        clouds.lightStepMultiplier = static_cast<float>(number);
+    }
+    if (readNumberProperty(ctx, wrapper, "minStepLength", number)) {
+        clouds.minStepLength = static_cast<float>(number);
+    }
+
+    std::int64_t integer = 0;
+    if (readIntProperty(ctx, wrapper, "primaryStepCount", integer)) {
+        clouds.primaryStepCount = static_cast<int>(integer);
+    }
+    if (readIntProperty(ctx, wrapper, "lightStepCount", integer)) {
+        clouds.lightStepCount = static_cast<int>(integer);
+    }
+
+    return true;
+}
+
+bool applyAtmosphere(JSContext *ctx, ScriptHost &host, JSValueConst wrapper,
+                     Atmosphere &atmosphere) {
+    double number = 0.0;
+    if (readNumberProperty(ctx, wrapper, "timeOfDay", number)) {
+        atmosphere.timeOfDay = static_cast<float>(number);
+    }
+    if (readNumberProperty(ctx, wrapper, "secondsPerHour", number)) {
+        atmosphere.secondsPerHour = static_cast<float>(number);
+    }
+    if (readNumberProperty(ctx, wrapper, "sunSize", number)) {
+        atmosphere.sunSize = static_cast<float>(number);
+    }
+    if (readNumberProperty(ctx, wrapper, "moonSize", number)) {
+        atmosphere.moonSize = static_cast<float>(number);
+    }
+    if (readNumberProperty(ctx, wrapper, "sunTintStrength", number)) {
+        atmosphere.sunTintStrength = static_cast<float>(number);
+    }
+    if (readNumberProperty(ctx, wrapper, "moonTintStrength", number)) {
+        atmosphere.moonTintStrength = static_cast<float>(number);
+    }
+    if (readNumberProperty(ctx, wrapper, "starIntensity", number)) {
+        atmosphere.starIntensity = static_cast<float>(number);
+    }
+
+    bool cycle = atmosphere.cycle;
+    if (readBoolProperty(ctx, wrapper, "cycle", cycle)) {
+        atmosphere.cycle = cycle;
+    }
+
+    JSValue value = JS_GetPropertyStr(ctx, wrapper, "wind");
+    if (!JS_IsException(value) && !JS_IsUndefined(value) && !JS_IsNull(value)) {
+        parsePosition3d(ctx, value, atmosphere.wind);
+    }
+    JS_FreeValue(ctx, value);
+
+    value = JS_GetPropertyStr(ctx, wrapper, "sunColor");
+    if (!JS_IsException(value) && !JS_IsUndefined(value) && !JS_IsNull(value)) {
+        parseColor(ctx, value, atmosphere.sunColor);
+    }
+    JS_FreeValue(ctx, value);
+
+    value = JS_GetPropertyStr(ctx, wrapper, "moonColor");
+    if (!JS_IsException(value) && !JS_IsUndefined(value) && !JS_IsNull(value)) {
+        parseColor(ctx, value, atmosphere.moonColor);
+    }
+    JS_FreeValue(ctx, value);
+
+    value = JS_GetPropertyStr(ctx, wrapper, "clouds");
+    if (!JS_IsException(value)) {
+        if (JS_IsNull(value) || JS_IsUndefined(value)) {
+            atmosphere.clouds = nullptr;
+        } else {
+            auto *cloudState = resolveClouds(ctx, host, value);
+            if (cloudState != nullptr && cloudState->ownedClouds) {
+                atmosphere.clouds = cloudState->ownedClouds;
+                applyClouds(ctx, host, value, *atmosphere.clouds);
+            }
+        }
+    }
+    JS_FreeValue(ctx, value);
+
+    auto *state = resolveAtmosphere(ctx, host, wrapper);
+    if (state != nullptr) {
+        const auto atmosphereIt = host.atmosphereIds.find(&atmosphere);
+        value = JS_GetPropertyStr(ctx, wrapper, "weatherDelegate");
+        if (!JS_IsException(value)) {
+            if (JS_IsFunction(ctx, value)) {
+                if (!JS_IsUndefined(state->weatherDelegate)) {
+                    JS_FreeValue(ctx, state->weatherDelegate);
+                }
+                state->weatherDelegate = JS_DupValue(ctx, value);
+                if (atmosphereIt != host.atmosphereIds.end()) {
+                    bindAtmosphereWeatherDelegate(ctx, host,
+                                                  atmosphereIt->second);
+                }
+            } else if (JS_IsNull(value) || JS_IsUndefined(value)) {
+                if (!JS_IsUndefined(state->weatherDelegate)) {
+                    JS_FreeValue(ctx, state->weatherDelegate);
+                    state->weatherDelegate = JS_UNDEFINED;
+                }
+                atmosphere.weatherDelegate = [](ViewInformation) {
+                    return WeatherState();
+                };
+            }
+        }
+        JS_FreeValue(ctx, value);
+    }
+
+    return true;
+}
+
 bool applyBaseObject(JSContext *ctx, ScriptHost &host, JSValueConst wrapper,
                      GameObject &object) {
     Position3d position = object.getPosition();
@@ -4165,6 +4759,36 @@ bool applyBaseObject(JSContext *ctx, ScriptHost &host, JSValueConst wrapper,
             assignObjectName(*host.context, object, name);
         }
     }
+
+    return true;
+}
+
+bool applyFluid(JSContext *ctx, ScriptHost &host, JSValueConst wrapper,
+                Fluid &fluid) {
+    applyBaseObject(ctx, host, wrapper, fluid);
+
+    double waveVelocity = fluid.waveVelocity;
+    if (readNumberProperty(ctx, wrapper, "waveVelocity", waveVelocity)) {
+        fluid.waveVelocity = static_cast<float>(waveVelocity);
+    }
+
+    JSValue value = JS_GetPropertyStr(ctx, wrapper, "normalTexture");
+    if (!JS_IsException(value) && !JS_IsUndefined(value) && !JS_IsNull(value)) {
+        auto *textureState = resolveTexture(ctx, host, value);
+        if (textureState != nullptr && textureState->texture) {
+            fluid.normalTexture = *textureState->texture;
+        }
+    }
+    JS_FreeValue(ctx, value);
+
+    value = JS_GetPropertyStr(ctx, wrapper, "movementTexture");
+    if (!JS_IsException(value) && !JS_IsUndefined(value) && !JS_IsNull(value)) {
+        auto *textureState = resolveTexture(ctx, host, value);
+        if (textureState != nullptr && textureState->texture) {
+            fluid.movementTexture = *textureState->texture;
+        }
+    }
+    JS_FreeValue(ctx, value);
 
     return true;
 }
@@ -4500,7 +5124,8 @@ bool applyColumn(JSContext *ctx, ScriptHost &host, JSValueConst wrapper,
     return true;
 }
 
-bool applyRow(JSContext *ctx, ScriptHost &host, JSValueConst wrapper, Row &row) {
+bool applyRow(JSContext *ctx, ScriptHost &host, JSValueConst wrapper,
+              Row &row) {
     applyBaseObject(ctx, host, wrapper, row);
 
     double number = 0.0;
@@ -5263,7 +5888,8 @@ bool parseVehicleEngineValue(JSContext *ctx, JSValueConst value,
     return true;
 }
 
-bool parseFloatVector(JSContext *ctx, JSValueConst value, std::vector<float> &out) {
+bool parseFloatVector(JSContext *ctx, JSValueConst value,
+                      std::vector<float> &out) {
     if (!JS_IsArray(value)) {
         return false;
     }
@@ -5302,7 +5928,8 @@ bool parseVehicleTransmissionValue(JSContext *ctx, JSValueConst value,
 
     std::int64_t mode = static_cast<std::int64_t>(out.mode);
     readIntProperty(ctx, value, "mode", mode);
-    out.mode = static_cast<bezel::VehicleTransmissionMode>(static_cast<int>(mode));
+    out.mode =
+        static_cast<bezel::VehicleTransmissionMode>(static_cast<int>(mode));
 
     JSValue field = JS_GetPropertyStr(ctx, value, "gearRatios");
     if (!JS_IsException(field) && !JS_IsUndefined(field)) {
@@ -5359,14 +5986,16 @@ bool parseVehicleControllerSettingsValue(
     if (!JS_IsException(field) && JS_IsArray(field)) {
         std::uint32_t length = 0;
         JSValue lengthValue = JS_GetPropertyStr(ctx, field, "length");
-        if (!JS_IsException(lengthValue) && getUint32(ctx, lengthValue, length)) {
+        if (!JS_IsException(lengthValue) &&
+            getUint32(ctx, lengthValue, length)) {
             out.differentials.clear();
             out.differentials.reserve(length);
             for (std::uint32_t i = 0; i < length; ++i) {
                 JSValue item = JS_GetPropertyUint32(ctx, field, i);
                 if (!JS_IsException(item)) {
                     bezel::VehicleDifferential differential;
-                    if (parseVehicleDifferentialValue(ctx, item, differential)) {
+                    if (parseVehicleDifferentialValue(ctx, item,
+                                                      differential)) {
                         out.differentials.push_back(differential);
                     }
                 }
@@ -5409,7 +6038,8 @@ bool parseVehicleSettingsValue(JSContext *ctx, JSValueConst value,
     if (!JS_IsException(field) && JS_IsArray(field)) {
         std::uint32_t length = 0;
         JSValue lengthValue = JS_GetPropertyStr(ctx, field, "length");
-        if (!JS_IsException(lengthValue) && getUint32(ctx, lengthValue, length)) {
+        if (!JS_IsException(lengthValue) &&
+            getUint32(ctx, lengthValue, length)) {
             out.wheels.clear();
             out.wheels.reserve(length);
             for (std::uint32_t i = 0; i < length; ++i) {
@@ -5463,8 +6093,9 @@ bool parseJointMember(JSContext *ctx, ScriptHost &host, JSValueConst value,
     return true;
 }
 
-bezel::RaycastResult convertToTaggedRaycastResult(
-    const bezel::RaycastResult &input, const std::vector<std::string> &tags) {
+bezel::RaycastResult
+convertToTaggedRaycastResult(const bezel::RaycastResult &input,
+                             const std::vector<std::string> &tags) {
     if (tags.empty()) {
         return input;
     }
@@ -5502,7 +6133,8 @@ RaycastResult convertRaycastResult(const bezel::RaycastResult &input) {
         converted.rigidbody = hit.rigidbody;
         converted.didHit = hit.didHit;
         if (hit.rigidbody != nullptr) {
-            auto it = atlas::gameObjects.find(static_cast<int>(hit.rigidbody->id.atlasId));
+            auto it = atlas::gameObjects.find(
+                static_cast<int>(hit.rigidbody->id.atlasId));
             if (it != atlas::gameObjects.end()) {
                 converted.object = it->second;
             }
@@ -5526,7 +6158,8 @@ OverlapResult convertOverlapResultToAtlas(const bezel::OverlapResult &input) {
         converted.penetrationDepth = hit.penetrationDepth;
         converted.rigidbody = hit.rigidbody;
         if (hit.rigidbody != nullptr) {
-            auto it = atlas::gameObjects.find(static_cast<int>(hit.rigidbody->id.atlasId));
+            auto it = atlas::gameObjects.find(
+                static_cast<int>(hit.rigidbody->id.atlasId));
             if (it != atlas::gameObjects.end()) {
                 converted.object = it->second;
             }
@@ -5550,7 +6183,8 @@ SweepResult convertSweepResultToAtlas(const bezel::SweepResult &input,
         converted.percentage = hit.percentage;
         converted.rigidbody = hit.rigidbody;
         if (hit.rigidbody != nullptr) {
-            auto it = atlas::gameObjects.find(static_cast<int>(hit.rigidbody->id.atlasId));
+            auto it = atlas::gameObjects.find(
+                static_cast<int>(hit.rigidbody->id.atlasId));
             if (it != atlas::gameObjects.end()) {
                 converted.object = it->second;
             }
@@ -5566,12 +6200,14 @@ SweepResult convertSweepResultToAtlas(const bezel::SweepResult &input,
 JSValue makeRaycastHitValue(JSContext *ctx, ScriptHost &host,
                             const RaycastHit &hit) {
     JSValue value = JS_NewObject(ctx);
-    setProperty(ctx, value, "position", makePosition3d(ctx, host, hit.position));
+    setProperty(ctx, value, "position",
+                makePosition3d(ctx, host, hit.position));
     setProperty(ctx, value, "normal", makePosition3d(ctx, host, hit.normal));
     setProperty(ctx, value, "distance", JS_NewFloat64(ctx, hit.distance));
     setProperty(ctx, value, "object",
-                hit.object != nullptr ? syncObjectWrapper(ctx, host, *hit.object)
-                                      : JS_NULL);
+                hit.object != nullptr
+                    ? syncObjectWrapper(ctx, host, *hit.object)
+                    : JS_NULL);
     setProperty(ctx, value, "didHit", JS_NewBool(ctx, hit.didHit));
     return value;
 }
@@ -5586,8 +6222,9 @@ JSValue makeRaycastResultValue(JSContext *ctx, ScriptHost &host,
     }
     setProperty(ctx, value, "hits", hits);
     setProperty(ctx, value, "hit",
-                result.hits.empty() ? JS_NULL
-                                    : makeRaycastHitValue(ctx, host, result.hit));
+                result.hits.empty()
+                    ? JS_NULL
+                    : makeRaycastHitValue(ctx, host, result.hit));
     setProperty(ctx, value, "closestDistance",
                 JS_NewFloat64(ctx, result.closestDistance));
     return value;
@@ -5604,8 +6241,9 @@ JSValue makeOverlapHitValue(JSContext *ctx, ScriptHost &host,
     setProperty(ctx, value, "penetrationDepth",
                 JS_NewFloat64(ctx, hit.penetrationDepth));
     setProperty(ctx, value, "object",
-                hit.object != nullptr ? syncObjectWrapper(ctx, host, *hit.object)
-                                      : JS_NULL);
+                hit.object != nullptr
+                    ? syncObjectWrapper(ctx, host, *hit.object)
+                    : JS_NULL);
     return value;
 }
 
@@ -5625,13 +6263,15 @@ JSValue makeOverlapResultValue(JSContext *ctx, ScriptHost &host,
 JSValue makeSweepHitValue(JSContext *ctx, ScriptHost &host,
                           const SweepHit &hit) {
     JSValue value = JS_NewObject(ctx);
-    setProperty(ctx, value, "position", makePosition3d(ctx, host, hit.position));
+    setProperty(ctx, value, "position",
+                makePosition3d(ctx, host, hit.position));
     setProperty(ctx, value, "normal", makePosition3d(ctx, host, hit.normal));
     setProperty(ctx, value, "distance", JS_NewFloat64(ctx, hit.distance));
     setProperty(ctx, value, "percentage", JS_NewFloat64(ctx, hit.percentage));
     setProperty(ctx, value, "object",
-                hit.object != nullptr ? syncObjectWrapper(ctx, host, *hit.object)
-                                      : JS_NULL);
+                hit.object != nullptr
+                    ? syncObjectWrapper(ctx, host, *hit.object)
+                    : JS_NULL);
     return value;
 }
 
@@ -5696,7 +6336,8 @@ void dispatchQueryResultToObject(JSContext *ctx, ScriptHost &host,
     JS_FreeValue(ctx, objectValue);
 }
 
-bool applyRigidbody(JSContext *ctx, JSValueConst wrapper, Rigidbody &component) {
+bool applyRigidbody(JSContext *ctx, JSValueConst wrapper,
+                    Rigidbody &component) {
     std::string sendSignal = component.sendSignal;
     readStringProperty(ctx, wrapper, "sendSignal", sendSignal);
     component.sendSignal = sendSignal;
@@ -6023,16 +6664,16 @@ class HostedSpringJointComponent final : public Component {
     }
 };
 
-std::uint64_t registerRigidbodyState(ScriptHost &host,
-                                     const std::shared_ptr<Rigidbody> &component,
-                                     JSContext *ctx, JSValueConst wrapper,
-                                     bool attached = false) {
+std::uint64_t registerRigidbodyState(
+    ScriptHost &host, const std::shared_ptr<Rigidbody> &component,
+    JSContext *ctx, JSValueConst wrapper, bool attached = false) {
     const std::uint64_t id = host.nextRigidbodyId++;
     host.rigidbodies[id] = {.ownedComponent = component,
                             .component = component.get(),
                             .value = JS_DupValue(ctx, wrapper),
                             .attached = attached};
-    if (auto *hosted = dynamic_cast<HostedRigidbodyComponent *>(component.get())) {
+    if (auto *hosted =
+            dynamic_cast<HostedRigidbodyComponent *>(component.get())) {
         hosted->scriptId = id;
     }
     return id;
@@ -6048,16 +6689,18 @@ std::uint64_t registerVehicleState(ScriptHost &host,
                          .component = nativeComponent,
                          .value = JS_DupValue(ctx, wrapper),
                          .attached = attached};
-    if (auto *hosted = dynamic_cast<HostedVehicleComponent *>(component.get())) {
+    if (auto *hosted =
+            dynamic_cast<HostedVehicleComponent *>(component.get())) {
         hosted->scriptId = id;
     }
     return id;
 }
 
-std::uint64_t registerFixedJointState(
-    ScriptHost &host, const std::shared_ptr<Component> &component,
-    FixedJoint *nativeComponent, JSContext *ctx, JSValueConst wrapper,
-    bool attached = false) {
+std::uint64_t
+registerFixedJointState(ScriptHost &host,
+                        const std::shared_ptr<Component> &component,
+                        FixedJoint *nativeComponent, JSContext *ctx,
+                        JSValueConst wrapper, bool attached = false) {
     const std::uint64_t id = host.nextFixedJointId++;
     host.fixedJoints[id] = {.ownedComponent = component,
                             .component = nativeComponent,
@@ -6070,10 +6713,11 @@ std::uint64_t registerFixedJointState(
     return id;
 }
 
-std::uint64_t registerHingeJointState(
-    ScriptHost &host, const std::shared_ptr<Component> &component,
-    HingeJoint *nativeComponent, JSContext *ctx, JSValueConst wrapper,
-    bool attached = false) {
+std::uint64_t
+registerHingeJointState(ScriptHost &host,
+                        const std::shared_ptr<Component> &component,
+                        HingeJoint *nativeComponent, JSContext *ctx,
+                        JSValueConst wrapper, bool attached = false) {
     const std::uint64_t id = host.nextHingeJointId++;
     host.hingeJoints[id] = {.ownedComponent = component,
                             .component = nativeComponent,
@@ -6086,10 +6730,11 @@ std::uint64_t registerHingeJointState(
     return id;
 }
 
-std::uint64_t registerSpringJointState(
-    ScriptHost &host, const std::shared_ptr<Component> &component,
-    SpringJoint *nativeComponent, JSContext *ctx, JSValueConst wrapper,
-    bool attached = false) {
+std::uint64_t
+registerSpringJointState(ScriptHost &host,
+                         const std::shared_ptr<Component> &component,
+                         SpringJoint *nativeComponent, JSContext *ctx,
+                         JSValueConst wrapper, bool attached = false) {
     const std::uint64_t id = host.nextSpringJointId++;
     host.springJoints[id] = {.ownedComponent = component,
                              .component = nativeComponent,
@@ -6112,12 +6757,12 @@ JSValue syncRigidbodyWrapper(JSContext *ctx, ScriptHost &host,
         return JS_EXCEPTION;
     }
 
-    JSValue wrapper = JS_IsUndefined(state->value)
-                          ? newObjectFromPrototype(
-                                ctx, state->component->isSensor
-                                         ? host.sensorPrototype
-                                         : host.rigidbodyPrototype)
-                          : JS_DupValue(ctx, state->value);
+    JSValue wrapper =
+        JS_IsUndefined(state->value)
+            ? newObjectFromPrototype(ctx, state->component->isSensor
+                                              ? host.sensorPrototype
+                                              : host.rigidbodyPrototype)
+            : JS_DupValue(ctx, state->value);
     if (JS_IsUndefined(state->value)) {
         state->value = JS_DupValue(ctx, wrapper);
     }
@@ -6200,9 +6845,9 @@ JSValue syncFixedJointWrapper(JSContext *ctx, ScriptHost &host,
     if (state == nullptr || state->component == nullptr) {
         return JS_NULL;
     }
-    JSValue wrapper =
-        syncJointWrapperBase(ctx, host, *state, jointId, host.fixedJointPrototype,
-                             ATLAS_FIXED_JOINT_ID_PROP, "fixed-joint");
+    JSValue wrapper = syncJointWrapperBase(
+        ctx, host, *state, jointId, host.fixedJointPrototype,
+        ATLAS_FIXED_JOINT_ID_PROP, "fixed-joint");
     setProperty(ctx, wrapper, "anchor",
                 makePosition3d(ctx, host, state->component->anchor));
     setProperty(ctx, wrapper, "breakForce",
@@ -6220,9 +6865,9 @@ JSValue syncHingeJointWrapper(JSContext *ctx, ScriptHost &host,
     if (state == nullptr || state->component == nullptr) {
         return JS_NULL;
     }
-    JSValue wrapper =
-        syncJointWrapperBase(ctx, host, *state, jointId, host.hingeJointPrototype,
-                             ATLAS_HINGE_JOINT_ID_PROP, "hinge-joint");
+    JSValue wrapper = syncJointWrapperBase(
+        ctx, host, *state, jointId, host.hingeJointPrototype,
+        ATLAS_HINGE_JOINT_ID_PROP, "hinge-joint");
     setProperty(ctx, wrapper, "anchor",
                 makePosition3d(ctx, host, state->component->anchor));
     setProperty(ctx, wrapper, "breakForce",
@@ -6260,9 +6905,9 @@ JSValue syncSpringJointWrapper(JSContext *ctx, ScriptHost &host,
     if (state == nullptr || state->component == nullptr) {
         return JS_NULL;
     }
-    JSValue wrapper =
-        syncJointWrapperBase(ctx, host, *state, jointId, host.springJointPrototype,
-                             ATLAS_SPRING_JOINT_ID_PROP, "spring-joint");
+    JSValue wrapper = syncJointWrapperBase(
+        ctx, host, *state, jointId, host.springJointPrototype,
+        ATLAS_SPRING_JOINT_ID_PROP, "spring-joint");
     setProperty(ctx, wrapper, "anchor",
                 makePosition3d(ctx, host, state->component->anchor));
     setProperty(ctx, wrapper, "breakForce",
@@ -6284,8 +6929,9 @@ JSValue syncSpringJointWrapper(JSContext *ctx, ScriptHost &host,
     JSValue spring = JS_NewObject(ctx);
     setProperty(ctx, spring, "enabled",
                 JS_NewBool(ctx, state->component->spring.enabled));
-    setProperty(ctx, spring, "mode",
-                JS_NewInt32(ctx, static_cast<int>(state->component->spring.mode)));
+    setProperty(
+        ctx, spring, "mode",
+        JS_NewInt32(ctx, static_cast<int>(state->component->spring.mode)));
     setProperty(ctx, spring, "frequency",
                 JS_NewFloat64(ctx, state->component->spring.frequencyHz));
     setProperty(ctx, spring, "dampingRatio",
@@ -6416,7 +7062,8 @@ Window *resolveWindowArg(JSContext *ctx, ScriptHost &host, JSValueConst value) {
     }
 
     bool isWindow = false;
-    if (!readBoolProperty(ctx, value, ATLAS_WINDOW_PROP, isWindow) || !isWindow) {
+    if (!readBoolProperty(ctx, value, ATLAS_WINDOW_PROP, isWindow) ||
+        !isWindow) {
         JS_ThrowTypeError(ctx, "Expected Atlas window handle");
         return nullptr;
     }
@@ -6479,7 +7126,8 @@ ScriptAudioDataState *resolveAudioData(JSContext *ctx, ScriptHost &host,
         return nullptr;
     }
 
-    auto *state = findAudioDataState(host, static_cast<std::uint64_t>(audioDataId));
+    auto *state =
+        findAudioDataState(host, static_cast<std::uint64_t>(audioDataId));
     if (state == nullptr || !state->data) {
         JS_ThrowReferenceError(ctx, "Unknown Finewave audio data id");
         return nullptr;
@@ -6494,7 +7142,8 @@ ScriptAudioSourceState *resolveAudioSource(JSContext *ctx, ScriptHost &host,
     }
 
     std::int64_t audioSourceId = 0;
-    if (!readIntProperty(ctx, value, ATLAS_AUDIO_SOURCE_ID_PROP, audioSourceId)) {
+    if (!readIntProperty(ctx, value, ATLAS_AUDIO_SOURCE_ID_PROP,
+                         audioSourceId)) {
         JS_ThrowTypeError(ctx, "Expected Finewave audio source handle");
         return nullptr;
     }
@@ -6834,7 +7483,8 @@ ScriptRigidbodyState *resolveRigidbody(JSContext *ctx, ScriptHost &host,
         return nullptr;
     }
 
-    auto *state = findRigidbodyState(host, static_cast<std::uint64_t>(rigidbodyId));
+    auto *state =
+        findRigidbodyState(host, static_cast<std::uint64_t>(rigidbodyId));
     if (state == nullptr || state->component == nullptr) {
         JS_ThrowReferenceError(ctx, "Unknown Atlas rigidbody id");
         return nullptr;
@@ -6874,7 +7524,8 @@ ScriptFixedJointState *resolveFixedJoint(JSContext *ctx, ScriptHost &host,
         return nullptr;
     }
 
-    auto *state = findFixedJointState(host, static_cast<std::uint64_t>(jointId));
+    auto *state =
+        findFixedJointState(host, static_cast<std::uint64_t>(jointId));
     if (state == nullptr || state->component == nullptr) {
         JS_ThrowReferenceError(ctx, "Unknown Atlas fixed joint id");
         return nullptr;
@@ -6894,7 +7545,8 @@ ScriptHingeJointState *resolveHingeJoint(JSContext *ctx, ScriptHost &host,
         return nullptr;
     }
 
-    auto *state = findHingeJointState(host, static_cast<std::uint64_t>(jointId));
+    auto *state =
+        findHingeJointState(host, static_cast<std::uint64_t>(jointId));
     if (state == nullptr || state->component == nullptr) {
         JS_ThrowReferenceError(ctx, "Unknown Atlas hinge joint id");
         return nullptr;
@@ -6988,7 +7640,8 @@ JSValue jsWindowSetClearColor(JSContext *ctx, JSValueConst, int argc,
     return syncWindowWrapper(ctx, *host, *window);
 }
 
-JSValue jsWindowClose(JSContext *ctx, JSValueConst, int argc, JSValueConst *argv) {
+JSValue jsWindowClose(JSContext *ctx, JSValueConst, int argc,
+                      JSValueConst *argv) {
     auto *host = getHost(ctx);
     if (host == nullptr || argc < 1) {
         return JS_ThrowTypeError(ctx, "Expected window");
@@ -7142,8 +7795,8 @@ JSValue jsMonitorGetPhysicalSize(JSContext *ctx, JSValueConst, int argc,
         return JS_ThrowReferenceError(ctx, "Unknown monitor");
     }
     const auto [width, height] = monitor.getPhysicalSize();
-    return makeSize2d(ctx, *host, {static_cast<float>(width),
-                                   static_cast<float>(height)});
+    return makeSize2d(ctx, *host,
+                      {static_cast<float>(width), static_cast<float>(height)});
 }
 
 JSValue jsMonitorGetPosition(JSContext *ctx, JSValueConst, int argc,
@@ -7590,7 +8243,8 @@ JSValue jsGamepadRumble(JSContext *ctx, JSValueConst, int argc,
                         JSValueConst *argv) {
     auto *host = getHost(ctx);
     if (host == nullptr || argc < 3) {
-        return JS_ThrowTypeError(ctx, "Expected gamepad, strength, and duration");
+        return JS_ThrowTypeError(ctx,
+                                 "Expected gamepad, strength, and duration");
     }
     if (!ensureCurrentGeneration(ctx, *host, argv[0])) {
         return JS_EXCEPTION;
@@ -7601,7 +8255,8 @@ JSValue jsGamepadRumble(JSContext *ctx, JSValueConst, int argc,
     }
     double strength = 0.0;
     double duration = 0.0;
-    if (!getDouble(ctx, argv[1], strength) || !getDouble(ctx, argv[2], duration)) {
+    if (!getDouble(ctx, argv[1], strength) ||
+        !getDouble(ctx, argv[2], duration)) {
         return JS_ThrowTypeError(ctx, "Expected strength and duration");
     }
     Window *window = getWindow(*host);
@@ -9042,8 +9697,8 @@ JSValue jsAudioEngineSetListenerOrientation(JSContext *ctx, JSValueConst,
     return JS_UNDEFINED;
 }
 
-JSValue jsAudioEngineSetListenerVelocity(JSContext *ctx, JSValueConst,
-                                         int argc, JSValueConst *argv) {
+JSValue jsAudioEngineSetListenerVelocity(JSContext *ctx, JSValueConst, int argc,
+                                         JSValueConst *argv) {
     auto *host = getHost(ctx);
     if (host == nullptr || argc < 2) {
         return JS_ThrowTypeError(ctx, "Expected audio engine and velocity");
@@ -9381,7 +10036,8 @@ JSValue jsAudioSourceApplyEffect(JSContext *ctx, JSValueConst, int argc,
 
     std::int64_t effectId = 0;
     if (readIntProperty(ctx, argv[1], ATLAS_REVERB_ID_PROP, effectId)) {
-        auto *state = findReverbState(*host, static_cast<std::uint64_t>(effectId));
+        auto *state =
+            findReverbState(*host, static_cast<std::uint64_t>(effectId));
         if (state == nullptr || !state->effect) {
             return JS_ThrowReferenceError(ctx, "Unknown Finewave reverb id");
         }
@@ -9389,7 +10045,8 @@ JSValue jsAudioSourceApplyEffect(JSContext *ctx, JSValueConst, int argc,
         return JS_UNDEFINED;
     }
     if (readIntProperty(ctx, argv[1], ATLAS_ECHO_ID_PROP, effectId)) {
-        auto *state = findEchoState(*host, static_cast<std::uint64_t>(effectId));
+        auto *state =
+            findEchoState(*host, static_cast<std::uint64_t>(effectId));
         if (state == nullptr || !state->effect) {
             return JS_ThrowReferenceError(ctx, "Unknown Finewave echo id");
         }
@@ -10040,15 +10697,16 @@ JSValue jsCloneRigidbody(JSContext *ctx, JSValueConst, int argc,
     component->sendSignal = state->component->sendSignal;
     component->isSensor = state->component->isSensor;
     if (state->component->body != nullptr) {
-        component->body = std::make_shared<bezel::Rigidbody>(
-            *state->component->body);
+        component->body =
+            std::make_shared<bezel::Rigidbody>(*state->component->body);
         component->body->id.joltId = bezel::INVALID_JOLT_ID;
         component->body->id.atlasId = 0;
     }
 
     JSValue prototype = JS_GetPrototype(ctx, argv[0]);
-    JSValue wrapper =
-        JS_IsException(prototype) ? JS_NewObject(ctx) : JS_NewObjectProto(ctx, prototype);
+    JSValue wrapper = JS_IsException(prototype)
+                          ? JS_NewObject(ctx)
+                          : JS_NewObjectProto(ctx, prototype);
     JS_FreeValue(ctx, prototype);
 
     const std::uint64_t rigidbodyId =
@@ -10073,7 +10731,8 @@ JSValue jsInitRigidbody(JSContext *ctx, JSValueConst, int argc,
     state->component->init();
     std::int64_t rigidbodyId = 0;
     readIntProperty(ctx, argv[0], ATLAS_RIGIDBODY_ID_PROP, rigidbodyId);
-    return syncRigidbodyWrapper(ctx, *host, static_cast<std::uint64_t>(rigidbodyId));
+    return syncRigidbodyWrapper(ctx, *host,
+                                static_cast<std::uint64_t>(rigidbodyId));
 }
 
 JSValue jsBeforePhysicsRigidbody(JSContext *ctx, JSValueConst, int argc,
@@ -10092,7 +10751,8 @@ JSValue jsBeforePhysicsRigidbody(JSContext *ctx, JSValueConst, int argc,
     state->component->beforePhysics();
     std::int64_t rigidbodyId = 0;
     readIntProperty(ctx, argv[0], ATLAS_RIGIDBODY_ID_PROP, rigidbodyId);
-    return syncRigidbodyWrapper(ctx, *host, static_cast<std::uint64_t>(rigidbodyId));
+    return syncRigidbodyWrapper(ctx, *host,
+                                static_cast<std::uint64_t>(rigidbodyId));
 }
 
 JSValue jsUpdateRigidbody(JSContext *ctx, JSValueConst, int argc,
@@ -10115,7 +10775,8 @@ JSValue jsUpdateRigidbody(JSContext *ctx, JSValueConst, int argc,
     state->component->update(static_cast<float>(deltaTime));
     std::int64_t rigidbodyId = 0;
     readIntProperty(ctx, argv[0], ATLAS_RIGIDBODY_ID_PROP, rigidbodyId);
-    return syncRigidbodyWrapper(ctx, *host, static_cast<std::uint64_t>(rigidbodyId));
+    return syncRigidbodyWrapper(ctx, *host,
+                                static_cast<std::uint64_t>(rigidbodyId));
 }
 
 JSValue jsRigidbodyAddCollider(JSContext *ctx, JSValueConst, int argc,
@@ -10135,7 +10796,7 @@ JSValue jsRigidbodyAddCollider(JSContext *ctx, JSValueConst, int argc,
     if (readNumberProperty(ctx, argv[1], "radius", radius) &&
         readNumberProperty(ctx, argv[1], "height", height)) {
         state->component->addCapsuleCollider(static_cast<float>(radius),
-                                            static_cast<float>(height));
+                                             static_cast<float>(height));
     } else {
         JSValue sizeValue = JS_GetPropertyStr(ctx, argv[1], "size");
         if (!JS_IsException(sizeValue) && !JS_IsUndefined(sizeValue)) {
@@ -10441,8 +11102,7 @@ JSValue jsRigidbodySetDamping(JSContext *ctx, JSValueConst, int argc,
                               JSValueConst *argv) {
     auto *host = getHost(ctx);
     if (host == nullptr || argc < 3) {
-        return JS_ThrowTypeError(ctx,
-                                 "Expected rigidbody and damping values");
+        return JS_ThrowTypeError(ctx, "Expected rigidbody and damping values");
     }
     auto *state = resolveRigidbody(ctx, *host, argv[0]);
     if (state == nullptr) {
@@ -10567,7 +11227,8 @@ JSValue jsVehicleRequestRecreate(JSContext *ctx, JSValueConst, int argc,
     state->component->requestRecreate();
     std::int64_t vehicleId = 0;
     readIntProperty(ctx, argv[0], ATLAS_VEHICLE_ID_PROP, vehicleId);
-    return syncVehicleWrapper(ctx, *host, static_cast<std::uint64_t>(vehicleId));
+    return syncVehicleWrapper(ctx, *host,
+                              static_cast<std::uint64_t>(vehicleId));
 }
 
 JSValue jsVehicleBeforePhysics(JSContext *ctx, JSValueConst, int argc,
@@ -10587,7 +11248,8 @@ JSValue jsVehicleBeforePhysics(JSContext *ctx, JSValueConst, int argc,
     state->component->beforePhysics();
     std::int64_t vehicleId = 0;
     readIntProperty(ctx, argv[0], ATLAS_VEHICLE_ID_PROP, vehicleId);
-    return syncVehicleWrapper(ctx, *host, static_cast<std::uint64_t>(vehicleId));
+    return syncVehicleWrapper(ctx, *host,
+                              static_cast<std::uint64_t>(vehicleId));
 }
 
 JSValue jsCreateFixedJoint(JSContext *ctx, JSValueConst, int argc,
@@ -10624,7 +11286,8 @@ JSValue jsFixedJointBeforePhysics(JSContext *ctx, JSValueConst, int argc,
     state->component->beforePhysics();
     std::int64_t jointId = 0;
     readIntProperty(ctx, argv[0], ATLAS_FIXED_JOINT_ID_PROP, jointId);
-    return syncFixedJointWrapper(ctx, *host, static_cast<std::uint64_t>(jointId));
+    return syncFixedJointWrapper(ctx, *host,
+                                 static_cast<std::uint64_t>(jointId));
 }
 
 JSValue jsFixedJointBreak(JSContext *ctx, JSValueConst, int argc,
@@ -10675,7 +11338,8 @@ JSValue jsHingeJointBeforePhysics(JSContext *ctx, JSValueConst, int argc,
     state->component->beforePhysics();
     std::int64_t jointId = 0;
     readIntProperty(ctx, argv[0], ATLAS_HINGE_JOINT_ID_PROP, jointId);
-    return syncHingeJointWrapper(ctx, *host, static_cast<std::uint64_t>(jointId));
+    return syncHingeJointWrapper(ctx, *host,
+                                 static_cast<std::uint64_t>(jointId));
 }
 
 JSValue jsHingeJointBreak(JSContext *ctx, JSValueConst, int argc,
@@ -10827,8 +11491,8 @@ JSValue jsRigidbodyRaycastWorld(JSContext *ctx, JSValueConst, int argc,
     }
     QueryResult result;
     result.operation = QueryOperation::RaycastWorld;
-    result.raycastResult = convertRaycastResult(
-        host->context->window->physicsWorld->raycast(
+    result.raycastResult =
+        convertRaycastResult(host->context->window->physicsWorld->raycast(
             origin, direction, static_cast<float>(maxDistance)));
     dispatchQueryResultToObject(ctx, *host, *state->component, result);
     return makeQueryResultValue(ctx, *host, result);
@@ -10857,8 +11521,8 @@ JSValue jsRigidbodyRaycastWorldAll(JSContext *ctx, JSValueConst, int argc,
     }
     QueryResult result;
     result.operation = QueryOperation::RaycastWorldAll;
-    result.raycastResult = convertRaycastResult(
-        host->context->window->physicsWorld->raycastAll(
+    result.raycastResult =
+        convertRaycastResult(host->context->window->physicsWorld->raycastAll(
             origin, direction, static_cast<float>(maxDistance)));
     dispatchQueryResultToObject(ctx, *host, *state->component, result);
     return makeQueryResultValue(ctx, *host, result);
@@ -10882,8 +11546,7 @@ JSValue jsRigidbodyRaycastTagged(JSContext *ctx, JSValueConst, int argc,
     if (!parseStringArray(ctx, argv[1], tags) ||
         !parsePosition3d(ctx, argv[2], direction) ||
         !getDouble(ctx, argv[3], maxDistance)) {
-        return JS_ThrowTypeError(ctx,
-                                 "Expected tags, direction, and distance");
+        return JS_ThrowTypeError(ctx, "Expected tags, direction, and distance");
     }
     auto body = ensureBezelBody(*state->component);
     return runRigidbodyRaycastQuery(
@@ -10912,8 +11575,7 @@ JSValue jsRigidbodyRaycastTaggedAll(JSContext *ctx, JSValueConst, int argc,
     if (!parseStringArray(ctx, argv[1], tags) ||
         !parsePosition3d(ctx, argv[2], direction) ||
         !getDouble(ctx, argv[3], maxDistance)) {
-        return JS_ThrowTypeError(ctx,
-                                 "Expected tags, direction, and distance");
+        return JS_ThrowTypeError(ctx, "Expected tags, direction, and distance");
     }
     auto body = ensureBezelBody(*state->component);
     return runRigidbodyRaycastQuery(
@@ -10939,10 +11601,10 @@ JSValue jsRigidbodyOverlap(JSContext *ctx, JSValueConst, int argc,
     QueryResult result;
     result.operation = QueryOperation::Overlap;
     if (body->collider != nullptr && state->component->object != nullptr) {
-        result.overlapResult = convertOverlapResultToAtlas(body->overlap(
-            host->context->window->physicsWorld, body->collider,
-            state->component->object->getPosition(),
-            state->component->object->getRotation()));
+        result.overlapResult = convertOverlapResultToAtlas(
+            body->overlap(host->context->window->physicsWorld, body->collider,
+                          state->component->object->getPosition(),
+                          state->component->object->getRotation()));
     }
     dispatchQueryResultToObject(ctx, *host, *state->component, result);
     return makeQueryResultValue(ctx, *host, result);
@@ -10969,10 +11631,10 @@ JSValue jsRigidbodyOverlapWithCollider(JSContext *ctx, JSValueConst, int argc,
     auto body = ensureBezelBody(*state->component);
     QueryResult result;
     result.operation = QueryOperation::Overlap;
-    result.overlapResult = convertOverlapResultToAtlas(body->overlap(
-        host->context->window->physicsWorld, collider,
-        state->component->object->getPosition(),
-        state->component->object->getRotation()));
+    result.overlapResult = convertOverlapResultToAtlas(
+        body->overlap(host->context->window->physicsWorld, collider,
+                      state->component->object->getPosition(),
+                      state->component->object->getRotation()));
     dispatchQueryResultToObject(ctx, *host, *state->component, result);
     return makeQueryResultValue(ctx, *host, result);
 }
@@ -10982,8 +11644,8 @@ JSValue jsRigidbodyOverlapWithColliderWorld(JSContext *ctx, JSValueConst,
     auto *host = getHost(ctx);
     if (host == nullptr || host->context == nullptr ||
         host->context->window == nullptr || argc < 3) {
-        return JS_ThrowTypeError(
-            ctx, "Expected rigidbody, collider, and position");
+        return JS_ThrowTypeError(ctx,
+                                 "Expected rigidbody, collider, and position");
     }
     auto *state = resolveRigidbody(ctx, *host, argv[0]);
     if (state == nullptr) {
@@ -11046,7 +11708,8 @@ JSValue jsRigidbodyPredictMovementWithCollider(JSContext *ctx, JSValueConst,
     }
     auto body = ensureBezelBody(*state->component);
     Position3d actualEnd = endPosition;
-    const Position3d direction = endPosition - state->component->object->getPosition();
+    const Position3d direction =
+        endPosition - state->component->object->getPosition();
     return runRigidbodySweepQuery(
         ctx, *host, *state->component, QueryOperation::Movement,
         body->sweep(host->context->window->physicsWorld, collider, direction,
@@ -11077,7 +11740,8 @@ JSValue jsRigidbodyPredictMovement(JSContext *ctx, JSValueConst, int argc,
         return makeQueryResultValue(ctx, *host, result);
     }
     Position3d actualEnd = endPosition;
-    const Position3d direction = endPosition - state->component->object->getPosition();
+    const Position3d direction =
+        endPosition - state->component->object->getPosition();
     return runRigidbodySweepQuery(
         ctx, *host, *state->component, QueryOperation::Movement,
         body->sweep(host->context->window->physicsWorld, body->collider,
@@ -11085,8 +11749,8 @@ JSValue jsRigidbodyPredictMovement(JSContext *ctx, JSValueConst, int argc,
         actualEnd);
 }
 
-JSValue jsRigidbodyPredictMovementWithColliderWorld(JSContext *ctx, JSValueConst,
-                                                    int argc,
+JSValue jsRigidbodyPredictMovementWithColliderWorld(JSContext *ctx,
+                                                    JSValueConst, int argc,
                                                     JSValueConst *argv) {
     auto *host = getHost(ctx);
     if (host == nullptr || host->context == nullptr ||
@@ -11192,7 +11856,8 @@ JSValue jsRigidbodyPredictMovementWithColliderAll(JSContext *ctx, JSValueConst,
     }
     auto body = ensureBezelBody(*state->component);
     Position3d actualEnd = endPosition;
-    const Position3d direction = endPosition - state->component->object->getPosition();
+    const Position3d direction =
+        endPosition - state->component->object->getPosition();
     return runRigidbodySweepQuery(
         ctx, *host, *state->component, QueryOperation::MovementAll,
         body->sweepAll(host->context->window->physicsWorld, collider, direction,
@@ -11223,7 +11888,8 @@ JSValue jsRigidbodyPredictMovementAll(JSContext *ctx, JSValueConst, int argc,
         return makeQueryResultValue(ctx, *host, result);
     }
     Position3d actualEnd = endPosition;
-    const Position3d direction = endPosition - state->component->object->getPosition();
+    const Position3d direction =
+        endPosition - state->component->object->getPosition();
     return runRigidbodySweepQuery(
         ctx, *host, *state->component, QueryOperation::MovementAll,
         body->sweepAll(host->context->window->physicsWorld, body->collider,
@@ -11231,8 +11897,9 @@ JSValue jsRigidbodyPredictMovementAll(JSContext *ctx, JSValueConst, int argc,
         actualEnd);
 }
 
-JSValue jsRigidbodyPredictMovementWithColliderAllWorld(
-    JSContext *ctx, JSValueConst, int argc, JSValueConst *argv) {
+JSValue jsRigidbodyPredictMovementWithColliderAllWorld(JSContext *ctx,
+                                                       JSValueConst, int argc,
+                                                       JSValueConst *argv) {
     auto *host = getHost(ctx);
     if (host == nullptr || host->context == nullptr ||
         host->context->window == nullptr || argc < 4) {
@@ -11349,7 +12016,8 @@ JSValue jsGetInputConstants(JSContext *ctx, JSValueConst, int, JSValueConst *) {
     return result;
 }
 
-JSValue jsGetWindowConstants(JSContext *ctx, JSValueConst, int, JSValueConst *) {
+JSValue jsGetWindowConstants(JSContext *ctx, JSValueConst, int,
+                             JSValueConst *) {
     JSValue result = JS_NewObject(ctx);
 
     JSValue controllerAxis = JS_NewObject(ctx);
@@ -11361,20 +12029,26 @@ JSValue jsGetWindowConstants(JSContext *ctx, JSValueConst, int, JSValueConst *) 
                 JS_NewInt32(ctx, static_cast<int>(ControllerAxis::LeftStickY)));
     setProperty(ctx, controllerAxis, "RightStick",
                 JS_NewInt32(ctx, static_cast<int>(ControllerAxis::RightStick)));
-    setProperty(ctx, controllerAxis, "RightStickX",
-                JS_NewInt32(ctx, static_cast<int>(ControllerAxis::RightStickX)));
-    setProperty(ctx, controllerAxis, "RightStickY",
-                JS_NewInt32(ctx, static_cast<int>(ControllerAxis::RightStickY)));
+    setProperty(
+        ctx, controllerAxis, "RightStickX",
+        JS_NewInt32(ctx, static_cast<int>(ControllerAxis::RightStickX)));
+    setProperty(
+        ctx, controllerAxis, "RightStickY",
+        JS_NewInt32(ctx, static_cast<int>(ControllerAxis::RightStickY)));
     setProperty(ctx, controllerAxis, "Trigger",
                 JS_NewInt32(ctx, static_cast<int>(ControllerAxis::Trigger)));
-    setProperty(ctx, controllerAxis, "TriggerLeft",
-                JS_NewInt32(ctx, static_cast<int>(ControllerAxis::LeftTrigger)));
-    setProperty(ctx, controllerAxis, "TriggerRight",
-                JS_NewInt32(ctx, static_cast<int>(ControllerAxis::RightTrigger)));
-    setProperty(ctx, controllerAxis, "LeftTrigger",
-                JS_NewInt32(ctx, static_cast<int>(ControllerAxis::LeftTrigger)));
-    setProperty(ctx, controllerAxis, "RightTrigger",
-                JS_NewInt32(ctx, static_cast<int>(ControllerAxis::RightTrigger)));
+    setProperty(
+        ctx, controllerAxis, "TriggerLeft",
+        JS_NewInt32(ctx, static_cast<int>(ControllerAxis::LeftTrigger)));
+    setProperty(
+        ctx, controllerAxis, "TriggerRight",
+        JS_NewInt32(ctx, static_cast<int>(ControllerAxis::RightTrigger)));
+    setProperty(
+        ctx, controllerAxis, "LeftTrigger",
+        JS_NewInt32(ctx, static_cast<int>(ControllerAxis::LeftTrigger)));
+    setProperty(
+        ctx, controllerAxis, "RightTrigger",
+        JS_NewInt32(ctx, static_cast<int>(ControllerAxis::RightTrigger)));
 
     JSValue controllerButton = JS_NewObject(ctx);
     setProperty(ctx, controllerButton, "A",
@@ -11385,76 +12059,103 @@ JSValue jsGetWindowConstants(JSContext *ctx, JSValueConst, int, JSValueConst *) 
                 JS_NewInt32(ctx, static_cast<int>(ControllerButton::X)));
     setProperty(ctx, controllerButton, "Y",
                 JS_NewInt32(ctx, static_cast<int>(ControllerButton::Y)));
-    setProperty(ctx, controllerButton, "LeftBumper",
-                JS_NewInt32(ctx, static_cast<int>(ControllerButton::LeftBumper)));
-    setProperty(ctx, controllerButton, "RightBumper",
-                JS_NewInt32(ctx, static_cast<int>(ControllerButton::RightBumper)));
+    setProperty(
+        ctx, controllerButton, "LeftBumper",
+        JS_NewInt32(ctx, static_cast<int>(ControllerButton::LeftBumper)));
+    setProperty(
+        ctx, controllerButton, "RightBumper",
+        JS_NewInt32(ctx, static_cast<int>(ControllerButton::RightBumper)));
     setProperty(ctx, controllerButton, "Back",
                 JS_NewInt32(ctx, static_cast<int>(ControllerButton::Back)));
     setProperty(ctx, controllerButton, "Start",
                 JS_NewInt32(ctx, static_cast<int>(ControllerButton::Start)));
     setProperty(ctx, controllerButton, "Guide",
                 JS_NewInt32(ctx, static_cast<int>(ControllerButton::Guide)));
-    setProperty(ctx, controllerButton, "LeftThumb",
-                JS_NewInt32(ctx, static_cast<int>(ControllerButton::LeftThumb)));
-    setProperty(ctx, controllerButton, "RightThumb",
-                JS_NewInt32(ctx, static_cast<int>(ControllerButton::RightThumb)));
+    setProperty(
+        ctx, controllerButton, "LeftThumb",
+        JS_NewInt32(ctx, static_cast<int>(ControllerButton::LeftThumb)));
+    setProperty(
+        ctx, controllerButton, "RightThumb",
+        JS_NewInt32(ctx, static_cast<int>(ControllerButton::RightThumb)));
     setProperty(ctx, controllerButton, "DPadUp",
                 JS_NewInt32(ctx, static_cast<int>(ControllerButton::DPadUp)));
-    setProperty(ctx, controllerButton, "DPadRight",
-                JS_NewInt32(ctx, static_cast<int>(ControllerButton::DPadRight)));
+    setProperty(
+        ctx, controllerButton, "DPadRight",
+        JS_NewInt32(ctx, static_cast<int>(ControllerButton::DPadRight)));
     setProperty(ctx, controllerButton, "DPadDown",
                 JS_NewInt32(ctx, static_cast<int>(ControllerButton::DPadDown)));
     setProperty(ctx, controllerButton, "DPadLeft",
                 JS_NewInt32(ctx, static_cast<int>(ControllerButton::DPadLeft)));
-    setProperty(ctx, controllerButton, "ButtonCount",
-                JS_NewInt32(ctx, static_cast<int>(ControllerButton::ButtonCount)));
+    setProperty(
+        ctx, controllerButton, "ButtonCount",
+        JS_NewInt32(ctx, static_cast<int>(ControllerButton::ButtonCount)));
 
     JSValue nintendoButton = JS_NewObject(ctx);
-    setProperty(ctx, nintendoButton, "B",
-                JS_NewInt32(ctx, static_cast<int>(NintendoControllerButton::B)));
-    setProperty(ctx, nintendoButton, "A",
-                JS_NewInt32(ctx, static_cast<int>(NintendoControllerButton::A)));
-    setProperty(ctx, nintendoButton, "Y",
-                JS_NewInt32(ctx, static_cast<int>(NintendoControllerButton::Y)));
-    setProperty(ctx, nintendoButton, "X",
-                JS_NewInt32(ctx, static_cast<int>(NintendoControllerButton::X)));
-    setProperty(ctx, nintendoButton, "L",
-                JS_NewInt32(ctx, static_cast<int>(NintendoControllerButton::L)));
-    setProperty(ctx, nintendoButton, "R",
-                JS_NewInt32(ctx, static_cast<int>(NintendoControllerButton::R)));
-    setProperty(ctx, nintendoButton, "ZL",
-                JS_NewInt32(ctx, static_cast<int>(NintendoControllerButton::ZL)));
-    setProperty(ctx, nintendoButton, "ZR",
-                JS_NewInt32(ctx, static_cast<int>(NintendoControllerButton::ZR)));
-    setProperty(ctx, nintendoButton, "Minus",
-                JS_NewInt32(ctx, static_cast<int>(NintendoControllerButton::Minus)));
-    setProperty(ctx, nintendoButton, "Plus",
-                JS_NewInt32(ctx, static_cast<int>(NintendoControllerButton::Plus)));
+    setProperty(
+        ctx, nintendoButton, "B",
+        JS_NewInt32(ctx, static_cast<int>(NintendoControllerButton::B)));
+    setProperty(
+        ctx, nintendoButton, "A",
+        JS_NewInt32(ctx, static_cast<int>(NintendoControllerButton::A)));
+    setProperty(
+        ctx, nintendoButton, "Y",
+        JS_NewInt32(ctx, static_cast<int>(NintendoControllerButton::Y)));
+    setProperty(
+        ctx, nintendoButton, "X",
+        JS_NewInt32(ctx, static_cast<int>(NintendoControllerButton::X)));
+    setProperty(
+        ctx, nintendoButton, "L",
+        JS_NewInt32(ctx, static_cast<int>(NintendoControllerButton::L)));
+    setProperty(
+        ctx, nintendoButton, "R",
+        JS_NewInt32(ctx, static_cast<int>(NintendoControllerButton::R)));
+    setProperty(
+        ctx, nintendoButton, "ZL",
+        JS_NewInt32(ctx, static_cast<int>(NintendoControllerButton::ZL)));
+    setProperty(
+        ctx, nintendoButton, "ZR",
+        JS_NewInt32(ctx, static_cast<int>(NintendoControllerButton::ZR)));
+    setProperty(
+        ctx, nintendoButton, "Minus",
+        JS_NewInt32(ctx, static_cast<int>(NintendoControllerButton::Minus)));
+    setProperty(
+        ctx, nintendoButton, "Plus",
+        JS_NewInt32(ctx, static_cast<int>(NintendoControllerButton::Plus)));
     setProperty(ctx, nintendoButton, "LeftStick",
-                JS_NewInt32(ctx, static_cast<int>(NintendoControllerButton::LeftStick)));
+                JS_NewInt32(ctx, static_cast<int>(
+                                     NintendoControllerButton::LeftStick)));
     setProperty(ctx, nintendoButton, "RightStick",
-                JS_NewInt32(ctx, static_cast<int>(NintendoControllerButton::RightStick)));
-    setProperty(ctx, nintendoButton, "DPadUp",
-                JS_NewInt32(ctx, static_cast<int>(NintendoControllerButton::DPadUp)));
+                JS_NewInt32(ctx, static_cast<int>(
+                                     NintendoControllerButton::RightStick)));
+    setProperty(
+        ctx, nintendoButton, "DPadUp",
+        JS_NewInt32(ctx, static_cast<int>(NintendoControllerButton::DPadUp)));
     setProperty(ctx, nintendoButton, "DPadRight",
-                JS_NewInt32(ctx, static_cast<int>(NintendoControllerButton::DPadRight)));
-    setProperty(ctx, nintendoButton, "DPadDown",
-                JS_NewInt32(ctx, static_cast<int>(NintendoControllerButton::DPadDown)));
-    setProperty(ctx, nintendoButton, "DPadLeft",
-                JS_NewInt32(ctx, static_cast<int>(NintendoControllerButton::DPadLeft)));
+                JS_NewInt32(ctx, static_cast<int>(
+                                     NintendoControllerButton::DPadRight)));
+    setProperty(
+        ctx, nintendoButton, "DPadDown",
+        JS_NewInt32(ctx, static_cast<int>(NintendoControllerButton::DPadDown)));
+    setProperty(
+        ctx, nintendoButton, "DPadLeft",
+        JS_NewInt32(ctx, static_cast<int>(NintendoControllerButton::DPadLeft)));
     setProperty(ctx, nintendoButton, "ButtonCount",
-                JS_NewInt32(ctx, static_cast<int>(NintendoControllerButton::ButtonCount)));
+                JS_NewInt32(ctx, static_cast<int>(
+                                     NintendoControllerButton::ButtonCount)));
 
     JSValue sonyButton = JS_NewObject(ctx);
-    setProperty(ctx, sonyButton, "Cross",
-                JS_NewInt32(ctx, static_cast<int>(SonyControllerButton::Cross)));
-    setProperty(ctx, sonyButton, "Circle",
-                JS_NewInt32(ctx, static_cast<int>(SonyControllerButton::Circle)));
-    setProperty(ctx, sonyButton, "Square",
-                JS_NewInt32(ctx, static_cast<int>(SonyControllerButton::Square)));
-    setProperty(ctx, sonyButton, "Triangle",
-                JS_NewInt32(ctx, static_cast<int>(SonyControllerButton::Triangle)));
+    setProperty(
+        ctx, sonyButton, "Cross",
+        JS_NewInt32(ctx, static_cast<int>(SonyControllerButton::Cross)));
+    setProperty(
+        ctx, sonyButton, "Circle",
+        JS_NewInt32(ctx, static_cast<int>(SonyControllerButton::Circle)));
+    setProperty(
+        ctx, sonyButton, "Square",
+        JS_NewInt32(ctx, static_cast<int>(SonyControllerButton::Square)));
+    setProperty(
+        ctx, sonyButton, "Triangle",
+        JS_NewInt32(ctx, static_cast<int>(SonyControllerButton::Triangle)));
     setProperty(ctx, sonyButton, "L1",
                 JS_NewInt32(ctx, static_cast<int>(SonyControllerButton::L1)));
     setProperty(ctx, sonyButton, "R1",
@@ -11463,24 +12164,33 @@ JSValue jsGetWindowConstants(JSContext *ctx, JSValueConst, int, JSValueConst *) 
                 JS_NewInt32(ctx, static_cast<int>(SonyControllerButton::L2)));
     setProperty(ctx, sonyButton, "R2",
                 JS_NewInt32(ctx, static_cast<int>(SonyControllerButton::R2)));
-    setProperty(ctx, sonyButton, "Share",
-                JS_NewInt32(ctx, static_cast<int>(SonyControllerButton::Share)));
-    setProperty(ctx, sonyButton, "Options",
-                JS_NewInt32(ctx, static_cast<int>(SonyControllerButton::Options)));
-    setProperty(ctx, sonyButton, "LeftStick",
-                JS_NewInt32(ctx, static_cast<int>(SonyControllerButton::LeftStick)));
-    setProperty(ctx, sonyButton, "RightStick",
-                JS_NewInt32(ctx, static_cast<int>(SonyControllerButton::RightStick)));
-    setProperty(ctx, sonyButton, "DPadUp",
-                JS_NewInt32(ctx, static_cast<int>(SonyControllerButton::DPadUp)));
-    setProperty(ctx, sonyButton, "DPadRight",
-                JS_NewInt32(ctx, static_cast<int>(SonyControllerButton::DPadRight)));
-    setProperty(ctx, sonyButton, "DPadDown",
-                JS_NewInt32(ctx, static_cast<int>(SonyControllerButton::DPadDown)));
-    setProperty(ctx, sonyButton, "DPadLeft",
-                JS_NewInt32(ctx, static_cast<int>(SonyControllerButton::DPadLeft)));
-    setProperty(ctx, sonyButton, "ButtonCount",
-                JS_NewInt32(ctx, static_cast<int>(SonyControllerButton::ButtonCount)));
+    setProperty(
+        ctx, sonyButton, "Share",
+        JS_NewInt32(ctx, static_cast<int>(SonyControllerButton::Share)));
+    setProperty(
+        ctx, sonyButton, "Options",
+        JS_NewInt32(ctx, static_cast<int>(SonyControllerButton::Options)));
+    setProperty(
+        ctx, sonyButton, "LeftStick",
+        JS_NewInt32(ctx, static_cast<int>(SonyControllerButton::LeftStick)));
+    setProperty(
+        ctx, sonyButton, "RightStick",
+        JS_NewInt32(ctx, static_cast<int>(SonyControllerButton::RightStick)));
+    setProperty(
+        ctx, sonyButton, "DPadUp",
+        JS_NewInt32(ctx, static_cast<int>(SonyControllerButton::DPadUp)));
+    setProperty(
+        ctx, sonyButton, "DPadRight",
+        JS_NewInt32(ctx, static_cast<int>(SonyControllerButton::DPadRight)));
+    setProperty(
+        ctx, sonyButton, "DPadDown",
+        JS_NewInt32(ctx, static_cast<int>(SonyControllerButton::DPadDown)));
+    setProperty(
+        ctx, sonyButton, "DPadLeft",
+        JS_NewInt32(ctx, static_cast<int>(SonyControllerButton::DPadLeft)));
+    setProperty(
+        ctx, sonyButton, "ButtonCount",
+        JS_NewInt32(ctx, static_cast<int>(SonyControllerButton::ButtonCount)));
 
     setProperty(ctx, result, "ControllerAxis", controllerAxis);
     setProperty(ctx, result, "ControllerButton", controllerButton);
@@ -11825,30 +12535,32 @@ class HostedScriptComponent final : public Component {
     }
 
     void onCollisionEnter(GameObject *other) override {
-        JSValue args[] = {other != nullptr ? syncObjectWrapper(ctx, *host, *other)
-                                           : JS_NULL};
+        JSValue args[] = {
+            other != nullptr ? syncObjectWrapper(ctx, *host, *other) : JS_NULL};
         call("onCollisionEnter", 1, args);
         JS_FreeValue(ctx, args[0]);
     }
 
     void onCollisionStay(GameObject *other) override {
-        JSValue args[] = {other != nullptr ? syncObjectWrapper(ctx, *host, *other)
-                                           : JS_NULL};
+        JSValue args[] = {
+            other != nullptr ? syncObjectWrapper(ctx, *host, *other) : JS_NULL};
         call("onCollisionStay", 1, args);
         JS_FreeValue(ctx, args[0]);
     }
 
     void onCollisionExit(GameObject *other) override {
-        JSValue args[] = {other != nullptr ? syncObjectWrapper(ctx, *host, *other)
-                                           : JS_NULL};
+        JSValue args[] = {
+            other != nullptr ? syncObjectWrapper(ctx, *host, *other) : JS_NULL};
         call("onCollisionExit", 1, args);
         JS_FreeValue(ctx, args[0]);
     }
 
-    void onSignalRecieve(const std::string &signal, GameObject *sender) override {
+    void onSignalRecieve(const std::string &signal,
+                         GameObject *sender) override {
         JSValue args[] = {JS_NewString(ctx, signal.c_str()),
-                          sender != nullptr ? syncObjectWrapper(ctx, *host, *sender)
-                                            : JS_NULL};
+                          sender != nullptr
+                              ? syncObjectWrapper(ctx, *host, *sender)
+                              : JS_NULL};
         call("onSignalRecieve", 2, args);
         JS_FreeValue(ctx, args[0]);
         JS_FreeValue(ctx, args[1]);
@@ -11856,17 +12568,19 @@ class HostedScriptComponent final : public Component {
 
     void onSignalEnd(const std::string &signal, GameObject *sender) override {
         JSValue args[] = {JS_NewString(ctx, signal.c_str()),
-                          sender != nullptr ? syncObjectWrapper(ctx, *host, *sender)
-                                            : JS_NULL};
+                          sender != nullptr
+                              ? syncObjectWrapper(ctx, *host, *sender)
+                              : JS_NULL};
         call("onSignalEnd", 2, args);
         JS_FreeValue(ctx, args[0]);
         JS_FreeValue(ctx, args[1]);
     }
 
     void onQueryReceive(QueryResult &result) override {
-        JSValue args[] = {
-            makeQueryResultValue(ctx, *host, result),
-            object != nullptr ? syncObjectWrapper(ctx, *host, *object) : JS_NULL};
+        JSValue args[] = {makeQueryResultValue(ctx, *host, result),
+                          object != nullptr
+                              ? syncObjectWrapper(ctx, *host, *object)
+                              : JS_NULL};
         callAlias("onQueryRecieve", "onQueryReceive", 2, args);
         JS_FreeValue(ctx, args[0]);
         JS_FreeValue(ctx, args[1]);
@@ -11946,7 +12660,8 @@ JSValue jsAddComponent(JSContext *ctx, JSValueConst, int argc,
 
     if (nativeKind == "rigidbody") {
         std::int64_t rigidbodyId = 0;
-        if (!readIntProperty(ctx, argv[1], ATLAS_RIGIDBODY_ID_PROP, rigidbodyId)) {
+        if (!readIntProperty(ctx, argv[1], ATLAS_RIGIDBODY_ID_PROP,
+                             rigidbodyId)) {
             return JS_ThrowReferenceError(ctx, "Rigidbody wrapper is invalid");
         }
         auto *rigidbodyState =
@@ -11955,8 +12670,8 @@ JSValue jsAddComponent(JSContext *ctx, JSValueConst, int argc,
             return JS_ThrowReferenceError(ctx, "Unknown rigidbody id");
         }
         if (rigidbodyState->attached) {
-            return JS_ThrowTypeError(ctx,
-                                     "Rigidbody is already attached to an object");
+            return JS_ThrowTypeError(
+                ctx, "Rigidbody is already attached to an object");
         }
 
         applyRigidbody(ctx, argv[1], *rigidbodyState->component);
@@ -11969,12 +12684,13 @@ JSValue jsAddComponent(JSContext *ctx, JSValueConst, int argc,
         }
         JS_FreeValue(ctx, ctor);
 
-        const std::uint64_t componentId = runtime::scripting::registerComponentInstance(
-            ctx, *host, rigidbodyState->component, static_cast<int>(ownerId),
-            componentName, argv[1]);
+        const std::uint64_t componentId =
+            runtime::scripting::registerComponentInstance(
+                ctx, *host, rigidbodyState->component,
+                static_cast<int>(ownerId), componentName, argv[1]);
         if (componentName == "Sensor") {
-            host->componentLookup[makeComponentLookupKey(static_cast<int>(ownerId),
-                                                         "Rigidbody")] = componentId;
+            host->componentLookup[makeComponentLookupKey(
+                static_cast<int>(ownerId), "Rigidbody")] = componentId;
         }
         rigidbodyState->attached = true;
 
@@ -11997,16 +12713,15 @@ JSValue jsAddComponent(JSContext *ctx, JSValueConst, int argc,
             return JS_ThrowReferenceError(ctx, "Unknown vehicle id");
         }
         if (vehicleState->attached) {
-            return JS_ThrowTypeError(ctx,
-                                     "Vehicle is already attached to an object");
+            return JS_ThrowTypeError(
+                ctx, "Vehicle is already attached to an object");
         }
 
         applyVehicle(ctx, argv[1], *vehicleState->component);
         object->addComponent(vehicleState->ownedComponent);
         runtime::scripting::registerComponentInstance(
             ctx, *host, vehicleState->ownedComponent.get(),
-            static_cast<int>(ownerId),
-            "Vehicle", argv[1]);
+            static_cast<int>(ownerId), "Vehicle", argv[1]);
         vehicleState->attached = true;
 
         auto objectIt = host->objectCache.find(static_cast<int>(ownerId));
@@ -12019,7 +12734,8 @@ JSValue jsAddComponent(JSContext *ctx, JSValueConst, int argc,
 
     if (nativeKind == "fixed-joint") {
         std::int64_t jointId = 0;
-        if (!readIntProperty(ctx, argv[1], ATLAS_FIXED_JOINT_ID_PROP, jointId)) {
+        if (!readIntProperty(ctx, argv[1], ATLAS_FIXED_JOINT_ID_PROP,
+                             jointId)) {
             return JS_ThrowReferenceError(ctx, "FixedJoint wrapper is invalid");
         }
         auto *jointState =
@@ -12028,16 +12744,16 @@ JSValue jsAddComponent(JSContext *ctx, JSValueConst, int argc,
             return JS_ThrowReferenceError(ctx, "Unknown fixed joint id");
         }
         if (jointState->attached) {
-            return JS_ThrowTypeError(ctx,
-                                     "FixedJoint is already attached to an object");
+            return JS_ThrowTypeError(
+                ctx, "FixedJoint is already attached to an object");
         }
 
         applyFixedJoint(ctx, *host, argv[1], *jointState->component);
         object->addComponent(jointState->ownedComponent);
-        const std::uint64_t componentId = runtime::scripting::registerComponentInstance(
-            ctx, *host, jointState->ownedComponent.get(),
-            static_cast<int>(ownerId),
-            "FixedJoint", argv[1]);
+        const std::uint64_t componentId =
+            runtime::scripting::registerComponentInstance(
+                ctx, *host, jointState->ownedComponent.get(),
+                static_cast<int>(ownerId), "FixedJoint", argv[1]);
         host->componentLookup[makeComponentLookupKey(static_cast<int>(ownerId),
                                                      "Joint")] = componentId;
         jointState->attached = true;
@@ -12046,7 +12762,8 @@ JSValue jsAddComponent(JSContext *ctx, JSValueConst, int argc,
 
     if (nativeKind == "hinge-joint") {
         std::int64_t jointId = 0;
-        if (!readIntProperty(ctx, argv[1], ATLAS_HINGE_JOINT_ID_PROP, jointId)) {
+        if (!readIntProperty(ctx, argv[1], ATLAS_HINGE_JOINT_ID_PROP,
+                             jointId)) {
             return JS_ThrowReferenceError(ctx, "HingeJoint wrapper is invalid");
         }
         auto *jointState =
@@ -12055,16 +12772,16 @@ JSValue jsAddComponent(JSContext *ctx, JSValueConst, int argc,
             return JS_ThrowReferenceError(ctx, "Unknown hinge joint id");
         }
         if (jointState->attached) {
-            return JS_ThrowTypeError(ctx,
-                                     "HingeJoint is already attached to an object");
+            return JS_ThrowTypeError(
+                ctx, "HingeJoint is already attached to an object");
         }
 
         applyHingeJoint(ctx, *host, argv[1], *jointState->component);
         object->addComponent(jointState->ownedComponent);
-        const std::uint64_t componentId = runtime::scripting::registerComponentInstance(
-            ctx, *host, jointState->ownedComponent.get(),
-            static_cast<int>(ownerId),
-            "HingeJoint", argv[1]);
+        const std::uint64_t componentId =
+            runtime::scripting::registerComponentInstance(
+                ctx, *host, jointState->ownedComponent.get(),
+                static_cast<int>(ownerId), "HingeJoint", argv[1]);
         host->componentLookup[makeComponentLookupKey(static_cast<int>(ownerId),
                                                      "Joint")] = componentId;
         jointState->attached = true;
@@ -12073,8 +12790,10 @@ JSValue jsAddComponent(JSContext *ctx, JSValueConst, int argc,
 
     if (nativeKind == "spring-joint") {
         std::int64_t jointId = 0;
-        if (!readIntProperty(ctx, argv[1], ATLAS_SPRING_JOINT_ID_PROP, jointId)) {
-            return JS_ThrowReferenceError(ctx, "SpringJoint wrapper is invalid");
+        if (!readIntProperty(ctx, argv[1], ATLAS_SPRING_JOINT_ID_PROP,
+                             jointId)) {
+            return JS_ThrowReferenceError(ctx,
+                                          "SpringJoint wrapper is invalid");
         }
         auto *jointState =
             findSpringJointState(*host, static_cast<std::uint64_t>(jointId));
@@ -12082,16 +12801,16 @@ JSValue jsAddComponent(JSContext *ctx, JSValueConst, int argc,
             return JS_ThrowReferenceError(ctx, "Unknown spring joint id");
         }
         if (jointState->attached) {
-            return JS_ThrowTypeError(ctx,
-                                     "SpringJoint is already attached to an object");
+            return JS_ThrowTypeError(
+                ctx, "SpringJoint is already attached to an object");
         }
 
         applySpringJoint(ctx, *host, argv[1], *jointState->component);
         object->addComponent(jointState->ownedComponent);
-        const std::uint64_t componentId = runtime::scripting::registerComponentInstance(
-            ctx, *host, jointState->ownedComponent.get(),
-            static_cast<int>(ownerId),
-            "SpringJoint", argv[1]);
+        const std::uint64_t componentId =
+            runtime::scripting::registerComponentInstance(
+                ctx, *host, jointState->ownedComponent.get(),
+                static_cast<int>(ownerId), "SpringJoint", argv[1]);
         host->componentLookup[makeComponentLookupKey(static_cast<int>(ownerId),
                                                      "Joint")] = componentId;
         jointState->attached = true;
@@ -12152,6 +12871,17 @@ std::shared_ptr<Model> ownModel(ScriptHost &host, std::shared_ptr<Model> model,
     return model;
 }
 
+std::shared_ptr<Fluid> ownFluid(ScriptHost &host, std::shared_ptr<Fluid> fluid,
+                                bool attachedToWindow = false) {
+    if (host.context != nullptr) {
+        host.context->objects.push_back(fluid);
+    }
+    host.objectStates[fluid->getId()] = {.object = fluid.get(),
+                                         .attachedToWindow = attachedToWindow,
+                                         .textureIds = {}};
+    return fluid;
+}
+
 std::shared_ptr<ParticleEmitter>
 ownParticleEmitter(ScriptHost &host, std::shared_ptr<ParticleEmitter> emitter,
                    bool attachedToWindow = false) {
@@ -12183,13 +12913,14 @@ void bindTextFieldCallback(JSContext *ctx, ScriptHost *host, TextField &field) {
             return;
         }
         JSValue payload = JS_NewObject(ctx);
-        setProperty(ctx, payload, "text", JS_NewString(ctx, event.text.c_str()));
+        setProperty(ctx, payload, "text",
+                    JS_NewString(ctx, event.text.c_str()));
         setProperty(ctx, payload, "cursorPosition",
-                    JS_NewInt64(ctx,
-                                static_cast<int64_t>(event.cursorIndex)));
+                    JS_NewInt64(ctx, static_cast<int64_t>(event.cursorIndex)));
         setProperty(ctx, payload, "focused", JS_NewBool(ctx, event.focused));
         JSValue args[] = {payload};
-        callGraphiteCallback(ctx, *host, field, GRAPHITE_ON_CHANGE_PROP, 1, args);
+        callGraphiteCallback(ctx, *host, field, GRAPHITE_ON_CHANGE_PROP, 1,
+                             args);
     });
 }
 
@@ -12202,12 +12933,15 @@ void bindButtonCallback(JSContext *ctx, ScriptHost *host, Button &button) {
         setProperty(ctx, payload, "label",
                     JS_NewString(ctx, event.label.c_str()));
         JSValue args[] = {payload};
-        callGraphiteCallback(ctx, *host, button, GRAPHITE_ON_CLICK_PROP, 1, args);
+        callGraphiteCallback(ctx, *host, button, GRAPHITE_ON_CLICK_PROP, 1,
+                             args);
     });
 }
 
-void bindCheckboxCallback(JSContext *ctx, ScriptHost *host, Checkbox &checkbox) {
-    checkbox.setOnToggle([ctx, host, &checkbox](const CheckboxToggleEvent &event) {
+void bindCheckboxCallback(JSContext *ctx, ScriptHost *host,
+                          Checkbox &checkbox) {
+    checkbox.setOnToggle([ctx, host,
+                          &checkbox](const CheckboxToggleEvent &event) {
         if (host == nullptr) {
             return;
         }
@@ -12228,7 +12962,8 @@ JSValue jsGraphiteGetUISize(JSContext *ctx, JSValueConst, int argc,
         return JS_ThrowTypeError(ctx, "Expected UI object");
     }
     GameObject *object = resolveObjectArg(ctx, *host, argv[0]);
-    auto *uiObject = object != nullptr ? dynamic_cast<UIObject *>(object) : nullptr;
+    auto *uiObject =
+        object != nullptr ? dynamic_cast<UIObject *>(object) : nullptr;
     if (uiObject == nullptr) {
         return JS_ThrowTypeError(ctx, "Expected UI object");
     }
@@ -12242,7 +12977,8 @@ JSValue jsGraphiteGetUIScreenPosition(JSContext *ctx, JSValueConst, int argc,
         return JS_ThrowTypeError(ctx, "Expected UI object");
     }
     GameObject *object = resolveObjectArg(ctx, *host, argv[0]);
-    auto *uiObject = object != nullptr ? dynamic_cast<UIObject *>(object) : nullptr;
+    auto *uiObject =
+        object != nullptr ? dynamic_cast<UIObject *>(object) : nullptr;
     if (uiObject == nullptr) {
         return JS_ThrowTypeError(ctx, "Expected UI object");
     }
@@ -12256,7 +12992,8 @@ JSValue jsGraphiteSetUIScreenPosition(JSContext *ctx, JSValueConst, int argc,
         return JS_ThrowTypeError(ctx, "Expected UI object and position");
     }
     GameObject *object = resolveObjectArg(ctx, *host, argv[0]);
-    auto *uiObject = object != nullptr ? dynamic_cast<UIObject *>(object) : nullptr;
+    auto *uiObject =
+        object != nullptr ? dynamic_cast<UIObject *>(object) : nullptr;
     if (uiObject == nullptr) {
         return JS_ThrowTypeError(ctx, "Expected UI object");
     }
@@ -12416,9 +13153,8 @@ JSValue jsGraphiteCreateFont(JSContext *ctx, JSValueConst, int argc,
     if (!parseResource(ctx, argv[0], resource)) {
         return JS_ThrowTypeError(ctx, "Expected Resource");
     }
-    std::string name = !resource.name.empty()
-                           ? resource.name
-                           : resource.path.stem().string();
+    std::string name =
+        !resource.name.empty() ? resource.name : resource.path.stem().string();
     Font font = Font::fromResource(name, resource, 48);
     return syncFontWrapper(ctx, *host, registerFontState(*host, font));
 }
@@ -12455,15 +13191,15 @@ JSValue jsGraphiteChangeFontSize(JSContext *ctx, JSValueConst, int argc,
     state->font->changeSize(static_cast<int>(size));
     return syncFontWrapper(
         ctx, *host,
-        static_cast<std::uint64_t>([](
-            ScriptHost &h, Font *fontPtr) -> std::uint64_t {
-            for (const auto &[id, state] : h.fonts) {
-                if (state.font.get() == fontPtr) {
-                    return id;
+        static_cast<std::uint64_t>(
+            [](ScriptHost &h, Font *fontPtr) -> std::uint64_t {
+                for (const auto &[id, state] : h.fonts) {
+                    if (state.font.get() == fontPtr) {
+                        return id;
+                    }
                 }
-            }
-            return 0;
-        }(*host, state->font.get())));
+                return 0;
+            }(*host, state->font.get())));
 }
 
 JSValue jsGraphiteGetTheme(JSContext *ctx, JSValueConst, int, JSValueConst *) {
@@ -12488,7 +13224,8 @@ JSValue jsGraphiteSetTheme(JSContext *ctx, JSValueConst, int argc,
     return makeThemeValue(ctx, *host, graphite::Theme::current());
 }
 
-JSValue jsGraphiteResetTheme(JSContext *ctx, JSValueConst, int, JSValueConst *) {
+JSValue jsGraphiteResetTheme(JSContext *ctx, JSValueConst, int,
+                             JSValueConst *) {
     auto *host = getHost(ctx);
     if (host == nullptr || !ensureBuiltins(ctx, *host)) {
         return JS_EXCEPTION;
@@ -12504,7 +13241,8 @@ JSValue jsGraphiteTextFieldFocus(JSContext *ctx, JSValueConst, int argc,
         return JS_ThrowTypeError(ctx, "Expected text field");
     }
     GameObject *object = resolveObjectArg(ctx, *host, argv[0]);
-    auto *field = object != nullptr ? dynamic_cast<TextField *>(object) : nullptr;
+    auto *field =
+        object != nullptr ? dynamic_cast<TextField *>(object) : nullptr;
     if (field == nullptr) {
         return JS_ThrowTypeError(ctx, "Expected text field");
     }
@@ -12519,7 +13257,8 @@ JSValue jsGraphiteTextFieldBlur(JSContext *ctx, JSValueConst, int argc,
         return JS_ThrowTypeError(ctx, "Expected text field");
     }
     GameObject *object = resolveObjectArg(ctx, *host, argv[0]);
-    auto *field = object != nullptr ? dynamic_cast<TextField *>(object) : nullptr;
+    auto *field =
+        object != nullptr ? dynamic_cast<TextField *>(object) : nullptr;
     if (field == nullptr) {
         return JS_ThrowTypeError(ctx, "Expected text field");
     }
@@ -12534,21 +13273,23 @@ JSValue jsGraphiteTextFieldIsFocused(JSContext *ctx, JSValueConst, int argc,
         return JS_ThrowTypeError(ctx, "Expected text field");
     }
     GameObject *object = resolveObjectArg(ctx, *host, argv[0]);
-    auto *field = object != nullptr ? dynamic_cast<TextField *>(object) : nullptr;
+    auto *field =
+        object != nullptr ? dynamic_cast<TextField *>(object) : nullptr;
     if (field == nullptr) {
         return JS_ThrowTypeError(ctx, "Expected text field");
     }
     return JS_NewBool(ctx, field->isFocused());
 }
 
-JSValue jsGraphiteTextFieldGetCursorIndex(JSContext *ctx, JSValueConst, int argc,
-                                          JSValueConst *argv) {
+JSValue jsGraphiteTextFieldGetCursorIndex(JSContext *ctx, JSValueConst,
+                                          int argc, JSValueConst *argv) {
     auto *host = getHost(ctx);
     if (host == nullptr || argc < 1) {
         return JS_ThrowTypeError(ctx, "Expected text field");
     }
     GameObject *object = resolveObjectArg(ctx, *host, argv[0]);
-    auto *field = object != nullptr ? dynamic_cast<TextField *>(object) : nullptr;
+    auto *field =
+        object != nullptr ? dynamic_cast<TextField *>(object) : nullptr;
     if (field == nullptr) {
         return JS_ThrowTypeError(ctx, "Expected text field");
     }
@@ -12598,6 +13339,577 @@ JSValue jsGraphiteCheckboxIsHovered(JSContext *ctx, JSValueConst, int argc,
         return JS_ThrowTypeError(ctx, "Expected checkbox");
     }
     return JS_NewBool(ctx, checkbox->isHovered());
+}
+
+JSValue jsHydraCreateWorleyNoise(JSContext *ctx, JSValueConst, int argc,
+                                 JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected frequency and divisions");
+    }
+    std::int64_t frequency = 0;
+    std::int64_t divisions = 0;
+    if (!getInt64(ctx, argv[0], frequency) ||
+        !getInt64(ctx, argv[1], divisions)) {
+        return JS_ThrowTypeError(ctx, "Expected integer parameters");
+    }
+    return syncWorleyNoiseWrapper(
+        ctx, *host,
+        registerWorleyNoiseState(*host, std::make_shared<WorleyNoise3D>(
+                                            static_cast<int>(frequency),
+                                            static_cast<int>(divisions))));
+}
+
+JSValue jsHydraWorleyGetValue(JSContext *ctx, JSValueConst, int argc,
+                              JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 4) {
+        return JS_ThrowTypeError(ctx, "Expected noise and coordinates");
+    }
+    auto *state = resolveWorleyNoise(ctx, *host, argv[0]);
+    if (state == nullptr) {
+        return JS_EXCEPTION;
+    }
+    double x = 0.0, y = 0.0, z = 0.0;
+    if (!getDouble(ctx, argv[1], x) || !getDouble(ctx, argv[2], y) ||
+        !getDouble(ctx, argv[3], z)) {
+        return JS_ThrowTypeError(ctx, "Expected coordinates");
+    }
+    return JS_NewFloat64(ctx, state->noise->getValue(static_cast<float>(x),
+                                                     static_cast<float>(y),
+                                                     static_cast<float>(z)));
+}
+
+JSValue jsHydraWorleyGet3dTexture(JSContext *ctx, JSValueConst, int argc,
+                                  JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected noise and size");
+    }
+    auto *state = resolveWorleyNoise(ctx, *host, argv[0]);
+    if (state == nullptr) {
+        return JS_EXCEPTION;
+    }
+    std::int64_t size = 0;
+    if (!getInt64(ctx, argv[1], size)) {
+        return JS_ThrowTypeError(ctx, "Expected size");
+    }
+    return JS_NewInt64(ctx, static_cast<int64_t>(state->noise->get3dTexture(
+                                static_cast<int>(size))));
+}
+
+JSValue jsHydraWorleyGetDetailTexture(JSContext *ctx, JSValueConst, int argc,
+                                      JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected noise and size");
+    }
+    auto *state = resolveWorleyNoise(ctx, *host, argv[0]);
+    if (state == nullptr) {
+        return JS_EXCEPTION;
+    }
+    std::int64_t size = 0;
+    if (!getInt64(ctx, argv[1], size)) {
+        return JS_ThrowTypeError(ctx, "Expected size");
+    }
+    return JS_NewInt64(ctx, static_cast<int64_t>(state->noise->getDetailTexture(
+                                static_cast<int>(size))));
+}
+
+JSValue jsHydraWorleyGetAllChannelsTexture(JSContext *ctx, JSValueConst,
+                                           int argc, JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected noise and size");
+    }
+    auto *state = resolveWorleyNoise(ctx, *host, argv[0]);
+    if (state == nullptr) {
+        return JS_EXCEPTION;
+    }
+    std::int64_t size = 0;
+    if (!getInt64(ctx, argv[1], size)) {
+        return JS_ThrowTypeError(ctx, "Expected size");
+    }
+    return JS_NewInt64(
+        ctx, static_cast<int64_t>(state->noise->get3dTextureAtAllChannels(
+                 static_cast<int>(size))));
+}
+
+JSValue jsHydraCreateClouds(JSContext *ctx, JSValueConst, int argc,
+                            JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected frequency and divisions");
+    }
+    std::int64_t frequency = 0;
+    std::int64_t divisions = 0;
+    if (!getInt64(ctx, argv[0], frequency) ||
+        !getInt64(ctx, argv[1], divisions)) {
+        return JS_ThrowTypeError(ctx, "Expected integer parameters");
+    }
+    return syncCloudsWrapper(
+        ctx, *host,
+        registerCloudsState(
+            *host, std::make_shared<Clouds>(static_cast<int>(frequency),
+                                            static_cast<int>(divisions))));
+}
+
+JSValue jsHydraUpdateClouds(JSContext *ctx, JSValueConst, int argc,
+                            JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 1) {
+        return JS_ThrowTypeError(ctx, "Expected clouds");
+    }
+    auto *state = resolveClouds(ctx, *host, argv[0]);
+    if (state == nullptr || state->clouds == nullptr) {
+        return JS_EXCEPTION;
+    }
+    applyClouds(ctx, *host, argv[0], *state->clouds);
+    return syncCloudsWrapper(ctx, *host, host->cloudIds[state->clouds]);
+}
+
+JSValue jsHydraCloudsGetTexture(JSContext *ctx, JSValueConst, int argc,
+                                JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected clouds and size");
+    }
+    auto *state = resolveClouds(ctx, *host, argv[0]);
+    if (state == nullptr || state->clouds == nullptr) {
+        return JS_EXCEPTION;
+    }
+    std::int64_t size = 0;
+    if (!getInt64(ctx, argv[1], size)) {
+        return JS_ThrowTypeError(ctx, "Expected size");
+    }
+    return JS_NewInt64(ctx, static_cast<int64_t>(state->clouds->getCloudTexture(
+                                static_cast<int>(size))));
+}
+
+JSValue jsHydraCreateAtmosphere(JSContext *ctx, JSValueConst, int,
+                                JSValueConst *) {
+    auto *host = getHost(ctx);
+    if (host == nullptr) {
+        return JS_ThrowInternalError(ctx, "Atlas scripting host unavailable");
+    }
+    return syncAtmosphereWrapper(
+        ctx, *host,
+        registerAtmosphereState(*host, std::make_shared<Atmosphere>()));
+}
+
+JSValue jsHydraUpdateAtmosphere(JSContext *ctx, JSValueConst, int argc,
+                                JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 1) {
+        return JS_ThrowTypeError(ctx, "Expected atmosphere");
+    }
+    auto *state = resolveAtmosphere(ctx, *host, argv[0]);
+    if (state == nullptr || state->atmosphere == nullptr) {
+        return JS_EXCEPTION;
+    }
+    applyAtmosphere(ctx, *host, argv[0], *state->atmosphere);
+    return syncAtmosphereWrapper(ctx, *host,
+                                 host->atmosphereIds[state->atmosphere]);
+}
+
+JSValue jsHydraAtmosphereEnable(JSContext *ctx, JSValueConst, int argc,
+                                JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 1) {
+        return JS_ThrowTypeError(ctx, "Expected atmosphere");
+    }
+    auto *state = resolveAtmosphere(ctx, *host, argv[0]);
+    if (state == nullptr || state->atmosphere == nullptr) {
+        return JS_EXCEPTION;
+    }
+    applyAtmosphere(ctx, *host, argv[0], *state->atmosphere);
+    state->atmosphere->enable();
+    return syncAtmosphereWrapper(ctx, *host,
+                                 host->atmosphereIds[state->atmosphere]);
+}
+
+JSValue jsHydraAtmosphereDisable(JSContext *ctx, JSValueConst, int argc,
+                                 JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 1) {
+        return JS_ThrowTypeError(ctx, "Expected atmosphere");
+    }
+    auto *state = resolveAtmosphere(ctx, *host, argv[0]);
+    if (state == nullptr || state->atmosphere == nullptr) {
+        return JS_EXCEPTION;
+    }
+    applyAtmosphere(ctx, *host, argv[0], *state->atmosphere);
+    state->atmosphere->disable();
+    return syncAtmosphereWrapper(ctx, *host,
+                                 host->atmosphereIds[state->atmosphere]);
+}
+
+JSValue jsHydraAtmosphereIsEnabled(JSContext *ctx, JSValueConst, int argc,
+                                   JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 1) {
+        return JS_ThrowTypeError(ctx, "Expected atmosphere");
+    }
+    auto *state = resolveAtmosphere(ctx, *host, argv[0]);
+    if (state == nullptr || state->atmosphere == nullptr) {
+        return JS_EXCEPTION;
+    }
+    return JS_NewBool(ctx, state->atmosphere->isEnabled());
+}
+
+JSValue jsHydraAtmosphereEnableWeather(JSContext *ctx, JSValueConst, int argc,
+                                       JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 1) {
+        return JS_ThrowTypeError(ctx, "Expected atmosphere");
+    }
+    auto *state = resolveAtmosphere(ctx, *host, argv[0]);
+    if (state == nullptr || state->atmosphere == nullptr) {
+        return JS_EXCEPTION;
+    }
+    applyAtmosphere(ctx, *host, argv[0], *state->atmosphere);
+    state->atmosphere->enableWeather();
+    return syncAtmosphereWrapper(ctx, *host,
+                                 host->atmosphereIds[state->atmosphere]);
+}
+
+JSValue jsHydraAtmosphereDisableWeather(JSContext *ctx, JSValueConst, int argc,
+                                        JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 1) {
+        return JS_ThrowTypeError(ctx, "Expected atmosphere");
+    }
+    auto *state = resolveAtmosphere(ctx, *host, argv[0]);
+    if (state == nullptr || state->atmosphere == nullptr) {
+        return JS_EXCEPTION;
+    }
+    applyAtmosphere(ctx, *host, argv[0], *state->atmosphere);
+    state->atmosphere->disableWeather();
+    return syncAtmosphereWrapper(ctx, *host,
+                                 host->atmosphereIds[state->atmosphere]);
+}
+
+JSValue jsHydraAtmosphereGetNormalizedTime(JSContext *ctx, JSValueConst,
+                                           int argc, JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 1) {
+        return JS_ThrowTypeError(ctx, "Expected atmosphere");
+    }
+    auto *state = resolveAtmosphere(ctx, *host, argv[0]);
+    if (state == nullptr || state->atmosphere == nullptr) {
+        return JS_EXCEPTION;
+    }
+    return JS_NewFloat64(ctx, state->atmosphere->getNormalizedTime());
+}
+
+JSValue jsHydraAtmosphereGetSunAngle(JSContext *ctx, JSValueConst, int argc,
+                                     JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 1) {
+        return JS_ThrowTypeError(ctx, "Expected atmosphere");
+    }
+    auto *state = resolveAtmosphere(ctx, *host, argv[0]);
+    if (state == nullptr || state->atmosphere == nullptr) {
+        return JS_EXCEPTION;
+    }
+    return makePosition3d(ctx, *host, state->atmosphere->getSunAngle());
+}
+
+JSValue jsHydraAtmosphereGetMoonAngle(JSContext *ctx, JSValueConst, int argc,
+                                      JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 1) {
+        return JS_ThrowTypeError(ctx, "Expected atmosphere");
+    }
+    auto *state = resolveAtmosphere(ctx, *host, argv[0]);
+    if (state == nullptr || state->atmosphere == nullptr) {
+        return JS_EXCEPTION;
+    }
+    return makePosition3d(ctx, *host, state->atmosphere->getMoonAngle());
+}
+
+JSValue jsHydraAtmosphereGetLightIntensity(JSContext *ctx, JSValueConst,
+                                           int argc, JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 1) {
+        return JS_ThrowTypeError(ctx, "Expected atmosphere");
+    }
+    auto *state = resolveAtmosphere(ctx, *host, argv[0]);
+    if (state == nullptr || state->atmosphere == nullptr) {
+        return JS_EXCEPTION;
+    }
+    return JS_NewFloat64(ctx, state->atmosphere->getLightIntensity());
+}
+
+JSValue jsHydraAtmosphereGetLightColor(JSContext *ctx, JSValueConst, int argc,
+                                       JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 1) {
+        return JS_ThrowTypeError(ctx, "Expected atmosphere");
+    }
+    auto *state = resolveAtmosphere(ctx, *host, argv[0]);
+    if (state == nullptr || state->atmosphere == nullptr) {
+        return JS_EXCEPTION;
+    }
+    return makeColor(ctx, *host, state->atmosphere->getLightColor());
+}
+
+JSValue jsHydraAtmosphereGetSkyboxColors(JSContext *ctx, JSValueConst, int argc,
+                                         JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 1) {
+        return JS_ThrowTypeError(ctx, "Expected atmosphere");
+    }
+    auto *state = resolveAtmosphere(ctx, *host, argv[0]);
+    if (state == nullptr || state->atmosphere == nullptr) {
+        return JS_EXCEPTION;
+    }
+    JSValue result = JS_NewArray(ctx);
+    const auto colors = state->atmosphere->getSkyboxColors();
+    for (std::uint32_t i = 0; i < colors.size(); ++i) {
+        JS_SetPropertyUint32(ctx, result, i, makeColor(ctx, *host, colors[i]));
+    }
+    return result;
+}
+
+JSValue jsHydraAtmosphereCreateSkyCubemap(JSContext *ctx, JSValueConst,
+                                          int argc, JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected atmosphere and size");
+    }
+    auto *state = resolveAtmosphere(ctx, *host, argv[0]);
+    if (state == nullptr || state->atmosphere == nullptr) {
+        return JS_EXCEPTION;
+    }
+    std::int64_t size = 0;
+    if (!getInt64(ctx, argv[1], size)) {
+        return JS_ThrowTypeError(ctx, "Expected size");
+    }
+    return syncCubemapWrapper(
+        ctx, *host,
+        registerCubemapState(*host, state->atmosphere->createSkyCubemap(
+                                        static_cast<int>(size))));
+}
+
+JSValue jsHydraAtmosphereUpdateSkyCubemap(JSContext *ctx, JSValueConst,
+                                          int argc, JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected atmosphere and cubemap");
+    }
+    auto *state = resolveAtmosphere(ctx, *host, argv[0]);
+    auto *cubemapState = resolveCubemap(ctx, *host, argv[1]);
+    if (state == nullptr || state->atmosphere == nullptr ||
+        cubemapState == nullptr || !cubemapState->cubemap) {
+        return JS_EXCEPTION;
+    }
+    state->atmosphere->updateSkyCubemap(*cubemapState->cubemap);
+    std::int64_t cubemapId = 0;
+    if (!readIntProperty(ctx, argv[1], ATLAS_CUBEMAP_ID_PROP, cubemapId)) {
+        return JS_EXCEPTION;
+    }
+    return syncCubemapWrapper(ctx, *host,
+                              static_cast<std::uint64_t>(cubemapId));
+}
+
+JSValue jsHydraAtmosphereCastShadows(JSContext *ctx, JSValueConst, int argc,
+                                     JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected atmosphere and resolution");
+    }
+    auto *state = resolveAtmosphere(ctx, *host, argv[0]);
+    if (state == nullptr || state->atmosphere == nullptr) {
+        return JS_EXCEPTION;
+    }
+    std::int64_t resolution = 0;
+    if (!getInt64(ctx, argv[1], resolution)) {
+        return JS_ThrowTypeError(ctx, "Expected resolution");
+    }
+    state->atmosphere->castShadowsFromSunlight(static_cast<int>(resolution));
+    return syncAtmosphereWrapper(ctx, *host,
+                                 host->atmosphereIds[state->atmosphere]);
+}
+
+JSValue jsHydraAtmosphereUseGlobalLight(JSContext *ctx, JSValueConst, int argc,
+                                        JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 1) {
+        return JS_ThrowTypeError(ctx, "Expected atmosphere");
+    }
+    auto *state = resolveAtmosphere(ctx, *host, argv[0]);
+    if (state == nullptr || state->atmosphere == nullptr) {
+        return JS_EXCEPTION;
+    }
+    applyAtmosphere(ctx, *host, argv[0], *state->atmosphere);
+    state->atmosphere->useGlobalLight();
+    return syncAtmosphereWrapper(ctx, *host,
+                                 host->atmosphereIds[state->atmosphere]);
+}
+
+JSValue jsHydraAtmosphereIsDaytime(JSContext *ctx, JSValueConst, int argc,
+                                   JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 1) {
+        return JS_ThrowTypeError(ctx, "Expected atmosphere");
+    }
+    auto *state = resolveAtmosphere(ctx, *host, argv[0]);
+    if (state == nullptr || state->atmosphere == nullptr) {
+        return JS_EXCEPTION;
+    }
+    return JS_NewBool(ctx, state->atmosphere->isDaytime());
+}
+
+JSValue jsHydraAtmosphereSetTime(JSContext *ctx, JSValueConst, int argc,
+                                 JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 4) {
+        return JS_ThrowTypeError(ctx, "Expected atmosphere and time");
+    }
+    auto *state = resolveAtmosphere(ctx, *host, argv[0]);
+    if (state == nullptr || state->atmosphere == nullptr) {
+        return JS_EXCEPTION;
+    }
+    double hours = 0.0;
+    double minutes = 0.0;
+    double seconds = 0.0;
+    if (!getDouble(ctx, argv[1], hours) || !getDouble(ctx, argv[2], minutes) ||
+        !getDouble(ctx, argv[3], seconds)) {
+        return JS_ThrowTypeError(ctx, "Expected numeric time values");
+    }
+    state->atmosphere->timeOfDay =
+        static_cast<float>(hours + (minutes / 60.0) + (seconds / 3600.0));
+    return syncAtmosphereWrapper(ctx, *host,
+                                 host->atmosphereIds[state->atmosphere]);
+}
+
+JSValue jsHydraAtmosphereAddClouds(JSContext *ctx, JSValueConst, int argc,
+                                   JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 3) {
+        return JS_ThrowTypeError(ctx,
+                                 "Expected atmosphere, frequency, divisions");
+    }
+    auto *state = resolveAtmosphere(ctx, *host, argv[0]);
+    if (state == nullptr || state->atmosphere == nullptr) {
+        return JS_EXCEPTION;
+    }
+    std::int64_t frequency = 0;
+    std::int64_t divisions = 0;
+    if (!getInt64(ctx, argv[1], frequency) ||
+        !getInt64(ctx, argv[2], divisions)) {
+        return JS_ThrowTypeError(ctx, "Expected integer parameters");
+    }
+    state->atmosphere->addClouds(static_cast<int>(frequency),
+                                 static_cast<int>(divisions));
+    return syncAtmosphereWrapper(ctx, *host,
+                                 host->atmosphereIds[state->atmosphere]);
+}
+
+JSValue jsHydraAtmosphereResetRuntimeState(JSContext *ctx, JSValueConst,
+                                           int argc, JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 1) {
+        return JS_ThrowTypeError(ctx, "Expected atmosphere");
+    }
+    auto *state = resolveAtmosphere(ctx, *host, argv[0]);
+    if (state == nullptr || state->atmosphere == nullptr) {
+        return JS_EXCEPTION;
+    }
+    state->atmosphere->resetRuntimeState();
+    return syncAtmosphereWrapper(ctx, *host,
+                                 host->atmosphereIds[state->atmosphere]);
+}
+
+JSValue jsHydraCreateFluid(JSContext *ctx, JSValueConst, int argc,
+                           JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || host->context == nullptr || argc < 1) {
+        return JS_ThrowInternalError(ctx, "Atlas scripting host unavailable");
+    }
+    auto object = ownFluid(*host, std::make_shared<Fluid>());
+    applyFluid(ctx, *host, argv[0], *object);
+    return syncObjectWrapper(ctx, *host, *object);
+}
+
+JSValue jsHydraFluidCreate(JSContext *ctx, JSValueConst, int argc,
+                           JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 3) {
+        return JS_ThrowTypeError(ctx, "Expected fluid, extent, and color");
+    }
+    GameObject *object = resolveObjectArg(ctx, *host, argv[0]);
+    auto *fluid = object != nullptr ? dynamic_cast<Fluid *>(object) : nullptr;
+    if (fluid == nullptr) {
+        return JS_ThrowTypeError(ctx, "Expected fluid");
+    }
+    Size2d extent;
+    Color color;
+    if (!parseSize2d(ctx, argv[1], extent) ||
+        !parseColor(ctx, argv[2], color)) {
+        return JS_ThrowTypeError(ctx, "Expected extent and color");
+    }
+    fluid->create(extent, color);
+    attachObjectIfReady(*host, *fluid);
+    return syncObjectWrapper(ctx, *host, *fluid);
+}
+
+JSValue jsHydraFluidSetExtent(JSContext *ctx, JSValueConst, int argc,
+                              JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected fluid and extent");
+    }
+    GameObject *object = resolveObjectArg(ctx, *host, argv[0]);
+    auto *fluid = object != nullptr ? dynamic_cast<Fluid *>(object) : nullptr;
+    if (fluid == nullptr) {
+        return JS_ThrowTypeError(ctx, "Expected fluid");
+    }
+    Size2d extent;
+    if (!parseSize2d(ctx, argv[1], extent)) {
+        return JS_ThrowTypeError(ctx, "Expected extent");
+    }
+    fluid->setExtent(extent);
+    return syncObjectWrapper(ctx, *host, *fluid);
+}
+
+JSValue jsHydraFluidSetWaveVelocity(JSContext *ctx, JSValueConst, int argc,
+                                    JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected fluid and velocity");
+    }
+    GameObject *object = resolveObjectArg(ctx, *host, argv[0]);
+    auto *fluid = object != nullptr ? dynamic_cast<Fluid *>(object) : nullptr;
+    if (fluid == nullptr) {
+        return JS_ThrowTypeError(ctx, "Expected fluid");
+    }
+    double velocity = 0.0;
+    if (!getDouble(ctx, argv[1], velocity)) {
+        return JS_ThrowTypeError(ctx, "Expected velocity");
+    }
+    fluid->setWaveVelocity(static_cast<float>(velocity));
+    return syncObjectWrapper(ctx, *host, *fluid);
+}
+
+JSValue jsHydraFluidSetWaterColor(JSContext *ctx, JSValueConst, int argc,
+                                  JSValueConst *argv) {
+    auto *host = getHost(ctx);
+    if (host == nullptr || argc < 2) {
+        return JS_ThrowTypeError(ctx, "Expected fluid and color");
+    }
+    GameObject *object = resolveObjectArg(ctx, *host, argv[0]);
+    auto *fluid = object != nullptr ? dynamic_cast<Fluid *>(object) : nullptr;
+    if (fluid == nullptr) {
+        return JS_ThrowTypeError(ctx, "Expected fluid");
+    }
+    Color color;
+    if (!parseColor(ctx, argv[1], color)) {
+        return JS_ThrowTypeError(ctx, "Expected color");
+    }
+    fluid->setWaterColor(color);
+    return syncObjectWrapper(ctx, *host, *fluid);
 }
 
 JSValue jsCreateCoreObject(JSContext *ctx, JSValueConst, int argc,
@@ -13214,7 +14526,11 @@ JSValue jsUpdateObject(JSContext *ctx, JSValueConst, int argc,
         applyRow(ctx, *host, argv[0], *row);
     } else if (auto *stack = dynamic_cast<Stack *>(object); stack != nullptr) {
         applyStack(ctx, *host, argv[0], *stack);
-    } else if (auto *core = dynamic_cast<CoreObject *>(object); core != nullptr) {
+    } else if (auto *fluid = dynamic_cast<Fluid *>(object); fluid != nullptr) {
+        applyFluid(ctx, *host, argv[0], *fluid);
+        attachObjectIfReady(*host, *fluid);
+    } else if (auto *core = dynamic_cast<CoreObject *>(object);
+               core != nullptr) {
         if (!applyCoreObject(ctx, *host, argv[0], *core)) {
             return JS_EXCEPTION;
         }
@@ -13388,20 +14704,21 @@ JSValue jsAuroraPerlinNoise(JSContext *ctx, JSValueConst, int argc,
     double x = 0.0;
     double y = 0.0;
     std::int64_t seed = 0;
-    if (argc < 3 || !getInt64(ctx, argv[0], seed) || !getDouble(ctx, argv[1], x) ||
-        !getDouble(ctx, argv[2], y)) {
+    if (argc < 3 || !getInt64(ctx, argv[0], seed) ||
+        !getDouble(ctx, argv[1], x) || !getDouble(ctx, argv[2], y)) {
         return JS_ThrowTypeError(ctx, "Expected seed, x, and y");
     }
     PerlinNoise noise(static_cast<unsigned int>(seed));
-    return JS_NewFloat64(ctx, noise.noise(static_cast<float>(x),
-                                          static_cast<float>(y)));
+    return JS_NewFloat64(
+        ctx, noise.noise(static_cast<float>(x), static_cast<float>(y)));
 }
 
 JSValue jsAuroraSimplexNoise(JSContext *ctx, JSValueConst, int argc,
                              JSValueConst *argv) {
     double x = 0.0;
     double y = 0.0;
-    if (argc < 2 || !getDouble(ctx, argv[0], x) || !getDouble(ctx, argv[1], y)) {
+    if (argc < 2 || !getDouble(ctx, argv[0], x) ||
+        !getDouble(ctx, argv[1], y)) {
         return JS_ThrowTypeError(ctx, "Expected x and y");
     }
     return JS_NewFloat64(
@@ -13419,9 +14736,10 @@ JSValue jsAuroraWorleyNoise(JSContext *ctx, JSValueConst, int argc,
         !getDouble(ctx, argv[3], y)) {
         return JS_ThrowTypeError(ctx, "Expected numPoints, seed, x, and y");
     }
-    WorleyNoise noise(static_cast<int>(numPoints), static_cast<unsigned int>(seed));
-    return JS_NewFloat64(ctx, noise.noise(static_cast<float>(x),
-                                          static_cast<float>(y)));
+    WorleyNoise noise(static_cast<int>(numPoints),
+                      static_cast<unsigned int>(seed));
+    return JS_NewFloat64(
+        ctx, noise.noise(static_cast<float>(x), static_cast<float>(y)));
 }
 
 JSValue jsAuroraFractalNoise(JSContext *ctx, JSValueConst, int argc,
@@ -13433,13 +14751,13 @@ JSValue jsAuroraFractalNoise(JSContext *ctx, JSValueConst, int argc,
     if (argc < 4 || !getInt64(ctx, argv[0], octaves) ||
         !getDouble(ctx, argv[1], persistence) || !getDouble(ctx, argv[2], x) ||
         !getDouble(ctx, argv[3], y)) {
-        return JS_ThrowTypeError(
-            ctx, "Expected octaves, persistence, x, and y");
+        return JS_ThrowTypeError(ctx,
+                                 "Expected octaves, persistence, x, and y");
     }
     FractalNoise noise(static_cast<int>(octaves),
                        static_cast<float>(persistence));
-    return JS_NewFloat64(ctx, noise.noise(static_cast<float>(x),
-                                          static_cast<float>(y)));
+    return JS_NewFloat64(
+        ctx, noise.noise(static_cast<float>(x), static_cast<float>(y)));
 }
 
 JSValue jsShowObject(JSContext *ctx, JSValueConst, int argc,
@@ -13801,6 +15119,23 @@ void runtime::scripting::clearSceneBindings(JSContext *ctx, ScriptHost &host) {
         JS_FreeValue(ctx, state.value);
     }
     host.fonts.clear();
+    for (auto &[_, state] : host.worleyNoise) {
+        JS_FreeValue(ctx, state.value);
+    }
+    host.worleyNoise.clear();
+    for (auto &[_, state] : host.clouds) {
+        JS_FreeValue(ctx, state.value);
+    }
+    host.clouds.clear();
+    host.cloudIds.clear();
+    for (auto &[_, state] : host.atmospheres) {
+        JS_FreeValue(ctx, state.value);
+        if (!JS_IsUndefined(state.weatherDelegate)) {
+            JS_FreeValue(ctx, state.weatherDelegate);
+        }
+    }
+    host.atmospheres.clear();
+    host.atmosphereIds.clear();
 
     if (!JS_IsUndefined(host.atlasParticleNamespace)) {
         JS_FreeValue(ctx, host.atlasParticleNamespace);
@@ -13823,6 +15158,10 @@ void runtime::scripting::clearSceneBindings(JSContext *ctx, ScriptHost &host) {
     if (!JS_IsUndefined(host.graphiteNamespace)) {
         JS_FreeValue(ctx, host.graphiteNamespace);
         host.graphiteNamespace = JS_UNDEFINED;
+    }
+    if (!JS_IsUndefined(host.hydraNamespace)) {
+        JS_FreeValue(ctx, host.hydraNamespace);
+        host.hydraNamespace = JS_UNDEFINED;
     }
     if (!JS_IsUndefined(host.audioEngineValue)) {
         JS_FreeValue(ctx, host.audioEngineValue);
@@ -13946,6 +15285,22 @@ void runtime::scripting::clearSceneBindings(JSContext *ctx, ScriptHost &host) {
         JS_FreeValue(ctx, host.uiObjectPrototype);
         host.uiObjectPrototype = JS_UNDEFINED;
     }
+    if (!JS_IsUndefined(host.worleyNoisePrototype)) {
+        JS_FreeValue(ctx, host.worleyNoisePrototype);
+        host.worleyNoisePrototype = JS_UNDEFINED;
+    }
+    if (!JS_IsUndefined(host.cloudsPrototype)) {
+        JS_FreeValue(ctx, host.cloudsPrototype);
+        host.cloudsPrototype = JS_UNDEFINED;
+    }
+    if (!JS_IsUndefined(host.atmospherePrototype)) {
+        JS_FreeValue(ctx, host.atmospherePrototype);
+        host.atmospherePrototype = JS_UNDEFINED;
+    }
+    if (!JS_IsUndefined(host.fluidPrototype)) {
+        JS_FreeValue(ctx, host.fluidPrototype);
+        host.fluidPrototype = JS_UNDEFINED;
+    }
 
     if (!JS_IsUndefined(host.rigidbodyPrototype)) {
         JS_FreeValue(ctx, host.rigidbodyPrototype);
@@ -14004,6 +15359,9 @@ void runtime::scripting::clearSceneBindings(JSContext *ctx, ScriptHost &host) {
     host.nextDirectionalLightId = 1;
     host.nextSpotLightId = 1;
     host.nextAreaLightId = 1;
+    host.nextWorleyNoiseId = 1;
+    host.nextCloudsId = 1;
+    host.nextAtmosphereId = 1;
     host.generation += 1;
 }
 
@@ -14143,9 +15501,8 @@ void runtime::scripting::registerNativeRigidbody(
         registerRigidbodyState(host, component, ctx, JS_UNDEFINED, true);
     JSValue wrapper = syncRigidbodyWrapper(ctx, host, rigidbodyId);
     const std::string name = component->isSensor ? "Sensor" : "Rigidbody";
-    const std::uint64_t componentId =
-        registerComponentInstance(ctx, host, component.get(), ownerId, name,
-                                  wrapper);
+    const std::uint64_t componentId = registerComponentInstance(
+        ctx, host, component.get(), ownerId, name, wrapper);
     if (component->isSensor) {
         host.componentLookup[makeComponentLookupKey(ownerId, "Rigidbody")] =
             componentId;
@@ -14178,9 +15535,8 @@ void runtime::scripting::registerNativeFixedJoint(
     const std::uint64_t jointId = registerFixedJointState(
         host, component, component.get(), ctx, JS_UNDEFINED, true);
     JSValue wrapper = syncFixedJointWrapper(ctx, host, jointId);
-    const std::uint64_t componentId =
-        registerComponentInstance(ctx, host, component.get(), ownerId,
-                                  "FixedJoint", wrapper);
+    const std::uint64_t componentId = registerComponentInstance(
+        ctx, host, component.get(), ownerId, "FixedJoint", wrapper);
     host.componentLookup[makeComponentLookupKey(ownerId, "Joint")] =
         componentId;
     JS_FreeValue(ctx, wrapper);
@@ -14196,9 +15552,8 @@ void runtime::scripting::registerNativeHingeJoint(
     const std::uint64_t jointId = registerHingeJointState(
         host, component, component.get(), ctx, JS_UNDEFINED, true);
     JSValue wrapper = syncHingeJointWrapper(ctx, host, jointId);
-    const std::uint64_t componentId =
-        registerComponentInstance(ctx, host, component.get(), ownerId,
-                                  "HingeJoint", wrapper);
+    const std::uint64_t componentId = registerComponentInstance(
+        ctx, host, component.get(), ownerId, "HingeJoint", wrapper);
     host.componentLookup[makeComponentLookupKey(ownerId, "Joint")] =
         componentId;
     JS_FreeValue(ctx, wrapper);
@@ -14214,9 +15569,8 @@ void runtime::scripting::registerNativeSpringJoint(
     const std::uint64_t jointId = registerSpringJointState(
         host, component, component.get(), ctx, JS_UNDEFINED, true);
     JSValue wrapper = syncSpringJointWrapper(ctx, host, jointId);
-    const std::uint64_t componentId =
-        registerComponentInstance(ctx, host, component.get(), ownerId,
-                                  "SpringJoint", wrapper);
+    const std::uint64_t componentId = registerComponentInstance(
+        ctx, host, component.get(), ownerId, "SpringJoint", wrapper);
     host.componentLookup[makeComponentLookupKey(ownerId, "Joint")] =
         componentId;
     JS_FreeValue(ctx, wrapper);
@@ -14251,9 +15605,9 @@ void runtime::scripting::installGlobals(JSContext *ctx) {
     JS_SetPropertyStr(ctx, global, "__atlasSceneAddDirectionalLight",
                       JS_NewCFunction(ctx, jsSceneAddDirectionalLight,
                                       "__atlasSceneAddDirectionalLight", 2));
-    JS_SetPropertyStr(ctx, global, "__atlasSceneAddLight",
-                      JS_NewCFunction(ctx, jsSceneAddLight,
-                                      "__atlasSceneAddLight", 2));
+    JS_SetPropertyStr(
+        ctx, global, "__atlasSceneAddLight",
+        JS_NewCFunction(ctx, jsSceneAddLight, "__atlasSceneAddLight", 2));
     JS_SetPropertyStr(ctx, global, "__atlasSceneAddSpotLight",
                       JS_NewCFunction(ctx, jsSceneAddSpotLight,
                                       "__atlasSceneAddSpotLight", 2));
@@ -14281,17 +15635,18 @@ void runtime::scripting::installGlobals(JSContext *ctx) {
     JS_SetPropertyStr(ctx, global, "__atlasSetWindowClearColor",
                       JS_NewCFunction(ctx, jsWindowSetClearColor,
                                       "__atlasSetWindowClearColor", 2));
-    JS_SetPropertyStr(ctx, global, "__atlasCloseWindow",
-                      JS_NewCFunction(ctx, jsWindowClose, "__atlasCloseWindow", 1));
+    JS_SetPropertyStr(
+        ctx, global, "__atlasCloseWindow",
+        JS_NewCFunction(ctx, jsWindowClose, "__atlasCloseWindow", 1));
     JS_SetPropertyStr(ctx, global, "__atlasSetWindowFullscreen",
                       JS_NewCFunction(ctx, jsWindowSetFullscreen,
                                       "__atlasSetWindowFullscreen", 2));
     JS_SetPropertyStr(ctx, global, "__atlasSetWindowFullscreenMonitor",
                       JS_NewCFunction(ctx, jsWindowSetFullscreenMonitor,
                                       "__atlasSetWindowFullscreenMonitor", 2));
-    JS_SetPropertyStr(ctx, global, "__atlasSetWindowed",
-                      JS_NewCFunction(ctx, jsWindowSetWindowed,
-                                      "__atlasSetWindowed", 2));
+    JS_SetPropertyStr(
+        ctx, global, "__atlasSetWindowed",
+        JS_NewCFunction(ctx, jsWindowSetWindowed, "__atlasSetWindowed", 2));
     JS_SetPropertyStr(ctx, global, "__atlasEnumerateMonitors",
                       JS_NewCFunction(ctx, jsWindowEnumerateMonitors,
                                       "__atlasEnumerateMonitors", 1));
@@ -14310,42 +15665,42 @@ void runtime::scripting::installGlobals(JSContext *ctx) {
     JS_SetPropertyStr(ctx, global, "__atlasMonitorGetContentScale",
                       JS_NewCFunction(ctx, jsMonitorGetContentScale,
                                       "__atlasMonitorGetContentScale", 1));
-    JS_SetPropertyStr(ctx, global, "__atlasMonitorGetName",
-                      JS_NewCFunction(ctx, jsMonitorGetName,
-                                      "__atlasMonitorGetName", 1));
+    JS_SetPropertyStr(
+        ctx, global, "__atlasMonitorGetName",
+        JS_NewCFunction(ctx, jsMonitorGetName, "__atlasMonitorGetName", 1));
     JS_SetPropertyStr(ctx, global, "__atlasGetControllers",
                       JS_NewCFunction(ctx, jsWindowGetControllers,
                                       "__atlasGetControllers", 1));
-    JS_SetPropertyStr(ctx, global, "__atlasGetController",
-                      JS_NewCFunction(ctx, jsWindowGetController,
-                                      "__atlasGetController", 2));
-    JS_SetPropertyStr(ctx, global, "__atlasGetJoystick",
-                      JS_NewCFunction(ctx, jsWindowGetJoystick,
-                                      "__atlasGetJoystick", 2));
+    JS_SetPropertyStr(
+        ctx, global, "__atlasGetController",
+        JS_NewCFunction(ctx, jsWindowGetController, "__atlasGetController", 2));
+    JS_SetPropertyStr(
+        ctx, global, "__atlasGetJoystick",
+        JS_NewCFunction(ctx, jsWindowGetJoystick, "__atlasGetJoystick", 2));
     JS_SetPropertyStr(ctx, global, "__atlasInstantiateObject",
                       JS_NewCFunction(ctx, jsWindowInstantiate,
                                       "__atlasInstantiateObject", 2));
-    JS_SetPropertyStr(ctx, global, "__atlasDestroyObject",
-                      JS_NewCFunction(ctx, jsWindowDestroy,
-                                      "__atlasDestroyObject", 2));
-    JS_SetPropertyStr(ctx, global, "__atlasAddUIObject",
-                      JS_NewCFunction(ctx, jsWindowAddUIObject,
-                                      "__atlasAddUIObject", 2));
-    JS_SetPropertyStr(ctx, global, "__atlasSetWindowCamera",
-                      JS_NewCFunction(ctx, jsWindowSetCamera,
-                                      "__atlasSetWindowCamera", 2));
-    JS_SetPropertyStr(ctx, global, "__atlasSetWindowScene",
-                      JS_NewCFunction(ctx, jsWindowSetScene,
-                                      "__atlasSetWindowScene", 2));
-    JS_SetPropertyStr(ctx, global, "__atlasGetWindowTime",
-                      JS_NewCFunction(ctx, jsWindowGetTime,
-                                      "__atlasGetWindowTime", 1));
+    JS_SetPropertyStr(
+        ctx, global, "__atlasDestroyObject",
+        JS_NewCFunction(ctx, jsWindowDestroy, "__atlasDestroyObject", 2));
+    JS_SetPropertyStr(
+        ctx, global, "__atlasAddUIObject",
+        JS_NewCFunction(ctx, jsWindowAddUIObject, "__atlasAddUIObject", 2));
+    JS_SetPropertyStr(
+        ctx, global, "__atlasSetWindowCamera",
+        JS_NewCFunction(ctx, jsWindowSetCamera, "__atlasSetWindowCamera", 2));
+    JS_SetPropertyStr(
+        ctx, global, "__atlasSetWindowScene",
+        JS_NewCFunction(ctx, jsWindowSetScene, "__atlasSetWindowScene", 2));
+    JS_SetPropertyStr(
+        ctx, global, "__atlasGetWindowTime",
+        JS_NewCFunction(ctx, jsWindowGetTime, "__atlasGetWindowTime", 1));
     JS_SetPropertyStr(ctx, global, "__atlasAddWindowRenderTarget",
                       JS_NewCFunction(ctx, jsWindowAddRenderTarget,
                                       "__atlasAddWindowRenderTarget", 2));
-    JS_SetPropertyStr(ctx, global, "__atlasGetWindowSize",
-                      JS_NewCFunction(ctx, jsWindowGetSize,
-                                      "__atlasGetWindowSize", 1));
+    JS_SetPropertyStr(
+        ctx, global, "__atlasGetWindowSize",
+        JS_NewCFunction(ctx, jsWindowGetSize, "__atlasGetWindowSize", 1));
     JS_SetPropertyStr(ctx, global, "__atlasGetWindowDeltaTime",
                       JS_NewCFunction(ctx, jsWindowGetDeltaTime,
                                       "__atlasGetWindowDeltaTime", 1));
@@ -14358,12 +15713,12 @@ void runtime::scripting::installGlobals(JSContext *ctx) {
     JS_SetPropertyStr(ctx, global, "__atlasDeactivateWindowDebug",
                       JS_NewCFunction(ctx, jsWindowDeactivateDebug,
                                       "__atlasDeactivateWindowDebug", 1));
-    JS_SetPropertyStr(ctx, global, "__atlasSetWindowGravity",
-                      JS_NewCFunction(ctx, jsWindowSetGravity,
-                                      "__atlasSetWindowGravity", 2));
-    JS_SetPropertyStr(ctx, global, "__atlasUseWindowTracer",
-                      JS_NewCFunction(ctx, jsWindowUseTracer,
-                                      "__atlasUseWindowTracer", 2));
+    JS_SetPropertyStr(
+        ctx, global, "__atlasSetWindowGravity",
+        JS_NewCFunction(ctx, jsWindowSetGravity, "__atlasSetWindowGravity", 2));
+    JS_SetPropertyStr(
+        ctx, global, "__atlasUseWindowTracer",
+        JS_NewCFunction(ctx, jsWindowUseTracer, "__atlasUseWindowTracer", 2));
     JS_SetPropertyStr(ctx, global, "__atlasSetWindowLogOutput",
                       JS_NewCFunction(ctx, jsWindowSetLogOutput,
                                       "__atlasSetWindowLogOutput", 4));
@@ -14373,22 +15728,23 @@ void runtime::scripting::installGlobals(JSContext *ctx) {
     JS_SetPropertyStr(ctx, global, "__atlasUseWindowMetalUpscaling",
                       JS_NewCFunction(ctx, jsWindowUseMetalUpscaling,
                                       "__atlasUseWindowMetalUpscaling", 2));
-    JS_SetPropertyStr(
-        ctx, global, "__atlasIsWindowMetalUpscalingEnabled",
-        JS_NewCFunction(ctx, jsWindowIsMetalUpscalingEnabled,
-                        "__atlasIsWindowMetalUpscalingEnabled", 1));
+    JS_SetPropertyStr(ctx, global, "__atlasIsWindowMetalUpscalingEnabled",
+                      JS_NewCFunction(ctx, jsWindowIsMetalUpscalingEnabled,
+                                      "__atlasIsWindowMetalUpscalingEnabled",
+                                      1));
     JS_SetPropertyStr(ctx, global, "__atlasGetWindowMetalUpscalingRatio",
                       JS_NewCFunction(ctx, jsWindowGetMetalUpscalingRatio,
-                                      "__atlasGetWindowMetalUpscalingRatio", 1));
+                                      "__atlasGetWindowMetalUpscalingRatio",
+                                      1));
     JS_SetPropertyStr(ctx, global, "__atlasGetWindowSSAORenderScale",
                       JS_NewCFunction(ctx, jsWindowGetSSAORenderScale,
                                       "__atlasGetWindowSSAORenderScale", 1));
     JS_SetPropertyStr(ctx, global, "__atlasGetWindowInputAction",
                       JS_NewCFunction(ctx, jsWindowGetInputAction,
                                       "__atlasGetWindowInputAction", 2));
-    JS_SetPropertyStr(ctx, global, "__atlasGamepadRumble",
-                      JS_NewCFunction(ctx, jsGamepadRumble,
-                                      "__atlasGamepadRumble", 3));
+    JS_SetPropertyStr(
+        ctx, global, "__atlasGamepadRumble",
+        JS_NewCFunction(ctx, jsGamepadRumble, "__atlasGamepadRumble", 3));
     JS_SetPropertyStr(ctx, global, "__atlasJoystickGetAxisCount",
                       JS_NewCFunction(ctx, jsJoystickGetAxisCount,
                                       "__atlasJoystickGetAxisCount", 1));
@@ -14401,18 +15757,18 @@ void runtime::scripting::installGlobals(JSContext *ctx) {
     JS_SetPropertyStr(ctx, global, "__atlasGetWindowConstants",
                       JS_NewCFunction(ctx, jsGetWindowConstants,
                                       "__atlasGetWindowConstants", 0));
-    JS_SetPropertyStr(ctx, global, "__auroraPerlinNoise",
-                      JS_NewCFunction(ctx, jsAuroraPerlinNoise,
-                                      "__auroraPerlinNoise", 3));
-    JS_SetPropertyStr(ctx, global, "__auroraSimplexNoise",
-                      JS_NewCFunction(ctx, jsAuroraSimplexNoise,
-                                      "__auroraSimplexNoise", 2));
-    JS_SetPropertyStr(ctx, global, "__auroraWorleyNoise",
-                      JS_NewCFunction(ctx, jsAuroraWorleyNoise,
-                                      "__auroraWorleyNoise", 4));
-    JS_SetPropertyStr(ctx, global, "__auroraFractalNoise",
-                      JS_NewCFunction(ctx, jsAuroraFractalNoise,
-                                      "__auroraFractalNoise", 4));
+    JS_SetPropertyStr(
+        ctx, global, "__auroraPerlinNoise",
+        JS_NewCFunction(ctx, jsAuroraPerlinNoise, "__auroraPerlinNoise", 3));
+    JS_SetPropertyStr(
+        ctx, global, "__auroraSimplexNoise",
+        JS_NewCFunction(ctx, jsAuroraSimplexNoise, "__auroraSimplexNoise", 2));
+    JS_SetPropertyStr(
+        ctx, global, "__auroraWorleyNoise",
+        JS_NewCFunction(ctx, jsAuroraWorleyNoise, "__auroraWorleyNoise", 4));
+    JS_SetPropertyStr(
+        ctx, global, "__auroraFractalNoise",
+        JS_NewCFunction(ctx, jsAuroraFractalNoise, "__auroraFractalNoise", 4));
     JS_SetPropertyStr(ctx, global, "__atlasRegisterInputAction",
                       JS_NewCFunction(ctx, jsRegisterInputAction,
                                       "__atlasRegisterInputAction", 1));
@@ -14594,9 +15950,9 @@ void runtime::scripting::installGlobals(JSContext *ctx) {
     JS_SetPropertyStr(
         ctx, global, "__atlasAddComponent",
         JS_NewCFunction(ctx, jsAddComponent, "__atlasAddComponent", 2));
-    JS_SetPropertyStr(ctx, global, "__graphiteGetUISize",
-                      JS_NewCFunction(ctx, jsGraphiteGetUISize,
-                                      "__graphiteGetUISize", 1));
+    JS_SetPropertyStr(
+        ctx, global, "__graphiteGetUISize",
+        JS_NewCFunction(ctx, jsGraphiteGetUISize, "__graphiteGetUISize", 1));
     JS_SetPropertyStr(ctx, global, "__graphiteGetUIScreenPosition",
                       JS_NewCFunction(ctx, jsGraphiteGetUIScreenPosition,
                                       "__graphiteGetUIScreenPosition", 1));
@@ -14609,9 +15965,9 @@ void runtime::scripting::installGlobals(JSContext *ctx) {
     JS_SetPropertyStr(ctx, global, "__graphiteCreateImage",
                       JS_NewCFunction(ctx, jsGraphiteCreateImage,
                                       "__graphiteCreateImage", 1));
-    JS_SetPropertyStr(ctx, global, "__graphiteCreateText",
-                      JS_NewCFunction(ctx, jsGraphiteCreateText,
-                                      "__graphiteCreateText", 1));
+    JS_SetPropertyStr(
+        ctx, global, "__graphiteCreateText",
+        JS_NewCFunction(ctx, jsGraphiteCreateText, "__graphiteCreateText", 1));
     JS_SetPropertyStr(ctx, global, "__graphiteCreateTextField",
                       JS_NewCFunction(ctx, jsGraphiteCreateTextField,
                                       "__graphiteCreateTextField", 1));
@@ -14624,30 +15980,30 @@ void runtime::scripting::installGlobals(JSContext *ctx) {
     JS_SetPropertyStr(ctx, global, "__graphiteCreateColumn",
                       JS_NewCFunction(ctx, jsGraphiteCreateColumn,
                                       "__graphiteCreateColumn", 1));
-    JS_SetPropertyStr(ctx, global, "__graphiteCreateRow",
-                      JS_NewCFunction(ctx, jsGraphiteCreateRow,
-                                      "__graphiteCreateRow", 1));
+    JS_SetPropertyStr(
+        ctx, global, "__graphiteCreateRow",
+        JS_NewCFunction(ctx, jsGraphiteCreateRow, "__graphiteCreateRow", 1));
     JS_SetPropertyStr(ctx, global, "__graphiteCreateStack",
                       JS_NewCFunction(ctx, jsGraphiteCreateStack,
                                       "__graphiteCreateStack", 1));
-    JS_SetPropertyStr(ctx, global, "__graphiteCreateFont",
-                      JS_NewCFunction(ctx, jsGraphiteCreateFont,
-                                      "__graphiteCreateFont", 1));
-    JS_SetPropertyStr(ctx, global, "__graphiteGetFont",
-                      JS_NewCFunction(ctx, jsGraphiteGetFont,
-                                      "__graphiteGetFont", 1));
+    JS_SetPropertyStr(
+        ctx, global, "__graphiteCreateFont",
+        JS_NewCFunction(ctx, jsGraphiteCreateFont, "__graphiteCreateFont", 1));
+    JS_SetPropertyStr(
+        ctx, global, "__graphiteGetFont",
+        JS_NewCFunction(ctx, jsGraphiteGetFont, "__graphiteGetFont", 1));
     JS_SetPropertyStr(ctx, global, "__graphiteChangeFontSize",
                       JS_NewCFunction(ctx, jsGraphiteChangeFontSize,
                                       "__graphiteChangeFontSize", 2));
-    JS_SetPropertyStr(ctx, global, "__graphiteGetTheme",
-                      JS_NewCFunction(ctx, jsGraphiteGetTheme,
-                                      "__graphiteGetTheme", 0));
-    JS_SetPropertyStr(ctx, global, "__graphiteSetTheme",
-                      JS_NewCFunction(ctx, jsGraphiteSetTheme,
-                                      "__graphiteSetTheme", 1));
-    JS_SetPropertyStr(ctx, global, "__graphiteResetTheme",
-                      JS_NewCFunction(ctx, jsGraphiteResetTheme,
-                                      "__graphiteResetTheme", 0));
+    JS_SetPropertyStr(
+        ctx, global, "__graphiteGetTheme",
+        JS_NewCFunction(ctx, jsGraphiteGetTheme, "__graphiteGetTheme", 0));
+    JS_SetPropertyStr(
+        ctx, global, "__graphiteSetTheme",
+        JS_NewCFunction(ctx, jsGraphiteSetTheme, "__graphiteSetTheme", 1));
+    JS_SetPropertyStr(
+        ctx, global, "__graphiteResetTheme",
+        JS_NewCFunction(ctx, jsGraphiteResetTheme, "__graphiteResetTheme", 0));
     JS_SetPropertyStr(ctx, global, "__graphiteTextFieldFocus",
                       JS_NewCFunction(ctx, jsGraphiteTextFieldFocus,
                                       "__graphiteTextFieldFocus", 1));
@@ -14657,10 +16013,9 @@ void runtime::scripting::installGlobals(JSContext *ctx) {
     JS_SetPropertyStr(ctx, global, "__graphiteTextFieldIsFocused",
                       JS_NewCFunction(ctx, jsGraphiteTextFieldIsFocused,
                                       "__graphiteTextFieldIsFocused", 1));
-    JS_SetPropertyStr(
-        ctx, global, "__graphiteTextFieldGetCursorIndex",
-        JS_NewCFunction(ctx, jsGraphiteTextFieldGetCursorIndex,
-                        "__graphiteTextFieldGetCursorIndex", 1));
+    JS_SetPropertyStr(ctx, global, "__graphiteTextFieldGetCursorIndex",
+                      JS_NewCFunction(ctx, jsGraphiteTextFieldGetCursorIndex,
+                                      "__graphiteTextFieldGetCursorIndex", 1));
     JS_SetPropertyStr(ctx, global, "__graphiteButtonIsHovered",
                       JS_NewCFunction(ctx, jsGraphiteButtonIsHovered,
                                       "__graphiteButtonIsHovered", 1));
@@ -14670,21 +16025,123 @@ void runtime::scripting::installGlobals(JSContext *ctx) {
     JS_SetPropertyStr(ctx, global, "__graphiteCheckboxIsHovered",
                       JS_NewCFunction(ctx, jsGraphiteCheckboxIsHovered,
                                       "__graphiteCheckboxIsHovered", 1));
-    JS_SetPropertyStr(ctx, global, "__finewaveGetAudioEngine",
-                      JS_NewCFunction(ctx, jsGetAudioEngine,
-                                      "__finewaveGetAudioEngine", 0));
-    JS_SetPropertyStr(ctx, global, "__finewaveAudioEngineSetListenerPosition",
-                      JS_NewCFunction(ctx, jsAudioEngineSetListenerPosition,
-                                      "__finewaveAudioEngineSetListenerPosition",
-                                      2));
+    JS_SetPropertyStr(ctx, global, "__hydraCreateWorleyNoise",
+                      JS_NewCFunction(ctx, jsHydraCreateWorleyNoise,
+                                      "__hydraCreateWorleyNoise", 2));
+    JS_SetPropertyStr(ctx, global, "__hydraWorleyGetValue",
+                      JS_NewCFunction(ctx, jsHydraWorleyGetValue,
+                                      "__hydraWorleyGetValue", 4));
+    JS_SetPropertyStr(ctx, global, "__hydraWorleyGet3dTexture",
+                      JS_NewCFunction(ctx, jsHydraWorleyGet3dTexture,
+                                      "__hydraWorleyGet3dTexture", 2));
+    JS_SetPropertyStr(ctx, global, "__hydraWorleyGetDetailTexture",
+                      JS_NewCFunction(ctx, jsHydraWorleyGetDetailTexture,
+                                      "__hydraWorleyGetDetailTexture", 2));
+    JS_SetPropertyStr(ctx, global, "__hydraWorleyGetAllChannelsTexture",
+                      JS_NewCFunction(ctx, jsHydraWorleyGetAllChannelsTexture,
+                                      "__hydraWorleyGetAllChannelsTexture", 2));
+    JS_SetPropertyStr(
+        ctx, global, "__hydraCreateClouds",
+        JS_NewCFunction(ctx, jsHydraCreateClouds, "__hydraCreateClouds", 2));
+    JS_SetPropertyStr(
+        ctx, global, "__hydraUpdateClouds",
+        JS_NewCFunction(ctx, jsHydraUpdateClouds, "__hydraUpdateClouds", 1));
+    JS_SetPropertyStr(ctx, global, "__hydraCloudsGetTexture",
+                      JS_NewCFunction(ctx, jsHydraCloudsGetTexture,
+                                      "__hydraCloudsGetTexture", 2));
+    JS_SetPropertyStr(ctx, global, "__hydraCreateAtmosphere",
+                      JS_NewCFunction(ctx, jsHydraCreateAtmosphere,
+                                      "__hydraCreateAtmosphere", 0));
+    JS_SetPropertyStr(ctx, global, "__hydraUpdateAtmosphere",
+                      JS_NewCFunction(ctx, jsHydraUpdateAtmosphere,
+                                      "__hydraUpdateAtmosphere", 1));
+    JS_SetPropertyStr(ctx, global, "__hydraAtmosphereEnable",
+                      JS_NewCFunction(ctx, jsHydraAtmosphereEnable,
+                                      "__hydraAtmosphereEnable", 1));
+    JS_SetPropertyStr(ctx, global, "__hydraAtmosphereDisable",
+                      JS_NewCFunction(ctx, jsHydraAtmosphereDisable,
+                                      "__hydraAtmosphereDisable", 1));
+    JS_SetPropertyStr(ctx, global, "__hydraAtmosphereIsEnabled",
+                      JS_NewCFunction(ctx, jsHydraAtmosphereIsEnabled,
+                                      "__hydraAtmosphereIsEnabled", 1));
+    JS_SetPropertyStr(ctx, global, "__hydraAtmosphereEnableWeather",
+                      JS_NewCFunction(ctx, jsHydraAtmosphereEnableWeather,
+                                      "__hydraAtmosphereEnableWeather", 1));
+    JS_SetPropertyStr(ctx, global, "__hydraAtmosphereDisableWeather",
+                      JS_NewCFunction(ctx, jsHydraAtmosphereDisableWeather,
+                                      "__hydraAtmosphereDisableWeather", 1));
+    JS_SetPropertyStr(ctx, global, "__hydraAtmosphereGetNormalizedTime",
+                      JS_NewCFunction(ctx, jsHydraAtmosphereGetNormalizedTime,
+                                      "__hydraAtmosphereGetNormalizedTime", 1));
+    JS_SetPropertyStr(ctx, global, "__hydraAtmosphereGetSunAngle",
+                      JS_NewCFunction(ctx, jsHydraAtmosphereGetSunAngle,
+                                      "__hydraAtmosphereGetSunAngle", 1));
+    JS_SetPropertyStr(ctx, global, "__hydraAtmosphereGetMoonAngle",
+                      JS_NewCFunction(ctx, jsHydraAtmosphereGetMoonAngle,
+                                      "__hydraAtmosphereGetMoonAngle", 1));
+    JS_SetPropertyStr(ctx, global, "__hydraAtmosphereGetLightIntensity",
+                      JS_NewCFunction(ctx, jsHydraAtmosphereGetLightIntensity,
+                                      "__hydraAtmosphereGetLightIntensity", 1));
+    JS_SetPropertyStr(ctx, global, "__hydraAtmosphereGetLightColor",
+                      JS_NewCFunction(ctx, jsHydraAtmosphereGetLightColor,
+                                      "__hydraAtmosphereGetLightColor", 1));
+    JS_SetPropertyStr(ctx, global, "__hydraAtmosphereGetSkyboxColors",
+                      JS_NewCFunction(ctx, jsHydraAtmosphereGetSkyboxColors,
+                                      "__hydraAtmosphereGetSkyboxColors", 1));
+    JS_SetPropertyStr(ctx, global, "__hydraAtmosphereCreateSkyCubemap",
+                      JS_NewCFunction(ctx, jsHydraAtmosphereCreateSkyCubemap,
+                                      "__hydraAtmosphereCreateSkyCubemap", 2));
+    JS_SetPropertyStr(ctx, global, "__hydraAtmosphereUpdateSkyCubemap",
+                      JS_NewCFunction(ctx, jsHydraAtmosphereUpdateSkyCubemap,
+                                      "__hydraAtmosphereUpdateSkyCubemap", 2));
+    JS_SetPropertyStr(ctx, global, "__hydraAtmosphereCastShadows",
+                      JS_NewCFunction(ctx, jsHydraAtmosphereCastShadows,
+                                      "__hydraAtmosphereCastShadows", 2));
+    JS_SetPropertyStr(ctx, global, "__hydraAtmosphereUseGlobalLight",
+                      JS_NewCFunction(ctx, jsHydraAtmosphereUseGlobalLight,
+                                      "__hydraAtmosphereUseGlobalLight", 1));
+    JS_SetPropertyStr(ctx, global, "__hydraAtmosphereIsDaytime",
+                      JS_NewCFunction(ctx, jsHydraAtmosphereIsDaytime,
+                                      "__hydraAtmosphereIsDaytime", 1));
+    JS_SetPropertyStr(ctx, global, "__hydraAtmosphereSetTime",
+                      JS_NewCFunction(ctx, jsHydraAtmosphereSetTime,
+                                      "__hydraAtmosphereSetTime", 4));
+    JS_SetPropertyStr(ctx, global, "__hydraAtmosphereAddClouds",
+                      JS_NewCFunction(ctx, jsHydraAtmosphereAddClouds,
+                                      "__hydraAtmosphereAddClouds", 3));
+    JS_SetPropertyStr(ctx, global, "__hydraAtmosphereResetRuntimeState",
+                      JS_NewCFunction(ctx, jsHydraAtmosphereResetRuntimeState,
+                                      "__hydraAtmosphereResetRuntimeState", 1));
+    JS_SetPropertyStr(
+        ctx, global, "__hydraCreateFluid",
+        JS_NewCFunction(ctx, jsHydraCreateFluid, "__hydraCreateFluid", 1));
+    JS_SetPropertyStr(
+        ctx, global, "__hydraFluidCreate",
+        JS_NewCFunction(ctx, jsHydraFluidCreate, "__hydraFluidCreate", 3));
+    JS_SetPropertyStr(ctx, global, "__hydraFluidSetExtent",
+                      JS_NewCFunction(ctx, jsHydraFluidSetExtent,
+                                      "__hydraFluidSetExtent", 2));
+    JS_SetPropertyStr(ctx, global, "__hydraFluidSetWaveVelocity",
+                      JS_NewCFunction(ctx, jsHydraFluidSetWaveVelocity,
+                                      "__hydraFluidSetWaveVelocity", 2));
+    JS_SetPropertyStr(ctx, global, "__hydraFluidSetWaterColor",
+                      JS_NewCFunction(ctx, jsHydraFluidSetWaterColor,
+                                      "__hydraFluidSetWaterColor", 2));
+    JS_SetPropertyStr(
+        ctx, global, "__finewaveGetAudioEngine",
+        JS_NewCFunction(ctx, jsGetAudioEngine, "__finewaveGetAudioEngine", 0));
+    JS_SetPropertyStr(
+        ctx, global, "__finewaveAudioEngineSetListenerPosition",
+        JS_NewCFunction(ctx, jsAudioEngineSetListenerPosition,
+                        "__finewaveAudioEngineSetListenerPosition", 2));
     JS_SetPropertyStr(
         ctx, global, "__finewaveAudioEngineSetListenerOrientation",
         JS_NewCFunction(ctx, jsAudioEngineSetListenerOrientation,
                         "__finewaveAudioEngineSetListenerOrientation", 3));
-    JS_SetPropertyStr(ctx, global, "__finewaveAudioEngineSetListenerVelocity",
-                      JS_NewCFunction(ctx, jsAudioEngineSetListenerVelocity,
-                                      "__finewaveAudioEngineSetListenerVelocity",
-                                      2));
+    JS_SetPropertyStr(
+        ctx, global, "__finewaveAudioEngineSetListenerVelocity",
+        JS_NewCFunction(ctx, jsAudioEngineSetListenerVelocity,
+                        "__finewaveAudioEngineSetListenerVelocity", 2));
     JS_SetPropertyStr(ctx, global, "__finewaveAudioEngineSetMasterVolume",
                       JS_NewCFunction(ctx, jsAudioEngineSetMasterVolume,
                                       "__finewaveAudioEngineSetMasterVolume",
@@ -14749,12 +16206,12 @@ void runtime::scripting::installGlobals(JSContext *ctx) {
                       JS_NewCFunction(ctx, jsAudioSourceUseSpatialization,
                                       "__finewaveAudioSourceUseSpatialization",
                                       1));
-    JS_SetPropertyStr(ctx, global, "__finewaveCreateReverb",
-                      JS_NewCFunction(ctx, jsCreateReverb,
-                                      "__finewaveCreateReverb", 0));
-    JS_SetPropertyStr(ctx, global, "__finewaveCreateEcho",
-                      JS_NewCFunction(ctx, jsCreateEcho,
-                                      "__finewaveCreateEcho", 0));
+    JS_SetPropertyStr(
+        ctx, global, "__finewaveCreateReverb",
+        JS_NewCFunction(ctx, jsCreateReverb, "__finewaveCreateReverb", 0));
+    JS_SetPropertyStr(
+        ctx, global, "__finewaveCreateEcho",
+        JS_NewCFunction(ctx, jsCreateEcho, "__finewaveCreateEcho", 0));
     JS_SetPropertyStr(ctx, global, "__finewaveCreateDistortion",
                       JS_NewCFunction(ctx, jsCreateDistortion,
                                       "__finewaveCreateDistortion", 0));
@@ -14770,15 +16227,15 @@ void runtime::scripting::installGlobals(JSContext *ctx) {
     JS_SetPropertyStr(ctx, global, "__finewaveReverbSetDryLevel",
                       JS_NewCFunction(ctx, jsReverbSetDryLevel,
                                       "__finewaveReverbSetDryLevel", 2));
-    JS_SetPropertyStr(ctx, global, "__finewaveReverbSetWidth",
-                      JS_NewCFunction(ctx, jsReverbSetWidth,
-                                      "__finewaveReverbSetWidth", 2));
-    JS_SetPropertyStr(ctx, global, "__finewaveEchoSetDelay",
-                      JS_NewCFunction(ctx, jsEchoSetDelay,
-                                      "__finewaveEchoSetDelay", 2));
-    JS_SetPropertyStr(ctx, global, "__finewaveEchoSetDecay",
-                      JS_NewCFunction(ctx, jsEchoSetDecay,
-                                      "__finewaveEchoSetDecay", 2));
+    JS_SetPropertyStr(
+        ctx, global, "__finewaveReverbSetWidth",
+        JS_NewCFunction(ctx, jsReverbSetWidth, "__finewaveReverbSetWidth", 2));
+    JS_SetPropertyStr(
+        ctx, global, "__finewaveEchoSetDelay",
+        JS_NewCFunction(ctx, jsEchoSetDelay, "__finewaveEchoSetDelay", 2));
+    JS_SetPropertyStr(
+        ctx, global, "__finewaveEchoSetDecay",
+        JS_NewCFunction(ctx, jsEchoSetDecay, "__finewaveEchoSetDecay", 2));
     JS_SetPropertyStr(ctx, global, "__finewaveEchoSetWetLevel",
                       JS_NewCFunction(ctx, jsEchoSetWetLevel,
                                       "__finewaveEchoSetWetLevel", 2));
@@ -14828,22 +16285,21 @@ void runtime::scripting::installGlobals(JSContext *ctx) {
     JS_SetPropertyStr(
         ctx, global, "__atlasUseSpatialAudio",
         JS_NewCFunction(ctx, jsUseSpatialAudio, "__atlasUseSpatialAudio", 2));
-    JS_SetPropertyStr(ctx, global, "__atlasCreateRigidbody",
-                      JS_NewCFunction(ctx, jsCreateRigidbody,
-                                      "__atlasCreateRigidbody", 1));
-    JS_SetPropertyStr(ctx, global, "__atlasCloneRigidbody",
-                      JS_NewCFunction(ctx, jsCloneRigidbody,
-                                      "__atlasCloneRigidbody", 1));
-    JS_SetPropertyStr(ctx, global, "__atlasInitRigidbody",
-                      JS_NewCFunction(ctx, jsInitRigidbody,
-                                      "__atlasInitRigidbody", 1));
     JS_SetPropertyStr(
-        ctx, global, "__atlasBeforePhysicsRigidbody",
-        JS_NewCFunction(ctx, jsBeforePhysicsRigidbody,
-                        "__atlasBeforePhysicsRigidbody", 1));
-    JS_SetPropertyStr(ctx, global, "__atlasUpdateRigidbody",
-                      JS_NewCFunction(ctx, jsUpdateRigidbody,
-                                      "__atlasUpdateRigidbody", 2));
+        ctx, global, "__atlasCreateRigidbody",
+        JS_NewCFunction(ctx, jsCreateRigidbody, "__atlasCreateRigidbody", 1));
+    JS_SetPropertyStr(
+        ctx, global, "__atlasCloneRigidbody",
+        JS_NewCFunction(ctx, jsCloneRigidbody, "__atlasCloneRigidbody", 1));
+    JS_SetPropertyStr(
+        ctx, global, "__atlasInitRigidbody",
+        JS_NewCFunction(ctx, jsInitRigidbody, "__atlasInitRigidbody", 1));
+    JS_SetPropertyStr(ctx, global, "__atlasBeforePhysicsRigidbody",
+                      JS_NewCFunction(ctx, jsBeforePhysicsRigidbody,
+                                      "__atlasBeforePhysicsRigidbody", 1));
+    JS_SetPropertyStr(
+        ctx, global, "__atlasUpdateRigidbody",
+        JS_NewCFunction(ctx, jsUpdateRigidbody, "__atlasUpdateRigidbody", 2));
     JS_SetPropertyStr(ctx, global, "__atlasRigidbodyAddCollider",
                       JS_NewCFunction(ctx, jsRigidbodyAddCollider,
                                       "__atlasRigidbodyAddCollider", 2));
@@ -14859,45 +16315,38 @@ void runtime::scripting::installGlobals(JSContext *ctx) {
     JS_SetPropertyStr(ctx, global, "__atlasRigidbodyApplyImpulse",
                       JS_NewCFunction(ctx, jsRigidbodyApplyImpulse,
                                       "__atlasRigidbodyApplyImpulse", 2));
+    JS_SetPropertyStr(ctx, global, "__atlasRigidbodySetLinearVelocity",
+                      JS_NewCFunction(ctx, jsRigidbodySetLinearVelocity,
+                                      "__atlasRigidbodySetLinearVelocity", 2));
+    JS_SetPropertyStr(ctx, global, "__atlasRigidbodyAddLinearVelocity",
+                      JS_NewCFunction(ctx, jsRigidbodyAddLinearVelocity,
+                                      "__atlasRigidbodyAddLinearVelocity", 2));
+    JS_SetPropertyStr(ctx, global, "__atlasRigidbodySetAngularVelocity",
+                      JS_NewCFunction(ctx, jsRigidbodySetAngularVelocity,
+                                      "__atlasRigidbodySetAngularVelocity", 2));
+    JS_SetPropertyStr(ctx, global, "__atlasRigidbodyAddAngularVelocity",
+                      JS_NewCFunction(ctx, jsRigidbodyAddAngularVelocity,
+                                      "__atlasRigidbodyAddAngularVelocity", 2));
+    JS_SetPropertyStr(ctx, global, "__atlasRigidbodySetMaxLinearVelocity",
+                      JS_NewCFunction(ctx, jsRigidbodySetMaxLinearVelocity,
+                                      "__atlasRigidbodySetMaxLinearVelocity",
+                                      2));
+    JS_SetPropertyStr(ctx, global, "__atlasRigidbodySetMaxAngularVelocity",
+                      JS_NewCFunction(ctx, jsRigidbodySetMaxAngularVelocity,
+                                      "__atlasRigidbodySetMaxAngularVelocity",
+                                      2));
+    JS_SetPropertyStr(ctx, global, "__atlasRigidbodyGetLinearVelocity",
+                      JS_NewCFunction(ctx, jsRigidbodyGetLinearVelocity,
+                                      "__atlasRigidbodyGetLinearVelocity", 1));
+    JS_SetPropertyStr(ctx, global, "__atlasRigidbodyGetAngularVelocity",
+                      JS_NewCFunction(ctx, jsRigidbodyGetAngularVelocity,
+                                      "__atlasRigidbodyGetAngularVelocity", 1));
+    JS_SetPropertyStr(ctx, global, "__atlasRigidbodyGetVelocity",
+                      JS_NewCFunction(ctx, jsRigidbodyGetVelocity,
+                                      "__atlasRigidbodyGetVelocity", 1));
     JS_SetPropertyStr(
-        ctx, global, "__atlasRigidbodySetLinearVelocity",
-        JS_NewCFunction(ctx, jsRigidbodySetLinearVelocity,
-                        "__atlasRigidbodySetLinearVelocity", 2));
-    JS_SetPropertyStr(
-        ctx, global, "__atlasRigidbodyAddLinearVelocity",
-        JS_NewCFunction(ctx, jsRigidbodyAddLinearVelocity,
-                        "__atlasRigidbodyAddLinearVelocity", 2));
-    JS_SetPropertyStr(
-        ctx, global, "__atlasRigidbodySetAngularVelocity",
-        JS_NewCFunction(ctx, jsRigidbodySetAngularVelocity,
-                        "__atlasRigidbodySetAngularVelocity", 2));
-    JS_SetPropertyStr(
-        ctx, global, "__atlasRigidbodyAddAngularVelocity",
-        JS_NewCFunction(ctx, jsRigidbodyAddAngularVelocity,
-                        "__atlasRigidbodyAddAngularVelocity", 2));
-    JS_SetPropertyStr(
-        ctx, global, "__atlasRigidbodySetMaxLinearVelocity",
-        JS_NewCFunction(ctx, jsRigidbodySetMaxLinearVelocity,
-                        "__atlasRigidbodySetMaxLinearVelocity", 2));
-    JS_SetPropertyStr(
-        ctx, global, "__atlasRigidbodySetMaxAngularVelocity",
-        JS_NewCFunction(ctx, jsRigidbodySetMaxAngularVelocity,
-                        "__atlasRigidbodySetMaxAngularVelocity", 2));
-    JS_SetPropertyStr(
-        ctx, global, "__atlasRigidbodyGetLinearVelocity",
-        JS_NewCFunction(ctx, jsRigidbodyGetLinearVelocity,
-                        "__atlasRigidbodyGetLinearVelocity", 1));
-    JS_SetPropertyStr(
-        ctx, global, "__atlasRigidbodyGetAngularVelocity",
-        JS_NewCFunction(ctx, jsRigidbodyGetAngularVelocity,
-                        "__atlasRigidbodyGetAngularVelocity", 1));
-    JS_SetPropertyStr(
-        ctx, global, "__atlasRigidbodyGetVelocity",
-        JS_NewCFunction(ctx, jsRigidbodyGetVelocity,
-                        "__atlasRigidbodyGetVelocity", 1));
-    JS_SetPropertyStr(ctx, global, "__atlasRigidbodyRaycast",
-                      JS_NewCFunction(ctx, jsRigidbodyRaycast,
-                                      "__atlasRigidbodyRaycast", 3));
+        ctx, global, "__atlasRigidbodyRaycast",
+        JS_NewCFunction(ctx, jsRigidbodyRaycast, "__atlasRigidbodyRaycast", 3));
     JS_SetPropertyStr(ctx, global, "__atlasRigidbodyRaycastAll",
                       JS_NewCFunction(ctx, jsRigidbodyRaycastAll,
                                       "__atlasRigidbodyRaycastAll", 3));
@@ -14913,12 +16362,13 @@ void runtime::scripting::installGlobals(JSContext *ctx) {
     JS_SetPropertyStr(ctx, global, "__atlasRigidbodyRaycastTaggedAll",
                       JS_NewCFunction(ctx, jsRigidbodyRaycastTaggedAll,
                                       "__atlasRigidbodyRaycastTaggedAll", 4));
-    JS_SetPropertyStr(ctx, global, "__atlasRigidbodyOverlap",
-                      JS_NewCFunction(ctx, jsRigidbodyOverlap,
-                                      "__atlasRigidbodyOverlap", 1));
+    JS_SetPropertyStr(
+        ctx, global, "__atlasRigidbodyOverlap",
+        JS_NewCFunction(ctx, jsRigidbodyOverlap, "__atlasRigidbodyOverlap", 1));
     JS_SetPropertyStr(ctx, global, "__atlasRigidbodyOverlapWithCollider",
                       JS_NewCFunction(ctx, jsRigidbodyOverlapWithCollider,
-                                      "__atlasRigidbodyOverlapWithCollider", 2));
+                                      "__atlasRigidbodyOverlapWithCollider",
+                                      2));
     JS_SetPropertyStr(
         ctx, global, "__atlasRigidbodyOverlapWithColliderWorld",
         JS_NewCFunction(ctx, jsRigidbodyOverlapWithColliderWorld,
@@ -14927,105 +16377,99 @@ void runtime::scripting::installGlobals(JSContext *ctx) {
         ctx, global, "__atlasRigidbodyPredictMovementWithCollider",
         JS_NewCFunction(ctx, jsRigidbodyPredictMovementWithCollider,
                         "__atlasRigidbodyPredictMovementWithCollider", 3));
-    JS_SetPropertyStr(
-        ctx, global, "__atlasRigidbodyPredictMovement",
-        JS_NewCFunction(ctx, jsRigidbodyPredictMovement,
-                        "__atlasRigidbodyPredictMovement", 2));
+    JS_SetPropertyStr(ctx, global, "__atlasRigidbodyPredictMovement",
+                      JS_NewCFunction(ctx, jsRigidbodyPredictMovement,
+                                      "__atlasRigidbodyPredictMovement", 2));
     JS_SetPropertyStr(
         ctx, global, "__atlasRigidbodyPredictMovementWithColliderWorld",
         JS_NewCFunction(ctx, jsRigidbodyPredictMovementWithColliderWorld,
                         "__atlasRigidbodyPredictMovementWithColliderWorld", 4));
-    JS_SetPropertyStr(
-        ctx, global, "__atlasRigidbodyPredictMovementWorld",
-        JS_NewCFunction(ctx, jsRigidbodyPredictMovementWorld,
-                        "__atlasRigidbodyPredictMovementWorld", 3));
+    JS_SetPropertyStr(ctx, global, "__atlasRigidbodyPredictMovementWorld",
+                      JS_NewCFunction(ctx, jsRigidbodyPredictMovementWorld,
+                                      "__atlasRigidbodyPredictMovementWorld",
+                                      3));
     JS_SetPropertyStr(
         ctx, global, "__atlasRigidbodyPredictMovementWithColliderAll",
         JS_NewCFunction(ctx, jsRigidbodyPredictMovementWithColliderAll,
                         "__atlasRigidbodyPredictMovementWithColliderAll", 3));
-    JS_SetPropertyStr(
-        ctx, global, "__atlasRigidbodyPredictMovementAll",
-        JS_NewCFunction(ctx, jsRigidbodyPredictMovementAll,
-                        "__atlasRigidbodyPredictMovementAll", 2));
+    JS_SetPropertyStr(ctx, global, "__atlasRigidbodyPredictMovementAll",
+                      JS_NewCFunction(ctx, jsRigidbodyPredictMovementAll,
+                                      "__atlasRigidbodyPredictMovementAll", 2));
     JS_SetPropertyStr(
         ctx, global, "__atlasRigidbodyPredictMovementWithColliderAllWorld",
         JS_NewCFunction(ctx, jsRigidbodyPredictMovementWithColliderAllWorld,
                         "__atlasRigidbodyPredictMovementWithColliderAllWorld",
                         4));
+    JS_SetPropertyStr(ctx, global, "__atlasRigidbodyPredictMovementAllWorld",
+                      JS_NewCFunction(ctx, jsRigidbodyPredictMovementAllWorld,
+                                      "__atlasRigidbodyPredictMovementAllWorld",
+                                      3));
     JS_SetPropertyStr(
-        ctx, global, "__atlasRigidbodyPredictMovementAllWorld",
-        JS_NewCFunction(ctx, jsRigidbodyPredictMovementAllWorld,
-                        "__atlasRigidbodyPredictMovementAllWorld", 3));
-    JS_SetPropertyStr(ctx, global, "__atlasRigidbodyHasTag",
-                      JS_NewCFunction(ctx, jsRigidbodyHasTag,
-                                      "__atlasRigidbodyHasTag", 2));
-    JS_SetPropertyStr(ctx, global, "__atlasRigidbodyAddTag",
-                      JS_NewCFunction(ctx, jsRigidbodyAddTag,
-                                      "__atlasRigidbodyAddTag", 2));
+        ctx, global, "__atlasRigidbodyHasTag",
+        JS_NewCFunction(ctx, jsRigidbodyHasTag, "__atlasRigidbodyHasTag", 2));
+    JS_SetPropertyStr(
+        ctx, global, "__atlasRigidbodyAddTag",
+        JS_NewCFunction(ctx, jsRigidbodyAddTag, "__atlasRigidbodyAddTag", 2));
     JS_SetPropertyStr(ctx, global, "__atlasRigidbodyRemoveTag",
                       JS_NewCFunction(ctx, jsRigidbodyRemoveTag,
                                       "__atlasRigidbodyRemoveTag", 2));
     JS_SetPropertyStr(ctx, global, "__atlasRigidbodySetDamping",
                       JS_NewCFunction(ctx, jsRigidbodySetDamping,
                                       "__atlasRigidbodySetDamping", 3));
-    JS_SetPropertyStr(ctx, global, "__atlasRigidbodySetMass",
-                      JS_NewCFunction(ctx, jsRigidbodySetMass,
-                                      "__atlasRigidbodySetMass", 2));
+    JS_SetPropertyStr(
+        ctx, global, "__atlasRigidbodySetMass",
+        JS_NewCFunction(ctx, jsRigidbodySetMass, "__atlasRigidbodySetMass", 2));
     JS_SetPropertyStr(ctx, global, "__atlasRigidbodySetRestitution",
                       JS_NewCFunction(ctx, jsRigidbodySetRestitution,
                                       "__atlasRigidbodySetRestitution", 2));
     JS_SetPropertyStr(ctx, global, "__atlasRigidbodySetMotionType",
                       JS_NewCFunction(ctx, jsRigidbodySetMotionType,
                                       "__atlasRigidbodySetMotionType", 2));
-    JS_SetPropertyStr(ctx, global, "__atlasSensorSetSignal",
-                      JS_NewCFunction(ctx, jsSensorSetSignal,
-                                      "__atlasSensorSetSignal", 2));
-    JS_SetPropertyStr(ctx, global, "__atlasCreateVehicle",
-                      JS_NewCFunction(ctx, jsCreateVehicle,
-                                      "__atlasCreateVehicle", 1));
     JS_SetPropertyStr(
-        ctx, global, "__atlasVehicleRequestRecreate",
-        JS_NewCFunction(ctx, jsVehicleRequestRecreate,
-                        "__atlasVehicleRequestRecreate", 1));
+        ctx, global, "__atlasSensorSetSignal",
+        JS_NewCFunction(ctx, jsSensorSetSignal, "__atlasSensorSetSignal", 2));
+    JS_SetPropertyStr(
+        ctx, global, "__atlasCreateVehicle",
+        JS_NewCFunction(ctx, jsCreateVehicle, "__atlasCreateVehicle", 1));
+    JS_SetPropertyStr(ctx, global, "__atlasVehicleRequestRecreate",
+                      JS_NewCFunction(ctx, jsVehicleRequestRecreate,
+                                      "__atlasVehicleRequestRecreate", 1));
     JS_SetPropertyStr(ctx, global, "__atlasVehicleBeforePhysics",
                       JS_NewCFunction(ctx, jsVehicleBeforePhysics,
                                       "__atlasVehicleBeforePhysics", 1));
-    JS_SetPropertyStr(ctx, global, "__atlasCreateFixedJoint",
-                      JS_NewCFunction(ctx, jsCreateFixedJoint,
-                                      "__atlasCreateFixedJoint", 1));
     JS_SetPropertyStr(
-        ctx, global, "__atlasFixedJointBeforePhysics",
-        JS_NewCFunction(ctx, jsFixedJointBeforePhysics,
-                        "__atlasFixedJointBeforePhysics", 1));
-    JS_SetPropertyStr(ctx, global, "__atlasFixedJointBreak",
-                      JS_NewCFunction(ctx, jsFixedJointBreak,
-                                      "__atlasFixedJointBreak", 1));
-    JS_SetPropertyStr(ctx, global, "__atlasCreateHingeJoint",
-                      JS_NewCFunction(ctx, jsCreateHingeJoint,
-                                      "__atlasCreateHingeJoint", 1));
+        ctx, global, "__atlasCreateFixedJoint",
+        JS_NewCFunction(ctx, jsCreateFixedJoint, "__atlasCreateFixedJoint", 1));
+    JS_SetPropertyStr(ctx, global, "__atlasFixedJointBeforePhysics",
+                      JS_NewCFunction(ctx, jsFixedJointBeforePhysics,
+                                      "__atlasFixedJointBeforePhysics", 1));
     JS_SetPropertyStr(
-        ctx, global, "__atlasHingeJointBeforePhysics",
-        JS_NewCFunction(ctx, jsHingeJointBeforePhysics,
-                        "__atlasHingeJointBeforePhysics", 1));
-    JS_SetPropertyStr(ctx, global, "__atlasHingeJointBreak",
-                      JS_NewCFunction(ctx, jsHingeJointBreak,
-                                      "__atlasHingeJointBreak", 1));
+        ctx, global, "__atlasFixedJointBreak",
+        JS_NewCFunction(ctx, jsFixedJointBreak, "__atlasFixedJointBreak", 1));
+    JS_SetPropertyStr(
+        ctx, global, "__atlasCreateHingeJoint",
+        JS_NewCFunction(ctx, jsCreateHingeJoint, "__atlasCreateHingeJoint", 1));
+    JS_SetPropertyStr(ctx, global, "__atlasHingeJointBeforePhysics",
+                      JS_NewCFunction(ctx, jsHingeJointBeforePhysics,
+                                      "__atlasHingeJointBeforePhysics", 1));
+    JS_SetPropertyStr(
+        ctx, global, "__atlasHingeJointBreak",
+        JS_NewCFunction(ctx, jsHingeJointBreak, "__atlasHingeJointBreak", 1));
     JS_SetPropertyStr(ctx, global, "__atlasCreateSpringJoint",
                       JS_NewCFunction(ctx, jsCreateSpringJoint,
                                       "__atlasCreateSpringJoint", 1));
+    JS_SetPropertyStr(ctx, global, "__atlasSpringJointBeforePhysics",
+                      JS_NewCFunction(ctx, jsSpringJointBeforePhysics,
+                                      "__atlasSpringJointBeforePhysics", 1));
     JS_SetPropertyStr(
-        ctx, global, "__atlasSpringJointBeforePhysics",
-        JS_NewCFunction(ctx, jsSpringJointBeforePhysics,
-                        "__atlasSpringJointBeforePhysics", 1));
-    JS_SetPropertyStr(ctx, global, "__atlasSpringJointBreak",
-                      JS_NewCFunction(ctx, jsSpringJointBreak,
-                                      "__atlasSpringJointBreak", 1));
+        ctx, global, "__atlasSpringJointBreak",
+        JS_NewCFunction(ctx, jsSpringJointBreak, "__atlasSpringJointBreak", 1));
     JS_SetPropertyStr(
         ctx, global, "__atlasCreateCoreObject",
         JS_NewCFunction(ctx, jsCreateCoreObject, "__atlasCreateCoreObject", 1));
-    JS_SetPropertyStr(ctx, global, "__auroraCreateTerrain",
-                      JS_NewCFunction(ctx, jsCreateTerrain,
-                                      "__auroraCreateTerrain", 1));
+    JS_SetPropertyStr(
+        ctx, global, "__auroraCreateTerrain",
+        JS_NewCFunction(ctx, jsCreateTerrain, "__auroraCreateTerrain", 1));
     JS_SetPropertyStr(
         ctx, global, "__atlasCreateModel",
         JS_NewCFunction(ctx, jsCreateModel, "__atlasCreateModel", 1));
@@ -15121,9 +16565,9 @@ void runtime::scripting::installGlobals(JSContext *ctx) {
     JS_SetPropertyStr(
         ctx, global, "__atlasUpdateCoreObject",
         JS_NewCFunction(ctx, jsUpdateObject, "__atlasUpdateCoreObject", 2));
-    JS_SetPropertyStr(ctx, global, "__auroraUpdateTerrain",
-                      JS_NewCFunction(ctx, jsUpdateObject,
-                                      "__auroraUpdateTerrain", 1));
+    JS_SetPropertyStr(
+        ctx, global, "__auroraUpdateTerrain",
+        JS_NewCFunction(ctx, jsUpdateObject, "__auroraUpdateTerrain", 1));
     JS_SetPropertyStr(
         ctx, global, "__atlasCreateBox",
         JS_NewCFunction(ctx, jsCreatePrimitiveBox, "__atlasCreateBox", 1));

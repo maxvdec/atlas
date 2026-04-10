@@ -36,6 +36,7 @@ declare module "atlas" {
         AreaLight,
         RenderTarget,
         Texture,
+        Cubemap,
     } from "atlas/graphics";
     import {
         AxisTrigger,
@@ -47,6 +48,7 @@ declare module "atlas" {
     } from "atlas/input";
     import { QueryResult } from "bezel";
     import { AudioEngine } from "finewave";
+    import { Atmosphere } from "hydra";
 
     export type Fog = {
         color: Color;
@@ -100,7 +102,7 @@ declare module "atlas" {
         getCamera(): Camera;
         getWindow(): Window;
 
-        //atmosphere: Atmosphere;
+        atmosphere: Atmosphere;
     }
 
     export abstract class Component {
@@ -339,6 +341,13 @@ declare module "atlas" {
         moveTo(target: Point3d, speed: number): void;
         getDirection(): Normal3d;
     }
+
+    export type ViewInformation = {
+        position: Position3d;
+        target: Point3d;
+        time: number;
+        deltaTime: number;
+    };
 
     export type WindowConfiguration = {
         title: string;
@@ -2389,5 +2398,137 @@ declare module "graphite" {
         style(): UIStyle;
         setStyle(style: UIStyle): Text;
         setFontSize(size: number): Text;
+    }
+}
+
+declare module "hydra" {
+    import {
+        Position3d,
+        Size3d,
+        Force3d,
+        Magnitude3d,
+        Color,
+        Scale3d,
+        Rotation3d,
+        Size2d,
+    } from "atlas/units";
+    import { Cubemap } from "atlas/graphics";
+    import { ViewInformation, GameObject } from "atlas";
+    import { Texture } from "atlas/graphics";
+
+    export class WorleyNoise3D {
+        constructor(frequency: number, numDivisions: number);
+
+        getValue(x: number, y: number, z: number): number;
+
+        get3dTexture(size: number): number;
+        getDetailTexture(size: number): number;
+        get3dTextureAtAllChannels(size: number): number;
+    }
+
+    export class Clouds {
+        constructor(frequency: number, numDivisions: number);
+
+        getCloudTexture(size: number): number;
+
+        position: Position3d;
+        size: Size3d;
+        scale: number;
+        offset: Position3d;
+        density: number;
+        densityMultiplier: number;
+        absorption: number;
+        scattering: number;
+        phase: number;
+        clusterStrength: number;
+        primaryStepCount: number;
+        lightStepCount: number;
+        lightStepMultiplier: number;
+        minStepLength: number;
+        wind: Force3d;
+    }
+
+    export enum WeatherCondition {
+        Clear,
+        Rain,
+        Snow,
+        Storm,
+    }
+
+    export type WeatherState = {
+        condition: WeatherCondition;
+        intensity: number;
+        wind: Force3d;
+    };
+
+    export type WeatherDelegate = (
+        information: ViewInformation,
+    ) => WeatherState;
+
+    export class Atmosphere {
+        timeOfDay: number;
+        secondsPerHour: number;
+        wind: Magnitude3d;
+        weatherDelegate: WeatherDelegate;
+
+        enable(): void;
+        disable(): void;
+        isEnabled(): boolean;
+        enableWeather(): void;
+        disableWeather(): void;
+
+        getNormalizedTime(): number;
+        getSunAngle(): Magnitude3d;
+        getMoonAngle(): Magnitude3d;
+        getLightIntensity(): number;
+        getLightColor(): Color;
+
+        clouds?: Clouds;
+
+        getSkyboxColors(): Color[];
+        createSkyCubemap(size: number): Cubemap;
+        updateSkyCubemap(cubemap: Cubemap): void;
+
+        castShadowsFromSunlight(resolution: number): void;
+        useGlobalLight(): void;
+
+        sunColor: Color;
+        moonColor: Color;
+
+        sunSize: number;
+        moonSize: number;
+        sunTintStrength: number;
+        moonTintStrength: number;
+        starIntensity: number;
+
+        isDaytime(): boolean;
+        setTime(hours: number, minutes: number, seconds: number): void;
+
+        addClouds(frequency: number, numDivisions: number): void;
+
+        cycle: boolean;
+        resetRuntimeState(): void;
+    }
+
+    export class Fluid extends GameObject {
+        waveVelocity: number;
+
+        constructor();
+        create(extent: Size2d, color: Color): void;
+
+        override move(position: Position3d): void;
+        override setPosition(position: Position3d): void;
+        override setRotation(rotation: Rotation3d): void;
+        override rotate(rotation: Rotation3d): void;
+        override setScale(scale: Scale3d): void;
+
+        setExtent(extent: Size2d): void;
+        setWaveVelocity(velocity: number): void;
+        setWaterColor(color: Color): void;
+        getPosition(): Position3d;
+        getScale(): Scale3d;
+
+        normalTexture: Texture;
+        movementTexture: Texture;
     }
 }
