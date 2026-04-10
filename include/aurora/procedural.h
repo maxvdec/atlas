@@ -238,6 +238,9 @@ class HillGenerator : public TerrainGenerator {
     HillGenerator(float scale = 0.01f, float amplitude = 10.0f)
         : scale(scale), amplitude(amplitude) {}
 
+    float getScale() const { return scale; }
+    float getAmplitude() const { return amplitude; }
+
     /**
      * @brief Samples Perlin noise and remaps it to a gentle hill profile.
      */
@@ -263,6 +266,11 @@ class MountainGenerator : public TerrainGenerator {
         : scale(scale), amplitude(amplitude), octaves(octaves),
           persistence(persistence) {}
 
+    float getScale() const { return scale; }
+    float getAmplitude() const { return amplitude; }
+    int getOctaves() const { return octaves; }
+    float getPersistence() const { return persistence; }
+
     /**
      * @brief Produces jagged mountain heights using fractal noise.
      */
@@ -286,6 +294,9 @@ class PlainGenerator : public TerrainGenerator {
     PlainGenerator(float scale = 0.02f, float amplitude = 2.0f)
         : amplitude(amplitude), scale(scale) {}
 
+    float getScale() const { return scale; }
+    float getAmplitude() const { return amplitude; }
+
     /**
      * @brief Returns low-amplitude Perlin noise suited for flat regions.
      */
@@ -306,6 +317,9 @@ class IslandGenerator : public TerrainGenerator {
   public:
     IslandGenerator(int numFeatures = 10, float scale = 0.01f)
         : numFeatures(numFeatures), scale(scale) {}
+
+    int getNumFeatures() const { return numFeatures; }
+    float getScale() const { return scale; }
 
     /**
      * @brief Produces island-style plateaus using cellular noise.
@@ -335,6 +349,10 @@ class CompoundGenerator : public TerrainGenerator {
         requires std::is_base_of<TerrainGenerator, T>::value
     void addGenerator(T gen) {
         generators.push_back(std::make_shared<T>(std::move(gen)));
+    }
+
+    const std::vector<std::shared_ptr<TerrainGenerator>> &getGenerators() const {
+        return generators;
     }
 
     /**

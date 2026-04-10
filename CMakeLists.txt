@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.15)
 project(Atlas LANGUAGES C CXX)
 
+set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
@@ -122,6 +123,8 @@ elseif(BACKEND_METAL)
 endif()
 
 set(SHADER_OUTPUT_FILE "${CMAKE_SOURCE_DIR}/include/atlas/core/default_shaders.h")
+set(RUNTIME_SCRIPT_INPUT_DIR "${CMAKE_SOURCE_DIR}/runtime/scripts")
+set(RUNTIME_SCRIPT_OUTPUT_FILE "${CMAKE_SOURCE_DIR}/include/atlas/runtime/atlasScripts.h")
 
 find_package(Python3 COMPONENTS Interpreter REQUIRED)
 
@@ -133,6 +136,11 @@ file(GLOB_RECURSE SHADER_SOURCES
     ${SHADER_INPUT_DIR}/*.tesc
     ${SHADER_INPUT_DIR}/*.tese
     ${SHADER_INPUT_DIR}/*.metal
+)
+
+file(GLOB_RECURSE RUNTIME_SCRIPT_SOURCES CONFIGURE_DEPENDS
+    ${RUNTIME_SCRIPT_INPUT_DIR}/*.js
+    ${RUNTIME_SCRIPT_INPUT_DIR}/*.mjs
 )
 
 if(BACKEND_OPENGL)
@@ -157,6 +165,20 @@ add_custom_command(
 # This named target is what everything else depends on to force ordering.
 add_custom_target(generate_shaders
     DEPENDS ${SHADER_OUTPUT_FILE}
+)
+
+add_custom_command(
+    OUTPUT  ${RUNTIME_SCRIPT_OUTPUT_FILE}
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_SOURCE_DIR}/include/runtime
+    COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/pack_runtime_scripts.py
+                ${RUNTIME_SCRIPT_INPUT_DIR} ${RUNTIME_SCRIPT_OUTPUT_FILE}
+    DEPENDS ${RUNTIME_SCRIPT_SOURCES} ${CMAKE_SOURCE_DIR}/pack_runtime_scripts.py
+    COMMENT "Packing runtime scripts into atlasScripts.h"
+    VERBATIM
+)
+
+add_custom_target(generate_runtime_scripts
+    DEPENDS ${RUNTIME_SCRIPT_OUTPUT_FILE}
 )
 
 # ─── Typst Docs ──────────────────────────────────────────────────────────────
@@ -222,7 +244,7 @@ else()
 endif()
 
 # ─── Global Includes ─────────────────────────────────────────────────────────
-include_directories(include extern ${OPENAL_INCLUDE})
+include_directories(include extern ${OPENAL_INCLUDE} extern/quickjs)
 
 if(NOT BEZEL_NATIVE)
     include_directories(${joltphysics_SOURCE_DIR})
@@ -240,12 +262,13 @@ endif()
 file(GLOB_RECURSE FINEWAVE_SOURCES CONFIGURE_DEPENDS finewave/*.cpp)
 file(GLOB_RECURSE AURORA_SOURCES   CONFIGURE_DEPENDS aurora/*.cpp)
 file(GLOB_RECURSE HYDRA_SOURCES    CONFIGURE_DEPENDS hydra/*.cpp)
-file(GLOB_RECURSE ATLAS_SOURCES    CONFIGURE_DEPENDS atlas/*.cpp extern/*.c)
+file(GLOB_RECURSE ATLAS_SOURCES    CONFIGURE_DEPENDS atlas/*.cpp extern/glad/*.c)
 file(GLOB_RECURSE OPAL_SOURCES     CONFIGURE_DEPENDS opal/*.cpp)
 file(GLOB_RECURSE PHOTON_SOURCES   CONFIGURE_DEPENDS photon/*.cpp)
 file(GLOB_RECURSE GRAPHITE_SOURCES CONFIGURE_DEPENDS graphite/*.cpp)
 file(GLOB_RECURSE RUNTIME_LIB_SOURCES CONFIGURE_DEPENDS runtime/lib/*.cpp)
 file(GLOB_RECURSE RUNTIME_SOURCES CONFIGURE_DEPENDS runtime/executable/*.cpp)
+file(GLOB_RECURSE QUICKJS_SOURCES CONFIGURE_DEPENDS extern/quickjs/*.c)
 
 # ─── bezel ───────────────────────────────────────────────────────────────────
 add_library(bezel ${BEZEL_SOURCES})
@@ -361,11 +384,28 @@ elseif(UNIX)
     target_link_libraries(atlas PRIVATE dl pthread)
 endif()
 
+# ─── quickjs ──────────────────────────────────────────────────────────────
+add_library(quickjs STATIC ${QUICKJS_SOURCES})
+
+target_include_directories(quickjs PUBLIC
+    ${CMAKE_SOURCE_DIR}/extern/quickjs
+)
+
+if(MSVC)
+    target_compile_options(quickjs PRIVATE /W0)
+else()
+    target_compile_options(quickjs PRIVATE
+        -w
+        -Wno-error
+    )
+endif()
+
 # ─── runtime_lib ──────────────────────────────────────────────────────────────
 add_library(runtime_lib ${RUNTIME_LIB_SOURCES})
-target_link_libraries(runtime_lib PRIVATE atlas)
+target_link_libraries(runtime_lib PRIVATE atlas quickjs)
 target_compile_definitions(runtime_lib PRIVATE RUNTIME_LIB JPH_PROFILE_ENABLED=1 JPH_DEBUG_RENDERER=1 JPH_OBJECT_STREAM=1)
-add_dependencies(runtime_lib generate_shaders)
+add_dependencies(runtime_lib generate_shaders generate_runtime_scripts)
+target_include_directories(runtime_lib PUBLIC ${CMAKE_SOURCE_DIR}/extern/quickjs)
 
 # ─── runtime ──────────────────────────────────────────────────────────────
 add_executable(atlasrun ${RUNTIME_SOURCES})

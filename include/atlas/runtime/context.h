@@ -13,7 +13,9 @@
 #include "atlas/camera.h"
 #include "atlas/core/renderable.h"
 #include "atlas/scene.h"
+#include "atlas/runtime/scripting.h"
 #include "atlas/texture.h"
+#include "quickjs.h"
 #include <atlas/window.h>
 #include <map>
 #include <memory>
@@ -54,7 +56,15 @@ class Context {
     std::string projectFile;
     std::string projectDir;
     std::string sceneDir;
+    std::string currentSceneName;
     std::shared_ptr<RuntimeScene> scene;
+
+    JSRuntime *runtime = nullptr;
+    JSContext *context = nullptr;
+    ScriptHost scriptHost;
+    std::unordered_map<std::string, std::string> scriptRegistry;
+    std::unordered_map<std::string, std::string> loadedScriptModules;
+    std::string scriptBundleModuleName = "__atlas_scripts__";
 
     std::unique_ptr<Camera> camera;
     std::map<std::string, std::unique_ptr<RenderTarget>> renderTargets;
@@ -68,6 +78,7 @@ class Context {
     std::unique_ptr<Window> window;
     std::vector<std::shared_ptr<Renderable>> objects;
     std::unordered_map<std::string, GameObject *> objectReferences;
+    std::unordered_map<int, std::string> objectNames;
 
     ProjectConfig config;
 
@@ -75,10 +86,18 @@ class Context {
     void loadProject();
     void loadMainScene(Window &window);
     void loadScene(Window &window, const json &sceneData);
+    void initializeScripting();
+    std::string registerScriptModule(const std::string &modulePath);
+    std::string toProjectScriptPath(const std::string &path) const;
 };
 
 namespace runtime {
 std::shared_ptr<Context> makeContext(std::string projectFile);
-};
+
+namespace scripting {
+void dumpExecution(JSContext *ctx);
+bool checkNotException(JSContext *ctx, JSValueConst value, const char *what);
+}; // namespace scripting
+}; // namespace runtime
 
 #endif // RUNTIME_CONTEXT_H

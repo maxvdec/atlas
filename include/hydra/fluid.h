@@ -138,6 +138,8 @@ struct Fluid : GameObject {
      */
     void setWaterColor(const Color &color);
 
+    bool isCreated() const { return fluidShader.programId != 0; }
+
     /**
      * @brief Returns the current world position of the fluid surface.
      */

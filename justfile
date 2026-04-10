@@ -12,7 +12,10 @@ target target backend="AUTO" bezel_native="OFF":
 
 run test="" backend="AUTO" bezel_native="OFF":
     just build {{ backend }} {{ bezel_native }}
-    test_dir="{{ test }}"; if [ -z "$test_dir" ]; then test_dir="$(tr -d '\n' < tests/default.txt)"; fi; MTL_HUD_ENABLED=0 ./build/bin/atlasrun "tests/$test_dir/project.atlas"
+    test_dir="{{ test }}"; if [ -z "$test_dir" ]; then test_dir="$(tr -d '\n' < tests/default.txt)"; fi; cd "tests/$test_dir" && atlas script compile && cd "../.."; MTL_HUD_ENABLED=0 ./build/bin/atlasrun "tests/$test_dir/project.atlas"
+
+addTest name:
+    test_dir="tests/{{ name }}"; [ ! -e "$test_dir" ] || { echo "Test already exists: $test_dir" >&2; exit 1; }; mkdir -p "$test_dir/assets/scripts" && cp tests/simple/project.atlas "$test_dir/project.atlas" && cp tests/simple/main.ascene "$test_dir/main.ascene" && cp tests/simple/assets/scripts/simpleLog.ts "$test_dir/assets/scripts/simpleLog.ts" && (cd "$test_dir" && cargo run --quiet --manifest-path ../../cli/Cargo.toml -- script init) && rm -f "$test_dir/lib/atlas.d.ts" && ln -s ../../../runtime/atlas.d.ts "$test_dir/lib/atlas.d.ts"
 
 debug backend="AUTO" bezel_native="OFF":
     just build {{ backend }} {{ bezel_native }}

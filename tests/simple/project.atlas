@@ -1,8 +1,12 @@
-name = "My Project"
 app_name = "My Project App"
-backend = "METAL"
-platform = "MACOS"
 atlas_version = "alpha8"
+backend = "METAL"
+name = "My Project"
+platform = "MACOS"
+
+[game]
+assets = ["assets/"]
+main_scene = "main.ascene"
 
 [pack]
 icon = "none"
@@ -10,14 +14,16 @@ supported_platforms = "all"
 
 [renderer]
 default = "deferred"
-global_illumination = false 
+global_illumination = false
 
-[game]
-main_scene = "main.ascene"
-assets = ["assets/"]
+[scripts]
+SimpleLog = "assets/scripts/simpleLog.ts"
 
 [window]
-dimensions = [1920, 1480]
+dimensions = [
+    1920,
+    1480,
+]
 mouse_capture = false
 multisampling = false
 ssaoScale = 1.0
