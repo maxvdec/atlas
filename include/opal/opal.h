@@ -71,6 +71,9 @@ class Context {
 
     SDL_Window *makeWindow(int width, int height, const char *title,
                            SDL_DisplayID displayID = 0);
+    void adoptWindow(SDL_Window *existingWindow, bool takeOwnership = false);
+    void setMetalTargetView(void *view);
+    void *getMetalTargetView() const;
     /** @brief Returns the owned window pointer, if created. */
     SDL_Window *getWindow() const;
 
@@ -79,6 +82,8 @@ class Context {
 
     SDL_Window *window = nullptr;
     SDL_GLContext glContext = nullptr;
+    bool ownsWindow = true;
+    void *metalTargetView = nullptr;
     ContextConfiguration config;
     bool decorated = true;
     bool resizable = true;

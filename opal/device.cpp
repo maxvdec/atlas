@@ -9,6 +9,8 @@
 
 #include "opal/opal.h"
 #include "atlas/tracer/log.h"
+#include <algorithm>
+#include <cmath>
 #include <cstddef>
 #include <memory>
 #include <stdexcept>
@@ -31,10 +33,10 @@ Context::~Context() {
         SDL_GL_DestroyContext(glContext);
         glContext = nullptr;
     }
-    if (window != nullptr) {
+    if (window != nullptr && ownsWindow) {
         SDL_DestroyWindow(window);
-        window = nullptr;
     }
+    window = nullptr;
 }
 
 Device::~Device() {
@@ -53,33 +55,119 @@ inline CocoaObj sendObjCId(CocoaObj object, const char *selector) {
         object, sel_registerName(selector));
 }
 
-void attachMetalLayerToWindow(SDL_Window *window, CA::MetalLayer *layer) {
-    if (window == nullptr || layer == nullptr) {
-        throw std::runtime_error("Cannot attach CAMetalLayer to null window");
+inline double sendObjCDouble(CocoaObj object, const char *selector) {
+    return reinterpret_cast<double (*)(CocoaObj, SEL)>(objc_msgSend)(
+        object, sel_registerName(selector));
+}
+
+struct CocoaPoint {
+    double x;
+    double y;
+};
+
+struct CocoaSize {
+    double width;
+    double height;
+};
+
+struct CocoaRect {
+    CocoaPoint origin;
+    CocoaSize size;
+};
+
+inline CocoaRect sendObjCRect(CocoaObj object, const char *selector) {
+    return reinterpret_cast<CocoaRect (*)(CocoaObj, SEL)>(objc_msgSend)(
+        object, sel_registerName(selector));
+}
+
+CocoaObj getWindowContentView(SDL_Window *window) {
+    if (window == nullptr) {
+        return nullptr;
     }
 
     const SDL_PropertiesID properties = SDL_GetWindowProperties(window);
     CocoaObj nsWindow = SDL_GetPointerProperty(
         properties, SDL_PROP_WINDOW_COCOA_WINDOW_POINTER, nullptr);
     if (nsWindow == nullptr) {
-        throw std::runtime_error("Unable to extract NSWindow from SDL");
+        return nullptr;
     }
 
-    CocoaObj contentView = sendObjCId(nsWindow, "contentView");
-    if (contentView == nullptr) {
-        throw std::runtime_error(
-            "Unable to get NSView contentView from NSWindow");
+    return sendObjCId(nsWindow, "contentView");
+}
+
+void queryTargetPixelSize(CocoaObj targetView, int fallbackWidth,
+                          int fallbackHeight, int &width, int &height) {
+    width = std::max(1, fallbackWidth);
+    height = std::max(1, fallbackHeight);
+    if (targetView == nullptr) {
+        return;
+    }
+
+    CocoaRect bounds = sendObjCRect(targetView, "bounds");
+    double scale = 1.0;
+    CocoaObj window = sendObjCId(targetView, "window");
+    if (window != nullptr) {
+        const double backingScale =
+            sendObjCDouble(window, "backingScaleFactor");
+        if (backingScale > 0.0) {
+            scale = backingScale;
+        }
+    }
+
+    width = std::max(1, static_cast<int>(std::lround(
+                            std::max(1.0, bounds.size.width) * scale)));
+    height = std::max(1, static_cast<int>(std::lround(
+                             std::max(1.0, bounds.size.height) * scale)));
+}
+
+void attachMetalLayerToView(CocoaObj targetView, CA::MetalLayer *layer) {
+    if (targetView == nullptr || layer == nullptr) {
+        throw std::runtime_error("Cannot attach CAMetalLayer to null view");
     }
 
     reinterpret_cast<void (*)(CocoaObj, SEL, bool)>(objc_msgSend)(
-        contentView, sel_registerName("setWantsLayer:"), true);
+        targetView, sel_registerName("setWantsLayer:"), true);
+
+    CocoaRect bounds = sendObjCRect(targetView, "bounds");
+    reinterpret_cast<void (*)(CocoaObj, SEL, CocoaRect)>(objc_msgSend)(
+        reinterpret_cast<CocoaObj>(layer), sel_registerName("setFrame:"),
+        bounds);
+
+    double scale = 1.0;
+    CocoaObj window = sendObjCId(targetView, "window");
+    if (window != nullptr) {
+        const double backingScale =
+            sendObjCDouble(window, "backingScaleFactor");
+        if (backingScale > 0.0) {
+            scale = backingScale;
+        }
+    }
+    reinterpret_cast<void (*)(CocoaObj, SEL, double)>(objc_msgSend)(
+        reinterpret_cast<CocoaObj>(layer),
+        sel_registerName("setContentsScale:"), scale);
+
     reinterpret_cast<void (*)(CocoaObj, SEL, CocoaObj)>(objc_msgSend)(
-        contentView, sel_registerName("setLayer:"),
+        targetView, sel_registerName("setLayer:"),
         reinterpret_cast<CocoaObj>(layer));
 }
 
 } // namespace
 #endif
+
+void Context::adoptWindow(SDL_Window *existingWindow, bool takeOwnership) {
+    if (existingWindow == nullptr) {
+        throw std::runtime_error("Cannot adopt a null SDL window");
+    }
+    if (window != nullptr && ownsWindow) {
+        SDL_DestroyWindow(window);
+    }
+    window = existingWindow;
+    ownsWindow = takeOwnership;
+}
+
+void Context::setMetalTargetView(void *view) { metalTargetView = view; }
+
+void *Context::getMetalTargetView() const { return metalTargetView; }
 
 std::shared_ptr<Context> Context::create(ContextConfiguration config) {
     if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMEPAD | SDL_INIT_JOYSTICK)) {
@@ -117,9 +205,7 @@ void Context::setAlwaysOnTop(bool enabled) { alwaysOnTop = enabled; }
 
 void Context::setSamples(int value) { samples = value; }
 
-void Context::setHighPixelDensity(bool enabled) {
-    highPixelDensity = enabled;
-}
+void Context::setHighPixelDensity(bool enabled) { highPixelDensity = enabled; }
 
 void Context::makeCurrent() {
     if (this->window != nullptr && this->glContext != nullptr) {
@@ -139,11 +225,10 @@ SDL_Window *Context::makeWindow(int width, int height, const char *title,
         SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
         SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, samples > 0 ? 1 : 0);
         SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, samples);
-        SDL_GL_SetAttribute(
-            SDL_GL_CONTEXT_PROFILE_MASK,
-            config.profile == OpenGLProfile::Core
-                ? SDL_GL_CONTEXT_PROFILE_CORE
-                : SDL_GL_CONTEXT_PROFILE_COMPATIBILITY);
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK,
+                            config.profile == OpenGLProfile::Core
+                                ? SDL_GL_CONTEXT_PROFILE_CORE
+                                : SDL_GL_CONTEXT_PROFILE_COMPATIBILITY);
         windowFlags |= SDL_WINDOW_OPENGL;
     }
 #ifdef VULKAN
@@ -174,6 +259,7 @@ SDL_Window *Context::makeWindow(int width, int height, const char *title,
         atlas_error("Failed to create SDL window");
         throw std::runtime_error("Failed to create SDL window");
     }
+    this->ownsWindow = true;
 
     if (config.useOpenGL) {
         glContext = SDL_GL_CreateContext(this->window);
@@ -298,13 +384,25 @@ Device::acquire([[maybe_unused]] const std::shared_ptr<Context> &context) {
     contextState.layer->setDisplaySyncEnabled(true);
     contextState.layer->setMaximumDrawableCount(3);
 
-    int fbWidth = 0;
-    int fbHeight = 0;
-    atlasGetWindowSizeInPixels(context->getWindow(), &fbWidth, &fbHeight);
+    int fallbackWidth = 1;
+    int fallbackHeight = 1;
+    if (context->window != nullptr) {
+        atlasGetWindowSizeInPixels(context->window, &fallbackWidth,
+                                   &fallbackHeight);
+    }
+    int fbWidth = fallbackWidth;
+    int fbHeight = fallbackHeight;
+    CocoaObj targetView =
+        reinterpret_cast<CocoaObj>(context->getMetalTargetView());
+    if (targetView == nullptr) {
+        targetView = getWindowContentView(context->window);
+    }
+    queryTargetPixelSize(targetView, fallbackWidth, fallbackHeight, fbWidth,
+                         fbHeight);
     contextState.layer->setDrawableSize(CGSizeMake(
         static_cast<double>(fbWidth), static_cast<double>(fbHeight)));
 
-    attachMetalLayerToWindow(context->getWindow(), contextState.layer);
+    attachMetalLayerToView(targetView, contextState.layer);
 
     atlas_log("Graphics device acquired (Metal)");
     return device;

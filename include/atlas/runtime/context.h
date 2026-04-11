@@ -83,6 +83,8 @@ class Context {
     ProjectConfig config;
 
     void runWindowed();
+    bool stepFrame();
+    void end();
     void loadProject();
     void loadMainScene(Window &window);
     void loadScene(Window &window, const json &sceneData);
@@ -93,6 +95,14 @@ class Context {
 
 namespace runtime {
 std::shared_ptr<Context> makeContext(std::string projectFile);
+std::shared_ptr<Context>
+makeContextForMetalView(std::string projectFile, void *metalView,
+                        CoreWindowReference sdlInputWindow = nullptr);
+void runProjectInMetalView(std::string projectFile, void *metalView,
+                           CoreWindowReference sdlInputWindow = nullptr);
+std::shared_ptr<Context> makeContextForMetalViewNonBlocking(
+    std::string projectFile, void *metalView,
+    CoreWindowReference sdlInputWindow = nullptr);
 
 namespace scripting {
 void dumpExecution(JSContext *ctx);
