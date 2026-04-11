@@ -9,7 +9,7 @@ To make this, we'll going to use everything we need, from UI to physics, to comp
 
 ## Installation
 
-First of all, we need to install the engine. To install the engine, go to the following [GitHub repository](https://github.com/maxvdec/atlas) and go to the releases page.
+First of all, we need to install the engine. To install the engine, go to the following [GitHub repository](https://github.com/neutralsoftware/atlas) and go to the releases page.
 After downloading the latest release, you can download the executable called `atlas`. That executable is the core of Atlas. With the executable you can run, create and do whatever
 with the engine. It is pretty useful and straightforward.
 

@@ -194,7 +194,7 @@ fn update_tsconfig(project_dir: &Path) -> Result<(), String> {
 fn fetch_atlas_types(branch: &str) -> Result<String, String> {
     let client = github_client()?;
     let url =
-        format!("https://raw.githubusercontent.com/maxvdec/atlas/{branch}/runtime/atlas.d.ts");
+        format!("https://raw.githubusercontent.com/neutralsoftware/atlas/{branch}/runtime/atlas.d.ts");
     let response = client
         .get(url)
         .send()

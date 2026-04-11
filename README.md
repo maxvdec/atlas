@@ -1,10 +1,10 @@
 # Atlas Engine
 
-![GitHub contributors](https://img.shields.io/github/contributors/maxvdec/atlas)
-![GitHub last commit](https://img.shields.io/github/last-commit/maxvdec/atlas)
-![Tests](https://github.com/maxvdec/atlas/actions/workflows/build.yaml/badge.svg)
-![GitHub Issues or Pull Requests](https://img.shields.io/github/issues/maxvdec/atlas)
-![GitHub Repo stars](https://img.shields.io/github/stars/maxvdec/atlas)
+![GitHub contributors](https://img.shields.io/github/contributors/neutralsoftware/atlas)
+![GitHub last commit](https://img.shields.io/github/last-commit/neutralsoftware/atlas)
+![Tests](https://github.com/neutralsoftware/atlas/actions/workflows/build.yaml/badge.svg)
+![GitHub Issues or Pull Requests](https://img.shields.io/github/issues/neutralsoftware/atlas)
+![GitHub Repo stars](https://img.shields.io/github/stars/neutralsoftware/atlas)
 [![](https://dcbadge.limes.pink/api/server/WKrxKtr7kW)](https://discord.gg/WKrxKtr7kW)
 
 Atlas is a Game Engine that uses the latest technologies to provide a fast, simple but powerful experience for developers.
@@ -43,7 +43,7 @@ an environment system and a debugging system with more to come.
 
 ## Getting the Engine
 
-Go to the releases page [here](https://github.com/maxvdec/atlas/releases) to download the latest version of Atlas. Then you can follow the instructions in the documentation to get started.
+Go to the releases page [here](https://github.com/neutralsoftware/atlas/releases) to download the latest version of Atlas. Then you can follow the instructions in the documentation to get started.
 
 ```bash
 atlas create myProject
@@ -113,7 +113,7 @@ atlas clangd --backend METAL
 To build the engine from source, you will need to have CMake and a C++ compiler installed on your system. Then you can clone the repository and build the engine using the following commands:
 
 ```bash
-git clone https://github.com/maxvdec/atlas.git
+git clone https://github.com/neutralsoftware/atlas.git
 cd atlas
 mkdir build
 cd build
