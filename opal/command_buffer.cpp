@@ -144,6 +144,74 @@ void updateLayerDrawableSize(Device *device, int width, int height) {
         CGSizeMake(static_cast<double>(width), static_cast<double>(height)));
 }
 
+#ifdef __APPLE__
+using CocoaObj = void *;
+
+inline CocoaObj sendObjCId(CocoaObj object, const char *selector) {
+    return reinterpret_cast<CocoaObj (*)(CocoaObj, SEL)>(objc_msgSend)(
+        object, sel_registerName(selector));
+}
+
+inline double sendObjCDouble(CocoaObj object, const char *selector) {
+    return reinterpret_cast<double (*)(CocoaObj, SEL)>(objc_msgSend)(
+        object, sel_registerName(selector));
+}
+
+struct CocoaPoint {
+    double x;
+    double y;
+};
+
+struct CocoaSize {
+    double width;
+    double height;
+};
+
+struct CocoaRect {
+    CocoaPoint origin;
+    CocoaSize size;
+};
+
+inline CocoaRect sendObjCRect(CocoaObj object, const char *selector) {
+    return reinterpret_cast<CocoaRect (*)(CocoaObj, SEL)>(objc_msgSend)(
+        object, sel_registerName(selector));
+}
+
+void queryMetalDrawableSizeFromView(void *view, int fallbackWidth,
+                                    int fallbackHeight, int *width,
+                                    int *height) {
+    int resultWidth = std::max(1, fallbackWidth);
+    int resultHeight = std::max(1, fallbackHeight);
+    if (view != nullptr) {
+        CocoaObj targetView = view;
+        CocoaRect bounds = sendObjCRect(targetView, "bounds");
+        double scale = 1.0;
+        CocoaObj hostWindow = sendObjCId(targetView, "window");
+        if (hostWindow != nullptr) {
+            const double backingScale =
+                sendObjCDouble(hostWindow, "backingScaleFactor");
+            if (backingScale > 0.0) {
+                scale = backingScale;
+            }
+        }
+
+        resultWidth =
+            std::max(1, static_cast<int>(std::lround(
+                            std::max(1.0, bounds.size.width) * scale)));
+        resultHeight =
+            std::max(1, static_cast<int>(std::lround(
+                            std::max(1.0, bounds.size.height) * scale)));
+    }
+
+    if (width != nullptr) {
+        *width = resultWidth;
+    }
+    if (height != nullptr) {
+        *height = resultHeight;
+    }
+}
+#endif
+
 void configureColorAttachmentForClear(MTL::RenderPassDescriptor *pass,
                                       uint32_t colorCount,
                                       const float clearColor[4],
@@ -288,8 +356,9 @@ std::shared_ptr<Texture> fallbackTextureForType(TextureType type) {
 }
 
 #ifdef __APPLE__
-bool encodeMetalFXSpatialUpscale(CommandBuffer *commandBuffer, Device *device,
-                                 const std::shared_ptr<Texture> &sourceTexture) {
+bool encodeMetalFXSpatialUpscale(
+    CommandBuffer *commandBuffer, Device *device,
+    const std::shared_ptr<Texture> &sourceTexture) {
     if (commandBuffer == nullptr || device == nullptr ||
         sourceTexture == nullptr) {
         return false;
@@ -305,7 +374,8 @@ bool encodeMetalFXSpatialUpscale(CommandBuffer *commandBuffer, Device *device,
 
     MTL::Texture *destinationTexture = nullptr;
     if (state.passDescriptor != nullptr) {
-        auto *colorAttachment = state.passDescriptor->colorAttachments()->object(0);
+        auto *colorAttachment =
+            state.passDescriptor->colorAttachments()->object(0);
         if (colorAttachment != nullptr) {
             destinationTexture = colorAttachment->texture();
         }
@@ -314,7 +384,8 @@ bool encodeMetalFXSpatialUpscale(CommandBuffer *commandBuffer, Device *device,
         destinationTexture = state.drawable->texture();
     }
 
-    if (destinationTexture == nullptr || sourceState.texture == destinationTexture) {
+    if (destinationTexture == nullptr ||
+        sourceState.texture == destinationTexture) {
         return false;
     }
     if (sourceState.texture->sampleCount() != 1 ||
@@ -345,12 +416,13 @@ bool encodeMetalFXSpatialUpscale(CommandBuffer *commandBuffer, Device *device,
     }
 
     auto sendIdNoArgs = [](id obj, SEL selector) -> id {
-        return ((id(*)(id, SEL))objc_msgSend)(obj, selector);
+        return ((id (*)(id, SEL))objc_msgSend)(obj, selector);
     };
     auto sendVoidUInteger = [](id obj, SEL selector, NS::UInteger value) {
         ((void (*)(id, SEL, NS::UInteger))objc_msgSend)(obj, selector, value);
     };
-    auto sendVoidPixelFormat = [](id obj, SEL selector, MTL::PixelFormat value) {
+    auto sendVoidPixelFormat = [](id obj, SEL selector,
+                                  MTL::PixelFormat value) {
         ((void (*)(id, SEL, MTL::PixelFormat))objc_msgSend)(obj, selector,
                                                             value);
     };
@@ -378,7 +450,7 @@ bool encodeMetalFXSpatialUpscale(CommandBuffer *commandBuffer, Device *device,
     sendVoidPixelFormat(descriptor, sel_registerName("setOutputTextureFormat:"),
                         destinationTexture->pixelFormat());
 
-    id scaler = ((id(*)(id, SEL, id))objc_msgSend)(
+    id scaler = ((id (*)(id, SEL, id))objc_msgSend)(
         descriptor, sel_registerName("newSpatialScalerWithDevice:"),
         reinterpret_cast<id>(deviceState.device));
     ((void (*)(id, SEL))objc_msgSend)(descriptor, sel_registerName("release"));
@@ -1146,6 +1218,11 @@ void CommandBuffer::beginPass(std::shared_ptr<RenderPass> newRenderPass) {
         int fbHeight = 0;
         atlasGetWindowSizeInPixels(deviceState.context->getWindow(), &fbWidth,
                                    &fbHeight);
+#ifdef __APPLE__
+        queryMetalDrawableSizeFromView(
+            deviceState.context->getMetalTargetView(), fbWidth, fbHeight,
+            &fbWidth, &fbHeight);
+#endif
         fbWidth = std::max(1, fbWidth);
         fbHeight = std::max(1, fbHeight);
 

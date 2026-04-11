@@ -2938,7 +2938,9 @@ createRenderable(Context &context, const json &objectData,
 
 } // namespace
 
-std::shared_ptr<Context> runtime::makeContext(std::string projectFile) {
+static std::shared_ptr<Context>
+makeContextWithWindowOptions(std::string projectFile, void *metalView,
+                             CoreWindowReference sdlInputWindow) {
     auto context = std::make_shared<Context>();
 
     if (!std::filesystem::exists(projectFile)) {
@@ -2975,6 +2977,8 @@ std::shared_ptr<Context> runtime::makeContext(std::string projectFile) {
         .mouseCaptured = mouseCaptured,
         .multisampling = multisampling,
         .ssaoScale = ssaoScale,
+        .metalTargetView = metalView,
+        .sdlInputWindow = sdlInputWindow,
     });
 
     context->projectFile =
@@ -2986,6 +2990,37 @@ std::shared_ptr<Context> runtime::makeContext(std::string projectFile) {
     context->scene->context = context;
 
     return context;
+}
+
+std::shared_ptr<Context> runtime::makeContext(std::string projectFile) {
+    return makeContextWithWindowOptions(std::move(projectFile), nullptr,
+                                        nullptr);
+}
+
+std::shared_ptr<Context>
+runtime::makeContextForMetalView(std::string projectFile, void *metalView,
+                                 CoreWindowReference sdlInputWindow) {
+#ifdef METAL
+    if (metalView == nullptr) {
+        throw std::runtime_error("Metal view pointer cannot be null");
+    }
+    return makeContextWithWindowOptions(std::move(projectFile), metalView,
+                                        sdlInputWindow);
+#else
+    (void)projectFile;
+    (void)metalView;
+    (void)sdlInputWindow;
+    throw std::runtime_error(
+        "makeContextForMetalView is only available with the Metal backend");
+#endif
+}
+
+void runtime::runProjectInMetalView(std::string projectFile, void *metalView,
+                                    CoreWindowReference sdlInputWindow) {
+    auto context = runtime::makeContextForMetalView(std::move(projectFile),
+                                                    metalView, sdlInputWindow);
+    context->loadProject();
+    context->runWindowed();
 }
 
 void Context::initializeScripting() {
@@ -3132,7 +3167,8 @@ void RuntimeScene::update(Window &window) {
 
     if (context->context != nullptr) {
         runtime::scripting::dispatchInteractiveFrame(
-            context->context, context->scriptHost, window, window.getDeltaTime());
+            context->context, context->scriptHost, window,
+            window.getDeltaTime());
     }
 }
 
@@ -3162,7 +3198,8 @@ void RuntimeScene::onMouseScroll(Window &window, Movement2d offset) {
     if (context != nullptr && context->context != nullptr) {
         MouseScrollPacket packet{offset.x, offset.y};
         runtime::scripting::dispatchInteractiveMouseScroll(
-            context->context, context->scriptHost, packet, window.getDeltaTime());
+            context->context, context->scriptHost, packet,
+            window.getDeltaTime());
     }
 
     if (context == nullptr || context->camera == nullptr ||

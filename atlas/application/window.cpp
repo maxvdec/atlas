@@ -38,6 +38,10 @@
 #include <sys/resource.h>
 #include <utility>
 #include <vector>
+#if defined(METAL) && defined(__APPLE__)
+#include <objc/message.h>
+#include <objc/runtime.h>
+#endif
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/string_cast.hpp>
 #include <tuple>
@@ -50,6 +54,40 @@ template <typename T> void hashCombine(std::size_t &seed, const T &value) {
     seed ^= std::hash<T>{}(value) + 0x9e3779b97f4a7c15ULL + (seed << 6) +
             (seed >> 2);
 }
+
+#if defined(METAL) && defined(__APPLE__)
+using CocoaObj = void *;
+
+inline CocoaObj sendObjCId(CocoaObj object, const char *selector) {
+    return reinterpret_cast<CocoaObj (*)(CocoaObj, SEL)>(objc_msgSend)(
+        object, sel_registerName(selector));
+}
+
+inline double sendObjCDouble(CocoaObj object, const char *selector) {
+    return reinterpret_cast<double (*)(CocoaObj, SEL)>(objc_msgSend)(
+        object, sel_registerName(selector));
+}
+
+struct CocoaPoint {
+    double x;
+    double y;
+};
+
+struct CocoaSize {
+    double width;
+    double height;
+};
+
+struct CocoaRect {
+    CocoaPoint origin;
+    CocoaSize size;
+};
+
+inline CocoaRect sendObjCRect(CocoaObj object, const char *selector) {
+    return reinterpret_cast<CocoaRect (*)(CocoaObj, SEL)>(objc_msgSend)(
+        object, sel_registerName(selector));
+}
+#endif
 
 std::unordered_map<SDL_JoystickID, SDL_Gamepad *> &openGamepads() {
     static std::unordered_map<SDL_JoystickID, SDL_Gamepad *> handles;
@@ -464,6 +502,17 @@ computeShadowCasterSignature(const std::vector<Renderable *> &shadowCasters) {
 Window::Window(const WindowConfiguration &config)
     : title(config.title), width(config.width), height(config.height) {
     atlas_log("Initializing window: " + config.title);
+#ifdef METAL
+    this->externalMetalView = config.metalTargetView;
+    this->renderToExternalMetalView = this->externalMetalView != nullptr;
+    this->showHostWindow = !this->renderToExternalMetalView;
+#else
+    (void)config.metalTargetView;
+    this->externalMetalView = nullptr;
+    this->renderToExternalMetalView = false;
+    this->showHostWindow = true;
+#endif
+
 #ifdef VULKAN
     auto context = opal::Context::create({.useOpenGL = false});
     atlas_log("Using Vulkan backend");
@@ -502,8 +551,20 @@ Window::Window(const WindowConfiguration &config)
     context->setSamples(config.multisampling ? 4 : 0);
     context->setHighPixelDensity(true);
 
-    SDL_Window *window =
-        context->makeWindow(config.width, config.height, config.title.c_str());
+#ifdef METAL
+    if (this->renderToExternalMetalView) {
+        context->setMetalTargetView(this->externalMetalView);
+    }
+#endif
+
+    SDL_Window *window = nullptr;
+    if (config.sdlInputWindow != nullptr) {
+        context->adoptWindow(config.sdlInputWindow, false);
+        window = config.sdlInputWindow;
+    } else {
+        window = context->makeWindow(config.width, config.height,
+                                     config.title.c_str());
+    }
 
     registerGamepadMappings();
 
@@ -520,8 +581,9 @@ Window::Window(const WindowConfiguration &config)
         releaseMouse();
     }
 
-    int fbWidth, fbHeight;
-    atlasGetWindowSizeInPixels(window, &fbWidth, &fbHeight);
+    int fbWidth = 0;
+    int fbHeight = 0;
+    this->queryDrawableSizeInPixels(&fbWidth, &fbHeight);
     device->getDefaultFramebuffer()->setViewport(0, 0, fbWidth, fbHeight);
     this->viewportWidth = fbWidth;
     this->viewportHeight = fbHeight;
@@ -654,7 +716,7 @@ std::tuple<int, int> Window::getCursorPosition() {
 
     int pixelWidth = 0;
     int pixelHeight = 0;
-    atlasGetWindowSizeInPixels(this->windowRef, &pixelWidth, &pixelHeight);
+    this->queryDrawableSizeInPixels(&pixelWidth, &pixelHeight);
 
     const float scaleX = windowWidth > 0 ? static_cast<float>(pixelWidth) /
                                                static_cast<float>(windowWidth)
@@ -665,6 +727,45 @@ std::tuple<int, int> Window::getCursorPosition() {
 
     return {static_cast<int>(std::lround(xpos * scaleX)),
             static_cast<int>(std::lround(ypos * scaleY))};
+}
+
+void Window::queryDrawableSizeInPixels(int *width, int *height) const {
+    int pixelWidth = 0;
+    int pixelHeight = 0;
+
+#if defined(METAL) && defined(__APPLE__)
+    if (this->externalMetalView != nullptr) {
+        CocoaObj targetView = this->externalMetalView;
+        CocoaRect bounds = sendObjCRect(targetView, "bounds");
+        double scale = 1.0;
+        CocoaObj hostWindow = sendObjCId(targetView, "window");
+        if (hostWindow != nullptr) {
+            const double backingScale =
+                sendObjCDouble(hostWindow, "backingScaleFactor");
+            if (backingScale > 0.0) {
+                scale = backingScale;
+            }
+        }
+
+        pixelWidth =
+            std::max(1, static_cast<int>(std::lround(
+                            std::max(1.0, bounds.size.width) * scale)));
+        pixelHeight =
+            std::max(1, static_cast<int>(std::lround(
+                            std::max(1.0, bounds.size.height) * scale)));
+    } else {
+        atlasGetWindowSizeInPixels(this->windowRef, &pixelWidth, &pixelHeight);
+    }
+#else
+    atlasGetWindowSizeInPixels(this->windowRef, &pixelWidth, &pixelHeight);
+#endif
+
+    if (width != nullptr) {
+        *width = pixelWidth;
+    }
+    if (height != nullptr) {
+        *height = pixelHeight;
+    }
 }
 
 void Window::run() {
@@ -691,14 +792,18 @@ void Window::run() {
     }
     SDL_Window *window = this->windowRef;
     const SDL_WindowID windowID = SDL_GetWindowID(window);
-    if (!SDL_ShowWindow(window)) {
-        atlas_warning("Failed to show window");
-    }
-    if (!SDL_SyncWindow(window)) {
-        atlas_warning("Failed to synchronize window state");
-    }
-    if (!SDL_RaiseWindow(window)) {
-        atlas_warning("Failed to focus window");
+    if (this->showHostWindow) {
+        if (!SDL_ShowWindow(window)) {
+            atlas_warning("Failed to show window");
+        }
+        if (!SDL_SyncWindow(window)) {
+            atlas_warning("Failed to synchronize window state");
+        }
+        if (!SDL_RaiseWindow(window)) {
+            atlas_warning("Failed to focus window");
+        }
+    } else {
+        SDL_HideWindow(window);
     }
 
     auto commandBuffer = device->acquireCommandBuffer();
@@ -736,8 +841,8 @@ void Window::run() {
                 if (event.window.windowID == windowID) {
                     int resizedWidth = 0;
                     int resizedHeight = 0;
-                    atlasGetWindowSizeInPixels(window, &resizedWidth,
-                                               &resizedHeight);
+                    this->queryDrawableSizeInPixels(&resizedWidth,
+                                                    &resizedHeight);
                     this->viewportWidth = resizedWidth;
                     this->viewportHeight = resizedHeight;
                     this->shadowMapsDirty = true;
@@ -1131,7 +1236,7 @@ void Window::run() {
         // Render to the screen
         commandBuffer->beginPass(renderPass);
         int fbWidth, fbHeight;
-        atlasGetWindowSizeInPixels(window, &fbWidth, &fbHeight);
+        this->queryDrawableSizeInPixels(&fbWidth, &fbHeight);
         setViewportState(0, 0, fbWidth, fbHeight);
         commandBuffer->clearColor(this->clearColor.r, this->clearColor.g,
                                   this->clearColor.b, this->clearColor.a);
@@ -1515,7 +1620,7 @@ glm::mat4 Window::calculateProjectionMatrix() {
     glm::mat4 projection;
     if (!this->camera->useOrthographic) {
         int fbWidth, fbHeight;
-        atlasGetWindowSizeInPixels(this->windowRef, &fbWidth, &fbHeight);
+        this->queryDrawableSizeInPixels(&fbWidth, &fbHeight);
 
         float aspectRatio =
             static_cast<float>(fbWidth) / static_cast<float>(fbHeight);
@@ -1524,7 +1629,7 @@ glm::mat4 Window::calculateProjectionMatrix() {
     } else {
         float orthoSize = this->camera->orthographicSize;
         int fbWidth, fbHeight;
-        atlasGetWindowSizeInPixels(this->windowRef, &fbWidth, &fbHeight);
+        this->queryDrawableSizeInPixels(&fbWidth, &fbHeight);
         float aspectRatio =
             static_cast<float>(fbWidth) / static_cast<float>(fbHeight);
         projection = glm::ortho(-orthoSize * aspectRatio,
@@ -2395,7 +2500,7 @@ void Window::renderPingpong(RenderTarget *target) {
     updatePipelineStateField(this->useDepth, true);
 
     int fbWidth, fbHeight;
-    atlasGetWindowSizeInPixels(this->windowRef, &fbWidth, &fbHeight);
+    this->queryDrawableSizeInPixels(&fbWidth, &fbHeight);
     setViewportState(0, 0, fbWidth, fbHeight);
 
     target->blurredTexture = Texture();

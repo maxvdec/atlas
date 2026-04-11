@@ -130,6 +130,22 @@ struct WindowConfiguration {
      * reduce quality but greatly boost performance.
      */
     float ssaoScale = 0.5f;
+
+    /**
+     * @brief Optional target NSView pointer for Metal presentation.
+     *
+     * When set (Metal backend only), Atlas renders directly into this view's
+     * CAMetalLayer instead of the SDL window's content view.
+     */
+    void *metalTargetView = nullptr;
+
+    /**
+     * @brief Optional SDL window handle retained for SDL subsystems.
+     *
+     * This is useful when embedding rendering into an external NSView while
+     * still using SDL input/audio facilities tied to a host SDL window.
+     */
+    CoreWindowReference sdlInputWindow = nullptr;
 };
 
 /**
@@ -576,7 +592,7 @@ class Window {
      */
     Size2d getSize() {
         int fbw, fbh;
-        atlasGetWindowSizeInPixels(windowRef, &fbw, &fbh);
+        this->queryDrawableSizeInPixels(&fbw, &fbh);
         return {static_cast<float>(fbw), static_cast<float>(fbh)};
     }
 
@@ -817,6 +833,7 @@ class Window {
     void setViewportState(int x, int y, int newViewportWidth,
                           int newViewportHeight);
     void updateBackbufferTarget(int backbufferWidth, int backbufferHeight);
+    void queryDrawableSizeInPixels(int *width, int *height) const;
 
     template <typename T> void updatePipelineStateField(T &field, T value) {
         if (field != value) {
@@ -867,6 +884,9 @@ class Window {
     float ssaoRenderScale = 0.5f;
     bool metalUpscalingEnabled = false;
     float metalUpscalingRatio = 1.0f;
+    bool renderToExternalMetalView = false;
+    bool showHostWindow = true;
+    void *externalMetalView = nullptr;
     unsigned int bloomBlurPasses = 4;
     int ssaoKernelSize = 32;
     float ssaoUpdateInterval = 1.0f / 45.0f;
