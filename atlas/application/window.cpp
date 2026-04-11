@@ -732,6 +732,7 @@ std::tuple<int, int> Window::getCursorPosition() {
 void Window::queryDrawableSizeInPixels(int *width, int *height) const {
     int pixelWidth = 0;
     int pixelHeight = 0;
+    atlasGetWindowSizeInPixels(this->windowRef, &pixelWidth, &pixelHeight);
 
 #if defined(METAL) && defined(__APPLE__)
     if (this->externalMetalView != nullptr) {
@@ -747,17 +748,13 @@ void Window::queryDrawableSizeInPixels(int *width, int *height) const {
             }
         }
 
-        pixelWidth =
-            std::max(1, static_cast<int>(std::lround(
-                            std::max(1.0, bounds.size.width) * scale)));
-        pixelHeight =
-            std::max(1, static_cast<int>(std::lround(
-                            std::max(1.0, bounds.size.height) * scale)));
-    } else {
-        atlasGetWindowSizeInPixels(this->windowRef, &pixelWidth, &pixelHeight);
+        if (bounds.size.width > 0.0 && bounds.size.height > 0.0) {
+            pixelWidth = std::max(
+                1, static_cast<int>(std::lround(bounds.size.width * scale)));
+            pixelHeight = std::max(
+                1, static_cast<int>(std::lround(bounds.size.height * scale)));
+        }
     }
-#else
-    atlasGetWindowSizeInPixels(this->windowRef, &pixelWidth, &pixelHeight);
 #endif
 
     if (width != nullptr) {

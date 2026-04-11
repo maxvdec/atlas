@@ -605,30 +605,21 @@ void uploadUniformBuffers(const std::shared_ptr<Pipeline> &pipeline,
                 return;
             }
 
-            static constexpr size_t kMaxBytesInline = 4096;
-            if (bytes.size() <= kMaxBytesInline) {
-                if (stage == metal::MetalProgramStage::Fragment) {
-                    encoder->setFragmentBytes(
-                        bytes.data(), static_cast<NS::UInteger>(bytes.size()),
-                        binding.index);
-                } else {
-                    encoder->setVertexBytes(
-                        bytes.data(), static_cast<NS::UInteger>(bytes.size()),
-                        binding.index);
-                }
-            } else {
-                MTL::Buffer *inlineBuffer = device->newBuffer(
-                    bytes.data(),
-                    static_cast<NS::UInteger>(
-                        alignUp(bytes.size(), static_cast<size_t>(16))),
-                    MTL::ResourceStorageModeShared);
-                if (stage == metal::MetalProgramStage::Fragment) {
-                    encoder->setFragmentBuffer(inlineBuffer, 0, binding.index);
-                } else {
-                    encoder->setVertexBuffer(inlineBuffer, 0, binding.index);
-                }
-                inlineBuffer->release();
+            MTL::Buffer *inlineBuffer =
+                device->newBuffer(bytes.data(),
+                                  static_cast<NS::UInteger>(alignUp(
+                                      bytes.size(), static_cast<size_t>(16))),
+                                  MTL::ResourceStorageModeShared);
+            if (inlineBuffer == nullptr) {
+                throw std::runtime_error(
+                    "Failed to allocate Metal uniform buffer");
             }
+            if (stage == metal::MetalProgramStage::Fragment) {
+                encoder->setFragmentBuffer(inlineBuffer, 0, binding.index);
+            } else {
+                encoder->setVertexBuffer(inlineBuffer, 0, binding.index);
+            }
+            inlineBuffer->release();
         };
 
         if (binding.vertexStage) {
@@ -708,7 +699,11 @@ void bindTextures(CommandBuffer *commandBuffer,
         commandState.textureBindingsInitialized = true;
     }
 
-    for (size_t unit = 0; unit < desiredTextures.size(); ++unit) {
+    constexpr size_t kMaxRenderTextureUnits = 16;
+    const size_t renderUnitCount =
+        std::min(desiredTextures.size(), kMaxRenderTextureUnits);
+
+    for (size_t unit = 0; unit < renderUnitCount; ++unit) {
         MTL::Texture *desiredTexture = desiredTextures[unit];
         MTL::SamplerState *desiredSampler = desiredSamplers[unit];
 
@@ -815,20 +810,17 @@ void uploadComputeUniformBuffers(const std::shared_ptr<Pipeline> &pipeline,
             continue;
         }
 
-        static constexpr size_t kMaxBytesInline = 4096;
-        if (bytes.size() <= kMaxBytesInline) {
-            encoder->setBytes(bytes.data(),
-                              static_cast<NS::UInteger>(bytes.size()),
-                              binding.index);
-        } else {
-            MTL::Buffer *inlineBuffer =
-                device->newBuffer(bytes.data(),
-                                  static_cast<NS::UInteger>(alignUp(
-                                      bytes.size(), static_cast<size_t>(16))),
-                                  MTL::ResourceStorageModeShared);
-            encoder->setBuffer(inlineBuffer, 0, binding.index);
-            inlineBuffer->release();
+        MTL::Buffer *inlineBuffer =
+            device->newBuffer(bytes.data(),
+                              static_cast<NS::UInteger>(alignUp(
+                                  bytes.size(), static_cast<size_t>(16))),
+                              MTL::ResourceStorageModeShared);
+        if (inlineBuffer == nullptr) {
+            throw std::runtime_error(
+                "Failed to allocate Metal compute uniform buffer");
         }
+        encoder->setBuffer(inlineBuffer, 0, binding.index);
+        inlineBuffer->release();
     }
 }
 
@@ -890,7 +882,10 @@ void bindComputeTextures(const std::shared_ptr<Pipeline> &pipeline,
         }
     }
 
-    for (size_t unit = 0; unit < desiredTextures.size(); ++unit) {
+    constexpr size_t kMaxComputeTextureUnits = 16;
+    const size_t computeUnitCount =
+        std::min(desiredTextures.size(), kMaxComputeTextureUnits);
+    for (size_t unit = 0; unit < computeUnitCount; ++unit) {
         encoder->setTexture(desiredTextures[unit],
                             static_cast<NS::UInteger>(unit));
         encoder->setSamplerState(desiredSamplers[unit],

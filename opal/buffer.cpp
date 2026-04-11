@@ -188,8 +188,10 @@ std::shared_ptr<Buffer> Buffer::create(BufferUsage usage, size_t size,
 
     if (data != nullptr && size > 0) {
         std::memcpy(bufferState.buffer->contents(), data, size);
-        bufferState.buffer->didModifyRange(
-            NS::Range::Make(0, static_cast<NS::UInteger>(size)));
+        if (bufferState.buffer->storageMode() == MTL::StorageModeManaged) {
+            bufferState.buffer->didModifyRange(
+                NS::Range::Make(0, static_cast<NS::UInteger>(size)));
+        }
     }
 #endif
 
@@ -311,8 +313,10 @@ void Buffer::updateData(size_t offset, size_t size, const void *data) {
         if (oldBuffer != nullptr && bufferState.size > 0) {
             std::memcpy(newBuffer->contents(), oldBuffer->contents(),
                         bufferState.size);
-            newBuffer->didModifyRange(NS::Range::Make(
-                0, static_cast<NS::UInteger>(bufferState.size)));
+            if (newBuffer->storageMode() == MTL::StorageModeManaged) {
+                newBuffer->didModifyRange(NS::Range::Make(
+                    0, static_cast<NS::UInteger>(bufferState.size)));
+            }
         }
         bufferState.buffer = newBuffer;
         bufferState.size = newSize;
@@ -323,8 +327,11 @@ void Buffer::updateData(size_t offset, size_t size, const void *data) {
 
     std::memcpy(static_cast<uint8_t *>(bufferState.buffer->contents()) + offset,
                 data, size);
-    bufferState.buffer->didModifyRange(NS::Range::Make(
-        static_cast<NS::UInteger>(offset), static_cast<NS::UInteger>(size)));
+    if (bufferState.buffer->storageMode() == MTL::StorageModeManaged) {
+        bufferState.buffer->didModifyRange(
+            NS::Range::Make(static_cast<NS::UInteger>(offset),
+                            static_cast<NS::UInteger>(size)));
+    }
 #endif
 }
 
