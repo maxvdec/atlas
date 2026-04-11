@@ -3015,12 +3015,22 @@ runtime::makeContextForMetalView(std::string projectFile, void *metalView,
 #endif
 }
 
-void runtime::runProjectInMetalView(std::string projectFile, void *metalView,
-                                    CoreWindowReference sdlInputWindow) {
+std::shared_ptr<Context> runtime::makeContextForMetalViewNonBlocking(
+    std::string projectFile, void *metalView,
+    CoreWindowReference sdlInputWindow) {
     auto context = runtime::makeContextForMetalView(std::move(projectFile),
                                                     metalView, sdlInputWindow);
     context->loadProject();
-    context->runWindowed();
+    return context;
+}
+
+void runtime::runProjectInMetalView(std::string projectFile, void *metalView,
+                                    CoreWindowReference sdlInputWindow) {
+    auto context = runtime::makeContextForMetalViewNonBlocking(
+        std::move(projectFile), metalView, sdlInputWindow);
+    while (context->stepFrame()) {
+    }
+    context->end();
 }
 
 void Context::initializeScripting() {
@@ -3091,6 +3101,25 @@ std::string Context::registerScriptModule(const std::string &modulePath) {
 void Context::runWindowed() {
     window->setScene(scene.get());
     window->run();
+}
+
+bool Context::stepFrame() {
+    if (window == nullptr) {
+        throw std::runtime_error("Window is not initialized");
+    }
+    if (scene == nullptr) {
+        throw std::runtime_error("Scene is not initialized");
+    }
+    window->setScene(scene.get());
+    return window->stepFrame();
+}
+
+void Context::end() {
+    if (window == nullptr) {
+        return;
+    }
+    window->close();
+    window->endRunLoop();
 }
 
 void Context::loadProject() {

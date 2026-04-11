@@ -768,7 +768,11 @@ void Window::queryDrawableSizeInPixels(int *width, int *height) const {
     }
 }
 
-void Window::run() {
+void Window::initializeRunLoop() {
+    if (this->runLoopInitialized) {
+        return;
+    }
+
     if (this->camera == nullptr) {
         this->camera = new Camera();
     }
@@ -790,8 +794,9 @@ void Window::run() {
     for (auto &obj : this->uiRenderables) {
         obj->initialize();
     }
+
     SDL_Window *window = this->windowRef;
-    const SDL_WindowID windowID = SDL_GetWindowID(window);
+    this->runLoopWindowID = SDL_GetWindowID(window);
     if (this->showHostWindow) {
         if (!SDL_ShowWindow(window)) {
             atlas_warning("Failed to show window");
@@ -806,9 +811,7 @@ void Window::run() {
         SDL_HideWindow(window);
     }
 
-    auto commandBuffer = device->acquireCommandBuffer();
-    this->activeCommandBuffer = commandBuffer;
-
+    this->activeCommandBuffer = device->acquireCommandBuffer();
     this->lastTime = atlasGetTimeSeconds();
 
     updatePipelineStateField(useMultisampling, this->useMultisampling);
@@ -818,565 +821,577 @@ void Window::run() {
     updatePipelineStateField(this->dstBlend, opal::BlendFunc::OneMinusSrcAlpha);
 
     this->framesPerSecond = 0.0f;
-
     auto defaultFramebuffer = device->getDefaultFramebuffer();
-    auto renderPass = opal::RenderPass::create();
-    renderPass->setFramebuffer(defaultFramebuffer);
-
-    constexpr float MAX_DELTA_TIME = 1.0f / 30.0f;
+    this->runLoopRenderPass = opal::RenderPass::create();
+    this->runLoopRenderPass->setFramebuffer(defaultFramebuffer);
     this->firstFrame = true;
-    auto pollEvents = [&]() {
-        SDL_Event event;
-        while (SDL_PollEvent(&event)) {
-            switch (event.type) {
-            case SDL_EVENT_QUIT:
+    this->runLoopInitialized = true;
+}
+
+void Window::pollEvents() {
+    SDL_Event event;
+    while (SDL_PollEvent(&event)) {
+        switch (event.type) {
+        case SDL_EVENT_QUIT:
+            shouldClose = true;
+            break;
+        case SDL_EVENT_WINDOW_CLOSE_REQUESTED:
+            if (event.window.windowID == this->runLoopWindowID) {
                 shouldClose = true;
-                break;
-            case SDL_EVENT_WINDOW_CLOSE_REQUESTED:
-                if (event.window.windowID == windowID) {
-                    shouldClose = true;
-                }
-                break;
-            case SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED:
-                if (event.window.windowID == windowID) {
-                    int resizedWidth = 0;
-                    int resizedHeight = 0;
-                    this->queryDrawableSizeInPixels(&resizedWidth,
-                                                    &resizedHeight);
-                    this->viewportWidth = resizedWidth;
-                    this->viewportHeight = resizedHeight;
-                    this->shadowMapsDirty = true;
-                    this->ssaoMapsDirty = true;
-                }
-                break;
-            case SDL_EVENT_KEY_DOWN:
-                if (event.key.windowID == windowID) {
-                    const int scancode = static_cast<int>(event.key.scancode);
-                    if (scancode >= 0 &&
-                        scancode < static_cast<int>(
-                                       this->keysPressedThisFrame.size())) {
-                        this->keysPressedThisFrame[scancode] = true;
-                    }
-                }
-                break;
-            case SDL_EVENT_TEXT_INPUT:
-                if (event.text.windowID == windowID &&
-                    event.text.text != nullptr) {
-                    this->textInputBuffer += event.text.text;
-                }
-                break;
-            case SDL_EVENT_MOUSE_MOTION:
-                if (event.motion.windowID == windowID) {
-                    Position2d movement = {.x = event.motion.xrel,
-                                           .y = -event.motion.yrel};
-                    this->relativeMousePos.x += movement.x;
-                    this->relativeMousePos.y += movement.y;
-                    if (this->currentScene != nullptr) {
-                        this->currentScene->onMouseMove(*this, movement);
-                    }
-                    this->lastMouseX = event.motion.x;
-                    this->lastMouseY = event.motion.y;
-                }
-                break;
-            case SDL_EVENT_MOUSE_BUTTON_DOWN:
-                if (event.button.windowID == windowID) {
-                    const std::size_t button =
-                        static_cast<std::size_t>(event.button.button);
-                    if (button < this->mouseButtonsPressedThisFrame.size()) {
-                        this->mouseButtonsPressedThisFrame[button] = true;
-                    }
-                }
-                break;
-            case SDL_EVENT_MOUSE_WHEEL:
-                if (event.wheel.windowID == windowID &&
-                    this->currentScene != nullptr) {
-                    float offsetX = event.wheel.x;
-                    float offsetY = event.wheel.y;
-                    if (event.wheel.direction == SDL_MOUSEWHEEL_FLIPPED) {
-                        offsetX = -offsetX;
-                        offsetY = -offsetY;
-                    }
-                    Position2d offset = {.x = offsetX, .y = offsetY};
-                    this->currentScene->onMouseScroll(*this, offset);
-                }
-                break;
-            case SDL_EVENT_GAMEPAD_REMOVED:
-                closeGamepadHandle(event.gdevice.which);
-                break;
-            case SDL_EVENT_JOYSTICK_REMOVED:
-                closeJoystickHandle(event.jdevice.which);
-                break;
-            default:
-                break;
             }
-        }
-    };
-
-    while (!shouldClose) {
-        currentFrame++;
-        this->relativeMousePos = {.x = 0.0f, .y = 0.0f};
-        this->keysPressedThisFrame.fill(false);
-        this->mouseButtonsPressedThisFrame.fill(false);
-        this->textInputBuffer.clear();
-        pollEvents();
-
-        if (this->hasPendingSceneChange) {
-            this->applyScene(this->pendingScene);
-            this->pendingScene = nullptr;
-            this->hasPendingSceneChange = false;
-        }
-
-        float currentTime = atlasGetTimeSeconds();
-        float rawDelta = currentTime - this->lastTime;
-        this->lastTime = currentTime;
-
-        const bool isFirstFrame = this->firstFrame;
-        if (isFirstFrame) {
-            this->deltaTime = 0.0f;
-        } else {
-            rawDelta = std::max(rawDelta, 0.0f);
-            this->deltaTime = std::min(rawDelta, MAX_DELTA_TIME);
-        }
-
-        if (this->deltaTime > 0.0f) {
-            this->framesPerSecond = 1.0f / this->deltaTime;
-        }
-
-        device->frameCount++;
-
-        for (auto *obj : this->pendingRemovals) {
-            this->renderables.erase(std::remove(this->renderables.begin(),
-                                                this->renderables.end(), obj),
-                                    this->renderables.end());
-            this->lateForwardRenderables.erase(
-                std::remove(this->lateForwardRenderables.begin(),
-                            this->lateForwardRenderables.end(), obj),
-                this->lateForwardRenderables.end());
-            this->preferenceRenderables.erase(
-                std::remove(this->preferenceRenderables.begin(),
-                            this->preferenceRenderables.end(), obj),
-                this->preferenceRenderables.end());
-            this->firstRenderables.erase(
-                std::remove(this->firstRenderables.begin(),
-                            this->firstRenderables.end(), obj),
-                this->firstRenderables.end());
-            this->uiRenderables.erase(std::remove(this->uiRenderables.begin(),
-                                                  this->uiRenderables.end(),
-                                                  obj),
-                                      this->uiRenderables.end());
-            if (auto *fluid = dynamic_cast<Fluid *>(obj)) {
-                this->lateFluids.erase(std::remove(this->lateFluids.begin(),
-                                                   this->lateFluids.end(),
-                                                   fluid),
-                                       this->lateFluids.end());
+            break;
+        case SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED:
+            if (event.window.windowID == this->runLoopWindowID) {
+                int resizedWidth = 0;
+                int resizedHeight = 0;
+                this->queryDrawableSizeInPixels(&resizedWidth, &resizedHeight);
+                this->viewportWidth = resizedWidth;
+                this->viewportHeight = resizedHeight;
+                this->shadowMapsDirty = true;
+                this->ssaoMapsDirty = true;
             }
-        }
-        this->pendingRemovals.clear();
-
-        for (auto *obj : this->pendingObjects) {
-            obj->initialize();
-            this->renderables.push_back(obj);
-            if (obj->renderLateForward) {
-                this->addLateForwardObject(obj);
+            break;
+        case SDL_EVENT_KEY_DOWN:
+            if (event.key.windowID == this->runLoopWindowID) {
+                const int scancode = static_cast<int>(event.key.scancode);
+                if (scancode >= 0 &&
+                    scancode <
+                        static_cast<int>(this->keysPressedThisFrame.size())) {
+                    this->keysPressedThisFrame[scancode] = true;
+                }
             }
+            break;
+        case SDL_EVENT_TEXT_INPUT:
+            if (event.text.windowID == this->runLoopWindowID &&
+                event.text.text != nullptr) {
+                this->textInputBuffer += event.text.text;
+            }
+            break;
+        case SDL_EVENT_MOUSE_MOTION:
+            if (event.motion.windowID == this->runLoopWindowID) {
+                Position2d movement = {.x = event.motion.xrel,
+                                       .y = -event.motion.yrel};
+                this->relativeMousePos.x += movement.x;
+                this->relativeMousePos.y += movement.y;
+                if (this->currentScene != nullptr) {
+                    this->currentScene->onMouseMove(*this, movement);
+                }
+                this->lastMouseX = event.motion.x;
+                this->lastMouseY = event.motion.y;
+            }
+            break;
+        case SDL_EVENT_MOUSE_BUTTON_DOWN:
+            if (event.button.windowID == this->runLoopWindowID) {
+                const std::size_t button =
+                    static_cast<std::size_t>(event.button.button);
+                if (button < this->mouseButtonsPressedThisFrame.size()) {
+                    this->mouseButtonsPressedThisFrame[button] = true;
+                }
+            }
+            break;
+        case SDL_EVENT_MOUSE_WHEEL:
+            if (event.wheel.windowID == this->runLoopWindowID &&
+                this->currentScene != nullptr) {
+                float offsetX = event.wheel.x;
+                float offsetY = event.wheel.y;
+                if (event.wheel.direction == SDL_MOUSEWHEEL_FLIPPED) {
+                    offsetX = -offsetX;
+                    offsetY = -offsetY;
+                }
+                Position2d offset = {.x = offsetX, .y = offsetY};
+                this->currentScene->onMouseScroll(*this, offset);
+            }
+            break;
+        case SDL_EVENT_GAMEPAD_REMOVED:
+            closeGamepadHandle(event.gdevice.which);
+            break;
+        case SDL_EVENT_JOYSTICK_REMOVED:
+            closeJoystickHandle(event.jdevice.which);
+            break;
+        default:
+            break;
         }
-        this->pendingObjects.clear();
+    }
+}
 
-        DebugTimer cpuTimer("Cpu Data");
-        DebugTimer mainTimer("Main Loop");
+bool Window::stepFrame() {
+    this->initializeRunLoop();
+    if (this->shouldClose) {
+        return false;
+    }
 
-        for (auto &obj : this->renderables) {
-            obj->beforePhysics();
+    SDL_Window *window = this->windowRef;
+    auto commandBuffer = this->activeCommandBuffer;
+    auto renderPass = this->runLoopRenderPass;
+    constexpr float MAX_DELTA_TIME = 1.0f / 30.0f;
+
+    currentFrame++;
+    this->relativeMousePos = {.x = 0.0f, .y = 0.0f};
+    this->keysPressedThisFrame.fill(false);
+    this->mouseButtonsPressedThisFrame.fill(false);
+    this->textInputBuffer.clear();
+    this->pollEvents();
+
+    if (this->hasPendingSceneChange) {
+        this->applyScene(this->pendingScene);
+        this->pendingScene = nullptr;
+        this->hasPendingSceneChange = false;
+    }
+
+    float currentTime = atlasGetTimeSeconds();
+    float rawDelta = currentTime - this->lastTime;
+    this->lastTime = currentTime;
+
+    const bool isFirstFrame = this->firstFrame;
+    if (isFirstFrame) {
+        this->deltaTime = 0.0f;
+    } else {
+        rawDelta = std::max(rawDelta, 0.0f);
+        this->deltaTime = std::min(rawDelta, MAX_DELTA_TIME);
+    }
+
+    if (this->deltaTime > 0.0f) {
+        this->framesPerSecond = 1.0f / this->deltaTime;
+    }
+
+    device->frameCount++;
+
+    for (auto *obj : this->pendingRemovals) {
+        this->renderables.erase(std::remove(this->renderables.begin(),
+                                            this->renderables.end(), obj),
+                                this->renderables.end());
+        this->lateForwardRenderables.erase(
+            std::remove(this->lateForwardRenderables.begin(),
+                        this->lateForwardRenderables.end(), obj),
+            this->lateForwardRenderables.end());
+        this->preferenceRenderables.erase(
+            std::remove(this->preferenceRenderables.begin(),
+                        this->preferenceRenderables.end(), obj),
+            this->preferenceRenderables.end());
+        this->firstRenderables.erase(std::remove(this->firstRenderables.begin(),
+                                                 this->firstRenderables.end(),
+                                                 obj),
+                                     this->firstRenderables.end());
+        this->uiRenderables.erase(std::remove(this->uiRenderables.begin(),
+                                              this->uiRenderables.end(), obj),
+                                  this->uiRenderables.end());
+        if (auto *fluid = dynamic_cast<Fluid *>(obj)) {
+            this->lateFluids.erase(std::remove(this->lateFluids.begin(),
+                                               this->lateFluids.end(), fluid),
+                                   this->lateFluids.end());
         }
+    }
+    this->pendingRemovals.clear();
 
-        this->physicsWorld->update(this->deltaTime);
-
-        if (this->hasPendingSceneChange) {
-            this->applyScene(this->pendingScene);
-            this->pendingScene = nullptr;
-            this->hasPendingSceneChange = false;
-            continue;
+    for (auto *obj : this->pendingObjects) {
+        obj->initialize();
+        this->renderables.push_back(obj);
+        if (obj->renderLateForward) {
+            this->addLateForwardObject(obj);
         }
+    }
+    this->pendingObjects.clear();
 
-        if (this->currentScene == nullptr) {
-            commandBuffer->start();
-            commandBuffer->beginPass(renderPass);
-            commandBuffer->clearColor(this->clearColor.r, this->clearColor.g,
-                                      this->clearColor.b, this->clearColor.a);
-            commandBuffer->clearDepth(1.0);
-            commandBuffer->endPass();
-            commandBuffer->commit();
-#ifdef OPENGL
-            SDL_GL_SwapWindow(window);
-#endif
-            continue;
-        }
+    DebugTimer cpuTimer("Cpu Data");
+    DebugTimer mainTimer("Main Loop");
 
+    for (auto &obj : this->renderables) {
+        obj->beforePhysics();
+    }
+
+    this->physicsWorld->update(this->deltaTime);
+
+    if (this->hasPendingSceneChange) {
+        this->applyScene(this->pendingScene);
+        this->pendingScene = nullptr;
+        this->hasPendingSceneChange = false;
+        return !this->shouldClose;
+    }
+
+    if (this->currentScene == nullptr) {
         commandBuffer->start();
+        commandBuffer->beginPass(renderPass);
+        commandBuffer->clearColor(this->clearColor.r, this->clearColor.g,
+                                  this->clearColor.b, this->clearColor.a);
+        commandBuffer->clearDepth(1.0);
+        commandBuffer->endPass();
+        commandBuffer->commit();
+#ifdef OPENGL
+        SDL_GL_SwapWindow(window);
+#endif
+        return !this->shouldClose;
+    }
 
-        currentScene->updateScene(this->deltaTime);
+    commandBuffer->start();
 
-        for (auto &obj : this->firstRenderables) {
-            if (obj == nullptr) {
+    currentScene->updateScene(this->deltaTime);
+
+    for (auto &obj : this->firstRenderables) {
+        if (obj == nullptr) {
+            continue;
+        }
+        obj->update(*this);
+    }
+
+    for (auto &obj : this->renderables) {
+        if (obj->renderLateForward) {
+            continue;
+        }
+        obj->update(*this);
+    }
+
+    for (auto &obj : this->lateForwardRenderables) {
+        obj->update(*this);
+    }
+
+    currentScene->update(*this);
+
+    uint64_t cpuTime = cpuTimer.stop();
+
+    DebugTimer gpuTimer("Gpu Data");
+
+    renderLightsToShadowMaps(commandBuffer);
+
+    static std::unique_ptr<RenderTarget> modeScreenTarget = nullptr;
+    std::vector<RenderTarget *> activeRenderTargets = this->renderTargets;
+    bool usesModeScreenTarget = false;
+    if (activeRenderTargets.empty() &&
+        (this->usePathTracing || this->usesDeferred)) {
+        if (!modeScreenTarget) {
+            modeScreenTarget =
+                std::make_unique<RenderTarget>(*this, RenderTargetType::Scene);
+        }
+        modeScreenTarget->display(*this, 0.0f);
+        modeScreenTarget->show();
+        activeRenderTargets.push_back(modeScreenTarget.get());
+        usesModeScreenTarget = true;
+    } else if (modeScreenTarget) {
+        modeScreenTarget->hide();
+    }
+
+    for (auto &target : activeRenderTargets) {
+        if (target == nullptr) {
+            continue;
+        }
+        this->currentRenderTarget = target;
+        setViewportState(0, 0, target->getWidth(), target->getHeight());
+        updatePipelineStateField(this->depthCompareOp, opal::CompareOp::Less);
+        updatePipelineStateField(this->writeDepth, true);
+        updatePipelineStateField(this->cullMode, opal::CullMode::Back);
+
+        auto newRenderPass = opal::RenderPass::create();
+        newRenderPass->setFramebuffer(target->getFramebuffer());
+        if (target->brightTexture.id != 0) {
+            target->getFramebuffer()->setDrawBuffers(2);
+        }
+
+        if (this->usePathTracing) {
+            if (pathTracer == nullptr) {
                 continue;
             }
-            obj->update(*this);
+#ifdef METAL
+            pathTracer->resizeOutput(target->getWidth(), target->getHeight());
+            pathTracer->render(commandBuffer);
+            pathTracer->copySrcFramebuffer->attachTexture(
+                pathTracer->pathTracingTexture->texture, 0);
+            pathTracer->copyDstFramebuffer->attachTexture(
+                target->texture.texture, 0);
+            auto copy = opal::ResolveAction::createForColorAttachment(
+                pathTracer->copySrcFramebuffer, pathTracer->copyDstFramebuffer,
+                0);
+            commandBuffer->performResolve(copy);
+#endif
+
+            continue;
         }
 
-        // Update the renderables
-        for (auto &obj : this->renderables) {
-            if (obj->renderLateForward) {
-                continue;
+        if (this->usesDeferred) {
+            if (this->gBuffer == nullptr) {
+                this->useDeferredRendering();
             }
-            obj->update(*this);
-        }
 
-        for (auto &obj : this->lateForwardRenderables) {
-            obj->update(*this);
-        }
+            this->deferredRendering(target, commandBuffer);
 
-        currentScene->update(*this);
-
-        uint64_t cpuTime = cpuTimer.stop();
-
-        DebugTimer gpuTimer("Gpu Data");
-
-        renderLightsToShadowMaps(commandBuffer);
-
-        static std::unique_ptr<RenderTarget> modeScreenTarget = nullptr;
-        std::vector<RenderTarget *> activeRenderTargets = this->renderTargets;
-        bool usesModeScreenTarget = false;
-        if (activeRenderTargets.empty() &&
-            (this->usePathTracing || this->usesDeferred)) {
-            if (!modeScreenTarget) {
-                modeScreenTarget = std::make_unique<RenderTarget>(
-                    *this, RenderTargetType::Scene);
+            auto forwardFramebuffer = target->getFramebuffer();
+            if (target->type == RenderTargetType::Multisampled &&
+                target->getResolveFramebuffer() != nullptr) {
+                forwardFramebuffer = target->getResolveFramebuffer();
             }
-            modeScreenTarget->display(*this, 0.0f);
-            modeScreenTarget->show();
-            activeRenderTargets.push_back(modeScreenTarget.get());
-            usesModeScreenTarget = true;
-        } else if (modeScreenTarget) {
-            modeScreenTarget->hide();
-        }
+            auto resolveCommand = opal::ResolveAction::createForDepth(
+                this->gBuffer->getFramebuffer(), forwardFramebuffer);
+            commandBuffer->performResolve(resolveCommand);
 
-        // Render to the targets
-        for (auto &target : activeRenderTargets) {
-            if (target == nullptr) {
-                continue;
-            }
-            this->currentRenderTarget = target;
-            setViewportState(0, 0, target->getWidth(), target->getHeight());
+            auto forwardRenderPass = opal::RenderPass::create();
+            forwardRenderPass->setFramebuffer(forwardFramebuffer);
+            forwardFramebuffer->setDrawBuffers(2);
+            commandBuffer->beginPass(forwardRenderPass);
+            forwardFramebuffer->setViewport(0, 0, target->getWidth(),
+                                            target->getHeight());
+
+            updatePipelineStateField(this->useDepth, true);
             updatePipelineStateField(this->depthCompareOp,
                                      opal::CompareOp::Less);
             updatePipelineStateField(this->writeDepth, true);
             updatePipelineStateField(this->cullMode, opal::CullMode::Back);
 
-            auto newRenderPass = opal::RenderPass::create();
-            newRenderPass->setFramebuffer(target->getFramebuffer());
-            if (target->brightTexture.id != 0) {
-                target->getFramebuffer()->setDrawBuffers(2);
-            }
-
-            if (this->usePathTracing) {
-                if (pathTracer == nullptr) {
-                    continue;
+            auto renderForwardOnly = [&](Renderable *obj) {
+                if (obj == nullptr) {
+                    return;
                 }
-#ifdef METAL
-                pathTracer->resizeOutput(target->getWidth(),
-                                         target->getHeight());
-                pathTracer->render(commandBuffer);
-                // Copy to the current target
-                pathTracer->copySrcFramebuffer->attachTexture(
-                    pathTracer->pathTracingTexture->texture, 0);
-                pathTracer->copyDstFramebuffer->attachTexture(
-                    target->texture.texture, 0);
-                auto copy = opal::ResolveAction::createForColorAttachment(
-                    pathTracer->copySrcFramebuffer,
-                    pathTracer->copyDstFramebuffer, 0);
-                commandBuffer->performResolve(copy);
-#endif
-
-                continue;
-            }
-
-            if (this->usesDeferred) {
-                if (this->gBuffer == nullptr) {
-                    this->useDeferredRendering();
-                }
-
-                this->deferredRendering(target, commandBuffer);
-
-                auto forwardFramebuffer = target->getFramebuffer();
-                if (target->type == RenderTargetType::Multisampled &&
-                    target->getResolveFramebuffer() != nullptr) {
-                    forwardFramebuffer = target->getResolveFramebuffer();
-                }
-                auto resolveCommand = opal::ResolveAction::createForDepth(
-                    this->gBuffer->getFramebuffer(), forwardFramebuffer);
-                commandBuffer->performResolve(resolveCommand);
-
-                auto forwardRenderPass = opal::RenderPass::create();
-                forwardRenderPass->setFramebuffer(forwardFramebuffer);
-                forwardFramebuffer->setDrawBuffers(2);
-                commandBuffer->beginPass(forwardRenderPass);
-                forwardFramebuffer->setViewport(0, 0, target->getWidth(),
-                                                target->getHeight());
-
-                updatePipelineStateField(this->useDepth, true);
-                updatePipelineStateField(this->depthCompareOp,
-                                         opal::CompareOp::Less);
-                updatePipelineStateField(this->writeDepth, true);
-                updatePipelineStateField(this->cullMode, opal::CullMode::Back);
-
-                auto renderForwardOnly = [&](Renderable *obj) {
-                    if (obj == nullptr) {
-                        return;
-                    }
-                    if (auto *model = dynamic_cast<Model *>(obj)) {
-                        const auto &meshes =
-                            static_cast<const Model *>(model)->getObjects();
-                        for (const auto &mesh : meshes) {
-                            CoreObject *meshObject = mesh.get();
-                            if (meshObject == nullptr) {
-                                continue;
-                            }
-                            bool hasAnyTexture = !meshObject->textures.empty();
-                            if (!hasAnyTexture) {
-                                meshObject->material = model->material;
-                            }
-                            meshObject->material.useNormalMap =
-                                model->material.useNormalMap;
-                            meshObject->material.normalMapStrength =
-                                model->material.normalMapStrength;
-                            meshObject->useDeferredRendering =
-                                model->useDeferredRendering;
-                            if (meshObject->canUseDeferredRendering()) {
-                                continue;
-                            }
-                            meshObject->setViewMatrix(
-                                this->camera->calculateViewMatrix());
-                            meshObject->setProjectionMatrix(
-                                calculateProjectionMatrix());
-                            meshObject->render(
-                                getDeltaTime(), commandBuffer,
-                                shouldRefreshPipeline(meshObject));
+                if (auto *model = dynamic_cast<Model *>(obj)) {
+                    const auto &meshes =
+                        static_cast<const Model *>(model)->getObjects();
+                    for (const auto &mesh : meshes) {
+                        CoreObject *meshObject = mesh.get();
+                        if (meshObject == nullptr) {
+                            continue;
                         }
-                        return;
+                        bool hasAnyTexture = !meshObject->textures.empty();
+                        if (!hasAnyTexture) {
+                            meshObject->material = model->material;
+                        }
+                        meshObject->material.useNormalMap =
+                            model->material.useNormalMap;
+                        meshObject->material.normalMapStrength =
+                            model->material.normalMapStrength;
+                        meshObject->useDeferredRendering =
+                            model->useDeferredRendering;
+                        if (meshObject->canUseDeferredRendering()) {
+                            continue;
+                        }
+                        meshObject->setViewMatrix(
+                            this->camera->calculateViewMatrix());
+                        meshObject->setProjectionMatrix(
+                            calculateProjectionMatrix());
+                        meshObject->render(getDeltaTime(), commandBuffer,
+                                           shouldRefreshPipeline(meshObject));
                     }
-                    if (obj->canUseDeferredRendering()) {
-                        return;
-                    }
-                    obj->setViewMatrix(this->camera->calculateViewMatrix());
-                    obj->setProjectionMatrix(calculateProjectionMatrix());
-                    obj->render(getDeltaTime(), commandBuffer,
-                                shouldRefreshPipeline(obj));
-                };
-
-                for (auto &obj : this->firstRenderables) {
-                    renderForwardOnly(obj);
+                    return;
                 }
-
-                for (auto &obj : this->renderables) {
-                    if (obj != nullptr && obj->renderLateForward) {
-                        continue;
-                    }
-                    renderForwardOnly(obj);
+                if (obj->canUseDeferredRendering()) {
+                    return;
                 }
-
-                for (auto &obj : this->lateForwardRenderables) {
-                    obj->setViewMatrix(this->camera->calculateViewMatrix());
-                    obj->setProjectionMatrix(calculateProjectionMatrix());
-                    obj->render(getDeltaTime(), commandBuffer,
-                                shouldRefreshPipeline(obj));
-                }
-
-                commandBuffer->endPass();
-                continue;
-            }
-            commandBuffer->beginPass(newRenderPass);
-            commandBuffer->clearColor(this->clearColor.r, this->clearColor.g,
-                                      this->clearColor.b, this->clearColor.a);
-            commandBuffer->clearDepth(1.0f);
-
-            for (auto &obj : this->firstRenderables) {
                 obj->setViewMatrix(this->camera->calculateViewMatrix());
                 obj->setProjectionMatrix(calculateProjectionMatrix());
                 obj->render(getDeltaTime(), commandBuffer,
                             shouldRefreshPipeline(obj));
+            };
+
+            for (auto &obj : this->firstRenderables) {
+                renderForwardOnly(obj);
             }
 
             for (auto &obj : this->renderables) {
-                if (obj->renderLateForward) {
+                if (obj != nullptr && obj->renderLateForward) {
                     continue;
                 }
-                obj->setViewMatrix(this->camera->calculateViewMatrix());
-                obj->setProjectionMatrix(calculateProjectionMatrix());
-                obj->render(getDeltaTime(), commandBuffer,
-                            shouldRefreshPipeline(obj));
+                renderForwardOnly(obj);
             }
-            updateFluidCaptures(commandBuffer);
+
             for (auto &obj : this->lateForwardRenderables) {
                 obj->setViewMatrix(this->camera->calculateViewMatrix());
                 obj->setProjectionMatrix(calculateProjectionMatrix());
                 obj->render(getDeltaTime(), commandBuffer,
                             shouldRefreshPipeline(obj));
             }
+
             commandBuffer->endPass();
-            target->resolve();
+            continue;
         }
-
-        for (auto &obj : this->preferenceRenderables) {
-            RenderTarget *target = dynamic_cast<RenderTarget *>(obj);
-            if (target != nullptr && target->brightTexture.id != 0) {
-                this->renderPhysicalBloom(target);
-            }
-        }
-
-        // Render to the screen
-        commandBuffer->beginPass(renderPass);
-        int fbWidth, fbHeight;
-        this->queryDrawableSizeInPixels(&fbWidth, &fbHeight);
-        setViewportState(0, 0, fbWidth, fbHeight);
+        commandBuffer->beginPass(newRenderPass);
         commandBuffer->clearColor(this->clearColor.r, this->clearColor.g,
                                   this->clearColor.b, this->clearColor.a);
         commandBuffer->clearDepth(1.0f);
 
-        if (this->renderTargets.empty() && !usesModeScreenTarget) {
-            updateBackbufferTarget(fbWidth, fbHeight);
-            this->currentRenderTarget = this->screenRenderTarget.get();
-            for (auto &obj : this->firstRenderables) {
-                obj->setViewMatrix(this->camera->calculateViewMatrix());
-                obj->setProjectionMatrix(calculateProjectionMatrix());
-                obj->render(getDeltaTime(), commandBuffer,
-                            shouldRefreshPipeline(obj));
-            }
-
-            for (auto &obj : this->renderables) {
-                if (obj->renderLateForward) {
-                    continue;
-                }
-                obj->setViewMatrix(this->camera->calculateViewMatrix());
-                obj->setProjectionMatrix(calculateProjectionMatrix());
-                obj->render(getDeltaTime(), commandBuffer,
-                            shouldRefreshPipeline(obj));
-            }
-
-            updateFluidCaptures(commandBuffer);
-
-            for (auto &obj : this->lateForwardRenderables) {
-                obj->setViewMatrix(this->camera->calculateViewMatrix());
-                obj->setProjectionMatrix(calculateProjectionMatrix());
-                obj->render(getDeltaTime(), commandBuffer,
-                            shouldRefreshPipeline(obj));
-            }
-        } else {
-            this->currentRenderTarget = nullptr;
-        }
-
-        for (auto &obj : this->preferenceRenderables) {
+        for (auto &obj : this->firstRenderables) {
             obj->setViewMatrix(this->camera->calculateViewMatrix());
             obj->setProjectionMatrix(calculateProjectionMatrix());
             obj->render(getDeltaTime(), commandBuffer,
                         shouldRefreshPipeline(obj));
         }
 
-        updatePipelineStateField(this->useBlending, true);
+        for (auto &obj : this->renderables) {
+            if (obj->renderLateForward) {
+                continue;
+            }
+            obj->setViewMatrix(this->camera->calculateViewMatrix());
+            obj->setProjectionMatrix(calculateProjectionMatrix());
+            obj->render(getDeltaTime(), commandBuffer,
+                        shouldRefreshPipeline(obj));
+        }
+        updateFluidCaptures(commandBuffer);
+        for (auto &obj : this->lateForwardRenderables) {
+            obj->setViewMatrix(this->camera->calculateViewMatrix());
+            obj->setProjectionMatrix(calculateProjectionMatrix());
+            obj->render(getDeltaTime(), commandBuffer,
+                        shouldRefreshPipeline(obj));
+        }
+        commandBuffer->endPass();
+        target->resolve();
+    }
 
-        for (auto &obj : this->uiRenderables) {
+    for (auto &obj : this->preferenceRenderables) {
+        RenderTarget *target = dynamic_cast<RenderTarget *>(obj);
+        if (target != nullptr && target->brightTexture.id != 0) {
+            this->renderPhysicalBloom(target);
+        }
+    }
+
+    commandBuffer->beginPass(renderPass);
+    int fbWidth, fbHeight;
+    this->queryDrawableSizeInPixels(&fbWidth, &fbHeight);
+    setViewportState(0, 0, fbWidth, fbHeight);
+    commandBuffer->clearColor(this->clearColor.r, this->clearColor.g,
+                              this->clearColor.b, this->clearColor.a);
+    commandBuffer->clearDepth(1.0f);
+
+    if (this->renderTargets.empty() && !usesModeScreenTarget) {
+        updateBackbufferTarget(fbWidth, fbHeight);
+        this->currentRenderTarget = this->screenRenderTarget.get();
+        for (auto &obj : this->firstRenderables) {
+            obj->setViewMatrix(this->camera->calculateViewMatrix());
+            obj->setProjectionMatrix(calculateProjectionMatrix());
             obj->render(getDeltaTime(), commandBuffer,
                         shouldRefreshPipeline(obj));
         }
 
-        this->lastViewMatrix = this->camera->calculateViewMatrix();
+        for (auto &obj : this->renderables) {
+            if (obj->renderLateForward) {
+                continue;
+            }
+            obj->setViewMatrix(this->camera->calculateViewMatrix());
+            obj->setProjectionMatrix(calculateProjectionMatrix());
+            obj->render(getDeltaTime(), commandBuffer,
+                        shouldRefreshPipeline(obj));
+        }
 
-        commandBuffer->endPass();
-        commandBuffer->commit();
+        updateFluidCaptures(commandBuffer);
+
+        for (auto &obj : this->lateForwardRenderables) {
+            obj->setViewMatrix(this->camera->calculateViewMatrix());
+            obj->setProjectionMatrix(calculateProjectionMatrix());
+            obj->render(getDeltaTime(), commandBuffer,
+                        shouldRefreshPipeline(obj));
+        }
+    } else {
+        this->currentRenderTarget = nullptr;
+    }
+
+    for (auto &obj : this->preferenceRenderables) {
+        obj->setViewMatrix(this->camera->calculateViewMatrix());
+        obj->setProjectionMatrix(calculateProjectionMatrix());
+        obj->render(getDeltaTime(), commandBuffer, shouldRefreshPipeline(obj));
+    }
+
+    updatePipelineStateField(this->useBlending, true);
+
+    for (auto &obj : this->uiRenderables) {
+        obj->render(getDeltaTime(), commandBuffer, shouldRefreshPipeline(obj));
+    }
+
+    this->lastViewMatrix = this->camera->calculateViewMatrix();
+
+    commandBuffer->endPass();
+    commandBuffer->commit();
 #ifdef OPENGL
-        SDL_GL_SwapWindow(window);
+    SDL_GL_SwapWindow(window);
 #endif
 
-        uint64_t gpuTime = gpuTimer.stop();
-        uint64_t mainTime = mainTimer.stop();
+    uint64_t gpuTime = gpuTimer.stop();
+    uint64_t mainTime = mainTimer.stop();
 
-        if (TracerServices::getInstance().isOk()) {
-            FrameDrawInfo frameInfo{};
-            frameInfo.drawCallCount = commandBuffer->getAndResetDrawCallCount();
-            frameInfo.frameTimeMs = this->deltaTime * 1000.0f;
-            frameInfo.frameNumber = device->frameCount;
-            frameInfo.fps = this->framesPerSecond;
-            frameInfo.send();
+    if (TracerServices::getInstance().isOk()) {
+        FrameDrawInfo frameInfo{};
+        frameInfo.drawCallCount = commandBuffer->getAndResetDrawCallCount();
+        frameInfo.frameTimeMs = this->deltaTime * 1000.0f;
+        frameInfo.frameNumber = device->frameCount;
+        frameInfo.fps = this->framesPerSecond;
+        frameInfo.send();
 
-            FrameResourcesInfo frameResourcesInfo{};
-            frameResourcesInfo.frameNumber = device->frameCount;
-            frameResourcesInfo.resourcesCreated =
-                ResourceTracker::getInstance().createdResources;
-            frameResourcesInfo.resourcesUnloaded =
-                ResourceTracker::getInstance().unloadedResources;
-            frameResourcesInfo.resourcesLoaded =
-                ResourceTracker::getInstance().loadedResources;
-            frameResourcesInfo.totalMemoryMb =
-                ResourceTracker::getInstance().totalMemoryMb;
+        FrameResourcesInfo frameResourcesInfo{};
+        frameResourcesInfo.frameNumber = device->frameCount;
+        frameResourcesInfo.resourcesCreated =
+            ResourceTracker::getInstance().createdResources;
+        frameResourcesInfo.resourcesUnloaded =
+            ResourceTracker::getInstance().unloadedResources;
+        frameResourcesInfo.resourcesLoaded =
+            ResourceTracker::getInstance().loadedResources;
+        frameResourcesInfo.totalMemoryMb =
+            ResourceTracker::getInstance().totalMemoryMb;
 
-            FrameMemoryPacket memoryPacket{};
-            memoryPacket.frameNumber = device->frameCount;
-            memoryPacket.allocationCount =
-                ResourceTracker::getInstance().createdResources -
-                ResourceTracker::getInstance().unloadedResources;
-            memoryPacket.totalAllocatedMb =
-                ResourceTracker::getInstance().totalMemoryMb;
-            memoryPacket.totalCPUMb =
-                ResourceTracker::getInstance().totalMemoryMb;
-            memoryPacket.totalGPUMb =
-                ResourceTracker::getInstance().totalMemoryMb;
-            memoryPacket.deallocationCount =
-                ResourceTracker::getInstance().unloadedResources;
-            memoryPacket.send();
+        FrameMemoryPacket memoryPacket{};
+        memoryPacket.frameNumber = device->frameCount;
+        memoryPacket.allocationCount =
+            ResourceTracker::getInstance().createdResources -
+            ResourceTracker::getInstance().unloadedResources;
+        memoryPacket.totalAllocatedMb =
+            ResourceTracker::getInstance().totalMemoryMb;
+        memoryPacket.totalCPUMb = ResourceTracker::getInstance().totalMemoryMb;
+        memoryPacket.totalGPUMb = ResourceTracker::getInstance().totalMemoryMb;
+        memoryPacket.deallocationCount =
+            ResourceTracker::getInstance().unloadedResources;
+        memoryPacket.send();
 
-            rusage usage{};
-            getrusage(RUSAGE_SELF, &usage);
+        rusage usage{};
+        getrusage(RUSAGE_SELF, &usage);
 
-            double normalCpuTime =
-                usage.ru_utime.tv_sec + (usage.ru_utime.tv_usec / 1e6) +
-                usage.ru_stime.tv_sec + (usage.ru_stime.tv_usec / 1e6);
+        double normalCpuTime =
+            usage.ru_utime.tv_sec + (usage.ru_utime.tv_usec / 1e6) +
+            usage.ru_stime.tv_sec + (usage.ru_stime.tv_usec / 1e6);
 
-            TimingEventPacket timingEvent;
-            timingEvent.frameNumber = device->frameCount;
-            timingEvent.durationMs = static_cast<float>(gpuTime) / 1'000'000.0f;
-            timingEvent.name = "Main Loop";
-            timingEvent.subsystem = TimingEventSubsystem::Rendering;
-            timingEvent.send();
+        TimingEventPacket timingEvent;
+        timingEvent.frameNumber = device->frameCount;
+        timingEvent.durationMs = static_cast<float>(gpuTime) / 1'000'000.0f;
+        timingEvent.name = "Main Loop";
+        timingEvent.subsystem = TimingEventSubsystem::Rendering;
+        timingEvent.send();
 
-            FrameTimingPacket timingPacket{};
-            timingPacket.frameNumber = device->frameCount;
-            timingPacket.cpuFrameTimeMs =
-                static_cast<float>(cpuTime) / 1'000'000.0f;
-            timingPacket.gpuFrameTimeMs =
-                static_cast<float>(gpuTime) / 1'000'000.0f;
-            timingPacket.workerThreadTimeMs = 0.0f;
-            timingPacket.mainThreadTimeMs =
-                static_cast<float>(mainTime) / 1'000'000.0f;
-            timingPacket.memoryMb =
-                ResourceTracker::getInstance().totalMemoryMb;
-            timingPacket.cpuUsagePercent =
-                static_cast<float>(normalCpuTime / this->deltaTime * 100.0);
-            timingPacket.gpuUsagePercent = 0.0f;
-            timingPacket.send();
+        FrameTimingPacket timingPacket{};
+        timingPacket.frameNumber = device->frameCount;
+        timingPacket.cpuFrameTimeMs =
+            static_cast<float>(cpuTime) / 1'000'000.0f;
+        timingPacket.gpuFrameTimeMs =
+            static_cast<float>(gpuTime) / 1'000'000.0f;
+        timingPacket.workerThreadTimeMs = 0.0f;
+        timingPacket.mainThreadTimeMs =
+            static_cast<float>(mainTime) / 1'000'000.0f;
+        timingPacket.memoryMb = ResourceTracker::getInstance().totalMemoryMb;
+        timingPacket.cpuUsagePercent =
+            static_cast<float>(normalCpuTime / this->deltaTime * 100.0);
+        timingPacket.gpuUsagePercent = 0.0f;
+        timingPacket.send();
 
-            frameResourcesInfo.send();
-        } else {
-            commandBuffer->getAndResetDrawCallCount();
-        }
-
-        ResourceTracker::getInstance().createdResources = 0;
-        ResourceTracker::getInstance().loadedResources = 0;
-        ResourceTracker::getInstance().unloadedResources = 0;
-        ResourceTracker::getInstance().totalMemoryMb = 0.0f;
-
-        if (this->firstFrame) {
-            this->firstFrame = false;
-        }
+        frameResourcesInfo.send();
+    } else {
+        commandBuffer->getAndResetDrawCallCount();
     }
+
+    ResourceTracker::getInstance().createdResources = 0;
+    ResourceTracker::getInstance().loadedResources = 0;
+    ResourceTracker::getInstance().unloadedResources = 0;
+    ResourceTracker::getInstance().totalMemoryMb = 0.0f;
+
+    if (this->firstFrame) {
+        this->firstFrame = false;
+    }
+
+    return !this->shouldClose;
+}
+
+void Window::endRunLoop() {
+    if (!this->runLoopInitialized) {
+        return;
+    }
+    this->activeCommandBuffer = nullptr;
+    this->runLoopRenderPass = nullptr;
+    this->runLoopWindowID = 0;
+    this->runLoopInitialized = false;
+}
+
+void Window::run() {
+    while (this->stepFrame()) {
+    }
+    this->endRunLoop();
 }
 
 void Window::addObject(Renderable *obj) {

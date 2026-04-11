@@ -413,6 +413,19 @@ class Window {
      */
     void run();
     /**
+     * @brief Advances rendering by a single frame.
+     *
+     * Useful for host-driven embedding scenarios where the host owns the
+     * main loop.
+     *
+     * @return (bool) True while rendering should continue.
+     */
+    bool stepFrame();
+    /**
+     * @brief Tears down state created by stepFrame()/run().
+     */
+    void endRunLoop();
+    /**
      * @brief Closes the window and terminates the application.
      *
      */
@@ -664,6 +677,9 @@ class Window {
     void useMetalUpscaling(float ratio = 0.75f);
     bool isMetalUpscalingEnabled() const { return this->metalUpscalingEnabled; }
     float getMetalUpscalingRatio() const { return this->metalUpscalingRatio; }
+    bool isRenderingToExternalMetalView() const {
+        return this->renderToExternalMetalView;
+    }
 
     /**
      * @brief Returns the SSAO-specific render scale.
@@ -834,6 +850,8 @@ class Window {
                           int newViewportHeight);
     void updateBackbufferTarget(int backbufferWidth, int backbufferHeight);
     void queryDrawableSizeInPixels(int *width, int *height) const;
+    void initializeRunLoop();
+    void pollEvents();
 
     template <typename T> void updatePipelineStateField(T &field, T value) {
         if (field != value) {
@@ -850,6 +868,9 @@ class Window {
     float deltaTime = 0.0f;
     float framesPerSecond = 0.0f;
     bool shouldClose = false;
+    bool runLoopInitialized = false;
+    SDL_WindowID runLoopWindowID = 0;
+    std::shared_ptr<opal::RenderPass> runLoopRenderPass = nullptr;
 
     ShaderProgram depthProgram;
     ShaderProgram pointDepthProgram;

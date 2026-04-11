@@ -25,6 +25,33 @@ extern "C" {
 bool atlas_runtime_run_in_metal_view(const char *projectFile, void *metalView,
                                      void *sdlInputWindow);
 
+/**
+ * @brief Creates a non-blocking runtime context bound to a Metal NSView.
+ *
+ * Returns an opaque handle that must be passed to step/end/destroy.
+ */
+void *atlas_runtime_create_metal_view_context(const char *projectFile,
+                                              void *metalView,
+                                              void *sdlInputWindow);
+
+/**
+ * @brief Advances one frame on a non-blocking runtime context.
+ *
+ * @return `true` while rendering should continue, `false` when ended.
+ */
+bool atlas_runtime_step_frame(void *runtimeContext);
+
+/**
+ * @brief Requests shutdown and releases frame-loop resources.
+ */
+void atlas_runtime_end_context(void *runtimeContext);
+
+/**
+ * @brief Destroys a context handle created by
+ * atlas_runtime_create_metal_view_context.
+ */
+void atlas_runtime_destroy_context(void *runtimeContext);
+
 #ifdef __cplusplus
 }
 #endif
